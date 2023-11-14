@@ -3945,6 +3945,17 @@ c
      &  deallocate (closed_mslp_ctr_flag2)
       if (allocated(quad_wind_circ_flag))
   end subroutine tracker
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is used to generate the pre-forecast-command
+  !*      It will edit the command (argument "arg") and replace string
+  !*      name with value val.  That is how the per-forecast-command
+  !*      has these modifications:
+  !*
+  !*      %[FHOUR]  -> replace with ->  last forecast hour
+  !*      %[FMIN]   -> replace with ->  last forecast minute
+  !*
+  !****************************************************************************
   subroutine argreplace(arg, n, name, val)
 
       implicit none
@@ -3983,7 +3994,36 @@ c
 
       arg=out
   end subroutine argreplace
-      end subroutine argreplace
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine must be called before any attempt is
+  !*      made to read from the input GRIB files.  The GRIB and index files
+  !*      are  opened with a call to baopenr.  This call to baopenr was not
+  !*      needed in the cray version of this program (the files could be
+  !*      opened with a simple Cray assign statement), but the GRIB-reading
+  !*      utilities on the SP do require calls to this subroutine (it has
+  !*      something to do with the GRIB I/O being done in C on the SP, and
+  !*      the C I/O package needs an explicit open statement).
+  !*
+  !*  INPUT:
+  !*      inp       :: Contains user-input info on the date & data
+  !*      lugb      :: The Fortran unit number for the GRIB data file
+  !*      lugi      :: The Fortran unit number for the GRIB index file
+  !*      ifh       :: integer index for lead time level
+  !*      gfilename :: If using individual files for each tau, gfilename will
+  !*                   contain the grib data filename for this tau.  Otherwise,
+  !*                   if using one big file for all taus, this contains dummy
+  !*                   character data.
+  !*      ifilename :: If using individual files for each tau, gfilename will
+  !*                   contain the grib index filename for this tau.  Otherwise,
+  !*                   if using one big file for all taus, this contains dummy
+  !*                   character data.
+  !*      lout      :: The Fortran unit number for the  output grib file
+  !*
+  !*  OUTPUT:
+  !*      iret      :: The return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine open_grib_files (inp, lugb, lugi, gfilename, ifilename, lout, iret)
       USE verbose_output
 
@@ -4104,19 +4144,19 @@ c
       return
   end subroutine open_grib_files
 c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine open_ncfile (filename,ncid)
-
-c     ABSTRACT: This subroutine opens a netcdf file specified by the
-c     input file "ncfile" and returns the netcdf file id that will be
-c     associated with that file.
-c
-c     INPUT:
-c     ncfile   character full-path file netcdf name
-c
-c     OUTPUT:
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine opens a netcdf file specified by the
+  !*      input file "ncfile" and returns the netcdf file id that will be
+  !*      associated with that file.
+  !*
+  !*  INPUT:
+  !*      ncfile    :: character full-path file netcdf name
+  !*
+  !*  OUTPUT:
+  !*      ncfile_id :: integer, netcdf id assigned to the netcdf file
+  !*
+  !****************************************************************************
   subroutine open_ncfile (filename, ncid)
 
       implicit none
@@ -4132,39 +4172,39 @@ c     OUTPUT:
 
   end subroutine open_ncfile
 c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine is_it_a_storm (imax,jmax,dx,dy,cparm,ist
-  end subroutine open_grib_files
-     &                        ,parmval,trkrinfo,stormcheck,ifh,isiret)
-
-c     ABSTRACT: This subroutine is called after the center of the storm
-c     has been fixed.  Its purpose is to determine whether or not 
-c     the center that was found is actually a storm, and not just some
-c     passing trough (this has happened in the case of decaying or weak
-c     storms).  It's called twice -- once to check for a minimum MSLP
-c     gradient, and once to check for a circulation at 850 mb.  The 
-c     subroutine input parameter "cparm" determines which parameter to
-c     check for.
-c
-c     INPUT:
-c     imax     Num pts in i direction on input grid
-c     jmax     Num pts in j direction on input grid
-c     dx       Grid spacing in i-direction on input grid
-c     dy       Grid spacing in j-direction on input grid
-c     cparm    Char string indicating what parm is to be checked:
-c              slp  = mslp, for a check of mslp gradient
-c              v850 = tangential winds at 850 mb
-c     ist      integer storm number (internal to the  tracker)
-c     defined_pt Logical; bitmap indicating if valid data at that pt.
-c     parmlon  Longitude of the max/min value for the input parameter
-c     parmlat  Latitude  of the max/min value for the input parameter
-c     parmval  Data value at parm's max/min point (used for mslp call)
-c     trkrinfo derived type containing grid info on user boundaries
-c     ifh      Integer index for the forecast hour
-c
-  end subroutine open_ncfile
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is called after the center of the storm
+  !*      has been fixed.  Its purpose is to determine whether or not
+  !*      the center that was found is actually a storm, and not just some
+  !*      passing trough (this has happened in the case of decaying or weak
+  !*      storms).  It's called twice -- once to check for a minimum MSLP
+  !*      gradient, and once to check for a circulation at 850 mb.  The
+  !*      subroutine input parameter "cparm" determines which parameter to
+  !*      check for.
+  !*
+  !*  INPUT:
+  !*      imax       :: Num pts in i direction on input grid
+  !*      jmax       :: Num pts in j direction on input grid
+  !*      dx         :: Grid spacing in i-direction on input grid
+  !*      dy         :: Grid spacing in j-direction on input grid
+  !*      cparm      :: Char string indicating what parm is to be checked:
+  !*                    slp  = mslp, for a check of mslp gradient
+  !*                    v850 = tangential winds at 850 mb
+  !*      ist        :: integer storm number (internal to the  tracker)
+  !*      defined_pt :: Logical; bitmap indicating if valid data at that pt.
+  !*      parmlon    :: Longitude of the max/min value for the input parameter
+  !*      parmlat    :: Latitude  of the max/min value for the input parameter
+  !*      parmval    :: Data value at parm's max/min point (used for mslp call)
+  !*      trkrinfo   :: derived type containing grid info on user boundaries
+  !*      ifh        :: Integer index for the forecast hour
+  !*
+  !*  OUTPUT:
+  !*      stormcheck :: Character; set to 'Y' if mslp gradient or 850 mb
+  !*                    tangential winds check okay.
+  !*      isiret     :: Return code for this subroutine.
+  !*
+  !****************************************************************************
   subroutine is_it_a_storm (imax, jmax, dx, dy, cparm, ist, defined_pt, parmlon, parmlat, &
                            &, parmval, trkrinfo, stormcheck, ifh, isiret)
 c     isiret   Return code for this subroutine.
@@ -4477,6 +4517,52 @@ c     for the GFS ensemble relocation.
 c
       return
   end subroutine is_it_a_storm
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  probes around a storm for either the
+  !*      boundaries of the grid within a distance threshold of a storm
+  !*      center (indicated by input parms pfixlon and pfixlat) or for the
+  !*      existence of missing data, via the valid_pt array, in order to
+  !*      know if a model storm is close to the edge of a fixed regional
+  !*      grid.  If we find even one grid point in our search at an outer
+  !*      radius (which we will initially set to 400 km) that is either
+  !*      beyond the last imax / jmax or is within the grid imax / jmax
+  !*      boundaries but has missing data (this would be the case for some
+  !*      of the regional grids that have been re-mapped onto a lat/lon
+  !*      grid, such as the HAFS or T-SHiELD grids), then we set the flag
+  !*      to indicate that we are close to the edge of the grid and return
+  !*      to the calling routine.  If the flag is set to indicate that the
+  !*      storm is close to the edge of valid data, then that calling
+  !*      routine will call other subroutines to apply more rigorous quality
+  !*      control checking, such as checking for a closed MSLP contour.
+  !*
+  !*  INPUT:
+  !*      imax               :: Num pts in i direction on input grid
+  !*      jmax               :: Num pts in j direction on input grid
+  !*      dx                 :: Grid spacing in i-direction on input grid
+  !*      dy                 :: Grid spacing in j-direction on input grid
+  !*      ist                :: integer storm number (internal to the  tracker)
+  !*      cparm              :: character parameter to track (slp, vort, etc)
+  !*      fxy                :: real array of data values
+  !*      valid_pt           :: Logical; bitmap indicating if valid data at that pt.
+  !*      pfixlon            :: Longitude of the max/min value for the input parameter
+  !*      pfixlat            :: Latitude  of the max/min value for the input parameter
+  !*      trkrinfo           :: derived type containing grid info on user boundaries
+  !*      gm_wrap_flag       :: character flag originally set in getgridinfo that
+  !*                            determines the GM-wrapping setting for this grid
+  !*
+  !*  OUTPUT:
+  !*      close_to_boundary  :: y/n flag that indicates if point is too close
+  !*                            to grid boundary
+  !*      ipfbret            :: Return code for this subroutine.
+  !*
+  !*  LOCAL:
+  !*      bounddist          :: The distance threshold used for determining how close
+  !*                            to the boundary of either the grid or invalid data to
+  !*                            trigger the extra checking of MSLP closed contour or
+  !*                            V850 circulation.
+  !*
+  !****************************************************************************
   subroutine probe_for_boundary (imax, jmax, dx, dy, ist, cparm, fxy, valid_pt, pfixlon, &
                                  & pfixlat, trkrinfo, close_to_boundary, gm_wrap_flag, ipfbret)
 
@@ -4564,6 +4650,13 @@ c
           
       return
     end subroutine probe_for_boundary
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is a driver subroutine for
+  !*      determining the structure or phase of a cyclone.  Initially, we
+  !*      will just have it use the Hart cyclone phase space (CPS) scheme.
+  !*
+  !****************************************************************************
   subroutine get_phase (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo, fixlon, &
                        & fixlat, valid_pt, maxstorm, cps_vals, wcore_flag, igpret)
 
@@ -4730,17 +4823,17 @@ c
       return
   end subroutine get_phase
 c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine get_cps_paramb (imax,jmax,inp,dx,dy,ist,ifh,trkrinfo
-     &                 ,fixlon,fixlat,valid_pt,paramb,maxstorm,igcpret)
-c
-c     ABSTRACT: This subroutine is part of the algorithm for determining
-c     the structure, or phase, of a cyclone.  For Hart's cyclone phase
-c     space, this subroutine determines "Parameter B", which determines
-c     the degree of thermal symmetry between the "left" and "right" 
-c     hemispheres of a storm, in the layer between 900 and 600 mb.
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is part of the algorithm for determining
+  !*      the structure, or phase, of a cyclone.  For Hart's cyclone phase
+  !*      space, this subroutine determines "Parameter B", which determines
+  !*      the degree of thermal symmetry between the "left" and "right"
+  !*      hemispheres of a storm, in the layer between 900 and 600 mb.
+  !*      We evaluate only those points that are within 500 km of the
+  !*      storm center.
+  !*
+  !****************************************************************************
   subroutine get_cps_paramb (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo, fixlon, &
                             & fixlat, valid_pt, paramb, maxstorm, igcpret)
 
@@ -5070,16 +5163,16 @@ c
       return
   end subroutine get_cbs_paramb
 c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine get_cps_vth (imax,jmax,inp,dx,dy,ist,ifh,trkrinfo
-     &        ,fixlon,fixlat,valid_pt,clayer,vth_slope,maxstorm,igcvret)
-c
-c     ABSTRACT: This subroutine is part of the algorithm for determining
-c     the structure, or phase, of a cyclone.  For Hart's cyclone phase
-c     space, this subroutine determines the thermal wind profile for 
-c     either the lower troposphere (i.e., between 600 and 900 mb) or the
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is part of the algorithm for determining
+  !*      the structure, or phase, of a cyclone.  For Hart's cyclone phase
+  !*      space, this subroutine determines the thermal wind profile for
+  !*      either the lower troposphere (i.e., between 600 and 900 mb) or the
+  !*      upper troposphere (i.e., between 300 and 600 mb).  We evaluate
+  !*      only those points that are within 500 km of the storm center.
+  !*
+  !****************************************************************************
   subroutine get_cps_vth (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo,fixlon, &
                          & fixlat, valid_pt, clayer, vth_slope, maxstorm, igcvret)
 
@@ -5353,6 +5446,27 @@ c     ------------------------------------------------------------------
 c
       return
   end subroutine get_cps_vth
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is the main driver for a series of
+  !*      other subroutines below this that will calculate the
+  !*      correlation between two input arrays, xdat and ydat.
+  !*
+  !*  INPUT:
+  !*      xdat     :: array of x (independent) data points
+  !*      ydat     :: array of y (dependent)   data points
+  !*      numpts   :: number of elements in each of xdat and ydat
+  !*
+  !*  OUTPUT:
+  !*      R2       :: R-squared, the coefficient of determination
+  !*      slope    :: Slope of regression line
+  !*
+  !*      xdiff    :: array of points for xdat - xmean
+  !*      ydiff    :: array of points for ydat - ymean
+  !*      yestim   :: array of regression-estimated points
+  !*      yresid   :: array of residuals (ydat(i) - yestim(i))
+  !*
+  !****************************************************************************
   subroutine calccorr(xdat, ydat, numpts, R2, slope)
 
       implicit none
@@ -5419,19 +5533,19 @@ c
       return
   end subroutine calccorr
 
-c-------------------------------------------c
-c                                           c
-c-------------------------------------------c
-      subroutine getmean(xarr,inum,zmean)
-c     
-c     This subroutine is part of the correlation calculation,
-c     and it simply returns the mean of the input array, xarr.
-c     
-c     INPUT:
-c      xarr   input array of data points
-c      inum   number of data points in xarr
-c     
-c     OUTPUT:
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is part of the correlation calculation,
+  !*      and it simply returns the mean of the input array, xarr.
+  !*
+  !*  INPUT:
+  !*      xarr   :: input array of data points
+  !*      inum   :: number of data points in xarr
+  !*
+  !*  OUTPUT:
+  !*      zmean  :: mean of data values in xarr
+  !*
+  !****************************************************************************
   subroutine getmean(xarr, inum, zmean)
 
       implicit none
@@ -5440,6 +5554,22 @@ c     OUTPUT:
     real    :: xsum, zmean
     integer :: i, inum
   end subroutine getmean
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is part of the correlation calculation,
+  !*      and it returns in the array zdiff the difference values
+  !*      between each member of the input array xarr and the
+  !*      mean value, zmean.
+  !*
+  !*  INPUT:
+  !*      xarr   :: input array of data points
+  !*      inum   :: number of data points in xarr
+  !*      zmean  :: mean of input array (xarr)
+  !*
+  !*  OUTPUT:
+  !*      zdiff  :: array containing xarr(i) - zmean
+  !*
+  !****************************************************************************
   subroutine getdiff(xarr, inum, zmean, zdiff)
 
       implicit none
@@ -5454,6 +5584,20 @@ c     OUTPUT:
 c     
       return
   end subroutine getdiff
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is part of the correlation calculation,
+  !*      and it returns the slope of the regression line.
+  !*
+  !*  INPUT:
+  !*      xarr   :: input array of xdiffs (x - xmean)
+  !*      yarr   :: input array of ydiffs (y - ymean)
+  !*      inum   :: number of points in x & y arrays
+  !*
+  !*  OUTPUT:
+  !*      slope  :: slope of regression line
+  !*
+  !****************************************************************************
   subroutine getslope(xarr, yarr, inum, slope)
     real    :: xarr(inum), yarr(inum)
     real    :: slope, sumxy, sumx2
@@ -5495,10 +5639,55 @@ c      inum   number of input points
 c
 c     OUTPUT:
   end subroutine getslope
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is part of the correlation calculation,
+  !*      and it calculates all the predicted y-values using the
+  !*      regression equation that has been calculated.
+  !*
+  !*  INPUT:
+  !*      xarr   :: array of x data points
+  !*      slope  :: slope of the calculated regression line
+  !*      yint   :: y-intercept of the calculated regression line
+  !*      inum   :: number of input points
+  !*
+  !*  OUTPUT:
+  !*      yestim :: array of y pts estimated from regression eqn.
+  !*
+  !****************************************************************************
   subroutine getyestim(xarr, slope, yint, inum, yestim)
   end subroutine getyestim
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is part of the correlation calculation,
+  !*      and it calculates all the residual values between the
+  !*      input y data points and the y-estim predicted y values.
+  !*
+  !*  INPUT:
+  !*      yarr   :: array of y data points
+  !*      yestim :: array of y pts estimated from regression eqn.
+  !*      inum   :: number of input points
+  !*
+  !*  OUTPUT:
+  !*      yresid :: array of residuals (ydat(i) - yestim(i))
+  !*
+  !****************************************************************************
   subroutine getresid(yarr, yestim, inum, yresid)
   end subroutine getresid
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is part of the correlation calculation,
+  !*      and it does the actual correlation calculation.
+  !*
+  !*  INPUT:
+  !*      yresid :: array of residuals (ydat(i) - yestim(i))
+  !*      ydiff  :: array of points for ydat - ymean
+  !*      inum   :: number of points in the arrays
+  !*
+  !*  OUTPUT:
+  !*      R2     :: R-squared, the coefficient of determination
+  !*
+  !****************************************************************************
   subroutine getcorr(yresid, ydiff, inum, R2)
 
       implicit none
@@ -5524,6 +5713,45 @@ c
       endif
 
   end subroutine getcorr
+  !****************************************************************************
+  !*  ABSTRACT: This subroutine is part of the algorithm for determining
+  !*      the structure, or phase, of a cyclone.  Here, we are only looking
+  !*      at the mid-to-upper tropospheric warm anomaly at the center of
+  !*      the storm.  The temperature data that we are searching through in
+  !*      the tmean array should be the 300-500 mb mean temperature data.
+  !*      The criteria in this algorithm are based loosely on Vitart's
+  !*      criteria for warm core checking, but the nuts & bolts of the
+  !*      subroutine use algorithms from this tracker, including the  barnes
+  !*      analysis.  First, we locate the warm core with the  find_maxmin
+  !*      routine.  Then we use the  check_closed_contour routine to see if
+  !*      there is a closed temperature contour surrounding the warm core.
+  !*
+  !*  INPUT:
+  !*      imax            :: Num pts in i direction on input grid
+  !*      jmax            :: Num pts in j direction on input grid
+  !*      inp             :: contains input date and model number information
+  !*      dx              :: Grid spacing in i-direction on input grid
+  !*      dy              :: Grid spacing in j-direction on input grid
+  !*      ist             :: integer storm number (internal to the  tracker)
+  !*      ifh             :: integer index for lead time
+  !*      trkrinfo        :: derived type containing grid info on user boundaries
+  !*      fixlon          :: array containing found fix longitudes
+  !*      fixlat          :: array containing found fix latitudes
+  !*      valid_pt        :: Logical; bitmap indicating if valid data at that pt.
+  !*      maxstorm        :: maximum # of storms to be handled
+  !*
+  !*  OUTPUT:
+  !*      wcore_flag      :: 'u'=undetermined, 'y'=yes, 'n'=no
+  !*      igvpret         :: Return code for this subroutine.
+  !*
+  !*  LOCAL:
+  !*      wcore_mean_val  :: barnes-averaged value of the temperature at the
+  !*                         location where the  tracker found the warm core.
+  !*      wcore_point_max :: max temperature found at a gridpoint near the
+  !*                         location where the  tracker found the warm core
+  !*                         using barnes analysis.
+  !*
+  !****************************************************************************
   subroutine get_vtt_phase (inp, imax, jmax, dx, dy, ist, ifh, trkrinfo, fixlon, &
                            & fixlat, valid_pt, maxstorm, wcore_flag, igvpret)
 
@@ -5707,6 +5935,42 @@ c     the tlastcont and rlastcont values are returned.
       endif
 
   end subroutine get_vtt_phase
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine computes a modified lat/lon fix position
+  !*      to use as the input center position for the subroutines that
+  !*      follow which calculate surface-wind related values.  The reason
+  !*      for this is that since we are concerned with the positioning of
+  !*      low-level wind features (e.g., rmax), we want the center position
+  !*      to be based solely on low-level features. We'll use mslp and the
+  !*      min in the sfc wind speed.  If a center fix was unable to be made
+  !*      at this forecast hour for mslp and low-level winds, then we will
+  !*      stick with just using the mean position we got using all the other
+  !*      parameters.
+  !*
+  !*  INPUT:
+  !*      xmeanlon :: The mean center longitude computed from all the various
+  !*                  parameter fixes found in array clon
+  !*      xmeanlat :: The mean center latitude computed from all the various
+  !*                  parameter fixes found in array clat
+  !*      clon     :: Center longitudes of tracked parms for this storm & ifh
+  !*      clat     :: Center latitudes of tracked parms for this storm & ifh
+  !*      ist      :: Index for storm number
+  !*      ifh      :: Index for forecast hour
+  !*      calcparm :: Logical; Use this parm's location for this storm or not
+  !*                  (if a parameter fix could not be made at this forecast
+  !*                  hour, then calcparm is set to false for this time for
+  !*                  that parameter).
+  !*      maxstorm :: Maximum number of storms that can be tracked
+  !*
+  !*  OUTPUT:
+  !*      xsfclon  :: low-level longitude estimate for this storm & time,
+  !*                  computed ideally from mean of mslp & low-level winds.
+  !*      xsfclat  :: low-level latitude estimate for this storm & time,
+  !*                  computed ideally from mean of mslp & low-level winds.
+  !*      igscret  :: Return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine get_sfc_center (xmeanlon, xmeanlat, clon, clat, ist, ifh, calcparm, &
                             & xsfclon, xsfclat, maxstorm, igscret)
 
@@ -5789,6 +6053,39 @@ c        xlatsum = xlatsum + 2.*clat(ist,ifh,10)
       endif
 
   end subroutine get_sfc_center
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine calculates the mean Vt separately for
+  !*      each of the four quadrants of a storm, within a specified distance
+  !*      (~250 km) of the storm center.  As of its writing (Sept 2020), it
+  !*      was used as part of the more rigorous QC checking for storms that
+  !*      are approaching the boundary of a fixed, regional grid.
+  !*
+  !*  INPUT:
+  !*      imax                  :: num points is i-direction of input grid
+  !*      jmax                  :: num points is j-direction of input grid
+  !*      dx                    :: grid increment in x-direction
+  !*      dy                    :: grid increment in y-direction
+  !*      ist                   :: Index for storm number
+  !*      ifh                   :: Index for forecast hour
+  !*      xclon                 :: Longitude of center fix passed to this routine, around
+  !*                               which the Vt calculations will be based.
+  !*      xclat                 :: Latitude of center fix passed to this routine, around
+  !*                               which the Vt calculations will be based.
+  !*      valid_pt              :: Logical; bitmap indicating if valid data at that pt.
+  !*      trkrinfo              :: derived type detailing user-specified grid info
+  !*      gm_wrap_flag          :: character flag originally set in getgridinfo that
+  !*                               determines GM-wrapping setting for this grid.
+  !*
+  !*  OUTPUT:
+  !*      vt_quad               :: low-level longitude estimate for this storm & time,
+  !*                               with a mean Vt for each of 4 quadrants.
+  !*      quad_wind_circ_check  :: character flag ('pass'/'fail') that
+  !*                               indicates if sufficient mean Vt was found in *all*
+  !*                               4 quadrants.
+  !*      icqwret               :: return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine check_quadrant_wind_circ (imax, jmax, dx, dy, ist, ifh, xclon, xclat, valid_pt, &
                                       & vt_quad, trkrinfo, quad_wind_circ_check, gm_wrap_flag, icqwret)
 
@@ -5945,42 +6242,42 @@ c
       end
   end subroutine check_quadrant_wind_circ
 c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine get_wind_structure (imax,jmax,inp,dx,dy
-     &             ,ist,ifh,fixlon,fixlat,xsfclon,xsfclat,valid_pt
-     &             ,er_wind,sr_wind,er_vr,sr_vr,er_vt,sr_vt,maxstorm
-     &             ,trkrinfo,gm_wrap_flag,igwsret)
-c       
-c     ABSTRACT: This subroutine is a driver subroutine for
-c     determining the structure of the low level winds of a cyclone.
-c     The algorithm will search out at specified distances from the
-c     storm center along arcs in each quadrant of the storm, 
-c     evaluating the winds every 15 degrees along the arc.  In each
-c     arc, start 7.5 degrees in, then make stops at 22.5, 37.5, 
-c     52.5, 67.5, and 82.5 degrees.  At each of those points, we 
-c     will bilinearly interpolate the winds to the points along those 
-c     arcs.  Then we compute a quadrant average of the wind magnitude,
-c     as well as the mean Vt and Vr values.  This will be done
-c     twice -- First, for an earth-relative coordinate system, and
-c     second, for a storm-relative coordinate system.  For the
-c     earth-relative estimates, we will always have 4 earth-relative
-c     quadrants: NE, SE, SW and NW.  For the storm-relative estimates,
-c     these mean values of the wind will be computed for the same 
-c     relative quadrants (front-right, back-right, back-left, front-
-c     left, but with respect (positive clockwise) to the
-c     direction of storm motion.  
-c       
-c     LOCAL:
-c       numdist   Number of discrete radii at which the winds will
-c                 be evaluated
-c       rdist     The radii (km) at which winds will be evaluated
-c     
-c     Arrays:
-c       rdist     Radii (km) at which the winds will be evaluated
-c       er_wind:  Quadrant winds in earth-relative framework
-c       sr_wind:  Quadrant winds in storm-relative framework
-c       er_vr:    Quadrant radial winds in earth-relative framework
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is a driver subroutine for
+  !*      determining the structure of the low level winds of a cyclone.
+  !*      The algorithm will search out at specified distances from the
+  !*      storm center along arcs in each quadrant of the storm,
+  !*      evaluating the winds every 15 degrees along the arc.  In each
+  !*      arc, start 7.5 degrees in, then make stops at 22.5, 37.5,
+  !*      52.5, 67.5, and 82.5 degrees.  At each of those points, we
+  !*      will bilinearly interpolate the winds to the points along those
+  !*      arcs.  Then we compute a quadrant average of the wind magnitude,
+  !*      as well as the mean Vt and Vr values.  This will be done
+  !*      twice -- First, for an earth-relative coordinate system, and
+  !*      second, for a storm-relative coordinate system.  For the
+  !*      earth-relative estimates, we will always have 4 earth-relative
+  !*      quadrants: NE, SE, SW and NW.  For the storm-relative estimates,
+  !*      these mean values of the wind will be computed for the same
+  !*      relative quadrants (front-right, back-right, back-left, front-
+  !*      left, but with respect (positive clockwise) to the
+  !*      direction of storm motion.
+  !*
+  !*  LOCAL:
+  !*      numdist   :: Number of discrete radii at which the winds will
+  !*                   be evaluated
+  !*      rdist     :: The radii (km) at which winds will be evaluated
+  !*
+  !*  Arrays:
+  !*      rdist     :: Radii (km) at which the winds will be evaluated
+  !*      er_wind   :: Quadrant winds in earth-relative framework
+  !*      sr_wind   :: Quadrant winds in storm-relative framework
+  !*      er_vr     :: Quadrant radial winds in earth-relative framework
+  !*      sr_vr     :: Quadrant radial winds in storm-relative framework
+  !*      er_vt     :: Quadrant tangential winds in earth-relative framework
+  !*      sr_vt     :: Quadrant tangential winds in storm-relative framework
+  !*
+  !****************************************************************************
   subroutine get_wind_structure (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, &
                                 & xsfclat, valid_pt, er_wind, sr_wind, er_vr, sr_vr, er_vt,  &
                                 & sr_vt, maxstorm, trkrinfo, gm_wrap_flag, igwsret)
@@ -6326,6 +6623,23 @@ c              endif
       enddo radiusloop2
 
   end subroutine get_wind_structure
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine determines the fractional areal coverage
+  !*      of winds exceeding various thresholds within specified arcs
+  !*      (e.g., 200 km, 400 km, etc) in each quadrant of a storm.  The bins
+  !*      that are used go as follows: (1) 0-100; (2) 0-200; (3) 0-300;
+  !*      (4) 0-400; (5) 0-500.
+  !*
+  !*  LOCAL:
+  !*      numdist   :: Number of discrete radii at which the winds will
+  !*                   be evaluated
+  !*      rdist     :: The radii (km) at which winds will be evaluated
+  !*
+  !*  Arrays:
+  !*      rdist     :: Radii (km) at which the winds will be evaluated
+  !*
+  !****************************************************************************
   subroutine get_fract_wind_cov (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, &
                                 & xsfclat, valid_pt, calcparm, wfract_cov, pdf_ct_bin,       &
                                 & pdf_ct_tot, maxstorm, trkrinfo, igfwret)
@@ -6945,6 +7259,29 @@ c     -------------------------------------------------
       endif
 
   end subroutine get_fract_wind_cov
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine computes the Integrated Kinetic Energy
+  !*      (IKE) and Storm Surge Damage Potential (SDP) values, based on
+  !*      Powell (BAMS, 2007).  At this time, we are only computing the IKE
+  !*      values for TS threshold (17.5 m/s) and above.  We are not yet
+  !*      computing wind damage potential (WDP) since, per Mark Powell
+  !*      (4/2008), he is currently re-formulating an algorithm for it.
+  !*
+  !*  LOCAL:
+  !*
+  !*  Arrays:
+  !*      ike   :: Integrated kinetic energy:
+  !*               ike(1) = IKE_10m/s  (storm energy)
+  !*               ike(2) = IKE_18m/s  (IKE_ts, tropical storm)
+  !*               ike(3) = IKE_33m/s  (IKE_h,  hurricane)
+  !*               ike(4) = IKE_25_40 m/s  (Not currently computed)
+  !*               ike(5) = IKE_41_54 m/s  (Not currently computed)
+  !*               ike(6) = IKE_55 m/s     (Not currently computed)
+  !*
+  !*      sdp   :: Storm surge damage potential
+  !*
+  !****************************************************************************
   subroutine get_ike_stats (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, &
                            & xsfclat, valid_pt, calcparm, ike, sdp, wdp, maxstorm, trkrinfo, igisret)
 
@@ -7179,6 +7516,92 @@ c     Print out the IKE and SDP statistics...
       endif
 
   end subroutine get_ike_stats
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine computes the 850-200 mb vertical wind
+  !*      shear.  It uses the method as used in SHIPS, including the vortex
+  !*      removal.  Note that the vortex removal is *not* performed using
+  !*      the application of the Laplacian filter, as in the 1999 or
+  !*      2005 DeMaria & Kaplan SHIPS papers.  Instead, via personal
+  !*      communication (2021) with Mark DeMaria, they said that they didn't
+  !*      have great results with the Laplacian and they instead use this
+  !*      method to remove the vortex:
+  !*
+  !*   1. Find the circulation center at 850 hPa. For SHIPS, that finds
+  !*      the center point that maximizes the symmetric tangential wind
+  !*      out to 500 km. [For the  tracker, I will either use the
+  !*      mean fix for the current lead time or I will use the fix
+  !*      position for 850 mb wind circulation].
+  !*
+  !*   2. Calculate the azimuthally averaged radial and tangential wind
+  !*      at each pressure level as a function of radius. At each level,
+  !*      find the radius where the symmetric tangential wind decreases
+  !*      to 1 m/s (r_outer). That radius nearly always decreases with
+  !*      height. Subtract the azimuthally averaged tangential and radial
+  !*      winds out to r = r_outer at each level to remove the vortex.
+  !*
+  !*   3. Average the Cartesian horizontal wind components after the
+  !*      vortex removal over an area out to 500 km radius at 850 and
+  !*      200 hPa to get the storm environmental wind vectors at those
+  !*      two levels.
+  !*
+  !*   4. Use the environmental winds to calculate the shear magnitude
+  !*      and direction.
+  !*
+  !*      This subroutine basically follows Steps 1-4 above.
+  !*
+  !*  INPUT:
+  !*      imax         :: num points is i-direction of input grid
+  !*      jmax         :: num points is j-direction of input grid
+  !*      inp          :: contains input date and model number information
+  !*      dx           :: grid increment in x-direction
+  !*      dy           :: grid increment in y-direction
+  !*      ist          :: Index for storm number
+  !*      ifh          :: Index for forecast hour
+  !*      fixlon       :: real array with longitudes of mean fix positions
+  !*      fixlat       :: real array with latitudes of mean fix positions
+  !*      valid_pt     :: Logical bitmap masking non-valid grid points.  This is a
+  !*                      concern for the regional models, which are interpolated
+  !*                      from Lam-Conf or NPS grids onto lat/lon grids, leaving
+  !*                      grid points around the edges which have no valid data.
+  !*      calcparm     :: Logical; tells whether or not a parm has a valid fix
+  !*                      at this forecast hour
+  !*      maxstorm     :: max num of storms that can be handled in this run
+  !*      trkrinfo     :: derived type detailing user-specified grid info
+  !*      clon         :: real array containing the longitudes of all of the
+  !*                      various parameter center fixes that have been found for
+  !*                      all lead times.
+  !*      clat         :: real array containing the latitudes of all of the
+  !*                      various parameter center fixes that have been found for
+  !*                      all lead times.
+  !*      gm_wrap_flag :: character flag set in getgridinfo that determines
+  !*                      if GM-wrapping has been set for this grid.
+  !*
+  !*  OUTPUT:
+  !*      shear        :: real array containing both the magnitude and direction
+  !*                      of the storm-centered 850-200 mb vertical shear.  In the
+  !*                      3rd element of the array, index 1 is for shear magnitude
+  !*                      and index 2 is for shear direction.
+  !*      igsret       :: return code from this subroutine
+  !*
+  !*  LOCAL:
+  !*      u_from_vt   :: u-comp of the wind as converted back from Vt
+  !*      v_from_vt   :: v-comp of the wind as converted back from Vt
+  !*      u_from_vr   :: u-comp of the wind as converted back from Vr
+  !*      v_from_vr   :: v-comp of the wind as converted back from Vr
+  !*      u_cart      :: u-comp of the wind that contains components from
+  !*                     both u_from_vt and u_from_vr
+  !*      v_cart      :: v-comp of the wind that contains components from
+  !*                     both v_from_vt and v_from_vr
+  !*      u_cart_sum  :: Sum of all u_cart values at each level
+  !*      v_cart_sum  :: Sum of all v_cart values at each level
+  !*
+  !*  *NOTE: For all of these above Local arrays with the u- and
+  !*      v-components, in the arrays, there is a numlev
+  !*      variable.  numlev=1 is for 850 mb, and numlev=2
+  !*      is for 200 mb.
+  !*
+  !****************************************************************************
   subroutine get_shear (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, calcparm, &
                        & maxstorm, trkrinfo, clon, clat, shear, gm_wrap_flag, igsret)
 
@@ -7745,9 +8168,90 @@ c      shear(ist,ifh,2) = shear_dir_from
       endif
 
   end subroutine get_ike_stats
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine calls a routine to create an
+  !*      area-averaged value of SST, centered on the model fix position at
+  !*      this lead time.
+  !*
+  !*  INPUT:
+  !*      imax        :: num points is i-direction of input grid
+  !*      jmax        :: num points is j-direction of input grid
+  !*      inp         :: contains input date and model number information
+  !*      dx          :: grid increment in x-direction
+  !*      dy          :: grid increment in y-direction
+  !*      ist         :: Index for storm number
+  !*      ifh         :: Index for forecast hour
+  !*      fixlon      :: real array with longitudes of mean fix positions
+  !*      fixlat      :: real array with latitudes of mean fix positions
+  !*      valid_pt    :: Logical bitmap masking non-valid grid points.  This is a
+  !*                     concern for the regional models, which are interpolated
+  !*                     from Lam-Conf or NPS grids onto lat/lon grids, leaving
+  !*                     grid points around the edges which have no valid data.
+  !*      readflag    :: Logical; tells whether or not a variable was read in.
+  !*      readgenflag :: Logical; tells whether or not a genesis variable was
+  !*                     read in.
+  !*      calcparm    :: Logical; tells whether or not a parm has a valid fix
+  !*                     at this forecast hour
+  !*      maxstorm    :: max num of storms that can be handled in this run
+  !*      trkrinfo    :: derived type detailing user-specified grid info
+  !*
+  !****************************************************************************
   subroutine get_sst (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag, &
                      & maxstorm, trkrinfo, sst_smooth, igsstret)
   end subroutine get_sst
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is the driver for calling various other
+  !*    routines to compute diagnostics needed for genesis.
+  !*
+  !*  INPUT:
+  !*      imax              :: num points is i-direction of input grid
+  !*      jmax              :: num points is j-direction of input grid
+  !*      inp               :: contains input date and model number information
+  !*      dx                :: grid increment in x-direction
+  !*      dy                :: grid increment in y-direction
+  !*      ist               :: Index for storm number
+  !*      ifh               :: Index for forecast hour
+  !*      fixlon            :: real array with longitudes of mean fix positions
+  !*      fixlat            :: real array with latitudes of mean fix positions
+  !*      valid_pt          :: Logical bitmap masking non-valid grid points.  This is a
+  !*                           concern for the regional models, which are interpolated
+  !*                           from Lam-Conf or NPS grids onto lat/lon grids, leaving
+  !*                           grid points around the edges which have no valid data.
+  !*      readflag          :: Logical; tells whether or not a variable was read in.
+  !*      readgenflag       :: Logical; tells whether or not a genesis variable was
+  !*                           read in.
+  !*      calcparm          :: Logical; tells whether or not a parm has a valid fix
+  !*                           at this forecast hour
+  !*      maxstorm          :: max num of storms that can be handled in this run
+  !*      trkrinfo          :: derived type detailing user-specified grid info
+  !*      clon              :: real array containing the longitudes of all of the
+  !*                           various parameter center fixes that have been found for
+  !*                           all lead times.
+  !*     clat               :: real array containing the latitudes of all of the
+  !*                           various parameter center fixes that have been found for
+  !*                           all lead times.
+  !*     already_computed_domain_wide_rh :: character (y/n) indicates if RH
+  !*                           has already been computed across the whole domain for this
+  !*                           forecast hour (this keeps us from re-computing it for
+  !*                           every storm at each lead time).
+  !*
+  !*  OUTPUT:
+  !*      divg               :: The barnes analysis-averaged value of 850 mb divergence,
+  !*                            centered on the fixlat for this lead time.
+  !*      moist_divg         :: The barnes analysis-averaged value of the dot product
+  !*                            of specific humidity (q) * 850 mb divergence, centered
+  !*                            on the fixlat for this lead time.
+  !*      rh_800_600_smooth  :: The  barnes analysis-averaged value of 800-600
+  !*                            mb RH, centered on the fixlat for this lead time.
+  !*      rh_1000_925_smooth :: The  barnes analysis-averaged value of
+  !*                            925-1000 mb RH, centered on the fixlat for this lead time.
+  !*      omega500_smooth    :: The barnes analysis-averaged value of 500 mb
+  !*                            omega, centered on the fixlat for this lead time.
+  !*      iggdret            :: return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine get_gen_diags (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag,    &
                            & readgenflag, calcparm, maxstorm, trkrinfo, clon, clat, divg, moist_divg, &
                            & rh_800_600_smooth, rh_1000_925_smooth, omega500_smooth,                  &
@@ -7915,6 +8419,15 @@ c      shear(ist,ifh,2) = shear_dir_from
 c
       return
   end subroutine get_gen_diags
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine calls two routines that will return the
+  !*      area-averaged (Barnes-averaged) value of divergence surrounding
+  !*      the  tracker-derived fix location at this lead time.  The first
+  !*      routine will compute divergence over the entire domain, and the
+  !*      second routine will compute the  Barnes average of the divergence.
+  !*
+  !****************************************************************************
   subroutine get_divg (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, calcparm, &
                       & maxstorm, trkrinfo, clon, clat, divg, igdret)
 
@@ -7976,36 +8489,36 @@ c
       end
   end subroutine get_divg
 c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine distbear (xlatin,xlonin,dist,bear,xlatt,xlont
-     &                    ,gm_wrap_flag)
-c
-c     ABSTRACT: Given an origin at latitude, longitude=xlato,xlono,
-c     this subroutine will locate a target point at a distance dist in
-c     km or nautical miles (depends on what you use for "rad_earth..."
-c     below), at bearing bear (degrees clockwise from north).
-c     Returns latitude xlatt and longitude xlont of target point.
-c
-c     *** NOTE ***
-c     This subroutine was written to handle input lats & lons as this:
-c     All latitudes are in degrees, north positive and south negative.
-c     All longitudes are in degrees, west positive and east negative.
-c     *** **** ***
-c
-c     However, for the longitudes, the rest of the  tracker uses all
-c     0-360 longitudes.  Therefore, we need to convert the input lons
-c     and then once again convert the lons that are returned back to
-c     the calling routine.
-c
-c     NOTE-- When origin is at north or south pole, bearing is no
-c     longer measured from north.  Instead, bearing is measured
-c     clockwise from the longitude opposite that specified in xlono.
-c     Example-- if xlato=90., xlono=80., the opposite longitude is
-c     -100 (100 East), and a target at bearing 30. will lie on the
-c     -70. (70 East) meridian.
-c
-c     AUTHOR: The core of this subroutine was written by Albion
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: Given an origin at latitude, longitude=xlato,xlono,
+  !*      this subroutine will locate a target point at a distance dist in
+  !*      km or nautical miles (depends on what you use for "rad_earth..."
+  !*      below), at bearing bear (degrees clockwise from north).
+  !*      Returns latitude xlatt and longitude xlont of target point.
+  !*
+  !*  *** NOTE ***
+  !*      This subroutine was written to handle input lats & lons as this:
+  !*      All latitudes are in degrees, north positive and south negative.
+  !*      All longitudes are in degrees, west positive and east negative.
+  !*  *** **** ***
+  !*
+  !*  However, for the longitudes, the rest of the  tracker uses all
+  !*      0-360 longitudes.  Therefore, we need to convert the input lons
+  !*      and then once again convert the lons that are returned back to
+  !*      the calling routine.
+  !*
+  !*  NOTE-- When origin is at north or south pole, bearing is no
+  !*      longer measured from north.  Instead, bearing is measured
+  !*      clockwise from the longitude opposite that specified in xlono.
+  !*      Example-- if xlato=90., xlono=80., the opposite longitude is
+  !*      -100 (100 East), and a target at bearing 30. will lie on the
+  !*      -70. (70 East) meridian.
+  !*
+  !*  AUTHOR: The core of this subroutine was written by Albion
+  !*      Taylor, another NOAA employee, in 1981.
+  !*
+  !****************************************************************************
   subroutine distbear (xlatin, xlonin, dist, bear, xlatt, xlont, gm_wrap_flag)
 c
       USE trig_vals
@@ -8084,6 +8597,30 @@ cstr      print *,'xlattz = datan2(z,r)/dtr = ',xlattz
       xlontz = atan2(x,y)/dtr
 
   end subroutine distbear
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine performs a bilinear interpolation to get
+  !*      a data value at a given lat/lon that may be anywhere within a box
+  !*      defined by the four surrouding grid points.  In the diagram below,
+  !*      remember that for our grids we are using in the  tracker, the
+  !*      latitude index starts at the north pole and increases southward.
+  !*      The point "X" indicates the target lat/lon location of the value
+  !*      for which we are  bilinearly interpolating.  The values to and ta
+  !*      below are ratios that determine how geographically close the
+  !*      target location is to the point of origin (pt.1 (i,j)) in terms
+  !*      of both longitude (to) and latitude (ta).
+  !*
+  !*       pt.1                pt.2
+  !*       (i,j)              (i+1,j)
+  !*
+  !*
+  !*
+  !*                      X
+  !*
+  !*       pt.4                pt.3
+  !*       (i,j+1)            (i+1,j+1)
+  !*
+  !****************************************************************************
   subroutine bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, &
                               & cparm, xintrp_val, valid_pt, bimct, ifh, ibiret)
 
@@ -8341,6 +8878,50 @@ c        endif
       endif
 
   end subroutine bilin_int_uneven
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  sorts storms by mslp.  It is called by
+  !*      subroutine  tracker just before the loop for "stormloop" is done
+  !*      for all the storms at a particular forecast hour.  It is only
+  !*      called for the "midlat" and "tcgen" cases.  The end result of
+  !*      this sort is an array (prsindex) that contains the indeces of
+  !*      the storms, arranged from lowest pressure to highest (and note
+  !*      that the "undefined" storms have a pressure of 9999.99 mb and
+  !*      thus get sorted to the bottom of the array).  The purpose of
+  !*      doing this is so that we track the most intense storms first.
+  !*      Why go to the trouble?  Imagine a scenario in which we are
+  !*      tracking a complex system in which there are 2 low pressure
+  !*      centers.  Let's say that one is becoming dominant and
+  !*      intensifying, while the other is weakening.  Now, let's assume
+  !*      that the weakening one eventually gets absorbed into the
+  !*      stronger, more dominant low.  Now we only have 1 low, but if in
+  !*      the  tracker stormloop, we first process the data for the
+  !*      weakening low, we will attribute the track to that storm, and
+  !*      then when we get to the point in the loop where we are trying
+  !*      to get the track for the stronger storm, we will (erroneously)
+  !*      stop the tracking for that storm since the storm center has
+  !*      already been attributed to the weaker storm.  But by using this
+  !*      subroutine, we will track the stronger storm first, and thus
+  !*      avoid this problem.
+  !*
+  !*  NOTE: The pressures used in the  sort are those obtained at the
+  !*      previous forecast hour.  At forecast hour = 0, just use the
+  !*      values as they were input to this routine, since they were
+  !*      found in first_ges_center from strongest to weakest already.
+  !*
+  !*  INPUT:
+  !*      gridprs   :: real array of storm mslp values
+  !*      ifh       :: integer index for the current forecast hour
+  !*      maxstorm  :: max num of storms that can be handled in this run
+  !*
+  !*  OUTPUT:
+  !*      sortindex :: contains a sorted array of indeces.  The  orders
+  !*                   sort routine does NOT rearrange the data.  Rather, it
+  !*                   returns this array of sorted indeces which point to
+  !*                   the correct order of data values in the data array.
+  !*      issret    :: return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine sort_storms_by_pressure (gridprs, ifh, maxstorm, sortindex, issret)
     real, allocatable      :: iwork(:)
     real                   :: gridprs(maxstorm,maxtime)
@@ -8410,6 +8991,33 @@ ccccc        call orders_4byte (imode,iwork,prstemp,sortindex,maxstorm,1,8,1)
       endif
 
   end subroutine sort_storms_by_pressure
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine takes as input a u-wind and v-wind value
+  !*      at an input (xlon,xlat) location and returns the tangential and
+  !*      radial wind components relative to the input center lat/lon
+  !*      position (centlon,centlat).  The only trick to this whole
+  !*      subroutine is figuring out the angle from the center point to the
+  !*      data point, and we do this by creating a triangle with the leg
+  !*      from the center point to the data point being the hypotenuse.
+  !*
+  !*  NOTE: All longitudes must be in positive degrees east (0-360) !!!
+  !*
+  !*  INPUT:
+  !*      centlon  :: Longitude of center point
+  !*      centlat  :: Latitude  of center point
+  !*      xlon     :: Longitude of pt at which vr & vt will be computed
+  !*      xlat     :: Latitude  of pt at which vr & vt will be computed
+  !*      udat     :: u-value of wind at the point (xlon,xlat)
+  !*      vdat     :: v-value of wind at the point (xlon,xlat)
+  !*      ifh      :: Integer index for the forecast hour
+  !*
+  !*  OUTPUT:
+  !*      vr      :: Radial wind component at (xlon,xlat) wrt (centlon,centlat)
+  !*      vt      :: Tang   wind component at (xlon,xlat) wrt (centlon,centlat)
+  !*      igvtret :: Return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine getvrvt (centlon, centlat, xlon, xlat, udat, vdat, vr, vt, ifh, igvtret)
 
       implicit none
@@ -8615,6 +9223,94 @@ c     &            ,'  vt= ',f11.3)
 c      endif
 
   end subroutine getvrvt
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
+  !*      storm at an input forecast hour in the new ATCF UNIX format.
+  !*      Unlike the old atcf DOS format in which you waited until the
+  !*      whole tracking was over to write the  output for all forecast
+  !*      hours, with this atcfunix format, each time we are calling this
+  !*      subroutine, it is to only write out 1 record, which will be the
+  !*      fix info for a particular storm at a given time.  Also, even
+  !*      though we have some data (GFS, NAM) at 6-hour intervals, Jim
+  !*      Gross informed me that TPC does not need the positions at such
+  !*      frequency, and keeping the reporting at 12 hour intervals is fine.
+  !*
+  !*  While this new atcfunix format contains much more information than
+  !*      the old 1-line atcf dos message, for our purposes we will use the
+  !*      slots for mslp and wind radii.  An example set of output records
+  !*      will look like the following:
+  !*
+  !*      AL, 13, 2000092500, 03, GFSO, 036, 243N, 675W, 42, 995, XX,  34,
+  !*             NEQ,  242,  163,  124,  208
+  !*      AL, 13, 2000092500, 03, GFSO, 036, 243N, 675W, 42, 995, XX,  50,
+  !*             NEQ,  155,  000,  000,  000
+  !*      AL, 13, 2000092500, 03, GFSO, 036, 243N, 675W, 42, 995, XX,  64,
+  !*             NEQ,  000,  000,  000,  000
+  !*
+  !*  (NOTE: Each of the above lines beginning with "AL" is output as
+  !*       a single line of text.)
+  !*
+  !*  Note that in this example, for this 36h forecast hour, there are
+  !*      3 entries.  This is so that we can include the radii for the
+  !*      3 different wind thresholds (34kt, 50kt and 64kt).  So the only
+  !*      thing different in each entry is the wind radii info;  all the
+  !*      other info is identical for each entry.
+  !*
+  !*  This message also contains the intensity estimates (in knots)
+  !*      for every forecast hours  The  conversion for m/s to knots is
+  !*      to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft,
+  !*      3600s/h).
+  !*
+  !*  NOTE: The longitudes that are passed into this subroutine are
+  !*      given in 0 - 360, increasing eastward.  The format for the
+  !*      atcfunix system requires that the  output be 0-180E or
+  !*      0-180W, so we must adjust the values, if needed.  Also, the
+  !*      values for southern latitudes must be positive (use 'N' and
+  !*      'S' to distinguish Northern/Southern Hemispheres).
+  !*
+  !*  INPUT:
+  !*      outlon            :: longitude  fix position for this storm at this time
+  !*                           which is to be written out to the  output file
+  !*      outlat            :: latitude  fix position for this storm at this time
+  !*                           which is to be written out to the  output file
+  !*      inp               :: contains input date and model number information
+  !*      ist               :: the number storm that we're processing (can be 1-15)
+  !*      ifcsthr           :: the current forecast hour being output
+  !*      vmaxwind          :: the max surface wind for this storm at this fcst hour
+  !*      xminmslp          :: the min mslp for this storm at this fcst hour
+  !*      vradius           :: Contains the distance from the storm fix position to
+  !*                           each of the various wind threshhold distances in each
+  !*                           quadrant. (3,4) ==> (# of threshholds, # of quadrants)
+  !*      maxstorm          :: max # of storms that can be handled
+  !*      plastbar          :: pressure of the outermost closed isobar
+  !*      rlastbar          :: radius (nm) of the outermost closed isobar
+  !*      rmax              :: radius of max winds (n mi).... it was already converted
+  !*                           from km to n mi in subroutine  get_max_wind
+  !*      cps_vals          :: real array with the values for the 3 cyclone phase
+  !*                           space parameters: (1) is for Parameter B (thermal
+  !*                           asymmetry); (2) is for lower level (600-900 mb) thermal
+  !*                           wind; (3) is for upper level (300-600 mb) thermal wind.
+  !*      wcore_flag        :: character for value of 300-500 mb warm core: y, n, or
+  !*                           'u' for undetermined.
+  !*      istmspd           :: integer storm translation speed.
+  !*      istmdir           :: integer storm motion vector direction (to).
+  !*      shear_mag         :: real magnitude of 850-200 mb vertical shear.
+  !*      shear_dir         :: real vector direction the 850-200 mb vertical shear
+  !*                           is heading to.
+  !*      sst_smooth        :: real barnes-averaged SST centered on mean fix
+  !*      axisymet_rmw_dist :: real distance to axisymmetric RMW
+  !*      axisymet_rmw_val  :: real value of axisymmetric RMW
+  !*
+  !*  OUTPUT:
+  !*      ioaxret           :: integer return code from this subroutine
+  !*
+  !*  LOCAL:
+  !*      intlon            :: integer that holds the value of outlon*10
+  !*      intlat            :: integer that holds the value of outlat*10
+  !*      storm             :: An array of type tcvcard.  Use this for the storm ID
+  !*
+  !****************************************************************************
   subroutine output_atcfunix (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius,       &
                              & maxstorm, trkrinfo, plastbar, rlastbar, rmax, cps_vals, ,wcore_flag,   &
                              & istmspd, istmdir, shear_mag, shear_dir, sst_smooth, axisymet_rmw_dist, &
@@ -8973,6 +9669,69 @@ c     bug fix for IBM: flush the output stream so it actually writes
       flush(64)
 
   end subroutine output_atcfunix
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  is very similar to subroutine
+  !*      output_atcfunix, however it also writes out additional
+  !*      parameters on the end that are not part of the standard
+  !*      ATCF format.  As of March 2022, that includes these parms:
+  !*
+  !*      850 mb convergence
+  !*      850 mb moisture convergence
+  !*      800-600 mb layer mean RH
+  !*      1000-925 mb layer mean RH
+  !*      500 mb omega
+  !*      SST
+  !*
+  !*  INPUT:
+  !*      outlon             :: longitude fix position for this storm at this time
+  !*                            which is to be written out to the  output file
+  !*      outlat             :: latitude  fix position for this storm at this time
+  !*                            which is to be written out to the  output file
+  !*      inp                :: contains input date and model number information
+  !*      ist                :: the number storm that we're processing (can be 1-15)
+  !*      ifcsthr            :: the current forecast hour being output
+  !*      vmaxwind           :: the max surface wind for this storm at this fcst hour
+  !*      xminmslp           :: the min mslp for this storm at this fcst hour
+  !*      vradius            :: Contains the distance from the storm fix position to
+  !*                            each of the various wind threshhold distances in each
+  !*                            quadrant. (3,4) ==> (# of threshholds, # of quadrants)
+  !*      maxstorm           :: max # of storms that can be handled
+  !*      plastbar           :: pressure of the outermost closed isobar
+  !*      rlastbar           :: radius (nm) of the outermost closed isobar
+  !*      rmax               :: radius of max winds (n mi).... it was already converted
+  !*                            from km to n mi in subroutine  get_max_wind
+  !*      cps_vals           :: real array with the values for the 3 cyclone phase
+  !*                            space parameters: (1) is for Parameter B (thermal
+  !*                            asymmetry); (2) is for lower level (600-900 mb) thermal
+  !*                            wind; (3) is for upper level (300-600 mb) thermal wind.
+  !*      wcore_flag         :: character for value of 300-500 mb warm core: y, n, or
+  !*                            'u' for undetermined.
+  !*      istmspd            :: integer storm translation speed.
+  !*      istmdir            :: integer storm motion vector direction (to).
+  !*      shear_mag          :: real magnitude of 850-200 mb vertical shear.
+  !*      shear_dir          :: real vector direction the 850-200 mb vertical shear
+  !*                            is heading to.
+  !*      sst_smooth         :: real barnes-averaged SST centered on mean fix
+  !*      axisymet_rmw_dist  :: real distance to axisymmetric RMW
+  !*      axisymet_rmw_val   :: real value of axiysymmetric RMW
+  !*      divg               :: real barnes-averaged 850 mb convergence
+  !*      moist_divg         :: real barnes-averaged 850 mb moisture convergence
+  !*      rh_800_600_smooth  :: real barnes-averaged 800-600 mb layer mean RH
+  !*      rh_1000_925_smooth :: real barnes-averaged 1000-925 mb layer mean RH
+  !*      omega500_smooth    :: real barnes-averaged 500 mb omega
+  !*      imeanzeta          :: array with values of mean 850 & 700 zeta
+  !*      igridzeta          :: array with values of max (gridpoint) 850 & 700 zeta
+  !*
+  !*  OUTPUT:
+  !*      ioaxret            :: integer return code from this subroutine
+  !*
+  !*  LOCAL:
+  !*      intlon             :: integer that holds the value of outlon*10
+  !*      intlat             :: integer that holds the value of outlat*10
+  !*      storm              :: An array of type tcvcard.  Use this for the storm ID
+  !*
+  !****************************************************************************
   subroutine output_aext (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius, maxstorm,   &
                          & trkrinfo, plastbar, rlastbar, rmax, cps_vals, wcore_flag, istmspd, istmdir,  &
                          & shear_mag, shear_dir, sst_smooth, axisymet_rmw_dist, axisymet_rmw_val, divg, &
@@ -9459,6 +10218,22 @@ c      comma_filler = comma_fill1//comma_fill2
      &       ,', ',a3)
 
   end subroutine output_aext
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a 1-line message for each
+  !*      storm.  This message contains the model identifier, the forecast
+  !*      initial date, and the positions for 0, 12, 24, 36, 48, 60 and 72
+  !*      hours.  In the case of the regional models (NGM, Eta), which
+  !*      only go out to 48h, zeroes are included for forecast hours
+  !*      60 and 72.
+  !*
+  !*  NOTE: The longitudes that are passed into this subroutine are
+  !*      given in 0 - 360, increasing eastward.  The  output of this
+  !*      subroutine is used by Steve Lord for plotting purposes, and his
+  !*      plotting routines need the longitudes in 0 - 360, increasing
+  !*      westward.  Thus, a necessary adjustment is made.
+  !*
+  !****************************************************************************
   subroutine output_all (fixlon, fixlat, inp, maxstorm, ifhmax, ioaret)
     type (datecard) :: inp
 
@@ -9579,6 +10354,24 @@ c            print *,'!!! ist = ',ist,' Model number = ',atcfnum
       enddo stormloop
 
   end subroutine output_all
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a 1-line message for each storm
+  !*      in ATCF format.  This message contains the model identifier, the
+  !*      forecast initial date, and the positions for 12, 24, 36, 48
+  !*      and 72 hours.  This message also contains the intensity
+  !*      estimates (in knots) for those same hours.  The  conversion for
+  !*      m/s to knots is to multiply m/s by 1.9427 (3.281 ft/m,
+  !*      1 naut mile/6080 ft, 3600s/h).
+  !*
+  !*  NOTE: The longitudes that are passed into this subroutine are
+  !*      given in 0 - 360, increasing eastward.  The  output of this
+  !*      subroutine is used by the atcf system at TPC for plotting
+  !*      purposes, and the atcf plotting routines need the longitudes in
+  !*      0 - 360, increasing westward.  Thus, a necessary adjustment is
+  !*      made.
+  !*
+  !****************************************************************************
   subroutine output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax, ioaret)
     type (datecard) :: inp
     real      :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
@@ -9728,6 +10521,83 @@ c            print *,'!!! ist = ',ist,' Model number = ',atcfnum
       enddo stormloop
 
   end subroutine output_atcf
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
+  !*      storm at an input forecast hour in a modified ATCF UNIX format.
+  !*      The modification is to allow for sub-hourly output.  That is,
+  !*      instead of just integer output hours, we can have output at
+  !*      10, 15 or 20 past an hour.  This necessitates a change in the
+  !*      "forecast hour" placeholder in the ATCF format.  Instead of it
+  !*      being an I3, we'll make it an I5, with something like a lead time
+  !*      of 36.25h being rounded and truncated to 03625 for output.
+  !*
+  !*      An example set of output records using the standard atcf format
+  !*      looks like the following:
+  !*
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  34,
+  !*             NEQ,  242,  163,  124,  208
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  50,
+  !*             NEQ,  155,  000,  000,  000
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  64,
+  !*             NEQ,  000,  000,  000,  000
+  !*
+  !*      An example set of modified output records will look like the
+  !*      following, for the case of a lead time of 36:15 (36.25):
+  !*
+  !*      AL, 13, 2000092500, 03, AVNO, 03625, 243N, 675W, 42, 995, XX,  34,
+  !*             NEQ,  242,  163,  124,  208
+  !*      AL, 13, 2000092500, 03, AVNO, 03625, 243N, 675W, 42, 995, XX,  50,
+  !*              NEQ,  155,  000,  000,  000
+  !*      AL, 13, 2000092500, 03, AVNO, 03625, 243N, 675W, 42, 995, XX,  64,
+  !*             NEQ,  000,  000,  000,  000
+  !*
+  !*  (NOTE: Each of the above lines beginning with "AL" is output as
+  !*      a single line of text.)
+  !*
+  !*  Note that in this example, for this 36h forecast hour, there are
+  !*      3 entries.  This is so that we can include the radii for the
+  !*      3 different wind thresholds (34kt, 50kt and 64kt).  So the only
+  !*      thing different in each entry is the wind radii info;  all the
+  !*      other info is identical for each entry.
+  !*
+  !*  This message also contains the intensity estimates (in knots)
+  !*      for every forecast hours  The  conversion for m/s to knots is
+  !*      to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft,
+  !*      3600s/h).
+  !*
+  !*  NOTE: The longitudes that are passed into this subroutine are
+  !*      given in 0 - 360, increasing eastward.  The format for the
+  !*      atcfunix system requires that the  output be 0-180E or
+  !*      0-180W, so we must adjust the values, if needed.  Also, the
+  !*      values for southern latitudes must be positive (use 'N' and
+  !*      'S' to distinguish Northern/Southern Hemispheres).
+  !*
+  !*  INPUT:
+  !*      storm     :: An array of type tcvcard.  Use this for the storm ID
+  !*      outlon    :: longitude  fix position for this storm at this time
+  !*                   which is to be written out to the  output file
+  !*      outlat    :: latitude  fix position for this storm at this time
+  !*                   which is to be written out to the  output file
+  !*      inp       :: contains input date and model number information
+  !*      ist       :: the number storm that we're processing (can be 1-15)
+  !*      ifh       :: index for the lead time array
+  !*      vmaxwind  :: the max surface wind for this storm at this fcst hour
+  !*      xminmslp  :: the min mslp for this storm at this fcst hour
+  !*      vradius   :: Contains the distance from the storm fix position to
+  !*                   each of the various wind threshhold distances in each
+  !*                   quadrant. (3,4) ==> (# of threshholds, # of quadrants)
+  !*      rmax      :: Radius of max winds (n mi).... it was already converted
+  !*                   from km to n mi in subroutine  get_max_wind
+  !*
+  !*  OUTPUT:
+  !*      ioaxret   :: integer return code from this subroutine
+  !*
+  !*  LOCAL:
+  !*      intlon    :: integer that holds the value of outlon*10
+  !*      intlat    :: integer that holds the value of outlat*10
+  !*
+  !****************************************************************************
   subroutine output_hfip (outlon, outlat, inp, ist, ifh, vmaxwind, xminmslp, vradius, rmax, ioaxret)
     type (datecard) :: inp
 
@@ -9854,6 +10724,92 @@ c            print *,'!!! ist = ',ist,' Model number = ',atcfnum
      &       ,', ',i4,a1,', ',i3,', ',i4,', ',a12,4(', ',i4.4)
      &       ,',    0,    0, ',i3)
   end subroutine output_hfip
+  !****************************************************************************
+  !*
+  !*   ABSTRACT: This subroutine  outputs a 1-line message for a given
+  !*      storm at an input forecast hour.  This message contains the
+  !*      values for the fractional areal coverage of various wind
+  !*      thresholds.  In addition, this subroutine also writes out
+  !*      records to a file containing data on the PDF of wind magnitudes
+  !*      within r=350 km.
+  !*
+  !*  This format will mimic the current atcfunix format with the
+  !*      difference coming late in the record, where the various wind radii
+  !*      will be replaced with areal coverage thresholds.
+  !*
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             000, 100,  34, NEE,  981,  857,  629,  810
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             000, 100,  50, NEE,  874,  732,  319,  610
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             000, 100,  64, NEE,  454,  327,   99,  270
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             000, 100,  34, AAE,  721,  721,  721,  721
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             000, 100,  50, AAE,  465,  465,  465,  465
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             000, 100,  64, AAE,  298,  298,  298,  298
+  !*
+  !*   (NOTE: Each of the above lines beginning with "AL" is output as
+  !*      a single line of text.)
+  !*
+  !*   Note that in this example, for this 36h forecast hour, there are
+  !*      3 entries.  This is so that we can include the pctgs for the
+  !*      3 different wind thresholds (34kt, 50kt and 64kt).  So the only
+  !*      thing different in each entry is the wind pctg info;  all the
+  !*      other info is identical for each entry.
+  !*
+  !*   Listed after the "XX" in each record is the radius from which
+  !*      the coverage is valid (000 km in this case); Next is the radius
+  !*      at which the coverage stops (100 km in this case).  Next is the
+  !*      wind threshold (34, 50, 64).  Next is an identifier for which
+  !*      quadrant the coverage starts in (first 2 characters are NE, SE,
+  !*      SW, NW); the last character indicates if the coverages are
+  !*      computed in the quadrants as earth-relative ("E") or
+  !*      storm-motion relative ("R").  The ones listed there as "AAE"
+  !*      are for the full disc (i.e., 4-quadrant average), earth-relative.
+  !*      Next are the wind coverage percentages, listed as percentage * 10
+  !*      (e.g., 981 = 98.1%).
+  !*
+  !*   This message also contains the intensity estimates (in knots)
+  !*      for every forecast hours  The  conversion for m/s to knots is
+  !*      to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft,
+  !*      3600s/h).
+  !*
+  !*   NOTE: The longitudes that are passed into this subroutine are
+  !*      given in 0 - 360, increasing eastward.  The format for the
+  !*      atcfunix system requires that the  output be 0-180E or
+  !*      0-180W, so we must adjust the values, if needed.  Also, the
+  !*      values for southern latitudes must be positive (use 'N' and
+  !*      'S' to distinguish Northern/Southern Hemispheres).
+  !*
+  !*   INPUT:
+  !*      outlon      :: longitude  fix position for this storm at this time
+  !*                     which is to be written out to the  output file
+  !*      outlat      :: latitude  fix position for this storm at this time
+  !*                     which is to be written out to the  output file
+  !*      xsfclon     :: low-level longitude estimate for this storm & time,
+  !*                     computed ideally from mean of mslp & low-level winds.
+  !*      xsfclat     :: low-level latitude estimate for this storm & time,
+  !*                     computed ideally from mean of mslp & low-level winds.
+  !*      inp         :: contains input date and model number information
+  !*      ist         :: the number storm that we're processing (can be 1-15)
+  !*      ifcsthr     :: the current forecast hour being output
+  !*      vmaxwind    :: the max surface wind for this storm at this fcst hour
+  !*      xminmslp    :: the min mslp for this storm at this fcst hour
+  !*      wfract_cov  :: percent areal coverage for various wind thresholds
+  !*      wfract_type :: 'earth' or 'storm' relative analysis
+  !*      pdf_ct_bin  :: array for pdf of wind magnitudes within r=350 km
+  !*      pdf_ct_tot  :: total count of pdf points for r < 350 km
+  !*
+  !*   OUTPUT:
+  !*      ioaxret     :: integer return code from this subroutine
+  !*
+  !*   LOCAL:
+  !*      intlon      :: integer that holds the value of outlon*10
+  !*      intlat      :: integer that holds the value of outlat*10
+  !*
+  !****************************************************************************
 
     type (datecard)    :: inp
 
@@ -9990,6 +10946,103 @@ c     bug fix for IBM: flush the output stream so it actually writes
       flush(73)
 
   end subroutine output_fract_wind
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
+  !*      storm at an input forecast hour.  This message contains the
+  !*      values of the winds at specified distances along 45-degree
+  !*      radials in each storm quadrant.  These are  output
+  !*      twice -- First, for an earth-relative coordinate system, and
+  !*      second, for a storm-relative coordinate system.  For the
+  !*      earth-relative estimates, we will always have 4 radials: NE, SE,
+  !*      SW and NW (45,135,225,315).  For the storm-relative estimates,
+  !*      these radials will be computed at the same relative angles (i.e.,
+  !*      45,135,225,315), but with respect (positive clockwise) to the
+  !*      direction of storm motion.  For example, for a storm moving with
+  !*      a heading of 280, the wind structure is evaluated at these
+  !*      radials: 325 (front-right; 45 deg CW from heading), 55 (back-
+  !*      right; 135 deg CW from heading), 145 (back-left; 225 deg CW from
+  !*      heading), 235 (front-left; 315 deg CW from heading).
+  !*
+  !*  This format will mimic the current atcfunix format with the
+  !*      difference coming late in the record, where the various wind radii
+  !*      will be replaced with wind values at the 13 specified distances
+  !*      (10, 25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500 km)
+  !*
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             71, NEE, 1137, 1221,  854,  655, etc., ... out to 500 km
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             71, SEE,  947,  982,  474,  396, etc., ... out to 500 km
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             71, SWE,  645,  683,  328,  277, etc., ... out to 500 km
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             71, NWE,  725,  753,  619,  429, etc., ... out to 500 km
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             72, FRR, 1134, 1224,  852,  654, etc., ... out to 500 km
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             72, BRR,  944,  984,  472,  393, etc., ... out to 500 km
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             72, BLR,  649,  686,  321,  272, etc., ... out to 500 km
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
+  !*             72, FLR,  729,  756,  613,  421, etc., ... out to 500 km
+  !*
+  !*  NOTE: Each of the above lines beginning with "AL" is output as
+  !*        a single line of text.
+  !*  NOTE: These winds are in m/s coming into this routine and will
+  !*        be converted to knots*10 for output (e.g., 1221 = 122.1 kts)
+  !*
+  !*  The "71" ID indicates earth-relative winds, the "72" ID indicates
+  !*      storm-relative winds.  Here are the other IDs that will be used:
+  !*      81: Tangential winds, earth-relative
+  !*      82: Tangential winds, storm motion-relative
+  !*      91: Radial winds, earth-relative
+  !*      92: Radial winds, storm motion-relative
+  !*
+  !*  Note that in this example, for this 36h forecast hour, there are
+  !*      8 entries.  This is so that we can include the wind values for
+  !*      the 4 different quadrants, for both the earth relative analyses
+  !*      (NEE, SEE, SWE, NWE) and the storm-relative analyses (FRR, BRR,
+  !*      BLR, FLR).
+  !*
+  !*  This message also contains the intensity estimates (in knots)
+  !*      for every forecast hour.  The  conversion for m/s to knots is
+  !*      to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft,
+  !*      3600s/h).
+  !*
+  !*  NOTE: The longitudes that are passed into this subroutine are
+  !*      given in 0 - 360, increasing eastward.  The format for the
+  !*      atcfunix system requires that the  output be 0-180E or
+  !*      0-180W, so we must adjust the values, if needed.  Also, the
+  !*      values for southern latitudes must be positive (use 'N' and
+  !*      'S' to distinguish Northern/Southern Hemispheres).
+  !*
+  !*  INPUT:
+  !*      outlon    :: longitude  fix position for this storm at this time
+  !*                   which is to be written out to the  output file
+  !*      outlat    :: latitude  fix position for this storm at this time
+  !*                   which is to be written out to the  output file
+  !*      inp       :: contains input date and model number information
+  !*      ist       :: the number storm that we're processing (can be 1-15)
+  !*      ifcsthr   :: the current forecast hour being output
+  !*      vmaxwind  :: the max surface wind for this storm at this fcst hour
+  !*      xminmslp  :: the min mslp for this storm at this fcst hour
+  !*      er_wind   :: Quadrant winds in earth-relative framework
+  !*      sr_wind   :: Quadrant winds in storm-relative framework
+  !*      er_vr     :: Quadrant radial winds in earth-relative framework
+  !*      sr_vr     :: Quadrant radial winds in storm-relative framework
+  !*      er_vt     :: Quadrant tangential winds in earth-relative framework
+  !*      sr_vt     :: Quadrant tangential winds in storm-relative framework
+  !*
+  !*  OUTPUT:
+  !*      ioaxret   :: integer return code from this subroutine
+  !*
+  !*  LOCAL:
+  !*      intlon    :: integer that holds the value of outlon*10
+  !*      intlat    :: integer that holds the value of outlat*10
+  !*                   be evaluated
+  !*      numdist   :: Number of discrete radii at which the winds will
+  !*
+  !****************************************************************************
   subroutine output_wind_structure (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour, &
                                    & vmaxwind, xminmslp, er_wind, sr_wind, er_vr, sr_vr, er_vt, &
                                    & sr_vt, maxstorm, iofwret)
@@ -10223,6 +11276,84 @@ c
      &       ,', ',i4,a1,', ',i5,a1)
 
   end subroutine output_wind_structure
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
+  !*      storm at an input forecast hour.  This message contains the values
+  !*      for the Integrated Kinetic Energy (IKE) and Storm Surge Damage
+  !*      Potential (SDP), based on Powell (BAMS, 2007).  At this time, we
+  !*      are only computing the IKE values for TS threshold (17.5 m/s) and
+  !*      above.  We are not yet computing wind damage potential (WDP)
+  !*      since, per Mark Powell (4/2008), he is currently re-formulating
+  !*      an algorithm for it.
+  !*
+  !*  Arrays:
+  !*      ike   :: Integrated kinetic energy:
+  !*               ike(1) = IKE_10m/s  (storm energy)
+  !*               ike(2) = IKE_18m/s  (IKE_ts, tropical storm)
+  !*               ike(3) = IKE_33m/s  (IKE_h,  hurricane)
+  !*               ike(4) = IKE_25_40 m/s  (Not currently computed)
+  !*               ike(5) = IKE_41_54 m/s  (Not currently computed)
+  !*               ike(6) = IKE_55 m/s     (Not currently computed)
+  !*
+  !*
+  !*  The format used will mimic the current atcfunix format with the
+  !*      difference coming late in the record, where the various wind radii
+  !*      will be replaced with WDP, SDP and IKE values:
+  !*
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  91,
+  !*             IKE,  340,  560,  212,  174,   42,   93,   12,    0
+  !*
+  !*      Where the places are identified as follows:
+  !*
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  91,
+  !*             IKE,  WDP,  SDP,  I10,  ITS,  IH ,I2540,I4154,  I55
+  !*
+  !*  (NOTE: Each of the above lines beginning with "AL" is output as
+  !*         a single line of text.)
+  !*
+  !*  Values for WDP and SDP are multiplied by 10 in this routine
+  !*      before being written out.
+  !*
+  !*  This message also contains the intensity estimates (in knots)
+  !*      for every forecast hour.  The  conversion for m/s to knots is
+  !*      to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft,
+  !*      3600s/h).
+  !*
+  !*  NOTE: The longitudes that are passed into this subroutine are
+  !*      given in 0 - 360, increasing eastward.  The format for the
+  !*      atcfunix system requires that the  output be 0-180E or
+  !*      0-180W, so we must adjust the values, if needed.  Also, the
+  !*      values for southern latitudes must be positive (use 'N' and
+  !*      'S' to distinguish Northern/Southern Hemispheres).
+  !*
+  !*  INPUT:
+  !*      storm     :: An array of type tcvcard.  Use this for the storm ID
+  !*      outlon    :: longitude  fix position for this storm at this time
+  !*                   which is to be written out to the  output file
+  !*      outlat    :: latitude  fix position for this storm at this time
+  !*                   which is to be written out to the  output file
+  !*      xsfclon   :: low-level longitude estimate for this storm & time,
+  !*                   computed ideally from mean of mslp & low-level winds.
+  !*      xsfclat   :: low-level latitude estimate for this storm & time,
+  !*                   computed ideally from mean of mslp & low-level winds.
+  !*      inp       :: contains input date and model number information
+  !*      ist       :: the number storm that we're processing (can be 1-15)
+  !*      ifcsthr   :: the current forecast hour being output
+  !*      vmaxwind  :: the max surface wind for this storm at this fcst hour
+  !*      xminmslp  :: the min mslp for this storm at this fcst hour
+  !*      ike       :: integrated kinetic energy, in units of TJ
+  !*      sdp       :: storm surge damage potential
+  !*      wdp       :: wind damage potential
+  !*
+  !*  OUTPUT:
+  !*      ioaxret   :: integer return code from this subroutine
+  !*
+  !*  LOCAL:
+  !*      intlon    :: integer that holds the value of outlon*10
+  !*      intlat    :: integer that holds the value of outlat*10
+  !*
+  !****************************************************************************
   subroutine output_ike (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour, vmaxwind, &
                         & xminmslp, ike, sdp, wdp, maxstorm, ioiret)
     type (datecard)    :: inp
@@ -10303,6 +11434,68 @@ c
      &       ,', ',i4,a1,', ',i5,a1)
 
   end subroutine output_ike
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
+  !*      storm at an input forecast hour.  This message contains the values
+  !*      for the three parameters that comprise Bob Hart's cyclone phase
+  !*      space (CPS).  These parameters are his "parameter B", which
+  !*      assesses the left-right thermal asymmetry, and the upper
+  !*      troposphere (300-600 mb) and lower troposphere (900-600 mb)
+  !*      thermal wind values.
+  !*
+  !*  Arrays:
+  !*
+  !*  The format used will mimic the current atcfunix format with the
+  !*      difference coming late in the record, where the various wind radii
+  !*      will be replaced with paramb, vtl_slope and vtu_slope values:
+  !*
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  95,
+  !*             CPS,   340,   560,   212
+  !*
+  !*      Where the places are identified as follows:
+  !*
+  !*      AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  95,
+  !*             CPS,     B,   VTL,   VTU
+  !*
+  !*      (NOTE: Each of the above lines beginning with "AL" is output as
+  !*            a single line of text.)
+  !*
+  !*  This message also contains the intensity estimates (in knots)
+  !*      for every forecast hour.  The  conversion for m/s to knots is
+  !*      to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft,
+  !*      3600s/h).
+  !*
+  !*  NOTE: The longitudes that are passed into this subroutine are
+  !*      given in 0 - 360, increasing eastward.  The format for the
+  !*      atcfunix system requires that the  output be 0-180E or
+  !*      0-180W, so we must adjust the values, if needed.  Also, the
+  !*      values for southern latitudes must be positive (use 'N' and
+  !*      'S' to distinguish Northern/Southern Hemispheres).
+  !*
+  !*  INPUT:
+  !*      storm     :: An array of type tcvcard.  Use this for the storm ID
+  !*      outlon    :: longitude  fix position for this storm at this time
+  !*                   which is to be written out to the  output file
+  !*      outlat    :: latitude  fix position for this storm at this time
+  !*                   which is to be written out to the  output file
+  !*      inp       :: contains input date and model number information
+  !*      ist       :: the number storm that we're processing (can be 1-15)
+  !*      ifcsthr   :: the current forecast hour being output
+  !*      vmaxwind  :: the max surface wind for this storm at this fcst hour
+  !*      xminmslp  :: the min mslp for this storm at this fcst hour
+  !*      paramb    :: thermal asymmetry
+  !*      vtl_slope :: thermal wind value for lower troposphere (900-600 mb)
+  !*      vtu_slope :: thermal wind value for upper troposphere (600-300 mb)
+  !*
+  !*  OUTPUT:
+  !*      ioiret    :: integer return code from this subroutine
+  !*
+  !*  LOCAL:
+  !*      intlon    :: integer that holds the value of outlon*10
+  !*      intlat    :: integer that holds the value of outlat*10
+  !*
+  !****************************************************************************
   subroutine output_phase (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, &
                           & paramb, vtl_slope, vtu_slope, ioiret)
     type (datecard)  :: inp
@@ -10375,6 +11568,101 @@ c
      &       ,', ',i4,a1,', ',i3,', ',i4,', ',a14,3(',',i6))
 
   end subroutine output_phase
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
+  !*      storm at an input forecast hour in a modified atcfunix format.
+  !*      The reason that it's called "modified" is that the format is
+  !*      slightly different from the standard TPC-accepted atcfunix
+  !*      format that they use for TCs.  Specifically, the first part that
+  !*      identifies the storm is different.  Here's an example of the
+  !*      TPC standard atcfunix format:
+  !*
+  !*      AL, 13, 2000092500, 03, GFSO, 036, 243N, 675W, 42, 995, XX,  34,
+  !*             NEQ,  242,  163,  124,  208
+  !*      AL, 13, 2000092500, 03, GFSO, 036, 243N, 675W, 42, 995, XX,  50,
+  !*             NEQ,  155,  000,  000,  000
+  !*      AL, 13, 2000092500, 03, GFSO, 036, 243N, 675W, 42, 995, XX,  64,
+  !*             NEQ,  000,  000,  000,  000
+  !*
+  !*  (NOTE: Each of the above lines beginning with "AL" is output as
+  !*         a single line of text.... they're just broken up into 2
+  !*         lines here for readability.)
+  !*
+  !*  Here's an example of the modified output format for the same
+  !*      storm.  Note that the lat/lon identifier in the new storm id at
+  !*      the beginning of the record is different from that shown later
+  !*      in the record.  The reason is that the lat/lon identifier will
+  !*      be the one that is pulled from the tcvitals or gen_vitals
+  !*      record:
+  !*
+  !*      2000092500_230N_0658W_13L, 2000092500, 03, GFSO, 036, 243N, 675W,
+  !*             42, 995, XX,  34, NEQ,  242,  163,  124,  208
+  !*      2000092500_230N_0658W_13L, 2000092500, 03, GFSO, 036, 243N, 675W,
+  !*             42, 995, XX,  50, NEQ,  155,  000,  000,  000
+  !*      2000092500_230N_0658W_13L, 2000092500, 03, GFSO, 036, 243N, 675W,
+  !*             42, 995, XX,  64, NEQ,  000,  000,  000,  000
+  !*
+  !*
+  !*  Note that in this example, for this 36h forecast hour, there are
+  !*      3 entries.  This is so that we can include the radii for the
+  !*      3 different wind thresholds (34kt, 50kt and 64kt).  So the only
+  !*      thing different in each entry is the wind radii info;  all the
+  !*      other info is identical for each entry.
+  !*
+  !*  This message also contains the intensity estimates (in knots)
+  !*      for every forecast hours  The  conversion for m/s to knots is
+  !*      to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft,
+  !*      3600s/h).
+  !*
+  !*  NOTE: The longitudes that are passed into this subroutine are
+  !*      given in 0 - 360, increasing eastward.  The format for the
+  !*      atcfunix system requires that the  output be 0-180E or
+  !*      0-180W, so we must adjust the values, if needed.  Also, the
+  !*      values for southern latitudes must be positive (use 'N' and
+  !*      'S' to distinguish Northern/Southern Hemispheres).
+  !*
+  !*  INPUT:
+  !*      outlon            :: longitude  fix position for this storm at this time
+  !*                           which is to be written out to the  output file
+  !*      outlat            :: latitude  fix position for this storm at this time
+  !*                           which is to be written out to the  output file
+  !*      inp               :: contains input date and model number information
+  !*      ist               :: the number storm that we're processing (can be 1-15)
+  !*      ifcsthr           :: the current forecast hour being output
+  !*      vmaxwind          :: the max surface wind for this storm at this fcst hour
+  !*      xminmslp          :: the min mslp for this storm at this fcst hour
+  !*      vradius           :: Contains the distance from the storm fix position to
+  !*                           each of the various wind threshhold distances in each
+  !*                           quadrant. (3,4) ==> (# of threshholds, # of quadrants)
+  !*      maxstorm          :: max # of storms that can be handled
+  !*      istmspd           :: storm translation speed
+  !*      istmdir           :: direction of storm movement
+  !*      plastbar          :: pressure of last closed isobar
+  !*      rlastbar          :: radius of last closed isobar
+  !*      rmax              :: radius of max winds
+  !*      cps_vals          :: Hart's cyclone phase space values: (1) is for parameter
+  !*                           B (thickness asymmetry), (2) and (3) are for thermal
+  !*                           wind values.
+  !*      wcore_flag        :: 'u'=undetermined, 'y'=yes, 'n'=no
+  !*      imeanzeta         :: array with values of mean 850 & 700 zeta
+  !*      igridzeta         :: array with values of max (gridpoint) 850 & 700 zeta
+  !*      shear_mag         :: real magnitude of 850-200 mb vertical shear.
+  !*      shear_dir         :: real vector direction the 850-200 mb vertical shear
+  !*                           is heading to.
+  !*      sst_smooth        :: real barnes-averaged SST centered on mean fix
+  !*      axisymet_rmw_dist :: real distance to axisymmetric RMW
+  !*      axisymet_rmw_val  :: real value of axisymmetric RMW
+  !*
+  !*  OUTPUT:
+  !*      ioaxret           :: integer return code from this subroutine
+  !*
+  !*  LOCAL:
+  !*      intlon            :: integer that holds the value of outlon*10
+  !*      intlat            :: integer that holds the value of outlat*10
+  !*      storm             :: An array of type tcvcard.  Use this for the storm ID
+  !*
+  !****************************************************************************
   subroutine output_atcf_gen (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius,  &
                              & maxstorm, trkrinfo, istmspd, istmdir, plastbar, rlastbar, rmax,   &
                              & cps_vals, wcore_flag, imeanzeta, igridzeta, shear_mag, shear_dir, &
@@ -10805,6 +12093,36 @@ c     identifier at the beginning of the modified atcfunix record.
      &       ,4(', ',i4))
 
   end subroutine output_atcf_gen
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
+  !*      storm at an input forecast hour in a modified atcfunix format.
+  !*      The purpose is to output the lat/lon fix positions and values
+  !*      for these  tracker parameters: zeta850, zeta700, circ850, circ700,
+  !*      gph850, gph700, MSLP, circsfc, zetasfc.
+  !*
+  !*  INPUT:
+  !*      xmeanlon  :: real longitude fix position for this storm at this time
+  !*      xmeanlat  :: real latitude  fix position for this storm at this time
+  !*      inp       :: contains input date and model number information
+  !*      ist       :: the number storm that we're processing
+  !*      ifh       :: the index for the current lead time
+  !*      ifcsthr   :: the current forecast hour being output
+  !*      vmaxwind  :: the max surface wind for this storm at this fcst hour
+  !*      xminmslp  :: the min mslp for this storm at this fcst hour
+  !*      maxstorm  :: max # of storms that can be handled
+  !*      trkrinfo  :: derived type that holds/describes various tracker parms
+  !*      clon      :: real array contains positions of every parm fix lon
+  !*      clat      :: real array contains positions of every parm fix lat
+  !*      calcparm  :: Logical; Tells whether or not this parm's location fix
+  !*                   for this storm at this lead time was used for the mean
+  !*                   fix position or not.
+  !*      xval      :: real array with the values of the individual parms
+  !*
+  !*  OUTPUT:
+  !*      ioapret   :: integer return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine output_atcf_parms (xmeanlon, xmeanlat, inp, ist, ifh, ifcsthour, vmaxwind, &
                                & xminmslp, maxstorm, trkrinfo, clon, clat, calcparm, xval, ioapret)
 
@@ -11037,6 +12355,25 @@ c     identifier at the beginning of the modified atcfunix record.
      &       ,i6))
 
   end subroutine output_atcf_parms
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a tcvitals record.  The
+  !*      lat/lon location is given by the xlon and xlat that are
+  !*      input to this subroutine.
+  !*
+  !*  INPUT:
+  !*      xlon   :: longitude of storm position to be  output
+  !*      xlat   :: latitude of storm position to be  output
+  !*      inp    :: contains input date and model number information
+  !*      ist    :: the number storm that we're processing (can be 1-15)
+  !*
+  !*  OUTPUT:
+  !*      iovret :: return code from this subroutine
+  !*
+  !*  OTHER:
+  !*      storm  :: contains the tcvitals info (from module def_vitals)
+  !*
+  !****************************************************************************
   subroutine output_tcvitals (xlon, xlat, inp, ist, iovret)
     type (tcvcard)  :: stm
     type (datecard) :: inp
@@ -11076,6 +12413,57 @@ c     need to mod it to get it in a 0-360 framework.
       endif
 
   end subroutine output_tcvitals
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a modified vitals record.
+  !*      The lat/lon location is given by the xlon and xlat that are
+  !*      input to this subroutine.
+  !*
+  !*  The reason that these are referred to as modified tcvitals is
+  !*      that the format is different from standard TC vitals format.
+  !*      The storm identifier is different than that for a standard
+  !*      tcvitals.  The storm identifier contains the date/time that
+  !*      the storm was first identified, and the lat/lon position at
+  !*      which it was first identified.
+  !*
+  !*  EXAMPLE:  The following is a standard TC Vitals record, split
+  !*            up over 3 lines:
+  !*
+  !*      NHC  01L ALBERTO   20060614 1200 343N 0807W 035 093 1004 1012
+  !*            0278 15 222 -999 -999 -999 -999 M -999 -999 -999 -999 72
+  !*            520N  410W  -999 -999 -999 -999
+  !*
+  !*  EXAMPLE:  The following is the format for the "genesis" vitals,
+  !*            split over 3 lines, for the same system:
+  !*
+  !*      2006061000_F000_210N_0853W_01L 20060614 1200 343N 0807W 035 093
+  !*            1004 1012 0278 15 222 -999 -999 -999 -999 M -999 -999
+  !*            -999 -999 72 520N  410W  -999 -999 -999 -999
+  !*
+  !*  EXAMPLE:  If the vitals record is for a non-officially numbered
+  !*            system (i.e., any system that's not a TC being tracked
+  !*            by NHC or JTWC), then the storm number is replaced
+  !*            by the characters "FOF", for "Found On the Fly" by
+  !*            the  tracker.
+  !*
+  !*      2006071500_F000_150N_0681W_FOF 20060718 1200 185N 0792W 035 093
+  !*            1004 1012 0278 15 222 -999 -999 -999 -999 M -999 -999
+  !*            -999 -999 72 520N  410W  -999 -999 -999 -999
+  !*
+  !*
+  !*  INPUT:
+  !*      xlon   :: longitude of storm position to be  output
+  !*      xlat   :: latitude of storm position to be  output
+  !*      inp    :: contains input date and model number information
+  !*      ist    :: the number storm that we're processing (can be 1-15)
+  !*
+  !*  OUTPUT:
+  !*      iovret :: return code from this subroutine
+  !*
+  !*  OTHER:
+  !*      storm  :: contains the tcvitals info (from module def_vitals)
+  !*
+  !****************************************************************************
   subroutine output_gen_vitals (xlon, xlat, inp, ist, istmspd, istmdir, iovret)
 
       implicit none
@@ -11183,6 +12571,29 @@ c     bug fix for IBM: flush the output stream so it actually writes
       flush(67)
 
   end subroutine output_gen_vitals
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  outputs a GRIB record that contains the
+  !*      "mask" used to mask out areas surrounding low pressure centers
+  !*      that have been found during the search at each forecast hour. This
+  !*      mask is written out purely for diagnostic purposes.  The GRIB
+  !*      identifier given to the mask in the pds is 850 mb height (you can
+  !*      make it anything you want).  This is only done for the "midlat"
+  !*      and "tcgen" cases, since the runs for those cases use a mask while
+  !*      the regular "tracker" run (that is, the run which strictly tracks
+  !*      only those storms in the TC vitals file) does not.
+  !*
+  !*  INPUT:
+  !*    masked_outc :: logical array containing mask
+  !*    ifh         :: integer counter for current forecast hour
+  !*    ifcsthour   :: integer current forecast hour
+  !*    imax        :: num points is i-direction of input grid
+  !*    jmax        :: num points is j-direction of input grid
+  !*
+  !*  OUTPUT:
+  !*      iotmret   :: return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine output_tracker_mask (masked_outc, lb, ifh, ifcsthour, imax, jmax, iotmret)
 
       implicit none
@@ -11320,91 +12731,91 @@ c     bug fix for IBM: flush the output stream so it actually writes
 c
   end subroutine output_tracker_mask
 c
-c-----------------------------------------------------------------------
-      subroutine get_next_ges (fixlon,fixlat,ist,ifh,imax,jmax
-     &          ,dx,dy,modelid,valid_pt,readflag,maxstorm,istmspd
-     &          ,istmdir,ctype,trkrinfo,gm_wrap_flag,ignret)
-c
-c     ABSTRACT: This subroutine calculates a guess position for the next
-c               forecast time.  It does this by using two different 
-c               methods and averaging the results from those two.  The
-c               first method is a simple linear extrapolation made by
-c               basically drawing a line from the previous position 
-c               through the current fix position and assuming straight
-c               line motion.  The second method is to do a barnes 
-c               smoothing of u & v in the vicinity of the storm at 850, 
-c               700 & 500 mb to get an average environmental wind 
-c               vector at each level, and then move the storm according 
-c               to the vector at each level.  Then a weighted average is
-c               taken of all these positions from methods 1 & 2 to get 
-c               the consensus for the guess position.  NOTE: For a 
-c               regional model and a storm that is relatively close to
-c               the model boundary, there is a strong possibility that
-c               the  barnes analysis subroutine will fail due to trying
-c               to access grid points beyond the model's lateral  
-c               boundary.  In this case, the redlm & ridlm are halved
-c               and barnes is called again.  If it still fails, then 
-c               just use the result from method 1 as a default.
-c
-c     INPUT:
-c     fixlon  Array with longitudes of fix positions
-c     fixlat  Array with latitudes of fix positions
-c     ist     Storm number currently being processed
-c     ifh     Forecast hour currently being processed
-c     imax    Max number of pts in x-direction for this grid
-c     jmax    Max number of pts in y-direction for this grid
-c     dx      grid-spacing of the model in the i-direction
-c     dy      grid-spacing of the model in the j-direction
-c     modelid Integer indicating what model's data is being processed
-c     valid_pt Logical; bitmap indicating if valid data at that pt.
-c     readflag Logical; Tells whether or not a variable was read in
-c              for this model
-c     maxstorm Max # of storms that can be handled in this run
-c     ctype   character that lets subroutine know if this is a search 
-c             for the next position for the purposes of tc vitals or
-c             for general tracking.  In the case of vitals, eventually
-c             in the  barnes subroutine we are more lax and allow the 
-c             routine to keep searching even if we are close to the 
-c             grid boundary.  In a general tracking search, if we hit
-c             the grid boundary even just once, we exit.
-c     trkrinfo derived type detailing user-specified grid info
-c     gm_wrap_flag character flag set in getgridinfo that determines
-c               whether GM-wrapping occurs for this grid.
-c
-c     OUTPUT:
-c     istmspd The speed that the storm would have to move to get from
-c             the current position to the next guess position
-c     istmdir The direction in which the storm would have to move to 
-c             get from the current position to the next guess position
-c
-c     LOCAL:
-c     dt      Number of seconds between successive forecast times
-c             for this particular model.
-c     dtkm    Distance in meters of 1 degree latitude
-c     icutmax Max number of times to cut the ridlm and redlm in half,
-c             for use in calling barnes.  If you're using a regional
-c             model and on the first call to barnes you try to access
-c             a point that's outside the model grid boundary, we'll
-c             call  barnes again, but not before cutting the redlm and
-c             ridlm in half.  icutmax says how many times to allow 
-c             this cutting in half before giving up and just going
-c             with the extrapolation method.  At first writing, we'll
-c             set icutmax to 2, so that it will allow the ridlm to 
-c             get down to 500 km (originally 2000 km) and the redlm 
-c             to 125 km (originally 500 km).
-c         *** NOTE: After testing the system, it was found that if
-c             we cut these radii, the u and v values that are 
-c             calculated from barnes are too strongly influenced by
-c             the near-storm environment and, especially for asymmetric
-c             systems, resulted in u and v values being much too strong.
-c             As such, we will not allow these values to be cut, and if
-c             we hit the boundaries in barnes, we'll just use the 
-c             extrapolation method, which has seemed to work just fine.
-c
-c     OTHER:  (slonfg, slatfg & storm defined in module def_vitals)
-c     slonfg  Array containing first guess longitude positions
-c     slatfg  Array containing first guess latitude positions
-c     storm   Contains tcvitals information
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine calculates a guess position for the next
+  !*      forecast time.  It does this by using two different
+  !*      methods and averaging the results from those two.  The
+  !*      first method is a simple linear extrapolation made by
+  !*      basically drawing a line from the previous position
+  !*      through the current fix position and assuming straight
+  !*      line motion.  The second method is to do a barnes
+  !*      smoothing of u & v in the vicinity of the storm at 850,
+  !*      700 & 500 mb to get an average environmental wind
+  !*      vector at each level, and then move the storm according
+  !*      to the vector at each level.  Then a weighted average is
+  !*      taken of all these positions from methods 1 & 2 to get
+  !*      the consensus for the guess position.  NOTE: For a
+  !*      regional model and a storm that is relatively close to
+  !*      the model boundary, there is a strong possibility that
+  !*      the  barnes analysis subroutine will fail due to trying
+  !*      to access grid points beyond the model's lateral
+  !*      boundary.  In this case, the redlm & ridlm are halved
+  !*      and barnes is called again.  If it still fails, then
+  !*      just use the result from method 1 as a default.
+  !*
+  !*  INPUT:
+  !*      fixlon       :: Array with longitudes of fix positions
+  !*      fixlat       :: Array with latitudes of fix positions
+  !*      ist          :: Storm number currently being processed
+  !*      ifh          :: Forecast hour currently being processed
+  !*      imax         :: Max number of pts in x-direction for this grid
+  !*      jmax         :: Max number of pts in y-direction for this grid
+  !*      dx           :: grid-spacing of the model in the i-direction
+  !*      dy           :: grid-spacing of the model in the j-direction
+  !*      modelid      :: Integer indicating what model's data is being processed
+  !*      valid_pt     :: Logical; bitmap indicating if valid data at that pt.
+  !*      readflag     :: Logical; Tells whether or not a variable was read in
+  !*                      for this model
+  !*      maxstorm     :: Max # of storms that can be handled in this run
+  !*      ctype        :: character that lets subroutine know if this is a search
+  !*                      for the next position for the purposes of tc vitals or
+  !*                      for general tracking.  In the case of vitals, eventually
+  !*                      in the  barnes subroutine we are more lax and allow the
+  !*                      routine to keep searching even if we are close to the
+  !*                      grid boundary.  In a general tracking search, if we hit
+  !*                      the grid boundary even just once, we exit.
+  !*      trkrinfo     :: derived type detailing user-specified grid info
+  !*      gm_wrap_flag :: character flag set in getgridinfo that determines
+  !*                      whether GM-wrapping occurs for this grid.
+  !*
+  !*  OUTPUT:
+  !*      istmspd      :: The speed that the storm would have to move to get from
+  !*                      the current position to the next guess position
+  !*      istmdir      :: The direction in which the storm would have to move to
+  !*                      get from the current position to the next guess position
+  !*
+  !*  LOCAL:
+  !*      dt           :: Number of seconds between successive forecast times
+  !*                      for this particular model.
+  !*      dtkm         :: Distance in meters of 1 degree latitude
+  !*      icutmax      :: Max number of times to cut the ridlm and redlm in half,
+  !*                      for use in calling barnes.  If you're using a regional
+  !*                      model and on the first call to barnes you try to access
+  !*                      a point that's outside the model grid boundary, we'll
+  !*                      call  barnes again, but not before cutting the redlm and
+  !*                      ridlm in half.  icutmax says how many times to allow
+  !*                      this cutting in half before giving up and just going
+  !*                      with the extrapolation method.  At first writing, we'll
+  !*                      set icutmax to 2, so that it will allow the ridlm to
+  !*                      get down to 500 km (originally 2000 km) and the redlm
+  !*                      to 125 km (originally 500 km).
+  !*
+  !*            *** NOTE: After testing the system, it was found that if
+  !*                      we cut these radii, the u and v values that are
+  !*                      calculated from barnes are too strongly influenced by
+  !*                      the near-storm environment and, especially for asymmetric
+  !*                      systems, resulted in u and v values being much too strong.
+  !*                      As such, we will not allow these values to be cut, and if
+  !*                      we hit the boundaries in barnes, we'll just use the
+  !*                      extrapolation method, which has seemed to work just fine.
+  !*
+  !*  OTHER:  (slonfg, slatfg & storm defined in module def_vitals)
+  !*      slonfg       :: Array containing first guess longitude positions
+  !*      slatfg       :: Array containing first guess latitude positions
+  !*      storm        :: Contains tcvitals information
+  !*
+  !****************************************************************************
   subroutine get_next_ges (fixlon, fixlat, ist, ifh, imax, jmax, dx, dy, modelid, valid_pt, &
                           & readflag, maxstorm, istmspd, istmdir, ctype, trkrinfo, gm_wrap_flag, ignret)
       USE tracked_parms; USE level_parms; USE trig_vals; USE trkrparms
@@ -12322,6 +13733,32 @@ c     is requested.
       endif
 
   end subroutine get_next_ges
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine calculates a guess position for the next
+  !*      forecast time.  It is called for a couple different cases, one in
+  !*      which we've got NetCDF data and no hour0 data, and the other is
+  !*      for any case in which the storm can't be found at 00h, and so we
+  !*      assume there may be an issue at 00h with the storm initialization,
+  !*      and we will give the  tracker one more try at the next lead time
+  !*      to try and track the storm.
+  !*
+  !*  We simply take the TC Vitals data and advect the current position
+  !*      to a position at the next lead time.  We can't use the code in
+  !*      subroutine  get_next_ges because there are certain allocatable
+  !*      arrays in that subroutine that need to have been allocated first,
+  !*      and at this point prior to the first lead time in hour0, they
+  !*      haven't been allocated.
+  !*
+  !*  INPUT:
+  !*      inctcv   :: Index for storm number currently being processed
+  !*      ifh      :: Forecast hour currently being processed
+  !*      trkrinfo :: derived type detailing user-specified grid info
+  !*
+  !*  OUTPUT:
+  !*      iatret   :: Return code from this subroutine
+  !*
+  !****************************************************************************
     type (trackstuff) :: trkrinfo
     integer           :: iatret, inctcv
     real              :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
@@ -12461,6 +13898,91 @@ c
 
 
   end subroutine advect_tcvitals_from_hour0
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine looks through the wind data near an
+  !*      input storm center (fixlon,fixlat) and gets the radii of various
+  !*      surface winds in each of the 4 storm quadrants (NE,NW,SE,SW).
+  !*      The wind thresholds that are sought are gale force (34kt|17.5m/s),
+  !*      storm force (50kt|25.7m/s), and hurricane force (64kt|32.9m/s).
+  !*      This subroutine calls the Cray subroutine  orders, which is a
+  !*      Cray-optimized sort routine.
+  !*
+  !*  UPDATE (AUG 2001): The Cray subroutine  orders was ported to the
+  !*      SP by NCEP personnel.  On the SP version, some changes were
+  !*      apparently made so that the size of the arrays for calling
+  !*      arguments 2, 3 and 4 (iwork, dtemp and isortix in my calling
+  !*      routine) must be the same.  This was not the case on the Crays,
+  !*      and this was causing the  tracker to crash for cases far north
+  !*      on fine grids (GFDL 1/3 grid).
+  !*
+  !*  UPDATE (AUG 2012): The call to the Cray subroutine orders was
+  !*      replaced with a call to qsort, which uses a quicksort sorting
+  !*      algorithm.  While this is not the fastest sorting routine out
+  !*      there, we don't do a lot of sorting here, and qsort is simple
+  !*      and it is portable.
+  !*
+  !*  UPDATE (April 2013):  For the radii, we encountered a problem with
+  !*      radmax being too small.  It was set at 650 km.  Hurricane Sandy
+  !*      exceeded this in the models, so the values returned from getradii
+  !*      were close to the default radmax value of 650 km (350 nm), instead
+  !*      of much higher as they should have been.  To fix it, we now use an
+  !*      iterative technique, where we start with radmax as a small value
+  !*      (450 km).  If getradii returns a value for R34 in a quadrant that
+  !*      does not exceed 0.97*radmax, then that value is ok.  If it does
+  !*      exceed 0.97*radmax, then we bump up radmax by 50 km and call
+  !*      getradii again, looking to diagnose radii only in those quadrants
+  !*      where the need_to_expand_r34 flag = 'n'.
+  !*
+  !*  INPUT:
+  !*      xcenlon  :: fix longitude of storm center for current forecast hour
+  !*      xcenlat  :: fix latitude of storm center for current forecast hour
+  !*      imax     :: max i dimension of model grid
+  !*      jmax     :: max j dimension of model grid
+  !*      dx       :: grid spacing in i-direction of model grid
+  !*      dy       :: grid spacing in j-direction of model grid
+  !*      valid_pt :: logical bitmap for valid data at a grid point
+  !*      cstormid :: 3-character storm ATCF ID (e.g., 03L, 11E, etc)
+  !*      ifcsthr  :: integer value for current forecast hour
+  !*      trkrinfo :: derived type containing various info on the storm
+  !*      need_to_expand_r34 :: 1-character array that specifies which of the
+  !*                  4 quadrants still need to be expanded on this time
+  !*                  through getradii in order to get an R34 value that is
+  !*                  not right at the outermost boundary.
+  !*      vmaxwind :: max wind (in m/s) that was reported from the
+  !*                  get_max_wind subroutine
+  !*      radmax   :: input max radius (km) that will be used for this
+  !*                  iteration of getradii.
+  !*      first_time_thru_getradii  :: logical flag.  It is used so that any
+  !*                  checking for 50- or 64-kt radii is only done on the
+  !*                  first time through getradii.  Only the checking for
+  !*                  34-kt radii is done on multiple iterations.
+  !*      igrct    :: integer that indicates what iteration of getradii this
+  !*                  call is.
+  !*
+  !*  OUTPUT:
+  !*      igrret   :: return code from this subroutine
+  !*      vradius  :: Contains the distance from the storm fix position to
+  !*                  each of the various wind threshhold distances in each
+  !*                  quadrant. (3,4) ==> (# of threshholds, # of quadrants)
+  !*
+  !*  LOCAL:
+  !*      radmax   :: the maximum radius to look for winds for the various
+  !*                  thresholds.
+  !*      quadinfo :: This array contains the magnitude of the near-surface
+  !*                  winds and the distance from the gridpoint to the fix
+  !*                  position for each point in each quadrant that is within
+  !*                  the maximum allowed radius, radmax.  quadinfo is
+  !*                  allocated within this subroutine, and is allocated as
+  !*                  (quadrant, num_pts_in_quadrant, data_type), where
+  !*                  data_type is either windspeed(1) or distance(2) from
+  !*                  storm center to grid point.
+  !*      quadmax  :: This array contains the max surface wind in each
+  !*                  quadrant, plus the location of it and the distance from
+  !*                  the storm center.  This information is critical to
+  !*                  identifying when this subroutine is malfunctioning.
+  !*
+  !****************************************************************************
     type (trackstuff) :: trkrinfo
 
     logical(1)            :: valid_pt(imax,jmax)
@@ -13275,6 +14797,90 @@ c           gotten to this point in threshloop).
         endif
 
   end subroutine getradii
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine looks through the wind data near an
+  !*      input storm center (fixlon,fixlat) and gets the radii of various
+  !*      surface winds in each of the 4 storm quadrants (NE,NW,SE,SW).
+  !*      The wind thresholds that are sought are gale force (34kt|17.5m/s),
+  !*      storm force (50kt|25.7m/s), and hurricane force (64kt|32.9m/s).
+  !*
+  !*  This subroutine is a new version,created in May 2022, in response
+  !*      to feedback from EMC and GFDL modeling groups.  Their input was
+  !*      that for newer, hi-res, FV3-based regional models (HAFS-A and
+  !*      T-SHiELD), the current wind radii scheme was detecting grid points
+  !*      that were isolated outliers and diagnosing the R34 values as being
+  !*      out at those extended radii.  I had discussions with NHC folks,
+  !*      who concurred that those isolated outliers should not be
+  !*      considered as part of the mean circulation of the storm.  I then
+  !*      spoke with John Knaff, who said that his group at STAR had run
+  !*      into similar issues with diagnosing R34 from Synthetic Aperture
+  !*      Radar (SAR) winds.  So what they do is analyze the wind in
+  !*      radial bands and assign a value for each band, but instead of
+  !*      using the max wind value in each band, they use the 95th
+  !*      percentile value.  I am going to try an additional constraint,
+  !*      whereby the mean tangential wind is also calculated in each
+  !*      radial band, and if that mean Vt falls below a threshold for
+  !*      more than a few bands (i.e., a distance of ~10-15 km), then the
+  !*      diagnosed R34 cannot be permitted to extend beyond that distance,
+  !*      either.
+  !*
+  !*  As for the diagnosis scheme itself, it will be done in the same
+  !*      way as previously done for the original getradii subroutine,
+  !*      where I work from the outside in, until I hit a band with a 95th
+  !*      percentile wind value >= 34 kts.  But then, according to the new
+  !*      method, I will need to make sure that the mean Vt in that band
+  !*      is cyclonic and exceeds a threshold value
+  !*
+  !*  INPUT:
+  !*      xcenlon      :: fix longitude of storm center for current forecast hour
+  !*      xcenlat      :: fix latitude of storm center for current forecast hour
+  !*      imax         :: max i dimension of model grid
+  !*      jmax         :: max j dimension of model grid
+  !*      dx           :: grid spacing in i-direction of model grid
+  !*      dy           :: grid spacing in j-direction of model grid
+  !*      valid_pt     :: logical bitmap for valid data at a grid point
+  !*      cstormid     :: 3-character storm ATCF ID (e.g., 03L, 11E, etc)
+  !*      ifcsthr      :: integer value for current forecast hour
+  !*      trkrinfo     :: derived type containing various info on the storm
+  !*      need_to_expand_r34 :: 1-character array that specifies which of the
+  !*                       4 quadrants still need to be expanded on this time
+  !*                      through getradii in order to get an R34 value that is
+  !*                      not right at the outermost boundary.
+  !*      vmaxwind     :: max wind (in m/s) that was reported from the
+  !*                      get_max_wind subroutine
+  !*      radmax       :: input max radius (km) that will be used for this
+  !*                      iteration of getradii.  Keep in mind that this gets
+  !*                      re-defined in this routine.
+  !*      first_time_thru_getradii :: logical flag.  It is used so that any
+  !*                      checking for 50- or 64-kt radii is only done on the
+  !*                      first time through getradii.  Only the checking for
+  !*                      34-kt radii is done on multiple iterations.
+  !*      pctile_quad_bin_wind    :: real array that contains the value of the
+  !*                      wind at the XXth percentile, where XX is read from
+  !*                      the user namelist.
+  !*      fp_pctile_quad_bin_wind :: real array that contains the value of the
+  !*                      wind at a different percentile -- the "free_pass"
+  !*                      percentile -- such that if an R34 was found at this
+  !*                      radius and the wind at the "free_pass" percentile is
+  !*                      >= 34 kts, then we issue a free pass so that further
+  !*                      testing of this quadrant is not done, and the R34 is
+  !*                      confirmed.
+  !*      igrct        :: integer that indicates what iteration of getradii this
+  !*                      call is.
+  !*      n_r34_iter   :: integer that keeps track of what iteration of
+  !*                      getradii_2 we are currently on.
+  !*      ist          :: integer index for the number storm being tracked.
+  !*      gm_wrap_flag :: character flag set in getgridinfo that determines
+  !*                      whether GM-wrapping occurs for this grid.
+  !*
+  !*  OUTPUT:
+  !*      igrret       :: return code from this subroutine
+  !*      vradius      :: Contains the distance from the storm fix position to
+  !*                      each of the various wind threshhold distances in each
+  !*                      quadrant. (3,4) ==> (# of threshholds, # of quadrants)
+  !*
+  !****************************************************************************
   subroutine getradii_2 (xcenlon, xcenlat, imax, jmax, dx, dy, valid_pt, cstormid, ifh, ifcsthr, vmaxwind, &
                         & vradius, trkrinfo, need_to_expand_r34, num_r34_bins, pctile_quad_bin_wind,       &
                         & fp_pctile_quad_bin_wind, radmax, axi_rmw, ix_radii_beg, ix_radii_end,            &
@@ -14337,6 +15943,39 @@ c             you've gotten to this point in threshloop).
           endif
 
   end subroutine getradii_2
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine looks for the maximum near-surface wind
+  !*      near the storm center.  This subroutine is only concerned with the
+  !*      value of the max wind, NOT where it's located radially with
+  !*      respect to the center.  The value that's returned in vmax is the
+  !*      max wind speed in m/s, which are the units the data are stored in.
+  !*      However, when the max wind values are  output in output_atcf, they
+  !*      will be converted from m/s to knots.
+  !*
+  !*  INPUT:
+  !*      xcenlon    :: fix longitude of storm center for current forecast hour
+  !*      xcenlat    :: fix latitude of storm center for current forecast hour
+  !*      imax       :: max i dimension of model grid
+  !*      jmax       :: max j dimension of model grid
+  !*      dx         :: grid spacing in i-direction of model grid
+  !*      dy         :: grid spacing in j-direction of model grid
+  !*      valid_pt   :: logical bitmap for valid data at a grid point
+  !*      levsfc     :: integer holding the value of the array member that holds
+  !*                    the near-surface winds in the u and v arrays (as of
+  !*                    1/2022 modifications, it's = 5).
+  !*
+  !*  OUTPUT:
+  !*      vmax       :: value of maximum near-surface wind near the storm ctr
+  !*      rmax       :: radius of max winds
+  !*      igmwret    :: return code from this subroutine
+  !*
+  !*  LOCAL:
+  !*      radmaxwind :: the maximum radius to look for a max wind near the
+  !*                    storm center.  You have to allow this to be bigger for
+  !*                    model grids with coarse resolution (ECMWF 2.5 degree).
+  !*
+  !****************************************************************************
   subroutine get_max_wind (xcenlon, xcenlat, imax, jmax, dx, dy, valid_pt, levsfc, vmax, trkrinfo, rmax, igmwret) 
 
       implicit none
@@ -14625,6 +16264,52 @@ c     that we are sure radmaxwind is within those points.
       endif
 
   end subroutine get_max_wind
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine calculates the axisymmetric RMW (ARMW),
+  !*      as opposed to the gridpoint RMW that was found in subroutine
+  !*      get_max_wind.  We will compute the mean wind in bands that are
+  !*      3-km wide, extending from 0 out to 125 km for a first pass.  The
+  !*      max value is determined, then a check is done to ensure that the
+  !*      integral of dV/dr > 0 going out to the diagnosed ARMW, and then
+  !*      the integral of dV/dr < 0 going outward from the ARMW.  If these
+  !*      do not, then we will shift the search range to go from 75 km out
+  !*      to 200 km, check again, and if still needed, try up to two more
+  !*      times with ranges of 150-275 km and then 225-350 km.  Note that
+  !*      we do not have to worry about sign of the winds for NHem vs.
+  !*      SHem as we do in the wind structure routines, which deal with
+  !*      tangential winds.  Here, we are just concerned with wind
+  !*      magnitude.
+  !*
+  !*  NOTE: As of May 2022, the units returned from this subroutine are
+  !*      in km for axisymet_rmw_dist and m/s for axisymet_rmw_val.  Both
+  !*      of those values are converted in output_atcfunix, for km-->nmi
+  !*      and m/s-->kts.
+  !*
+  !*  INPUT:
+  !*      xcenlon                :: fix longitude of storm center for current forecast hour
+  !*      xcenlat                :: fix latitude of storm center for current forecast hour
+  !*      imax                   :: max i dimension of model grid
+  !*      jmax                   :: max j dimension of model grid
+  !*      dx                     :: grid spacing in i-direction of model grid
+  !*      dy                     :: grid spacing in j-direction of model grid
+  !*      valid_pt               :: logical bitmap for valid data at a grid point
+  !*      trkrinfo               :: derived type detailing user-specified grid info
+  !*      axisymet_rmw_dist      :: real distance to the axisymet RMW
+  !*      axisymet_rmw_val       :: real value of axisymet wind at axisymet RMW
+  !*      gm_wrap_flag character :: flag set in getgridinfo that determines
+  !*                                what GM-wrapping setting to use for this grid.
+  !*
+  !*  OUTPUT:
+  !*      axisymet_rmw           :: value of the axisymmetric RMW
+  !*      igarret                :: return code from this subroutine
+  !*
+  !*  LOCAL:
+  !*      numdist                :: Number of discrete radii at which the winds will
+  !*                                be evaluated
+  !*      rdist                  :: The radii (km) at which winds will be evaluated
+  !*
+  !****************************************************************************
   subroutine get_axisymet_rmw (xcenlon, xcenlat, imax, jmax, dx, dy, valid_pt, trkrinfo, &
                               & axisymet_rmw_dist, axisymet_rmw_val, gm_wrap_flag, igarret)
 
@@ -14936,6 +16621,85 @@ c              endif
         endif
 
   end subroutine get_axisymet_rmw
+  !****************************************************************************
+  !*  ABSTRACT: This subroutine loops through the different parameters
+  !*      for the input storm number (ist) and calculates the
+  !*      center position of the storm by taking an average of
+  !*      the center positions obtained for those parameters.
+  !*      First we check to see which parameters are within a
+  !*      max error range (errmax), and we discard those that are
+  !*      not within that range.  Of the remaining parms, we get
+  !*      a mean position, and then we re-calculate the position
+  !*      by giving more weight to those estimates that are closer
+  !*      to this mean first-guess position estimate.
+  !*
+  !*  INPUT:
+  !*      clon           :: Center longitudes of tracked parms for this storm & ifh
+  !*      clat           :: Center latitudes of tracked parms for this storm & ifh
+  !*      ist            :: Storm number
+  !*      ifh            :: Index for forecast hour
+  !*      calcparm       :: Logical; Use this parm's location for this storm or not
+  !*      geslon         :: Initial guess longitude for this storm at this fcst hour
+  !*      geslat         :: Initial guess latitude for this storm at this fcst hour
+  !*      inp            :: contains the input date and model number information
+  !*      xvalues        :: The actual max or min data values for each parameter
+  !*      maxstorm       :: max # of storms to be handled in this run
+  !*
+  !*  INPUT/OUTPUT:
+  !*      stderr         :: Standard deviation of the position "error" of the parms
+  !*                        relative to the guess storm position.  As long as the
+  !*                        distance of a parm center to the guess center is <=
+  !*                        errpmax, it is included in the std dev calculation.
+  !*
+  !*  OUTPUT:
+  !*      fixlon         :: Best approximation of storm center's longitude
+  !*      fixlat         :: Best approximation of storm center's latitude
+  !*      ifret          :: Return code from this subroutine
+  !*
+  !*  LOCAL:
+  !*      storm          :: Contains tcvitals info for the storms (def_vitals)
+  !*      trkerr_avg     :: Sum/avg of the track errors for all parms for this
+  !*                        fcst hour, regardless of whether or not the error was
+  !*                        > errmax.  It's used for getting the std deviation of
+  !*                        the position error for this forecast time, to be used
+  !*                        as part of the errmax calculation for the next fcst
+  !*                        time.
+  !*      iclose         :: Number of parameters whose position estimates are
+  !*                        found to be within a distance errmax of the guess pos
+  !*      wtpos          :: The weight given to each position estimate.  It's
+  !*                        based on the distance from the average position.
+  !*      errdist        :: The "error" of the parameter center position relative
+  !*                        to the storm's guess position.
+  !*      avgerr         :: Average "error" of the parameter center positions
+  !*                        relative to the storm's guess position.
+  !*      use4next       :: Logical; If a parm center has been calculated but its
+  !*                        distance from the guess position is > errmax, we don't
+  !*                        use this center in calculating the new guess position,
+  !*                        however we will use this position in calculating the
+  !*                        standard deviation of the current time's guess
+  !*                        positions, to be used in calculating the new errmax
+  !*                        for the next forecast time.  So in this subroutine,
+  !*                        calcparm may be set to FALSE if errdist > errmax, but
+  !*                        use4next will not be set to FALSE (Actually, it is
+  !*                        only set to FALSE if errdist > errpmax, which is
+  !*                        defined in error_parms and is roughly 600km).
+  !*      stderr_close   :: Standard deviation of position errors for parms that
+  !*                        have center estimates that are within a distance
+  !*                        errmax of the guess position.
+  !*      clon_fguess    :: These are the first-guess mean position estimates,
+  !*      clat_fguess    :: which are the means of the position estimates that
+  !*                        are within a distance errmax.  These first-guess mean
+  !*                        positions will be refined by giving more weight to
+  !*                        individual parameter estimates that are closer to
+  !*                        this first-guess mean position.
+  !*      dist_from_mean :: Contains the "error" distance of each parameter
+  !*                        from the first-guess mean position (clon_fguess,
+  !*                        clat_fguess).  NOTE: If a parameter is not within
+  !*                        a distance errmax of the guess position for this
+  !*                        time (geslon,geslat), then there will be NO
+  !*                        dist_from_mean calculated for that parm.
+  !*
+  !****************************************************************************
   subroutine fixcenter (clon, clat, ist, ifh, calcparm, geslon, geslat, inp, stderr, &
                        & fixlon, fixlat, xvalues, maxstorm, ifret)
 
@@ -15510,6 +17274,14 @@ c     time.
           endif
 
   end subroutine fixcenter
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine just calculates a straight average of
+  !*      the parameters in the input array (xdat).  The logical array
+  !*      (valid) indicates whether or not to include a particular array
+  !*      member or not in the calculation.
+  !*
+  !****************************************************************************
   subroutine avgcalc (xdat, kmax, valid, xavg, iaret)
     real       :: xdat(kmax)
     logical(1) :: valid(kmax)
@@ -15534,6 +17306,14 @@ c
         endif
 
   end subroutine avgcalc
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine calculates a weighted average of the
+  !*      parameters in the input array (xdat) using the input weights
+  !*      in the input array (wt).  It is used to calculate the center lat
+  !*      and lon fix positions.
+  !*
+  !****************************************************************************
   subroutine wtavrg (xdat, wt, kmax, xwtavg, iwtret)
     real :: xdat(kmax), wt(kmax)
       iwtret = 0
@@ -15555,6 +17335,15 @@ c
         endif
 
   end subroutine wtavrg
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine calculates a weighted average of the
+  !*      parameters in the input array (xlon) using the input weights
+  !*      in the input array (wt).  This subroutine is specifically used
+  !*      to find the center lon fix positions.  It contains code to
+  !*      account for wrapping around the Greenwich Meridian.
+  !*
+  !****************************************************************************
   subroutine wtavrg_lon (xlon, wt, kmax, xwtavg, iwtret)
     real     :: xlon(kmax), wt(kmax)
     integer  :: gt345_ct, lt15_ct
@@ -15605,12 +17394,55 @@ c
       endif
 
   end subroutine wtavrg_lon
+!****************************************************************************
+!*
+!****************************************************************************
   subroutine stdevcalc (xdat, kmax, valid, xavg, stdx, isret)
 
     real       :: xdat(kmax)
     logical(1) :: valid(kmax)
 
   end subroutine stdevcalc
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine calculates the center fix position for
+  !*      the wind circulation near the storm center.  This center fix is
+  !*      done differently than for the other parms.  With this fix,
+  !*      we limit the area that is searched.  This subroutine is not
+  !*      called until center fixes have been made for the 5 other parms
+  !*      (z850, z700, zeta850, zeta700, mslp).  Once those  fixes have been
+  !*      made, a modified first guess is made of the average of the
+  !*      original guess position for this lead time and the 5 other parm
+  !*      fixes that have already been made for this lead time.  That
+  !*      modified guess position is passed into this subroutine as uvgeslon
+  !*      and uvgeslat, and that's where the searching for the wind
+  !*      circulation is centered.
+  !*
+  !*  This subroutine works by converting the winds to Vt and Vr at
+  !*      each grid point evaluated, relative to each candidate center point
+  !*      that is being evaluated at the time in the loop.  We then compute
+  !*      the circulation at each of 24 azimuths surrounding the storm
+  !*      center, where circulation = Vt * (length of a 1/24 arc, in meters)
+  !*      This process is repeated for 7 successive radii and the results
+  !*      are summed up over all radii, approximating a solid disk
+  !*      circulation.  The point at which the circulation is maximized
+  !*      (NHEM) or minimized (SHEM) is the center of circulation.
+  !*
+  !*      grid_maxlat :: northernmost latitude on the input grid being sent to
+  !*                     this routine.  This grid may be a subset of the original
+  !*                     full grid from the original dataset.
+  !*      grid_minlat :: southernmost latitude on the input grid being sent to
+  !*                     this routine.  This grid may be a subset of the original
+  !*                     full grid from the original dataset.
+  !*      grid_maxlon :: easternmost longitude on the input grid being sent to
+  !*                     this routine.  This grid may be a subset of the original
+  !*                     full grid from the original dataset.
+  !*      grid_minlon :: westernmost longitude on the input grid being sent to
+  !*                     this routine.  This grid may be a subset of the original
+  !*                     full grid from the original dataset.
+  !*      cmodel_type :: character, 'global' or 'regional'
+  !*
+  !****************************************************************************
   subroutine get_wind_circulation (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, level, valid_pt, cflag, &
                                   & ctlon, ctlat, fxval, trkrinfo, cmodel_type, maxmin, ifh, gm_wrap_flag, igwcret)
 
@@ -16391,6 +18223,29 @@ c                vt_mean(idist) = -999.0
      &       ,'W)   guesslat= ',f8.3)
 
   end subroutine get_wind_circulation
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine calculates the center fix position for
+  !*      the minimum in the wind speed near the storm center.  This center
+  !*      fix is done differently than for the other parms.  With this fix,
+  !*      we severely limit the area that is searched, because we do not
+  !*      want to confuse a wind minimum out on the periphery of a storm
+  !*      with the center wind minimum.  Therefore, this subroutine is not
+  !*      called until center fixes have been made for the 5 other parms
+  !*      (z850, z700, zeta850, zeta700, mslp).  Once those  fixes have been
+  !*      made, a modified first guess is made of the average of the guess
+  !*      position for this time and the 5 other parm fixes.  That modified
+  !*      guess position is passed into this subroutine as uvgeslon and
+  !*      uvgeslat, and that's where the searching for the wind minimum
+  !*      is done.  To get the wind minimum, the u and v data are first
+  !*      interpolated down to a fine grid (see details below for exact
+  !*      figures), and then a single-pass barnes analysis is done on that
+  !*      fine grid.  The reason that we first interpolate the data (which
+  !*      is different from how we do the other parms) is that if we just
+  !*      use the original grid resolution, we may not be able to
+  !*      accurately pick out a minimum in the wind field at the center.
+  !*
+  !****************************************************************************
   subroutine get_uv_center (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, level, valid_pt, &
                            & cflag, ctlon, ctlat, xval, trkrinfo, igucret)
     type (trackstuff) :: trkrinfo
@@ -16948,6 +18803,37 @@ c
       endif
 
   end subroutine get_uv_center
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: The purpose of this subroutine is to get a modified
+  !*      first guess lat/lon position before searching for the
+  !*      minimum in the wind field.  The reason for doing this is
+  !*      to better refine the guess and avoid picking up a wind
+  !*      wind minimum far away from the center.  So, use the
+  !*      first guess position (and give it strong weighting), and
+  !*      then also use the  fix positions for the current time
+  !*      (give the vorticity centers stronger weighting as well),
+  !*      and then take the average of these positions.
+  !*
+  !*  INPUT:
+  !*      guesslon  :: guess longitude for this forecast time
+  !*      guesslat  :: guess latitude for this forecast time
+  !*      clon      :: array with center longitude  fixes for the various parms
+  !*      clat      :: array with center latitude  fixes for the various parms
+  !*      calcparm  :: logical; tells whether or not a parm has a valid fix
+  !*                   at this forecast hour
+  !*      ist       :: index for current storm
+  !*      ifh       :: index for current forecast hour
+  !*      maxstorm  :: max # of storms that can be handled
+  !*
+  !*  OUTPUT:
+  !*      uvgeslon  :: contains modified guess longitude position at which to
+  !*                   look for the wind minimum
+  !*      uvgeslat  :: contains modified guess latitude position at which to
+  !*                   look for the wind minimum
+  !*      igugret   :: return code for this subroutine (0=normal)
+  !*
+  !****************************************************************************
   subroutine get_uv_guess (guesslon, guesslat, clon, clat, calcparm, ist, ifh, maxstorm, &
                           & uvgeslon, uvgeslat, igugret)
 
@@ -17055,18 +18941,85 @@ c        endif
         endif
 
   end subroutine get_uv_guess
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine calculates the magnitude of the wind
+  !*      speed for an array of points, given real u and real v arrays.
+  !*
+  !****************************************************************************
   subroutine calc_vmag (xu, xv, imx, jmx, wspeed, icvret)
     real    :: xu(imx,jmx), xv(imx,jmx), wspeed(imx,jmx)
   end subroutine calc_vmag
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine does a bilinear interpolation on a
+  !*      grid of evenly spaced data.  Do NOT attempt to use this subroutine
+  !*      with data that are not evenly spaced or you will get unpredictable
+  !*      results.
+  !*
+  !*  ---------------------------------------------------------------------
+  !*         Latitude ---->          |
+  !*                                 |
+  !*  L   O  e  O  e  O  e  O  e  O  | O: original point from input array
+  !*  o                              |
+  !*  n   e  1  2  1  2  1  2  1  e  | 1: interpolated, primary inter. pt
+  !*  g                              |
+  !*  i   O  2  O  2  O  2  O  2  O  | e: interpolated edge point
+  !*  t                              |
+  !*  u   e  1  2  1  2  1  2  1  e  | 2: interpolated, secondary inter. pt
+  !*  d                              |
+  !*  e   O  2  O  2  O  2  O  2  O  | Interpolations are done in the order
+  !*                                 | as indicated above; First, the input
+  !*  |   e  1  2  1  2  1  2  1  e  | 'O' pts are placed onto the new,
+  !*  |                              | larger grid. From that, the '1' pts
+  !*  |   O  2  O  2  O  2  O  2  O  | can be interpolated.  Next, the edge
+  !*  |                              | (e) pts are interpolated using an
+  !*  v   e  1  2  1  2  1  2  1  e  | interpolation of two 'O' pts and one
+  !*                                 | '1' pt.  Finally, the '2' pts are
+  !*      O  e  O  e  O  e  O  e  O  | done using the 2 surrounding '0' and
+  !*                                 | '1' pts.  Bilinear interpolation is
+  !*                                 | made incredibly easier by the fact
+  !*                                 | that the grid is evenly spaced.
+  !*  ---------------------------------------------------------------------
+  !*     NOTE: Remember that the arrays that are read in are indexed as
+  !*     (lon,lat), so that in the diagram above, pt (1,1) is at the upper
+  !*     left and pt (imax,jmax) is at the lower right, and each column is
+  !*     a new latitude and each row is a new longitude.
+  !*
+  !****************************************************************************
   subroutine bilin_int_even (imxold, jmxold, xold, imxnew, jmxnew, xnew, ibiret)
     real  :: xold(imxold,jmxold), xnew(imxnew,jmxnew)
   end subroutine bilin_int_even
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine linearly interpolates evenly spaced
+  !*      data from one grid to another.
+  !*
+  !****************************************************************************
   subroutine lin_int (ioldmax, inewmax, xold, xnew, iliret)
     real    :: xold(ioldmax), xnew(inewmax)
   end subroutine lin_int
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine linearly interpolates evenly spaced
+  !*      data from one grid to another.  This particular
+  !*      routine is specifically used for interpolating
+  !*      longitudes, and it factors in the possibility of
+  !*      interpolating across the greenwich meridian.
+  !*
+  !****************************************************************************
   subroutine lin_int_lon (ioldmax, inewmax, xold, xnew, iliret)
     real  :: xold(ioldmax), xnew(inewmax)
   end subroutine lin_int_lon
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine finds the maximum and mean zeta values
+  !*      at 850 & 700 mb, near a storm center.  It is called from
+  !*      subroutine  tracker, and its purpose is to report these values
+  !*      that will then be written out to a special, modified version of
+  !*      the atcfunix file (the "atcf_gen" file).
+  !*
+  !****************************************************************************
   subroutine get_zeta_values (fixlon, fixlat, imax, jmax, dx, dy, trkrinfo, imeanzeta, igridzeta, &
                              & readflag, valid_pt, ist, ifh, maxstorm, inp, igzvret)
 
@@ -17270,6 +19223,69 @@ c        endif
  635  format(1x,'#---------------------------------------------------#')
 
   end subroutine get_zeta_values
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine  finds the location (clon,clat) of and value of the
+  !*      the max or min of fxy in the vicinity of slon,slat.  The value of
+  !*      the input flag maxmin determines whether to look for a max or a
+  !*      min value.  The max/min is determined by finding the point which
+  !*      gives the max/min value of a single point barnes analysis of fxy
+  !*      with e-folding radius re (km) and influence radius ri (km). The
+  !*      initial search is restricted to a radius rads around the point
+  !*      (slon,slat) on a grid with lon,lat spacing dx and dy. The location
+  !*      is refined by reducing the spacing of the search grid by a factor
+  !*      of two, nhalf times.
+  !*
+  !*  INPUT:
+  !*      imax        :: Num pts in i direction on input grid
+  !*      jmax        :: Num pts in j direction on input grid
+  !*      dx          :: Grid spacing in i-direction on input grid
+  !*      dy          :: Grid spacing in j-direction on input grid
+  !*      cparm       :: Char string indicating what parm is being passed in
+  !*      fxy         :: Real array of data values
+  !*      maxmin      :: Char string indicating whether to search for a max or min
+  !*      ist         :: Number of the storm being processed
+  !*      guesslon    :: Guess longitude of the storm
+  !*      guesslat    :: Guess latitude of the storm
+  !*      rlonv       :: Array containing longitude values of input grid points
+  !*      rlatv       :: Array containing latitude values of input grid points
+  !*      valid_pt    :: Logical bitmap masking non-valid grid points.  This is a
+  !*                     concern for the regional models, which are interpolated
+  !*                     from Lam-Conf or NPS grids onto lat/lon grids, leaving
+  !*                     grid points around the edges which have no valid data.
+  !*      trkrinfo    :: derived type detailing user-specified grid info
+  !*      grid_maxlat :: northernmost latitude on the input grid being sent to
+  !*                     this routine.  This grid may be a subset of the original
+  !*                     full grid from the original dataset.
+  !*      grid_minlat :: southernmost latitude on the input grid being sent to
+  !*                     this routine.  This grid may be a subset of the original
+  !*                     full grid from the original dataset.
+  !*      grid_maxlon :: easternmost longitude on the input grid being sent to
+  !*                     this routine.  This grid may be a subset of the original
+  !*                     full grid from the original dataset.
+  !*      grid_minlon :: westernmost longitude on the input grid being sent to
+  !*                     this routine.  This grid may be a subset of the original
+  !*                     full grid from the original dataset.
+  !*      cmodel_type :: character, 'global' or 'regional'
+  !*
+  !*  INPUT/OUTPUT:
+  !*      compflag    :: Logical; continue processing this storm or not (would be
+  !*                     set to FALSE if, for example, the guess position is
+  !*                     outside the domain of a regional grid)
+  !*
+  !*  OUTPUT:
+  !*      ctlon       :: Center longitude of storm found for this parameter
+  !*      ctlat       :: Center latitude of storm found for this parameter
+  !*      xval        :: Max or Min value found at the (ctlon,ctlat)
+  !*      ifmret      :: Return code from this subroutine
+  !*
+  !*  UPDATE DEC 2009: For the HFIP HRH testing, it was found that
+  !*      due to the very limited domain size of some of the models, the
+  !*      barnes scheme was allowing points close to the grid boundaries
+  !*      to erroneously be selected as the center point.  We add in a
+  !*      buffer (grid_buffer) here to prevent this from occurring.
+  !*
+  !****************************************************************************
   subroutine find_maxmin (imax, jmax, dx, dy, cparm, fxy, maxmin, ist, guesslon, guesslat, rlonv, &
                          & rlatv, valid_pt, trkrinfo, compflag, ctlon, ctlat, xval, grid_maxlat,  &
                          & grid_minlat, grid_maxlon, grid_minlon, cmodel_type, ifmret)
@@ -18045,9 +20061,107 @@ c           up in this subroutine inside iloop).
       enddo
 
   end subroutine find_maxmin
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine performs a single-pass barnes anaylsis
+  !*      of fxy at the point (flon,flat). The e-folding radius (km)
+  !*      and influence radius (km) are re and ri, respectively.
+  !*
+  !*  NOTE: The input grid that is searched in this subroutine is most
+  !*      likely NOT the model's full, original grid.  Instead, a smaller
+  !*      subgrid of the original grid is searched.  The upper left and
+  !*      lower right grid point indices are passed into this subroutine
+  !*      (iibeg, jjbeg, iiend, jjend) for this subgrid.  These indices are
+  !*      determined in the subroutine  get_ij_bounds, and the purpose of
+  !*      doing it this way is to limit the number of points for which the
+  !*      subroutine has to calculate distances (for a global 1 deg grid,
+  !*      the number of loop iterations is reduced from 65160 to somewhere
+  !*      around 600).
+  !*
+  !*  NOTE: This subroutine will immediately exit with a non-zero
+  !*      return code if it tries to access a grid point that does not have
+  !*      valid data.  This would happen in the case of a regional grid, if
+  !*      you try to access a point near the edge of the grid (remember that
+  !*      because of the interpolation for the regional grids, there will be
+  !*      areas around the edges that have no valid data).
+  !*
+  !*  INPUT:
+  !*      flon       :: Lon value for center point about which barnes anl is done
+  !*      flat       :: Lat value for center point about which barnes anl is done
+  !*      rlon       :: Array of lon values for each grid point
+  !*      rlat       :: Array of lat values for each grid point
+  !*      iimax      :: Max number of pts in x-direction on input grid
+  !*      jjmax      :: Max number of pts in y-direction on input grid
+  !*      iibeg      :: i index for grid point to start barnes anlysis (upp left)
+  !*      jjbeg      :: j index for grid point to start barnes anlysis (upp left)
+  !*      iiend      :: i index for last grid point in barnes anlysis (low right)
+  !*      jjend      :: j index for last grid point in barnes anlysis (low right)
+  !*      fxy        :: Real array of data on which to perform barnes analysis
+  !*      defined_pt :: Logical; bitmap array used for regional grids
+  !*      bskip      :: integer to indicate number of grid points to skip during
+  !*                    a barnes loop, in order to speed processing
+  !*      re         :: input e-folding radius for barnes analysis
+  !*      ri         :: input influence radius for searching for min/max
+  !*      ctype      :: character that lets subroutine know if this is a search
+  !*                    for the next position for the purposes of tc vitals or
+  !*                    for general tracking.  In the case of vitals, in
+  !*                    this barnes subroutine we are more lax and allow the
+  !*                    routine to keep searching even if we are close to the
+  !*                    grid boundary.  In a general tracking search, if we hit
+  !*                    the grid boundary even just once, we exit.
+  !*      trkrinfo   :: derived type detailing user-specified grid info
+  !*
+  !*  OUTPUT:
+  !*      favg       :: Average value about the point (flon,flat)
+  !*      iret       :: Return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine barnes(flon, flat, rlon, rlat, iimax, jjmax, iibeg, jjbeg, iiend, jjend, fxy,  &
                    & defined_pt, bskip, re, ri, favg, icount, ctype, trkrinfo, iret)
   end subroutine barnes
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine performs a single-pass barnes anaylsis
+  !*      of fxy at the point (flon,flat)...  Just like the original
+  !*      subroutine  barnes.  The only difference is that this routine
+  !*      is meant for SST and will contain an additional check for the
+  !*      land-sea mask.  While it would have been easy to code that into
+  !*      the original barnes subroutine, I didn't want to check
+  !*      for land/sea since that routine is the core of the  tracker
+  !*      program, it gets called zillions of times for other purposes,
+  !*      and I don't want to slow it down at all with extra code.
+  !*
+  !*  INPUT:
+  !*      flon       :: Lon value for center point about which barnes anl is done
+  !*      flat       :: Lat value for center point about which barnes anl is done
+  !*      rlon       :: Array of lon values for each grid point
+  !*      rlat       :: Array of lat values for each grid point
+  !*      iimax      :: Max number of pts in x-direction on input grid
+  !*      jjmax      :: Max number of pts in y-direction on input grid
+  !*      iibeg      :: i index for grid point to start barnes anlysis (upp left)
+  !*      jjbeg      :: j index for grid point to start barnes anlysis (upp left)
+  !*      iiend      :: i index for last grid point in barnes anlysis (low right)
+  !*      jjend      :: j index for last grid point in barnes anlysis (low right)
+  !*      fxy        :: Real array of data on which to perform barnes analysis
+  !*      defined_pt :: Logical; bitmap array used for regional grids
+  !*      bskip      :: integer to indicate number of grid points to skip during
+  !*                    a barnes loop, in order to speed processing
+  !*      re         :: input e-folding radius for barnes analysis
+  !*      ri         :: input influence radius for searching for min/max
+  !*      ctype      :: character that lets subroutine know if this is a search
+  !*                    for the next position for the purposes of tc vitals or
+  !*                    for general tracking.  In the case of vitals, in
+  !*                    this barnes subroutine we are more lax and allow the
+  !*                    routine to keep searching even if we are close to the
+  !*                    grid boundary.  In a general tracking search, if we hit
+  !*                    the grid boundary even just once, we exit.
+  !*      trkrinfo   : derived type detailing user-specified grid info
+  !*
+  !*  OUTPUT:
+  !*      favg       :: Average value about the point (flon,flat)
+  !*      iret       :: Return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine sst_barnes (flon, flat, rlon, rlat, iimax, jjmax, iibeg, jjbeg, iiend, jjend, fxy, &
                         & defined_pt, bskip, re, ri, favg, icount, ctype, trkrinfo, iret)
 
@@ -18163,6 +20277,96 @@ carw             return
       endif
 
   end subroutine sst_barnes
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine figures out, based on ri, dx and dy and
+  !*      the guess latitude and longitude positions, the farthest reaching
+  !*      grid points that are searchable by an analysis subroutine.  The
+  !*      purpose is to return indices for a subgrid that is much smaller
+  !*      than the original, full grid.  This smaller subgrid can then be
+  !*      passed to a subsequent analysis or interpolation subroutine, and
+  !*      work can be done on this smaller array.  This can help save time,
+  !*      especially in the  barnes analysis subroutine, as work will only
+  !*      be done on, say, a 20 x 20 array (400 pts) instead of on a
+  !*      360 x 181 array (65160 pts).  It's crucial, however, to make sure
+  !*      that the ibeg, jbeg, iend and jend are extended far enough out to
+  !*      fully encompass any search that would be done.  Below is a
+  !*      diagram showing the different grids....
+  !*
+  !*      Full Global or Regional Model Grid  (Grid F) ----------->
+  !*     ----------------------------------------------------------------
+  !*  |  |                            (ibeg,jbeg)                       |
+  !*  |  | x = ij position that the        |      (Grid R)              |
+  !*  |  |     geslat/geslon is fixed to.  ._______________.            |
+  !*  |  |                                 |               |            |
+  !*  |  | Even though only the points     |    (Grid B)   |            |
+  !*  |  | within Grid B will be checked   |   . . . . k   |            |
+  !*  v  | later on for a max/min (in the  |   . . . . .   |            |
+  !*     | case of a subsequent call to    |   . . x . e   |            |
+  !*     | find_maxmin), the  barnes anal- |   . . . . .   |            |
+  !*     | ysis will include all pts sur-  |   . . . . .   |            |
+  !*     | rounding these Grid B points    |               |            |
+  !*     | that are within a radius of ri. ._______________.            |
+  !*     | So in the case of pt. k, that ri                             |
+  !*     | radius may extend all the way to the Grid R     |            |
+  !*     | boundary, thus we need to include those    (iend,jend)       |
+  !*     | points within our ibeg-jbeg-iend-jend bounds.                |
+  !*     |                                                              |
+  !*     ----------------------------------------------------------------
+  !*
+  !*     Remember that the grids we deal with start north and increase
+  !*     south, so the northernmost latitude on the input grid will have
+  !*     a j index of 1.
+  !*
+  !*     If nhalf > 0: This occurs in the case of a call from fmax, when
+  !*     the grid spacing is halved nhalf times.  In this case, we have to
+  !*     do extra work to figure out the maximum possible grid point.  For
+  !*     this case:
+  !*     jhlatpts =    # of grid pts to last possible search pt (from x to
+  !*                   edge of Grid B in above diagram), plus a cushion.
+  !*     jripts   =    # of searchable grid points within radius ri of last
+  !*                   possible search pt (num pts between edge of Grid B
+  !*                   and edge of Grid R in above diagram), plus a cushion
+  !*     jbmaxlatpts = # of pts (in j direction) from x to the edge of
+  !*                   Grid R to include in this subgrid.
+  !*
+  !*     If nhalf = 0: In this case, the grid spacing will not be reduced,
+  !*     so the number of pts in j direction from x to the edge of Grid
+  !*     B will be the input parameter npts, and just multiply it by 2,
+  !*     and add 2 for a cushion to get jmaxlatpts.  Typically, this sub
+  !*     is called from find_maxmin, and in that sub, the first time that
+  !*     this sub is called, nhalf will = 0.  Then, after a first-shot
+  !*     center is found, the grid spacing will be cut in order to rerun
+  !*     barnes on a smaller grid, and that's when nhalf will be sent
+  !*     here as 3.
+  !*
+  !*  INPUT:
+  !*      npts     :: Num pts from x to edge of max/min search grid (Grid B)
+  !*                  (i.e., You define the size of Grid B by the value of
+  !*                  npts that you pass into this subroutine).
+  !*      nhalf    :: Number of times the grid spacing will be halved
+  !*      ri       :: Radius of influence (for use in barnes analysis)
+  !*      imax     :: Number of points in x-direction on original grid
+  !*      jmax     :: Number of points in y-direction on original grid
+  !*      dx       :: Input grid spacing in i-direction on original grid
+  !*      dy       :: Input grid spacing in j-direction on original grid
+  !*      rglatmax :: Value of northern-most latitude on original grid
+  !*      rglatmin :: Value of southern-most latitude on original grid
+  !*      rglonmax :: Value of eastern-most longitude on original grid
+  !*      rglonmin :: Value of western-most longitude on original grid
+  !*      geslat   :: Value of latitude of guess position of storm
+  !*      geslon   :: Value of longitude of guess position of storm
+  !*
+  !*  OUTPUT:
+  !*      ilonfix  :: i index on full, input grid that storm is fixed to
+  !*      jlatfix  :: j index on full, input grid that storm is fixed to
+  !*      ibeg     :: i index for top left of sub-array (Grid R) of input grid
+  !*      iend     :: i index for bot right of sub-array (Grid R) of input grid
+  !*      jbeg     :: j index for top left of sub-array (Grid R) of input grid
+  !*      jend     :: j index for bot right of sub-array (Grid R) of input grid
+  !*      igiret   :: Return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine get_ij_bounds (npts, nhalf, ri, imax, jmax, dx, dy, rglatmax, rglatmin, rglonmax, rglonmin, &
                            & geslon, geslat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
@@ -18417,7 +20621,13 @@ c     Roughly fix geslon to the grid point just EASTward of geslon.
           endif
 
   end subroutine get_ij_bounds
-  subroutine check_bounds (guesslon, guesslat, ist, ifh, trkrinfo, icbret)
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine checks to make sure that the requested
+  !*      storm is in fact within the model's grid boundaries;
+  !*      this is only a concern for the regional models.
+  !*
+  !****************************************************************************
   subroutine check_bounds (guesslon, guesslat, ist, ifh, trkrinfo, icbret)
 
       implicit none
@@ -18478,6 +20688,44 @@ c     Roughly fix geslon to the grid point just EASTward of geslon.
       endif
 
   end subroutine check_bounds
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine computes the distance between two
+  !*      lat/lon points by using spherical coordinates to
+  !*      calculate the great circle distance between the points.
+  !*                       Figure out the angle (a) between pt.B and pt.C,
+  !*             N. Pole   then figure out how much of a % of a great
+  !*               x       circle distance that angle represents.
+  !*              / \
+  !*            b/   \     cos(a) = (cos b)(cos c) + (sin b)(sin c)(cos A)
+  !*            /     \
+  !*        pt./<--A-->\c     NOTE: The latitude arguments passed to the
+  !*        B /         \           subr are the actual lat vals, but in
+  !*                     \          the calculation we use 90-lat.
+  !*               a      \
+  !*                       \pt.  NOTE: You may get strange results if you:
+  !*                         C    (1) use positive values for SH lats AND
+  !*                              you try computing distances across the
+  !*                              equator, or (2) use lon values of 0 to
+  !*                              -180 for WH lons AND you try computing
+  !*                              distances across the 180E meridian.
+  !*
+  !*  NOTE: In the diagram above, (a) is the angle between pt. B and
+  !*      pt. C (with pt. x as the vertex), and (A) is the difference in
+  !*      longitude (in degrees, absolute value) between pt. B and pt. C.
+  !*
+  !*  !!! NOTE !!! -- THE PARAMETER ecircum IS DEFINED (AS OF THE
+  !*      ORIGINAL WRITING OF THIS SYSTEM) IN KM, NOT M, SO BE AWARE THAT
+  !*      THE DISTANCE RETURNED FROM THIS SUBROUTINE IS ALSO IN KM.
+  !*
+  !*  20 May 2022: After all these years with the  tracker, I uncovered
+  !*      a bug in this distance calculation.  For points that are
+  !*      extremely close to each other, inverse cosine function would
+  !*      return a value of zero because of truncation due to using single
+  !*      precision.  I had to switch to using double precision and also
+  !*      using the double-precision versions of sin & cos (dsin & dcos).
+  !*
+  !****************************************************************************
   subroutine calcdist(rlonb, rlatb, rlonc, rlatc, xdist, degrees)
 
       implicit none
@@ -18519,6 +20767,14 @@ c     (e.g., 1.00000000007), due to (I'm guessing) rounding errors.
       xdist8      = circ_fract * ecircum
 
   end subroutine calcdist
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine  subtracts out the coriolis parameter
+  !*      from the vorticity values.  It is needed because at the original
+  !*      writing of this system, all of the forecast centers who included
+  !*      vorticity included only absolute vorticity.
+  !*
+  !****************************************************************************
   subroutine subtract_cor (imax, jmax, dy, level)
 
       implicit none
@@ -18526,6 +20782,29 @@ c     (e.g., 1.00000000007), due to (I'm guessing) rounding errors.
     integer :: i, j, imax, jmax, level
     real    :: dy, coriolis, rlat
   end subroutine subtract_cor
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine uses various input regarding the model
+  !*      and forecast hour and generates the name of the input grib file
+  !*      for this particular forecast hour.  Remember that the lead time
+  !*      is in minutes and that 5 spaces must be reserved for the lead
+  !*      time (e.g., f00360).  File name should be something that looks
+  !*      like either, e.g., "gfdl.6thdeg.katrina12l.2005082818.f00720",
+  !*      or "gfdl.6thdeg.2005082818.f00720" (the part in there with the
+  !*      storm name & ID is optional).  The grib index file name should
+  !*      be exactly the same as the grib data file itself, but with the
+  !*      character string ".ix" added onto the end of the name.
+  !*
+  !*      NOTE: Array iftotalmins is brought in via module tracked_parms.
+  !*
+  !*  INPUT:
+  !*      ifh       :: integer array index for current lead time
+  !*
+  !*  OUTPUT:
+  !*      gfilename :: GRIB file name
+  !*      ifilename :: GRIB index file name
+  !*
+  !****************************************************************************
   subroutine get_grib_file_name (ifh, gfilename, ifilename)
 
       implicit none
@@ -18571,6 +20850,126 @@ c     the grib file, with "ix" added to the end of it.
       endif
 
   end subroutine get_grib_file_name
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine reads the input GRIB file for the
+  !*      tracked parameters.  It then calls subroutines to convert the
+  !*      data from a 1-d array into a 2-d array if the read was successful.
+  !*
+  !*  There are up to 9 fields that are read in that will be used to
+  !*      locate the storm position.  There are an additional 4 variables
+  !*      (500 mb u- and v-components and 10 m u- and v- components) that
+  !*      will not be used for tracking, but only for helping to estimate
+  !*      the next first guess position (500 mb winds) and for estimating
+  !*      the max near-surface wind speeds in the vicinity of the storm
+  !*      (10 m winds).
+  !*
+  !*  Fields read in are listed here.  Numbers indicate positioning in
+  !*      the readflag logical array:
+  !*
+  !*      1.   850 mb absolute vorticity
+  !*      2.   700 mb absolute vorticity
+  !*      3.   850 mb u-component
+  !*      4.   850 mb v-component
+  !*      5.   700 mb u-component
+  !*      6.   700 mb v-component
+  !*      7.   850 mb geopotential height
+  !*      8.   700 mb geopotential height
+  !*      9.   MSLP
+  !*      10.  10-m u-component
+  !*      11.  10-m v-component
+  !*      12.  500 mb u-component
+  !*      13.  500 mb v-component
+  !*      14.  300-500 mb mean temperature (I jerry-rigged this by storing
+  !*           the data as being at the 401 mb level.)
+  !*      15.  500 mb geopotential height
+  !*      16.  200 mb geopotential height
+  !*      17.  Land-Sea mask -- This is for tcgen applications only, and
+  !*           even there, it's optional.
+  !*      18.  200 mb u-component
+  !*      19.  200 mb u-component
+  !*      20.  SST
+  !*
+  !*  For genesis humidity & temperature parameters (if requested), the
+  !*      list of variables goes as follows:
+  !*
+  !*      1.  850 mb specific humidity
+  !*      2. 1000 mb relative humidity
+  !*      3.  925 mb relative humidity
+  !*      4.  800 mb relative humidity
+  !*      5.  750 mb relative humidity
+  !*      6.  700 mb relative humidity
+  !*      7.  650 mb relative humidity
+  !*      8.  600 mb relative humidity
+  !*      9. 1000 mb specific humidity
+  !*     10.  925 mb specific humidity
+  !*     11.  800 mb specific humidity
+  !*     12.  750 mb specific humidity
+  !*     13.  700 mb specific humidity
+  !*     14.  650 mb specific humidity
+  !*     15.  600 mb specific humidity
+  !*     16. 1000 mb temperature
+  !*     17.  925 mb temperature
+  !*     18.  800 mb temperature
+  !*     19.  750 mb temperature
+  !*     20.  700 mb temperature
+  !*     21.  650 mb temperature
+  !*     22.  600 mb temperature
+  !*     23.  500 mb omega
+  !*
+  !*  INPUT:
+  !*      imax              :: integer number of pts in i-direction on grid
+  !*      jmax              :: integer number of pts in j-direction on grid
+  !*      ifh               :: integer index for forecast hour
+  !*      need_to_flip_lats :: logical flag read in from getgridinfo that
+  !*                           indicates if data needs flipped north to south
+  !*      need_to_flip_lons :: logical flag read in from getgridinfo that
+  !*                           indicates if data needs flipped east to west
+  !*      inp               :: of a derived type, contains user-input info
+  !*      lugb              :: integer unit number of input grib file
+  !*      lugi              :: integer unit number of input grib index file
+  !*      trkrinfo          :: derived type that contains info on the type of
+  !*                           tracker run that we are performing.
+  !*
+  !*  OUTPUT:
+  !*      readflag          :: logical array, indicates if a parm was read in
+  !*      readgenflag       :: logical array, indicates if a genesis parm was read in
+  !*      valid_pt          :: logical array, indicates for each (i,j) if there is
+  !*                           valid data at the point (used for regional grids)
+  !*
+  !*  The following data statements contain the parameters that will be
+  !*      used to search the grib files.  The first 9 parameters will all be
+  !*      used to locate the storm position.  The last 4 parameters (500 mb
+  !*      u- and v-components and 10 m u- and v- components) will not be
+  !*      used for tracking, but only for helping to estimate the next first
+  !*      guess position (500 mb winds) and for estimating the max near-
+  !*      surface wind speeds in the vicinity of the storm (10 m winds).
+  !*
+  !*  ** NOTE: iglevtyp(12 & 13) and iglev(12 & 13) are initialized to
+  !*      0 just to satisfy the IBM xlf compiler, which barks about
+  !*      there being too few initial values in the list when I
+  !*      only had 11 values there -- even though the real
+  !*      initialization for these variables is done just about
+  !*      10 lines below.
+  !*
+  !*  ** NOTE: The new ECMWF hi-res data uses the ECMWF GRIB parameter
+  !*      ID table, which has different values than the NCEP
+  !*      table.  Therefore, we needed to add the variables and
+  !*      data values for ec_igparm, ec_iglevtyp and ec_iglev.
+  !*
+  !*  Model numbers used: (1) AVN, (2) MRF, (3) UKMET, (4) ECMWF,
+  !*      (5) NGM, (6) Early Eta, (7) NAVGEM, (8) GDAS,
+  !*      (10) NCEP Ensemble, (11) Ensemble relocation,
+  !*      (13) SREF Ensemble,
+  !*      (14) NCEP Ensemble (from ensstat mean fields),
+  !*      (15) CMC, (16) CMC Ensemble, (17) HWRF,
+  !*      (18) HWRF Ensemble, (19) HWRF-DAS (HDAS),
+  !*      (20) NCEP Ensemble RELOCATION
+  !*      (21) ECMWF Ensemble
+  !*      (23) FNMOC Ensemble
+  !*      (24) HWRF Basin-scale
+  !*
+  !****************************************************************************
   subroutine getdata_grib (readflag, readgenflag, valid_pt, imax, jmax, ifh, need_to_flip_lats, &
                           & need_to_flip_lons, inp, lugb, lugi, trkrinfo) 
 
@@ -20466,6 +22865,100 @@ c             Convert data to 2-d array
                 end select
 
   end subroutine getdata_grib
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine reads the input NetCDF file for the
+  !*      tracked parameters for one lead time.
+  !*
+  !*  There are up to 9 fields that are read in that will be used to
+  !*      locate the storm position.  There are an additional 4 variables
+  !*      (500 mb u- and v-components and 10 m u- and v- components) that
+  !*      will not be used for tracking, but only for helping to estimate
+  !*      the next first guess position (500 mb winds) and for estimating
+  !*      the max near-surface wind speeds in the vicinity of the storm
+  !*      (10 m winds).
+  !*
+  !*      Fields read in are listed here.  Numbers indicate positioning in
+  !*      the readflag logical array:
+  !*
+  !*      1.   850 mb absolute vorticity
+  !*      2.   700 mb absolute vorticity
+  !*      3.   850 mb u-component
+  !*      4.   850 mb v-component
+  !*      5.   700 mb u-component
+  !*      6.   700 mb v-component
+  !*      7.   850 mb geopotential height
+  !*      8.   700 mb geopotential height
+  !*      9.   MSLP
+  !*     10.   10-m u-component
+  !*     11.   10-m v-component
+  !*     12.   500 mb u-component
+  !*     13.   500 mb v-component
+  !*     14.   300-500 mb mean temperature
+  !*     15.   500 mb geopotential height
+  !*     16.   200 mb geopotential height
+  !*     17.   Land-Sea mask -- This is for tcgen applications only, and
+  !*           even there, it's optional.
+  !*     18.   200 mb u-component
+  !*     19.   200 mb u-component
+  !*     20.   SST
+  !*
+  !*      For genesis humidity & temperature parameters (if requested), the
+  !*      list of variables goes as follows:
+  !*
+  !*      1.  850 mb specific humidity
+  !*      2.  1000 mb relative humidity
+  !*      3.  925 mb relative humidity
+  !*      4.  800 mb relative humidity
+  !*      5.  750 mb relative humidity
+  !*      6.  700 mb relative humidity
+  !*      7.  650 mb relative humidity
+  !*      8.  600 mb relative humidity
+  !*      9.  1000 mb specific humidity
+  !*     10.  925 mb specific humidity
+  !*     11.  800 mb specific humidity
+  !*     12.  750 mb specific humidity
+  !*     13.  700 mb specific humidity
+  !*     14.  650 mb specific humidity
+  !*     15.  600 mb specific humidity
+  !*     16.  1000 mb temperature
+  !*     17.  925 mb temperature
+  !*     18.  800 mb temperature
+  !*     19.  750 mb temperature
+  !*     20.  700 mb temperature
+  !*     21.  650 mb temperature
+  !*     22.  600 mb temperature
+  !*     23.  500 mb omega
+  !*
+  !*  If the user has requested to check the cyclone phase space for
+  !*      this run (phaseflag set to 'y' and phasescheme set to 'cps'),
+  !*      then we need to have gp height data for 900-300 mb at every 50
+  !*      mb. Some of those levels for gp height data were already read
+  !*      in with the read of the initial 17 parameters, but we will be
+  !*      sure to read in the others, if requested.
+  !*
+  !*  INPUT:
+  !*      ncfile_id   integer ID associated with the NetCDF file
+  !*      nc_lsmask_file_id :: integer ID associated with the separate NetCDF
+  !*                           land-sea mask file, if one is going to be used.
+  !*      imax              :: integer number of pts in i-direction on grid
+  !*      jmax              :: integer number of pts in j-direction on grid
+  !*      ifh               :: integer index for forecast hour
+  !*      need_to_flip_lats :: logical flag read in from getgridinfo that
+  !*                           indicates if data needs flipped north to south
+  !*      need_to_flip_lons :: logical flag read in from getgridinfo that
+  !*                           indicates if data needs flipped east to west
+  !*      ncfile_tmax       :: integer with max number of time levels in the input
+  !*                           NetCDF file, as read in from the NetCDF file
+  !*                           itself in subroutine read_netcdf_hours.
+  !*
+  !*  OUTPUT:
+  !*      readflag          :: logical array, indicates if a parm was read in
+  !*      readgenflag       :: logical array, indicates if a genesis parm was read in
+  !*      valid_pt          :: logical array, indicates for each (i,j) if there is
+  !*                           valid data at the point (used for regional grids)
+  !*
+  !****************************************************************************
   subroutine getdata_netcdf (ncfile_id, nc_lsmask_file_id, readflag, readgenflag, valid_pt, imax, jmax, ifh, &
                             & need_to_flip_lats, need_to_flip_lons, ncfile_tmax, netcdfinfo, trkrinfo)
 
@@ -21346,6 +23839,12 @@ c            call bitmapchk(kf,lb,f,dmin,dmax)
       endif
 
   end subroutine getdata_netcdf
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine queries a netcdf file to get the
+  !*      value of a requested file dimension (e.g., imax, jmax)
+  !*
+  !****************************************************************************
   subroutine get_ncdim1 (ncid, var1_name, nmax)
 
       include "netcdf.inc"
@@ -21363,16 +23862,16 @@ c            call bitmapchk(kf,lb,f,dmin,dmax)
 
     end subroutine get_ncdim1
 c
-c------------------------------------------------------------------
-c       
-c------------------------------------------------------------------
-      subroutine get_var1_one_dim (ncid,var1_name,nmax,var1)
-c
-c     ABSTRACT: This routine reads a netcdf file in order to return
-c     a 1-dimensional array of data.  Note that we are using just 
-c     this one subroutine to read what will either be a 4-byte or 
-c     an 8-byte real array, and then we will copy the array back
-c     into array var1, which will have the native type that the 
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine reads a netcdf file in order to return
+  !*      a 1-dimensional array of data.  Note that we are using just
+  !*      this one subroutine to read what will either be a 4-byte or
+  !*      an 8-byte real array, and then we will copy the array back
+  !*      into array var1, which will have the native type that the
+  !*      tracker was compiled in.
+  !*
+  !****************************************************************************
   subroutine get_var1_one_dim (ncid, var1_name, nmax, var1)
 
       USE verbose_output
@@ -21463,13 +23962,13 @@ c     into array var1, which will have the native type that the
 c
   end subroutine get_var1_one_dim
 c
-c------------------------------------------------------------------
-c       
-c------------------------------------------------------------------
-      subroutine get_var1_one_dim4 (ncid,var1_name,nmax,readvar4)
-c
-c     ABSTRACT: This routine reads a netcdf file in order to return
-c     a 1-dimensional array of data.  This one is intended for an 
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine reads a netcdf file in order to return
+  !*      a 1-dimensional array of data.  This one is intended for an
+  !*      array of real, 4-byte data.
+  !*
+  !****************************************************************************
   subroutine get_var1_one_dim4 (ncid, var1_name, nmax, readvar4)
 
       USE verbose_output
@@ -21495,13 +23994,13 @@ c     a 1-dimensional array of data.  This one is intended for an
 c
   end subroutine get_var1_one_dim4
 c
-c------------------------------------------------------------------
-c       
-c------------------------------------------------------------------
-      subroutine get_var1_one_dim8 (ncid,var1_name,nmax,readvar8)
-c
-c     ABSTRACT: This routine reads a netcdf file in order to return
-c     a 1-dimensional array of data.  This one is intended for an 
+  !****************************************************************************
+  !*
+  !* ABSTRACT: This routine reads a netcdf file in order to return
+  !*     a 1-dimensional array of data.  This one is intended for an
+  !*    array of real, 8-byte data.
+  !*
+  !****************************************************************************
   subroutine get_var1_one_dim8 (ncid, var1_name, nmax, readvar8)
 
       USE verbose_output
@@ -21522,6 +24021,22 @@ c     a 1-dimensional array of data.  This one is intended for an
 !     write(*,*) 'Got var1id', var1id
 
   end subroutine get_var1_one_dim8
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine inquires into a NetCDF file using calls
+  !*      to the NetCDF library to determine the real type (32-bit vs.
+  !*      64-bit real) for a given variable.
+  !*
+  !*  INPUT:
+  !*      ncid      :: integer that contains the NetCDF file ID
+  !*      var3_name :: character name of NetCDF input variable
+  !*
+  !*  OUTPUT:
+  !*      xtype     :: integer value that indicates 4-byte or 8-byte real.
+  !*                   A value of 5 = 4-byte real;  6 = 8-byte real.
+  !*      ignrret   :: integer return code from this routine
+  !*
+  !****************************************************************************
   subroutine get_netcdf_real_type (ncid, var3_name, xtype, ignrret)
     integer,       intent(in) :: ncid
       character*(*), intent(in) :: var3_name
@@ -21547,6 +24062,35 @@ c     a 1-dimensional array of data.  This one is intended for an
       if (status .ne. NF_NOERR) call handle_netcdf_err(status)
 
   end subroutine get_netcdf_real_type
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine reads a netcdf file and returns a
+  !*      2-dimensional synoptic variable at a particular lead time.
+  !*      The lead time is specified by the ltix array, which is
+  !*      included in module tracked_parms and defined in subroutine
+  !*      read_fhours.
+  !*
+  !*  INPUT:
+  !*      ncid      :: integer that contains the NetCDF file ID
+  !*      var3_name :: character name of NetCDF input file
+  !*      imax      :: integer x-dimension of input data
+  !*      jmax      :: integer y-dimension of input data
+  !*      ncix      :: integer index of time level for where this time level
+  !*                   actually is inside the NetCDF data.  Do NOT confuse this
+  !*                   with the index of where this forecast hour is in the
+  !*                   user's list of input forecast hours, as they may be
+  !*                   different.  For example, the user may request times that
+  !*                   are every 6 hours, but the NetCDF file might have times
+  !*                   that are every hour, so the indices for those two arrays
+  !*                   will be different.  Be sure to use the one (ncix) that
+  !*                   indicates where the data actually starts in the
+  !*                   NetCDF file.
+  !*
+  !*  OUTPUT:
+  !*      var3      :: real array with real values returned from NetCDF read
+  !*      igvret    :: integer return code from this routine
+  !*
+  !****************************************************************************
   subroutine get_var3_tlev_real4 (ncid, var3_name, imax, jmax, ncix, var3, igvret)
 
       include "netcdf.inc"
@@ -21588,6 +24132,35 @@ c
       endif
 
   end subroutine get_var3_tlev_real4
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine reads a netcdf file and returns a
+  !*      2-dimensional synoptic variable at a particular lead time.
+  !*      The lead time is specified by the ltix array, which is
+  !*      included in module tracked_parms and defined in subroutine
+  !*      read_fhours.
+  !*
+  !*  INPUT:
+  !*      ncid      :: integer that contains the NetCDF file ID
+  !*      var3_name :: character name of NetCDF input file
+  !*      imax      :: integer x-dimension of input data
+  !*      jmax      :: integer y-dimension of input data
+  !*      ncix      :: integer index of time level for where this time level
+  !*                   actually is inside the NetCDF data.  Do NOT confuse this
+  !*                   with the index of where this forecast hour is in the
+  !*                   user's list of input forecast hours, as they may be
+  !*                   different. For example, the user may request times that
+  !*                   are every 6 hours, but the NetCDF file might have times
+  !*                   that are every hour, so the indices for those two arrays
+  !*                   will be different. Be sure to use the one (ncix) that
+  !*                   indicates where the data actually starts in the
+  !*                   NetCDF file.
+  !*
+  !*  OUTPUT:
+  !*      var3      :: real array with real values returned from NetCDF read
+  !*      igvret    :: integer return code from this routine
+  !*
+  !****************************************************************************
   subroutine get_var3_tlev_double (ncid, var3_name, imax, jmax, ncix, var3, igvret)
 
       include "netcdf.inc"
@@ -21633,12 +24206,12 @@ c
 
   end subroutine get_var3_tlev_double
 c
-c----------------------------------------------------------------------
-c
-c----------------------------------------------------------------------
-      subroutine handle_netcdf_err (status)
-c
-c     ABSTRACT: This subroutine is an error handling routine for NetCDF-
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is an error handling routine for NetCDF-
+  !*      related functions.
+  !*
+  !****************************************************************************
   subroutine handle_netcdf_err (status)
 
       implicit         none
@@ -21655,10 +24228,56 @@ c
       endif
 
   end subroutine handle_netcdf_err
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine checks the bitmap for non-existent data values.
+  !*      Since the data from the regional models have been interpolated
+  !*      from either a polar stereographic or lambert conformal grid
+  !*      onto a lat/lon grid, there will be some gridpoints around the
+  !*      edges of this lat/lon grid that have no data; these grid
+  !*      points have been bitmapped out by Mark Iredell's interpolater.
+  !*      To provide another means of checking for invalid data points
+  !*      later in the program, set these bitmapped data values to a
+  !*      value of -999.0.  The min and max of this array are also
+  !*      returned if a user wants to check for reasonable values.
+  !*
+  !****************************************************************************
   subroutine bitmapchk (n, ld, d, dmin, dmax)
     logical(1) :: ld
     dimension  :: ld(n), d(n) !CAITLYN - i have never seen this data type before
   end subroutine bitmapchk
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine converts a 1-dimensional input
+  !*      array of logical data (lb1d) into a 2-dimensional output
+  !*      array (dimension imax,jmax) of logical data (lb2d).
+  !*
+  !*  This subroutine was updated in 6/2000 to add the scanning mode
+  !*      flag (iscanflag) as an input.  This is in order to handle grids
+  !*      that are flipped.  Most grids -- NCEP, UKMET, ECMWF -- have
+  !*      point (1,1) as the uppermost left point on the grid, and the
+  !*      data goes from north to south.  Some grids -- GFDL and the new
+  !*      NAVGEM grid -- are flipped; their point (1,1) is the lowermost
+  !*      left point, and their data goes from south to north.  So if
+  !*      the scanning mode flag indicates northward scanning data
+  !*      (bit 2 in the flag is turned on), we catch it in this
+  !*      subroutine and flip the data ourselves for our own arrays,
+  !*      since this whole program is structured around the data going
+  !*      from north to south.  As of the writing of this, only the
+  !*      first 3 bits of the scanning flag are used, which is why we
+  !*      can use the mod statement in the code below.
+  !*
+  !*  INPUT:
+  !*      imax      :: Number of gridpoints in i direction in input box
+  !*      jmax      :: Number of gridpoints in j direction in input box
+  !*      lb1d      :: 1-d array containing logical bitmap values
+  !*      iscanflag :: This is kgds(11), an integer value in the GDS,
+  !*                   which holds the scanning mode for the data values
+  !*
+  !*  OUTPUT:
+  !*      lb2d      :: 2-d array containing logical bitmap values
+  !*
+  !****************************************************************************
   subroutine conv1d2d_logic (imax, jmax, lb1d, lb2d, need_to_flip_lats)
     logical(1) :: lb1d(imax*jmax), lb2d(imax,jmax)
       logical(1) :: need_to_flip_lats
@@ -21667,6 +24286,46 @@ c
       if (need_to_flip_lats) then
 
   end subroutine conv1d2d_logic
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: The purpose of this routine is to create a 2-d logical
+  !*      bitmap to be used for masking out regions with missing data,
+  !*      such as for a regional grid with irregular boundaries (such as
+  !*      we've seen for the regional / nested FV3).  This bitmap will
+  !*      have the same functionality as a GRIB1/GRIB2 bitmap.  The trick
+  !*      is that NetCDF does not have a logical bitmap within its
+  !*      definition, so we need to make one.  We do this by reading in
+  !*      the "missing_value" attribute for any variable, then here we
+  !*      scan through all the data values retrieved from the NetCDF read,
+  !*      and then for all grid points with missing values we set the
+  !*      valid_pt flag to .false.
+  !*
+  !*  Note the use of the need_to_flip_lats flag.  This is in order to
+  !*      handle grids that are flipped.  Most grids -- NCEP, UKMET, ECMWF
+  !*      -- have point (1,1) as the uppermost left point on the grid, and
+  !*      the data goes from north to south.  Some grids -- GFDL and the
+  !*      new NAVGEM grid -- are flipped; their point (1,1) is the lowermost
+  !*      left point, and their data goes from south to north.  So if
+  !*      the need_to_flip_lats flag was set to TRUE in getgridinfo, meaning
+  !*      that we have northward scanning data, we catch it in this
+  !*      subroutine and flip the data ourselves for our own arrays,
+  !*      since this whole program is structured around the data going
+  !*      from north to south.
+  !*
+  !*  INPUT:
+  !*      imax              :: Number of gridpoints in i direction in input box
+  !*      jmax              :: Number of gridpoints in j direction in input box
+  !*      dat1d             :: 1-d array containing floating point data values
+  !*      xmissing_val      :: real value of missing value for the given variable
+  !*                           that was read in for the calling routine
+  !*      need_to_flip_lats :: logical flag, set in getgridinfo, that
+  !*                           indicates if data is correctly N-to-S, or if it is
+  !*                           S-to-N and needs to be flipped.
+  !*
+  !*  OUTPUT:
+  !*      lb2d              :: 2-d array containing logical bitmap values
+  !*
+  !****************************************************************************
   subroutine conv1d2d_logic_netcdf (imax, jmax, dat1d, lb2d, xmissing_val, need_to_flip_lats)
 
       implicit none
@@ -21734,40 +24393,40 @@ c
       end
   end subroutine conv1d2d_logic_netcdf
 c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine conv1d2d_real (imax,jmax,dat1d,dat2d,need_to_flip_lats)
-c
-c     ABSTRACT: This subroutine converts a 1-dimensional input 
-c     array of real data (dat1d) into a 2-dimensional output
-c     array (dimension imax,jmax) of real data (dat2d).
-c
-c     This subroutine was updated in 6/2000 to add the scanning mode
-c     flag (iscanflag) as an input.  This is in order to handle grids
-c     that are flipped.  Most grids -- NCEP, UKMET, ECMWF -- have
-c     point (1,1) as the uppermost left point on the grid, and the
-c     data goes from north to south.  Some grids -- GFDL and the new
-c     NAVGEM grid -- are flipped; their point (1,1) is the lowermost
-c     left point, and their data goes from south to north.  So if
-c     the scanning mode flag indicates northward scanning data
-c     (bit 2 in the flag is turned on), we catch it in this
-c     subroutine and flip the data ourselves for our own arrays,
-c     since this whole program is structured around the data going
-c     from north to south.  As of the writing of this, only the
-c     first 3 bits of the scanning flag are used, which is why we
-c     can use the mod statement in the code below.
-c
-c     UPDATE 8/2009: I removed the scanning mode flag, since that is
-c     GRIB-specific.  The north-south determination is now handled with
-c     the logical flag need_to_flip_lats.
-c
-c     INPUT:
-c     imax     Number of gridpoints in i direction in input box
-c     jmax     Number of gridpoints in j direction in input box
-c     dat1d    1-d real array of data
-c     need_to_flip_lats  logical flag, set in getgridinfo, that
-c              indicates if data is correctly N-to-S, or if it is
-c              S-to-N and needs to be flipped.
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine converts a 1-dimensional input
+  !*      array of real data (dat1d) into a 2-dimensional output
+  !*      array (dimension imax,jmax) of real data (dat2d).
+  !*
+  !*  This subroutine was updated in 6/2000 to add the scanning mode
+  !*      flag (iscanflag) as an input.  This is in order to handle grids
+  !*      that are flipped.  Most grids -- NCEP, UKMET, ECMWF -- have
+  !*      point (1,1) as the uppermost left point on the grid, and the
+  !*      data goes from north to south.  Some grids -- GFDL and the new
+  !*      NAVGEM grid -- are flipped; their point (1,1) is the lowermost
+  !*      left point, and their data goes from south to north.  So if
+  !*      the scanning mode flag indicates northward scanning data
+  !*      (bit 2 in the flag is turned on), we catch it in this
+  !*      subroutine and flip the data ourselves for our own arrays,
+  !*      since this whole program is structured around the data going
+  !*      from north to south.  As of the writing of this, only the
+  !*      first 3 bits of the scanning flag are used, which is why we
+  !*      can use the mod statement in the code below.
+  !*
+  !*
+  !*  INPUT:
+  !*      imax              :: Number of gridpoints in i direction in input box
+  !*      jmax              :: Number of gridpoints in j direction in input box
+  !*      dat1d             :: 1-d real array of data
+  !*      need_to_flip_lats :: logical flag, set in getgridinfo, that
+  !*                           indicates if data is correctly N-to-S, or if it is
+  !*                           S-to-N and needs to be flipped.
+  !*
+  !*  OUTPUT:
+  !*      dat2d             :: 2-d real array of data
+  !*
+  !****************************************************************************
   subroutine conv1d2d_real (imax, jmax, dat1d, dat2d, need_to_flip_lats)
 c     OUTPUT:
 c     dat2d    2-d real array of data
@@ -21788,6 +24447,39 @@ c
         enddo
 
   end subroutine conv1d2d_real
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine converts a 1-dimensional input
+  !*      array of real data (dat1d) into a 2-dimensional output
+  !*      array (dimension imax,jmax) of real data (dat2d).
+  !*
+  !*  This subroutine was updated in 6/2000 to add the scanning mode
+  !*      flag (iscanflag) as an input.  This is in order to handle grids
+  !*      that are flipped.  Most grids -- NCEP, UKMET, ECMWF -- have
+  !*      point (1,1) as the uppermost left point on the grid, and the
+  !*      data goes from north to south.  Some grids -- GFDL and the new
+  !*      NAVGEM grid -- are flipped; their point (1,1) is the lowermost
+  !*      left point, and their data goes from south to north.  So if
+  !*      the scanning mode flag indicates northward scanning data
+  !*      (bit 2 in the flag is turned on), we catch it in this
+  !*      subroutine and flip the data ourselves for our own arrays,
+  !*      since this whole program is structured around the data going
+  !*      from north to south.  As of the writing of this, only the
+  !*      first 3 bits of the scanning flag are used, which is why we
+  !*      can use the mod statement in the code below.
+  !*
+  !*  INPUT:
+  !*      imax              :: Number of gridpoints in i direction in input box
+  !*      jmax              :: Number of gridpoints in j direction in input box
+  !*      dat1d             :: 1-d real array of data
+  !*      need_to_flip_lats :: logical flag, set in getgridinfo, that
+  !*                           indicates if data is correctly N-to-S, or if it is
+  !*                           S-to-N and needs to be flipped.
+  !*
+  !*  OUTPUT:
+  !*      dat2d             :: 2-d real array of data
+  !*
+  !****************************************************************************
   subroutine conv1d2d_real_netcdf (imax, jmax, dat1d, dat2d, need_to_flip_lats)
     real       :: dat1d(imax*jmax)
     real       :: dat2d(imax,jmax)
@@ -21805,6 +24497,14 @@ c
         enddo
 
   end subroutine conv1d2d_real_netcdf
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine simply reads in the namelists that are
+  !*      created in the shell script.  Namelist datein contains the
+  !*      starting date information, plus the model identifier.  Namelist
+  !*      stswitch contains the flags for processing for each storm.
+  !*
+  !****************************************************************************
   subroutine read_nlists (inp, trkrinfo, netcdfinfo, lunml)
 
       implicit none
@@ -22330,6 +25030,37 @@ c
       endif
 
   end subroutine read_nlists
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine reads in a text file that contains the
+  !*      forecast times that will be read in.  The format of the file is
+  !*      in "MMMMM", i.e., minutes, for example, for a forecast going out
+  !*      to 120h, the file would look like this:
+  !*
+  !*  For reference, here are the times that match up 
+  !*      with the minutes on the left:
+  !*
+  !*      1        0                    0:00
+  !*      2      240                    4:00
+  !*      3      270                    4:30
+  !*      4      300                    5:00
+  !*      5      330                    5:30
+  !*      6      360                    6:00
+  !*      7      600                   10:00
+  !*      8      630                   10:30
+  !*      9      660                   11:00
+  !*     10      690                   11:30
+  !*     11      720                   12:00
+  !*     12      960                   16:00
+  !*     13      990                   16:30
+  !*      .       .                      .
+  !*      .       .                      .
+  !*      .       .                      .
+  !*     87     7200                  120:00
+  !*
+  !*     Note that we are now allowing for sub-hourly time intervals.
+  !*
+  !****************************************************************************
   subroutine read_fhours (ifhmax)
     integer, parameter :: iunit_fh = 15
     integer            :: itmphrs(750), itmpmins(750), input_mins(750), itmpltix(750)
@@ -22451,37 +25182,37 @@ c
       return
   end subroutine read_fhours
 c
-c---------------------------------------------------------------------
-c
-c---------------------------------------------------------------------
-      subroutine read_tcv_card (lucard,maxstorm,trkrinfo,numtcv,iret)
-c
-c     ABSTRACT: This subroutine reads in the updated TC Vitals file
-c               for the current time and prints out those cards (storms)
-c               that have been selected to be processed.  It also 
-c               takes the initial positions from the tcv card for each
-c               storm and puts them into the slonfg & slatfg arrays.
-c               Note that this routine is reading in vitals in the 
-c               standard format for TCs only.  Any genesis vitals are
-c               read in in subroutine  read_gen_vitals.
-c
-c     INPUT:    
-c     lucard    integer unit number for tcvitals card
-c     trkrinfo  derived type that contains info on the type of 
-c               tracker run that we are performing.
-c
-c     OUTPUT:   
-c     maxstorm  max # of storms to be handled for this case
-c     numtcv    number of storms read off of the input tcvitals file
-c     iret      return code from this subroutine
-c
-c     OTHER:
-c     stormswitch 1,2 or 3 (see more description under Main pgm section)
-c     slonfg     first guess array for longitude
-c     slatfg     first guess array for latitude
-c     storm      contains the tcvitals info
-c     (storm, stormswitch, slonfg and slatfg are allocatable and are 
-c      defined in module def_vitals)
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine reads in the updated TC Vitals file
+  !*      for the current time and prints out those cards (storms)
+  !*      that have been selected to be processed.  It also
+  !*      takes the initial positions from the tcv card for each
+  !*      storm and puts them into the slonfg & slatfg arrays.
+  !*      Note that this routine is reading in vitals in the
+  !*      standard format for TCs only.  Any genesis vitals are
+  !*      read in in subroutine  read_gen_vitals.
+  !*
+  !*  INPUT:
+  !*      lucard      :: integer unit number for tcvitals card
+  !*      trkrinfo    :: derived type that contains info on the type of
+  !*                     tracker run that we are performing.
+  !*
+  !*  OUTPUT:
+  !*      maxstorm    :: max # of storms to be handled for this case
+  !*      numtcv      :: number of storms read off of the input tcvitals file
+  !*      iret        :: return code from this subroutine
+  !*
+  !*  OTHER:
+  !*      stormswitch :: 1,2 or 3 (see more description under Main pgm section)
+  !*      slonfg      :: first guess array for longitude
+  !*      slatfg      :: first guess array for latitude
+  !*      storm       :: contains the tcvitals info
+  !*     
+  !*      (storm, stormswitch, slonfg and slatfg are allocatable and are
+  !*      defined in module def_vitals)
+  !*
+  !****************************************************************************
   subroutine read_tcv_card (lucard, maxstorm, trkrinfo, numtcv, iret)
       USE def_vitals; USE set_max_parms; USE trkrparms
       USE verbose_output
@@ -22779,6 +25510,83 @@ c            write (storm(i)%tcv_storm_name,'(i4.4)') i
       endif
 
   end subroutine read_tcv_card
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine reads in a modified TC Vitals file
+  !*      for the current time and prints out those cards (storms) that
+  !*      have been selected to be processed.  It also takes the initial
+  !*      positions from the tcv card for each storm and puts them into
+  !*      the slonfg & slatfg arrays.
+  !*
+  !*  The reason that these are referred to as modified tcvitals is
+  !*      that the format is different from standard TC vitals format.
+  !*      These vitals are created by a previous run of this tracker
+  !*      executable, and the storm identifier is different than that
+  !*      for a standard tcvitals.  The storm
+  !*      identifier contains the date/time that the storm was first
+  !*      identified, and the lat/lon position at which it was first
+  !*      identified.
+  !*
+  !*  EXAMPLE:  The following is a standard TC Vitals record, split
+  !*      up over 3 lines:
+  !*
+  !*      NHC  01L ALBERTO   20060614 1200 343N 0807W 035 093 1004 1012
+  !*           0278 15 222 -999 -999 -999 -999 M -999 -999 -999 -999 72
+  !*           520N  410W  -999 -999 -999 -999
+  !*
+  !*  EXAMPLE:  The following is the format for the "genesis" vitals,
+  !*      split over 3 lines, for the same system:
+  !*
+  !*      2006061000_F000_210N_0853W_01L 20060614 1200 343N 0807W 035 093
+  !*           1004 1012 0278 15 222 -999 -999 -999 -999 M -999 -999
+  !*           -999 -999 72 520N  410W  -999 -999 -999 -999
+  !*
+  !*  EXAMPLE:  If the vitals record is for a non-officially numbered
+  !*      system (i.e., any system that's not a TC being tracked
+  !*      by NHC or JTWC), then the storm number is replaced
+  !*      by the characters "FOF", for "Found On the Fly" by
+  !*      the  tracker.
+  !*
+  !*      2006071500_F000_150N_0681W_FOF 20060718 1200 185N 0792W 035 093
+  !*           1004 1012 0278 15 222 -999 -999 -999 -999 M -999 -999
+  !*           -999 -999 72 520N  410W  -999 -999 -999 -999
+  !*
+  !*  NOTE: The "F000" in there at character positions 12-15 are to
+  !*      indicate the forecast hour within that forecast cycle
+  !*      that the storm was first detected.  For a vitals record,
+  !*      this is always going to be 000 for fhr=0h, and really,
+  !*      it's not even needed.  However, I'm keeping it in there
+  !*      in order to keep the storm ID format exactly the same
+  !*      as the  output_atcf_sink forecast track record, which
+  !*      does have a use for that "FXXX" identifier in the output.
+  !*
+  !*  INPUT:
+  !*      lgvcard  :: integer unit number for tcgen-tcvitals card
+  !*
+  !*  OUTPUT:
+  !*      maxstorm    :: max # of storms to be handled for this case
+  !*      iret        :: return code from this subroutine
+  !*
+  !*  INPUT/OUTPUT:
+  !*      numtcv      :: As an input, this variable contains the number of
+  !*                     *tropical* cyclone vitals (i.e., regular tcvitals) that
+  !*                     were read off of the input tcvitals file in subroutine
+  !*                     read_tcv_card.  This variable will be incremented for
+  !*                     each "modified" vitals record that is read in this
+  !*                     subroutine, and so as output, this variable will
+  !*                     contain the combined total of tcvitals and modified
+  !*                     vitals records.
+  !*
+  !*  OTHER:
+  !*      stormswitch :: 1,2 or 3 (see more description under Main pgm section)
+  !*      slonfg      :: first guess array for longitude
+  !*      slatfg      :: first guess array for latitude
+  !*      storm       :: contains the tcvitals info
+  !*      
+  !*      (storm, stormswitch, slonfg and slatfg are allocatable and are
+  !*      defined in module def_vitals)
+  !*
+  !****************************************************************************
   subroutine read_gen_vitals (lgvcard, maxstorm, trkrinfo, numtcv, iret)
 
       implicit none
@@ -22983,6 +25791,17 @@ c
       endif
 
   end subroutine read_gen_vitals
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: The purpose of this subroutine is just to get the max
+  !*      values of i and j and the dx and dy grid spacing intervals for the
+  !*      grid to be used in the rest of the program.  So just read the
+  !*      grib file to get the lon and lat data.  Also, get the info for
+  !*      the data grid's boundaries.  This boundary information will be
+  !*      used later in the tracking algorithm, and is accessed via Module
+  !*      grid_bounds.
+  !*
+  !****************************************************************************
   subroutine getgridinfo_grib (imax, jmax, ifh, dx, dy, lugb, lugi, trkrinfo, need_to_flip_lats, &
                               & need_to_flip_lons, inp, gm_wrap_flag, iggret)
 
@@ -23739,6 +26558,17 @@ c     grid, whether that be a 'midlat' or a 'tcgen' run.
   99  format (' NEW BOUNDARY VALUE: ',f8.2)
 
   end subroutine getgridinfo_grib
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: The purpose of this subroutine is just to get the max
+  !*      values of i and j and the dx and dy grid spacing intervals for the
+  !*      grid to be used in the rest of the program.  So just query the
+  !*      netcdf file to get the lon and lat data.  Also, get the info for
+  !*      the data grid's boundaries.  This boundary information will be
+  !*      used later in the tracking algorithm, and is accessed via Module
+  !*      grid_bounds.
+  !*
+  !****************************************************************************
   subroutine getgridinfo_netcdf (ncfile_id, imax, jmax, dx, dy, trkrinfo, need_to_flip_lats, &
                                 & need_to_flip_lons, inp, netcdfinfo, iggret)
 
@@ -24048,38 +26878,38 @@ c
       return
   end subroutine getgridinfo_netcdf
 c
-c---------------------------------------------------------------------
-c
-c---------------------------------------------------------------------
-      subroutine read_netcdf_hours (ncfile,ncfile_id,ncfile_tmax,ifhmax
-     &                            ,ncfile_has_hour0,netcdfinfo,irnhret)
-c
-c     ABSTRACT: The purpose of this subroutine is to read the "time"
-c     dimension and "time data" from the NetCDF file so that we know
-c     how many time levels there are and what those time levels are.
-c     One reason for doing this is that some models, like the GFDL
-c     FV3, do not output hour 0 data, so we need to check this first
-c     before running through the tracking processing for the various 
-c     hours.  We will take the list of hours read in here directly from
-c     the NetCDF file and compare that against the *requested* list of 
-c     forecast hours that the user has entered.  The user might not be 
-c     aware that there is no hour 0 data for a given model.  We compare
-c     these two lists of forecast hours and then write a message if 
-c     there is a lead time that is not in the NetCDF file.
-c   
-c     INPUT:
-c     ncfile     character name of NetCDF file
-c     ncfile_id  integer id associated with NetCDF file after open
-c     ifhmax     integer max number of lead times that the user has 
-c                requested on the input lead times data file.  This
-c                value was set in subroutine read_fhours.
-c     netcdfinfo variable of user-defined type netcdfstuff (from 
-c                module netcdf_parms).
-c
-c     OUTPUT:
-c     ncfile_tmax integer max number of lead times that are in the 
-c                 NetCDF file, as read in from this subroutine
-c     ncfile_has_hour0 character flag (y|n) that tells whether or not 
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: The purpose of this subroutine is to read the "time"
+  !*      dimension and "time data" from the NetCDF file so that we know
+  !*      how many time levels there are and what those time levels are.
+  !*      One reason for doing this is that some models, like the GFDL
+  !*      FV3, do not output hour 0 data, so we need to check this first
+  !*      before running through the tracking processing for the various
+  !*      hours.  We will take the list of hours read in here directly from
+  !*      the NetCDF file and compare that against the *requested* list of
+  !*      forecast hours that the user has entered.  The user might not be
+  !*      aware that there is no hour 0 data for a given model.  We compare
+  !*      these two lists of forecast hours and then write a message if
+  !*      there is a lead time that is not in the NetCDF file.
+  !*
+  !*  INPUT:
+  !*      ncfile           :: character name of NetCDF file
+  !*      ncfile_id        :: integer id associated with NetCDF file after open
+  !*      ifhmax           :: integer max number of lead times that the user has
+  !*                          requested on the input lead times data file.  This
+  !*                          value was set in subroutine read_fhours.
+  !*      netcdfinfo       :: variable of user-defined type netcdfstuff (from
+  !*                          module netcdf_parms).
+  !*
+  !*  OUTPUT:
+  !*      ncfile_tmax      :: integer max number of lead times that are in the
+  !*                          NetCDF file, as read in from this subroutine
+  !*      ncfile_has_hour0 :: character flag (y|n) that tells whether or not
+  !*                          the input NetCDF data file actually has an hour0
+  !*                          record in it or not.
+  !*
+  !****************************************************************************
   subroutine read_netcdf_hours (ncfile, ncfile_id, ncfile_tmax, ifhmax, &
                                & ncfile_has_hour0, netcdfinfo, irnhret)
 c
@@ -24301,6 +27131,54 @@ c
         endif
 
   end subroutine read_netcdf_hours
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine checks to see if the input lat/lon
+  !*      point is associated with four surrounding (i,j) locations that
+  !*      have valid data.  The writing of this routine was prompted by the
+  !*      HFIP project in February, 2009.  Some of their high resolution
+  !*      data for their inner nests contained grids that had been rotated
+  !*      from native map projections to regular lat/lon grids, but that
+  !*      rotation left "empty" spots on the lat/lon grid where there is
+  !*      no data.  Then when searching in find_maxmin, we were running
+  !*      barnes iterations from these lat/lon locations where there was
+  !*      no data, which would give artificially low values at those
+  !*      lat/lon locations (because the  barnes scheme would only include
+  !*      points that were relatively far away where there was valid data).
+  !*      So in this routine, we call subroutine  fix_latlon_to_ij in order
+  !*      to get the nearest (i,j) coordinates, and then we check all of
+  !*      these points to make sure that valid data exist.
+  !*
+  !*  INPUT:
+  !*      imax         :: Num pts in i-direction on grid
+  !*      jmax         :: Num pts in j-direction on grid
+  !*      dx           :: grid spacing in i-direction
+  !*      dy           :: grid spacing in j-direction
+  !*      fxy          :: real array of input data values
+  !*      cmaxmin      :: character that tells if searching for max or min
+  !*      valid_pt     :: Logical; bitmap indicating if valid data at that pt
+  !*      rlatt, rlont :: input lat/lon about which we will check the
+  !*                      surrounding (i,j) locations for valid data.
+  !*      grid_maxlat  :: northernmost latitude on the input grid being sent to
+  !*                      this routine. This grid may be a subset of the original
+  !*                      full grid from the original dataset.
+  !*      grid_minlat  :: southernmost latitude on the input grid being sent to
+  !*                      this routine. This grid may be a subset of the original
+  !*                      full grid from the original dataset.
+  !*      grid_maxlon  :: easternmost longitude on the input grid being sent to
+  !*                      this routine. This grid may be a subset of the original
+  !*                      full grid from the original dataset.
+  !*      grid_minlon  :: westernmost longitude on the input grid being sent to
+  !*                      this routine. This grid may be a subset of the original
+  !*                      full grid from the original dataset.
+  !*      trkrinfo     :: derived type containing grid info on user boundaries
+  !*
+  !*  OUTPUT:
+  !*      icvpret      :: return code from this routine.  A value of 0 means that
+  !*                      all is okay and the input point is surrounded by valid
+  !*                      data.
+  !*
+  !****************************************************************************
   subroutine check_valid_point (imax, jmax, dx, dy, fxy, cmaxmin, valid_pt, rlont, rlatt, grid_maxlat, &
                                & grid_minlat, grid_maxlon, grid_minlon, trkrinfo, icvpret)
 
@@ -24322,6 +27200,97 @@ c
       endif
 
   end subroutine check_valid_point
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine takes an input lat/lon position and
+  !*      assigns it to a nearby (i,j) gridpoint.  If this is being used
+  !*      before the call to check_closed_contour after the  barnes analysis
+  !*      to see if we have a storm or not, then the lat/lon position that
+  !*      is input into this subroutine is one which was obtained from a
+  !*      barnes analysis, so it is essentially an area-weighted average
+  !*      of nearby points.  What we need to do in this subroutine is find
+  !*      the actual nearby gridpoint which does have the actual raw max or
+  !*      min value.  Then we return the (i,j) coordinates of that point as
+  !*      well as that raw data value at that point.
+  !*
+  !*  We want to do a simple search in the very few points around
+  !*      this (ipfix,jpfix) point to find the raw max or min data
+  !*      value.  First we need to set up a 4x4 box to search:
+  !*
+  !*            o     o     o     o
+  !*
+  !*
+  !*             o     a     b     o
+  !*                    +
+  !*
+  !*             o     c     d     o
+  !*
+  !*
+  !*             o     o     o     o
+  !*
+  !*  In the above diagram, if "+" is the lat/lon location of our
+  !*      barnes-found point (i.e., the input (parmlon,parmlat)), and
+  !*      a-b-c-d is the square of points surrounding "+", we only want
+  !*      to look out 1 layer of points further.  So first we need to
+  !*      know, for each case we're looking at, if "+" got assigned to
+  !*      a or b or c or d.  By the way, if the parmlon falls directly
+  !*      on a gridpoint in either the i or j direction, we will only
+  !*      look at the 2 gridpoints on either side of that point, as
+  !*      opposed to having 4 points set up as in the box above.
+  !*
+  !*  NOTE: For fine resolution grids, it is
+  !*      possible to have the gridpoint max/min be more than 1 or 2 grid
+  !*      points away from the  barnes-averaged max.  So allow for this
+  !*      here, with a check of grdspc ((dx+dy)/2) below and the
+  !*      addition of the "grfact" multiplier for fine resolution grids.
+  !*
+  !*  INPUT:
+  !*      imax             :: Num pts in i-direction on grid
+  !*      jmax             :: Num pts in j-direction on grid
+  !*      dx               :: grid spacing of the data grid in i-direction
+  !*      dy               :: grid spacing of the data grid in j-direction
+  !*      fxy              :: real array of input data values
+  !*      cmaxmin          :: character that tells if searching for max or min
+  !*      valid_pt         :: Logical; bitmap indicating if valid data at that pt
+  !*      parmlon          :: lon at which input parameter center was found, or the lon
+  !*                          for the mean storm center fix (check calling routine)
+  !*      parmlat          :: lat at which input parameter center was found, or the lat
+  !*                          for the mean storm center fix (check calling routine)
+  !*      xdataval         :: barnes-obtained value of parameter at (parmlon,parmlat)
+  !*      ccall            :: character that tells if this call is part of a tracker
+  !*                          fix routine or just from the check_valid_point routine
+  !*                          ('tracker' or 'checker')
+  !*      grid_maxlat      :: northernmost latitude on the input grid being sent to
+  !*                          this routine. This grid may be a subset of the original
+  !*                          full grid from the original dataset, or it may be the
+  !*                          original grid itself.
+  !*      grid_minlat      :: southernmost latitude on the input grid being sent to
+  !*                          this routine. This grid may be a subset of the original
+  !*                          full grid from the original dataset, or it may be the
+  !*                          original grid itself.
+  !*      grid_maxlon      :: easternmost longitude on the input grid being sent to
+  !*                          this routine. This grid may be a subset of the original
+  !*                          full grid from the original dataset, or it may be the
+  !*                          original grid itself.
+  !*      grid_minlon      :: westernmost longitude on the input grid being sent to
+  !*                          this routine. This grid may be a subset of the original
+  !*                          full grid from the original dataset, or it may be the
+  !*                          original grid itself.
+  !*      trkrinfo         :: derived type containing grid info on user boundaries
+  !*      stopcheck        :: character, if set to gptmslp, then there is a check that
+  !*                          will ignore MSLP values that are erroneously reporting
+  !*                          values < 0, which is due to a grid transformation issue
+  !*                          that very occasionally occurs in HWRF.
+  !*
+  !*  OUTPUT:
+  !*      ifix             :: i-index for gridpoint to which the max or min is assigned
+  !*      jfix             :: j-index for gridpoint to which the max or min is assigned
+  !*      gridpoint_maxmin :: value of fxy at (ifix,jfix).  This will be
+  !*                          different from the input value xdataval, which came from
+  !*                          the  barnes averaging.  This is the raw value at the
+  !*                          gridpoint.
+  !*
+  !****************************************************************************
   subroutine fix_latlon_to_ij (imax, jmax, dx, dy, fxy, cmaxmin, valid_pt, parmlon, parmlat, xdataval,    &
                               & ifix, jfix, gridpoint_maxmin, ccall, stopcheck, grid_maxlat, grid_minlat, &
                               & grid_maxlon, grid_minlon, trkrinfo, ifilret)
@@ -24585,6 +27554,25 @@ c            endif
           endif
 
   end subroutine fix_latlon_to_ij
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine calculates the relative vorticity (zeta)
+  !*      from u,v on a lat/lon grid. Centered finite
+  !*      differences are used on the interior points and one-sided
+  !*      differences are used on the boundaries.
+  !*
+  !*  NOTE: There are 3 critical arrays in this subroutine, the first
+  !*      being zeta and the 2nd and 3rd being u and v.  There is a
+  !*      critical difference in the array indexing for the levels.  For
+  !*      zeta, the array is dimensioned with levels from 1 to 3, with
+  !*      1 = 850, 2 = 700, 3 = sfc.  However, there are extra levels
+  !*      for the winds, such that the level dimension goes 1 = 850,
+  !*      2 = 700, 3 = 500, 4 = 200, 5 = sfc, and this is annotated now
+  !*      by the use of the "nlev850", "nlev700" and "levsfc" variables
+  !*      from module level_parms.  So we need to be sure to properly
+  !*      annotate that in this routine.
+  !*
+  !****************************************************************************
   subroutine rvcal (imax, jmax, dlon, dlat, z, vp)
 
       implicit none
@@ -24870,6 +27858,39 @@ c
       enddo
 
   end subroutine rvcal
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine calculates the divergence
+  !*      from u,v on a lat/lon grid. Centered finite
+  !*      differences are used on the interior points and one-sided
+  !*      differences are used on the boundaries.
+  !*
+  !*  NOTE: There are 3 critical arrays in this subroutine, the first
+  !*      being divergence and the 2nd and 3rd being u and v.  There is a
+  !*      critical difference in the array indexing for the levels.  For
+  !*      divergence, the array is dimensioned with levels from 1 to 3, with
+  !*      1 = 850, 2 = 700, 3 = sfc.  However, there are extra levels
+  !*      for the winds, such that the level dimension goes 1 = 850,
+  !*      2 = 700, 3 = 500, 4 = 200, 5 = sfc, and this is annotated now
+  !*      by the use of the "nlev850", "nlev700" and "levsfc" variables
+  !*      from module level_parms.  So we need to be sure to properly
+  !*      annotate that in this routine.
+  !*
+  !*  INPUT:
+  !*      imax    :: integer max number of pts in x-direction on input grid
+  !*      jmax    :: integer max number of pts in y-direction on input grid
+  !*      dlon    :: real grid spacing in x-direction
+  !*      dlat    :: real grid spacing in y-direction
+  !*      vp      :: Logical; bitmap array used for regional grids
+  !*      w       :: integer indicates which index to use for the vertical
+  !*                 level, with 1=850, as described in the doc block above.
+  !*
+  !*  OUTPUT
+  !*      divx4   :: real array with divergence values to be returned to the
+  !*                 calling routine, scaled up by 1e4
+  !*      idvcret :: integer return code from this routine
+  !*
+  !****************************************************************************
   subroutine divcal (imax, jmax, dlon, dlat, divx4, vp, w, idvcret)
 
       implicit none
@@ -25159,6 +28180,36 @@ c
       if (allocated(div)) deallocate (div)
 
   end subroutine divcal
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine computes one smoothed value of a value from
+  !*      an input real array.  It does this using the  Barnes analysis and
+  !*      values of re and ri that are also specified in the calling
+  !*      routine.
+  !*
+  !*  INPUT:
+  !*      xcenlon    :: real value of center position at which to compute average
+  !*      xcenlat    :: real value of center position at which to compute average
+  !*      ist        :: Storm number currently being processed
+  !*      ifh        :: Forecast hour currently being processed
+  !*      imax       :: Max number of pts in x-direction for this grid
+  !*      jmax       :: Max number of pts in y-direction for this grid
+  !*      xarray     :: real array with data values that will be searched here
+  !*      cvar       :: character string that contains variable being searched
+  !*      dx         :: grid-spacing of the model in the i-direction
+  !*      dy         :: grid-spacing of the model in the j-direction
+  !*      valid_pt   :: Logical; bitmap indicating if valid data at that pt.
+  !*      maxstorm   :: Max # of storms that can be handled in this run
+  !*      re         :: real e-folding radius
+  !*      ri         :: real radius of influence
+  !*      trkrinfo   :: derived type detailing user-specified grid info
+  !*
+  !*  OUTPUT:
+  !*      xsmoothval :: real smoothed value of the input variable, centered
+  !*                    on the input (xcenlon,xcenlat) point.
+  !*      igsvret    :: integer return code from this routine
+  !*
+  !****************************************************************************
   subroutine get_smooth_value_at_pt (xcenlon, xcenlat, ist, ifh, imax, jmax, xarray, cvar, dx, dy, &
                                     & valid_pt, maxstorm, re, ri, trkrinfo, xsmoothval, igsvret)
 
@@ -25330,6 +28381,43 @@ c         loop, and try it again with the smaller re and ri.
       enddo radmaxloop
 
   end subroutine get_smooth_value_at_pt
+  !****************************************************************************
+  !*
+  !*ABSTRACT: This routine computes smoothed values of RH, averaged
+  !*     over multiple layers, initially 1000-925 mb and 800-600 mb.
+  !*     It does this by first calling a routine that will average the
+  !*     data from various vertical levels together, then by calling a
+  !*     a routine that uses the  Barnes analysis and values of re and ri
+  !*     that are also specified in the calling routine.
+  !*
+  !*     INPUT:
+  !*     xcenlon real value of center position at which to compute average
+  !*     xcenlat real value of center position at which to compute average
+  !*     ist     Storm number currently being processed
+  !*     ifh     Forecast hour currently being processed
+  !*     imax    Max number of pts in x-direction for this grid
+  !*     jmax    Max number of pts in y-direction for this grid
+  !*     dx      grid-spacing of the model in the i-direction
+  !*     dy      grid-spacing of the model in the j-direction
+  !*     valid_pt Logical; bitmap indicating if valid data at that pt.
+  !*     maxstorm Max # of storms that can be handled in this run
+  !*     re      real e-folding radius
+  !*     ri      real radius of influence
+  !*     trkrinfo derived type detailing user-specified grid info
+  !*     readgenflag logical array, indicates if a genesis parm was read in
+  !*     already_computed_domain_wide_rh character (y/n) indicates if RH
+  !*             has already been computed across the whole domain for this
+  !*             forecast hour (this keeps us from re-computing it for
+  !*             every storm at each lead time).
+  !*
+  !*     OUTPUT:
+  !*     rh_1000_925_smooth real value of the smoothed value of
+  !*                 barnes-averaged RH in the 1000-925 mb layer.
+  !*     rh_800_600_smooth  real value of the smoothed value of
+  !*                 barnes-averaged RH in the 800-600 mb layer.
+  !*     igsvret integer return code from this routine
+  !*
+  !****************************************************************************
   subroutine get_rh_at_center (xcenlon, xcenlat, ist, ifh, imax, jmax, dx, dy, valid_pt, maxstorm, re, ri, &
                               & trkrinfo, rh_1000_925_smooth, rh_800_600_smooth, readgenflag,              &
                               & already_computed_domain_wide_rh, igrhret)
@@ -25422,6 +28510,34 @@ c
      &                ,valid_pt,maxstorm,trkrinfo,mean_rh,icmlret)
 
   end subroutine get_rh_at_center
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine computes relative humidity across a full
+  !*      model domain, using T and q.  This will only be called, obviously,
+  !*      if RH was not available to be read in for this model.  For
+  !*      computing saturation vapor pressure (qs), I'm using Tetens
+  !*      formula, because it includes the variation of latent heat with
+  !*      temperature and because it is what HWRF uses.  The form of
+  !*      Tetens formula I'm using is from the 2nd edition of the Ronald
+  !*      Stull book, Meterology for Scientists and Engineers, p. 98.
+  !*
+  !*  INPUT:
+  !*      ist         :: Storm number currently being processed
+  !*      ifh         :: Forecast hour currently being processed
+  !*      imax        :: Max number of pts in x-direction for this grid
+  !*      jmax        :: Max number of pts in y-direction for this grid
+  !*      dx          :: grid-spacing of the model in the i-direction
+  !*      dy          :: grid-spacing of the model in the j-direction
+  !*      ip          :: integer index for the vertical level for RH
+  !*      valid_pt    :: Logical; bitmap indicating if valid data at that pt.
+  !*      maxstorm    :: Max # of storms that can be handled in this run
+  !*      trkrinfo    :: derived type detailing user-specified grid info
+  !*      readgenflag :: logical array, indicates if a genesis parm was read in
+  !*
+  !*  OUTPUT:
+  !*      ichrret     :: integer return code from this routine
+  !*
+  !****************************************************************************
   subroutine compute_rh_from_q (ist, ifh, imax, jmax, dx, dy, ip, valid_pt, maxstorm, &
                                & trkrinfo, readgenflag, ichrret)
 
@@ -25546,6 +28662,31 @@ c                endif
             endif
 
   end subroutine compute_rh_from_q
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine computes a multi-layer mean of an input variable.
+  !*
+  !*  INPUT:
+  !*      xcenlon   :: real value of center position at which to compute average
+  !*      xcenlat   :: real value of center position at which to compute average
+  !*      ist       :: Storm number currently being processed
+  !*      ifh       :: Forecast hour currently being processed
+  !*      imax      :: Max number of pts in x-direction for this grid
+  !*      jmax      :: Max number of pts in y-direction for this grid
+  !*      cvar      :: character string that contains variable being searched
+  !*      clevstr   :: character string that indicates vertical levels being
+  !*                   included in the vertical layer mean
+  !*      dx        :: grid-spacing of the model in the i-direction
+  !*      dy        :: grid-spacing of the model in the j-direction
+  !*      valid_pt  :: Logical; bitmap indicating if valid data at that pt.
+  !*      maxstorm  :: Max # of storms that can be handled in this run
+  !*      trkrinfo  :: derived type detailing user-specified grid info
+  !*
+  !*  OUTPUT:
+  !*      xmean_arr :: real array containing mean field
+  !*      icmlret   :: integer return code from this routine
+  !*
+  !****************************************************************************
   subroutine calc_multi_layer_mean (xcenlon, xcenlat, ist, ifh, imax, jmax, cvar, clevstr, dx, dy, &
                                    & valid_pt, maxstorm, trkrinfo, xmean_arr, icmlret)
 
@@ -25651,6 +28792,25 @@ c     &             ,point_ct(i,j)
      &       ,' xminrh= ',xminrh
 
   end subroutine calc_multi_layer_mean
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine calculates the  thicknesses for three
+  !*      different layers: 200-500, 500-850 and 200-850 mb.
+  !*
+  !*  The array indices for the 3 different thickness layers are
+  !*      as follows:
+  !*      1: 500-850
+  !*      2: 200-500
+  !*      3: 200-850
+  !*
+  !*  The array indices for the levels for the 4 different GP height
+  !*      arrays (as assigned in subroutine  getdata) are as follows:
+  !*      1: 850 mb
+  !*      2: 700 mb
+  !*      3: 500 mb
+  !*      4: 200 mb
+  !*
+  !****************************************************************************
   subroutine thickness_calc (imax, jmax, vp)
     integer    :: i, j, layer, upper, lower, imax, jmax
     logical(1) :: vp(imax,jmax)
@@ -25664,6 +28824,53 @@ c     &             ,point_ct(i,j)
         end select
 
   end subroutine thickness_calc
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine scans an array and picks out areas of
+  !*      max or min, then loads those center positions into the first-
+  !*      guess lat & lon arrays to be used by subroutine  tracker for
+  !*      locating the very specific low center positions.
+  !*
+  !*  INPUT:
+  !*      imax         :: Number of gridpoints in i direction in input grid
+  !*      jmax         :: Number of gridpoints in j direction in input grid
+  !*      dx           :: Grid spacing in i-direction for the input grid
+  !*      dy           :: Grid spacing in j-direction for the input grid
+  !*      cparm        :: Char string indicating what parm is being passed in
+  !*      fxy          :: Real array of data values
+  !*      finf         :: Logical. Field of influence.  Dimension same as fxy
+  !*      cmaxmin      :: Char string to indicate if search is for a max or a min
+  !*      trkrinfo     :: Derived type that holds/describes various tracker parms,
+  !*                      including the contour interval to be used
+  !*      ifh          :: Index for the forecast hour
+  !*      valid_pt     :: Logical bitmap masking non-valid grid points.  This is a
+  !*                      concern for the regional models, which are interpolated
+  !*                      from Lam-Conf or NPS grids onto lat/lon grids, leaving
+  !*                      grid points around the edges which have no valid data.
+  !*      maxstorm     :: max # of storms that can be handled in this run
+  !*      gm_wrap_flag :: character flag set in getgridinfo that determines
+  !*                      which GM-wrapping setting to use.
+  !*
+  !*  INPUT/OUTPUT:
+  !*      masked_out   :: Logical. T = data point is already accounted for, under
+  !*                      the influence of another nearby max or min center,
+  !*                      F = data point is available to be scanned by this
+  !*                      subroutine for max or min centers.
+  !*      stormct      :: Integer: keeps and increments a running tab of the number
+  !*                      of storms that have been tracked at any time across all
+  !*                      forecast hours
+  !*      contour_info :: Type cint_stuff from module contours.  Contains
+  !*                      contour information
+  !*
+  !*  OUTPUT:
+  !*      maxmini      :: Integer array containing i-indeces of max/min locations
+  !*      maxminj      :: Integer array containing j-indeces of max/min locations
+  !*      ifgcret      :: return code from this subroutine
+  !*
+  !*  OTHER:
+  !*      storm        :: Contains the tcvitals for the storms (module def_vitals)
+  !*
+  !****************************************************************************
   subroutine first_ges_center (imax, jmax, dx, dy, cparm, fxy, cmaxmin, trkrinfo, ifh, valid_pt, maxstorm, &
                               & masked_out, stormct, contour_info, maxmini, maxminj, gm_wrap_flag, ifgcret)
 
@@ -26111,6 +29318,62 @@ c     &                 ,contour_info%contvals(n)
       endif
 
   end subroutine first_ges_center
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine will search an area delineated by
+  !*      input i and j indeces in order to find all local maxes or mins
+  !*      in that area.  The (i,j) locations of the maxes/mins are returned
+  !*      in the maxmini and maxminj arrays.  The input 3-character string
+  !*      cmaxmin will tell the subroutine to look for a "max" or a "min".
+  !*
+  !*  INPUT:
+  !*      imax         :: Number of gridpoints in i direction in input grid
+  !*      jmax         :: Number of gridpoints in j direction in input grid
+  !*      ibeg         :: i-index for upper left location of grid to search
+  !*      iend         :: i-index for lower right location of grid to search
+  !*      jbeg         :: j-index for upper left location of grid to search
+  !*      jend         :: j-index for lower right location of grid to search
+  !*      fxy          :: Real array of data values
+  !*      valid_pt     :: Logical bitmap masking non-valid grid points.  This is a
+  !*                      concern for the regional models, which are interpolated
+  !*                      from Lam-Conf or NPS grids onto lat/lon grids, leaving
+  !*                      grid points around the edges which have no valid data.
+  !*      masked_out   :: Logical. T = data point is already accounted for, under
+  !*                      the influence of another nearby max or min center,
+  !*                      F = data point is available to be scanned by this
+  !*                      subroutine for max or min centers.
+  !*      contour_info :: Type cint_stuff from module contours containing the
+  !*                      the following 4 variables:
+  !*                      1. xmincont Real value for min contour level in the fxy data array
+  !*                      2. xmaxcont Real value for max contour level in the fxy data array
+  !*                      3. contvals Real array holding values of cont levels at this time
+  !*                      4. numcont  Number of contour intervals found at this time
+  !*      dx           :: Grid spacing in x-direction
+  !*      dy           :: Grid spacing in y-direction
+  !*      trkrinfo     :: derived type containing various user-input tracker parms
+  !*      cmaxmin      :: String that declares if "min" or "max" is being searched
+  !*      maxstorm     :: max # of storms that can be handled in this run
+  !*      ifh          :: Integer index for forecast hour array
+  !*      xavg         :: The mean value of the variable (likely MSLP) that is
+  !*                      being searched.  Value computed on the domain specified
+  !*                      by ibeg,iend,jbeg,jend.
+  !*      stdv         :: Standard deviation of the variable (likely MSLP) that is
+  !*                      being searched.  Value computed on the domain specified
+  !*                      by ibeg,iend,jbeg,jend.
+  !*      gm_wrap_flag :: character flag set in getgridinfo that determines
+  !*                      which GM-wrapping setting to use.
+  !*
+  !*  INPUT/OUTPUT:
+  !*      stormct      :: Integer: keeps and increments a running tab of the number
+  !*                      of storms that have been tracked at any time across all
+  !*                      forecast hours
+  !*
+  !*  OUTPUT:
+  !*      maxmini      :: integer array containing i-indeces of the max/min points
+  !*      maxminj      :: integer array containing j-indeces of the max/min points
+  !*      ifamret      :: return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine find_all_maxmins (imax, jmax, ibeg, iend, jbeg, jend, fxy, valid_pt, masked_out, contour_info,      &
                               & dx, dy, trkrinfo, cmaxmin, maxstorm, stormct, maxmini, maxminj, ifh, xavg, stdv, &
                               & ssct1, yyct1, yyct2, zzct1, zzct2, zzct3, gm_wrap_flag, ifamret)
@@ -27066,6 +30329,51 @@ c
       deallocate (slp_valid_pt)
 
   end subroutine find_all_maxmins
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine performs a computation that looks out
+  !*      along 8 radials to determine if there is a radial gradient of MSLP
+  !*      that is at least as strong as that specified by the user.  For
+  !*      example, if the user enters a MSLP contour interval of 1 mb, then
+  !*      we will start at the candidate position, and in each of the 8
+  !*      radial directions, we will check the interpolated MSLP at discrete
+  !*      distances out to 300 km.  If at any discrete radius along the way
+  !*      outward, that 1-mb increase in MSLP is achieved, then set the flag
+  !*      to Y for that radial and stop any further checking along that
+  !*      radial, and move to the next radial.  Iterate through all 8
+  !*      radials, as long as there is continued success, meaning that if
+  !*      while going through this process, if one of the radials fails the
+  !*      test, then this candidate point is discarded altogether, and then
+  !*      move onto the next candidate point.  As part of this testing along
+  !*      a radial, consider allowing perhaps a slight drop along a radial
+  !*      (maybe something like 0.05 mb?) to account for noise, but if it's
+  !*      any more than that, then fail the radial and discard the candidate
+  !*      point.  NOTE: In the first testing of this routine in early 2023,
+  !*      it was found that for hi-res T-SHiELD data, using a value of
+  !*      xmslp_noise > 0 allowed too many noise disturbances through, so
+  !*      I have set it to zero.
+  !*
+  !*  INPUT:
+  !*      imax         :: Num pts in i-direction on grid
+  !*      jmax         :: Num pts in j-direction on grid
+  !*      ip           :: i index for location of local max or min
+  !*      jp           :: j index for location of local max or min
+  !*      dx           :: x-increment on the grid
+  !*      dy           :: y-increment on the grid
+  !*      fxy          :: input data array
+  !*      valid_pt     :: Logical; bitmap indicating if valid data at that pt
+  !*      masked_outc  :: Logical. T = data point is already accounted for,
+  !*                      under the influence of another nearby max or min
+  !*                      center; F = data point is available to be scanned by
+  !*                      this subroutine for max or min centers.
+  !*      ctlon        :: Fix longitude for the input parameter to this routine
+  !*      ctlon        :: Fix latitude for the input parameter to this routine
+  !*      cmodel_type  :: character, 'global' or 'regional'
+  !*      ifh          :: integer index for forecast hour array
+  !*      gm_wrap_flag :: character flag set in getgridinfo that determines
+  !*                      what GM-wrapping setting to use.
+  !*
+  !****************************************************************************
   subroutine check_mslp_radial_gradient (imax, jmax, ip, jp, dx, dy, fxy, valid_pt, trkrinfo, gm_wrap_flag, icmrgret)
 
       implicit none
@@ -27423,6 +30731,56 @@ c     ------------------------------------------------------------------
       endif
 
   end subroutine check_mslp_radial_gradient
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine checks for a low-level (10-m)
+  !*      cyclonic circulation, in a manner that is meant to emulate how
+  !*      NHC assesses a disturbance in order to determine whether or not
+  !*      TC formation has occurred.  We will do a check at three different
+  !*      radii (initially 75, 125 and 175 km), and if the check passes at
+  !*      any one of these, then the low-level wind circulation is
+  !*      satisfied, the flag is set to y, and the subroutine returns to
+  !*      the calling routine.  At each candidate radius, we do a check of
+  !*      the Vt at 16 equally-spaced azimuths.  There are 4 points in each
+  !*      quadrant.  We average those 4 points to get a mean Vt for that
+  !*      azimuth.  Once we have a mean Vt for all 16 azimuths, go through
+  !*      the azimuths, one at a time, in a clockwise fashion, and check to see
+  !*      if their mean cyclonic Vt passes a threshold.  As long as 2 in a
+  !*      row do not fail, the test passes (i.e., every other one can pass
+  !*      and that is okay).
+  !*
+  !*  INPUT:
+  !*      imax                :: max i dimension of model grid
+  !*      jmax                :: max j dimension of model grid
+  !*      ip                  :: i index for candidate location of local max or min
+  !*      jp                  :: j index for candidate location of local max or min
+  !*      dx                  :: grid spacing in i-direction of model grid
+  !*      dy                  :: grid spacing in j-direction of model grid
+  !*      valid_pt            :: logical bitmap for valid data at a grid point
+  !*      trkrinfo            :: derived type detailing user-specified grid info
+  !*      ifh                 :: integer index for the current lead time being processed
+  !*      gm_wrap_flag        :: character flag set in getgridinfo that determines
+  !*                             what GM-wrapping setting to use for this grid.
+  !*      tracker_application :: character string that determines if the
+  !*                             calling routine is working through a genesis
+  !*                             application or a forward tracking application for an
+  !*                             already-known system, whether known at the very start
+  !*                             of this tracker run or known from a previous lead time
+  !*                             where it might have been found for the first time in
+  !*                             this forecast as part of a genesis run.  The value
+  !*                             should be either "genesis" or "forward".
+  !*
+  !*  OUTPUT:
+  !*      low_level_wind_circ_flag :: character flag that will inform the
+  !*                             calling routine as to whether or not a low-level
+  !*                             closed circulation was found.
+  !*      vtquadmax           :: real array that contains the max mean cyclonic Vt
+  !*                             averaged the various azimuths at any given distance
+  !*                             in that quadrant (i.e., it could occur at 75, 125 or
+  !*                             175 km... it does not matter).
+  !*      iccwcret            :: return code from this subroutine
+  !*
+  !****************************************************************************
   subroutine check_for_closed_wind_circulation (imax, jmax, ip, jp, dx, dy, valid_pt, trkrinfo, ifh, &
                                                & low_level_wind_circ_flag, gm_wrap_flag, vtquadmax,  &
                                                & tracker_application, iccwcret)
@@ -27640,6 +30998,40 @@ c
       final_quad_sum_ct = final_quad_full_vt_ct + final_quad_half_vt_ct
 
   end subroutine check_for_closed_wind_circulation
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine masks out grid points for a storm that
+  !*      is currently being tracked.  It is called after a fix has been
+  !*      made at the current forecast hour.  It is only used as a backup,
+  !*      that is, if the mslp data were not there and/or a fix position
+  !*      for mslp could not be made, then that means that the mask would
+  !*      not be able to get updated using the routine in subroutine
+  !*      check_closed_contour.  But we still do need to update that mask,
+  !*      so we will instead do it based on wind circulation.  We will go
+  !*      out radially from the center, starting at 40 km, then every
+  !*      40 km from there on out.  When the mean cyclonic Vt drops below
+  !*      3 m/s, stop searching, and then mask out all grid points within
+  !*      that last-searched radius.
+  !*
+  !*  INPUT:
+  !*      imax         :: Num pts in i-direction on grid
+  !*      jmax         :: Num pts in j-direction on grid
+  !*      ix           :: i index for location of local max or min
+  !*      jx           :: j index for location of local max or min
+  !*      fxy          :: input data array
+  !*      valid_pt     :: Logical; bitmap indicating if valid data at that pt
+  !*      masked_outc  :: Logical. T = data point is already accounted for,
+  !*                      under the influence of another nearby max or min
+  !*                      center; F = data point is available to be scanned by
+  !*                      this subroutine for max or min centers.
+  !*      ctlon        :: Fix longitude for the input parameter to this routine
+  !*      ctlon        :: Fix latitude for the input parameter to this routine
+  !*      cmodel_type  :: character, 'global' or 'regional'
+  !*      ifh          :: integer index for forecast hour array
+  !*      gm_wrap_flag :: character flag set in getgridinfo that determines
+  !*                      which GM-wrapping setting to use.
+  !*
+  !****************************************************************************
   subroutine mask_based_on_wind_circ (imax, jmax, dx, dy, level, valid_pt, masked_outc, trkrinfo, ctlon, ctlat, &
                                      & cmodel_type, ifh, gm_wrap_flag, imbowret)
 
@@ -27982,6 +31374,152 @@ c     radius of 80 km.
       enddo
 
   end subroutine mask_based_on_wind_circ
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine checks a field of data around an input
+  !*      (ix,jx) data point to see if a closed contour exists around
+  !*      that data point.  It can check for a closed contour on a max or a
+  !*      min field, depending on the value of the input variable 'cmaxmin'.
+  !*      The algorithm works by examining rings of the 8 data points
+  !*      surrounding a data point that is in the contour interval.  For
+  !*      example, in the diagram below, the X represents the location of
+  !*      the local minimum value which was passed into this routine with
+  !*      the coordinates (ix,jx), let's say it's 985 mb.  And let's assume
+  !*      that the data values at points A-I are all in the 4 mb contour
+  !*      interval of 985-989 mb, and that all the surrounding points have
+  !*      data values >= 989.  To test for a closed contour, we first check
+  !*      the ring of 8 points immediately around point X to see what their
+  !*      data values are.  If a data value is found that is below the
+  !*      lower limit of this contour interval (985 mb) or lower than the
+  !*      local minimum value at the X point that we initially targeted
+  !*      (985 mb), then we do NOT have a closed contour, and we exit this
+  !*      subroutine.  But in our example, that's not the case, and we have
+  !*      5 points (B,D,E,F,G) that are in the interval.  So in our next
+  !*      iteration of the loop, we set up 5 rings, each one set up around
+  !*      the points found in the first iteration (B,D,E,F,G), and we check
+  !*      the 8 points around each of those points.  A logical array is
+  !*      used so that as soon as a point is found, it is flagged as being
+  !*      found.  In this way, when we look at the ring around point D, for
+  !*      example, we won't pick point X again and set up another ring
+  !*      around it in the next ring iteration and end up in an infinite
+  !*      loop, going back and forth between point X and point D.  While
+  !*      checking the 8 points in a ring, if a found data value is above
+  !*      our contour interval (i.e., >= 989 mb), we just ignore the
+  !*      point; we only mark points that are in our contour interval,
+  !*      and again, if we find a point below our contour interval, we
+  !*      exit the subroutine with a flag indicating a closed contour was
+  !*      NOT found.  So in this method, we keep spreading out from the
+  !*      initial local minimum and creating and checking new rings until
+  !*      we either: (a) Hit the edge of the regional grid, in which case
+  !*      we consider a closed contour NOT found, (b) Run into a data
+  !*      point that has been marked as being under the influence of
+  !*      another nearby low, in which case we consider a closed contour
+  !*      NOT found, (c) Run into a point which is below (above) our
+  !*      contour interval for a min (max) check, in which case we
+  !*      consider a closed contour NOT found, or (d) we run out of
+  !*      points to keep searching, we have no rings left to create and
+  !*      check because all of the surrounding points are above (below)
+  !*      our contour interval for a min (max) check, and by default we
+  !*      consider this a closed contour and return to the calling
+  !*      subroutine a flag indicating such.
+  !*
+  !*               + + + + + + + + + +
+  !*               + + + + + + + + + +
+  !*               + + A B + + + + + +
+  !*               + + C D X E + + + +
+  !*               + + + + F G + + + +
+  !*               + + + + + H I + + +
+  !*               + + + + + + + + + +
+  !*               + + + + + + + + + +
+  !*
+  !*  UPDATE: This subroutine was updated to keep searching for
+  !*      multiple closed contours until it can't find anymore.  The
+  !*      input parameter num_requested_contours dictates how many
+  !*      contours to search for.  In the case of just trying to roughly
+  !*      locate new centers and establish that there is a closed
+  !*      circulation, num_requested_contours will = 1, and we will exit
+  !*      after finding that 1 contour.  But for a check after making a
+  !*      full center fix, we set num_requested_contours = 999 so that
+  !*      we can keep searching for all closed contours around the low.
+  !*      In this 999 case, you will eventually get to a point where
+  !*      there is no closed contour.  In that case, in the standard
+  !*      output you will see a message telling you that you hit a point
+  !*      that is not in the contour and that there is no closed contour,
+  !*      but you will also notice that the ccflag = y, meaning there is
+  !*      a closed contour (because you have found at least 1 closed
+  !*      contour along the way).  The reason to keep searching for more
+  !*      closed contours is that we can then return the value of the
+  !*      outermost closed isobar.
+  !*
+  !*  INPUT:
+  !*      imax                   :: Num pts in i-direction on grid
+  !*      jmax                   :: Num pts in j-direction on grid
+  !*      ix                     :: i index for location of local max or min
+  !*      jx                     :: j index for location of local max or min
+  !*      fxy                    :: input data array
+  !*      valid_pt               :: Logical; bitmap indicating if valid data at that pt
+  !*      masked_out             :: Logical. T = data point is already accounted for, under
+  !*                                the influence of another nearby max or min center,
+  !*                                F = data point is available to be scanned by this
+  !*                                subroutine for max or min centers.
+  !*      cmaxmin                :: character string ('max' or 'min') that tells this
+  !*                                routine what we're looking for.
+  !*      trkrinfo               :: derived type that holds/describes various tracker parms
+  !*      contour_info           :: Type cint_stuff from module contours.  Contains
+  !*                                contour information
+  !*      num_requested_contours :: For the simple  first_ges_center check,
+  !*                                this will be 1 (we just want to know if there's at
+  !*                                least 1 closed contour).  For the verifying check after
+  !*                                we've found a center, this will be 9999 (i.e., just keep
+  !*                                searching for more contours)
+  !*      get_last_isobar_flag   :: character ('y' or 'n') to indicate whether
+  !*                                or not to report on the value of the last closed isobar
+  !*                                and the radius of the last closed isobar.
+  !*
+  !*  OUTPUT:
+  !*      closed_contour         :: character; A returned value of 'y' indicates that
+  !*                                this routine was able to find a closed contour.
+  !*      plastbar               :: Contains the value of the last closed isobar (unrounded)
+  !*      rlastbar               :: Contains the mean radius of the last closed isobar
+  !*
+  !*  LOCAL:
+  !*      num_pts_in_all_contours :: Counter for the number of pts inside of
+  !*                                the contour we're looking at
+  !*      next_ring_ct           :: Counter for the number of points that have been
+  !*                                tagged to be used as center points for the next
+  !*                                iteration of multiple_ring_loop.
+  !*      next_contour_ct        :: Counter for the number of points that have been
+  !*                                tagged to be used as center points in the first iteration
+  !*                                through single_contour_scan_loop as we begin to scan
+  !*                                points in the *next* contour interval.  This counter gets
+  !*                                incremented when, for example, we are searching points
+  !*                                around a current center point and we find one that is not
+  !*                                in our current interval, but rather is in the next
+  !*                                interval.  We want to remember this point and store the
+  !*                                location, so we increment this counter and store the
+  !*                                location in next_contour_i and next_contour_j arrays.
+  !*      beyond_contour_ct      :: Counter for the number of points that have been
+  !*                                tagged to be used as center points for some subsequent
+  !*                                iteration of successive_contours_loop.  This is
+  !*                                different from next_contour_ct, which is used to hold
+  !*                                the locations of points that are definitely in the
+  !*                                *next* contour interval.  Here, we have points that we
+  !*                                just store in a pool of potential points to be searched
+  !*                                in future iterations.  These points can come about in
+  !*                                cases where there is a very intense, very compact low
+  !*                                with a tight pressure gradient, such that multiple
+  !*                                contour intervals could be spanned in between 2 adjacent
+  !*                                gridpoints (this is especially the case if the contour
+  !*                                interval you have chosen is small).  You need to be
+  !*                                careful with how you handle this array.  Once you find
+  !*                                that you have searchable points in next_contour_i or
+  !*                                next_contour_j, do not just simply empty out this
+  !*                                beyond_contour count and its i and j arrays.  The
+  !*                                reason being that some of these "beyond" points may end
+  !*                                up being used and searched in subsequent iterations, but
+  !*                                not if we just delete them now.
+  !*
+  !****************************************************************************
   subroutine check_closed_contour (imax, jmax, ix, jx, fxy, valid_pt, masked_out, closed_contour, cmaxmin, trkrinfo, &
                                   & num_requested_contours, contour_info, get_last_isobar_flag, plastbar, rlastbar,  &
                                   & zzct1, zzct2, zzct3, icccret)
@@ -28944,6 +32482,31 @@ c     &                     ,' fxy= ',fxy(irx,jrx)
       enddo
 
   end subroutine check_closed_contour
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine looks at the values for the land-sea
+  !*      mask at and surrounding an input (i,j) position to determine if
+  !*      less than 50% of the area surrounding the input (i,j) position
+  !*      within 75 km radius is land.
+  !*
+  !*  INPUT:
+  !*      imax                :: Num pts in i-direction on grid
+  !*      jmax                :: Num pts in j-direction on grid
+  !*      ix                  :: i index for location of local max or min
+  !*      jx                  :: j index for location of local max or min
+  !*      valid_pt            :: Logical; bitmap indicating if valid data at that pt
+  !*      dx                  :: Grid spacing in x-direction
+  !*      dy                  :: Grid spacing in y-direction
+  !*      gm_wrap_flag        :: character flag set in getgridinfo to determine
+  !*                             settings for GM-wrapping
+  !*
+  !*  OUTPUT:
+  !*      fract_land          :: Fraction of points/area that is covered by land
+  !*      point_is_over_water :: y/n: A value of 'y' is returned if <50%
+  !*                             of the points/area is covered by land
+  !*      iclmret             :: Return code from this routine
+  !*
+  !****************************************************************************
   subroutine check_land_mask (imax, jmax, ix, jx, fract_land, valid_pt, dx, dy, &
                              & point_is_over_water, ifh, gm_wrap_flag, iclmret)
 
@@ -29081,6 +32644,18 @@ c     Now get the mean land fraction....
         endif
 
   end subroutine check_land_mask
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine takes an (i,j) position input and
+  !*      returns the four neighboring (i,j) points to the east, south,
+  !*      west and north.  The routine checks for wrap around the GM, so
+  !*      that if, for example, you are on a global 360x181 grid and you
+  !*      are at point i=360, then i+1 = 361, so you need something to
+  !*      adjust that back to i = 1.  Likewise, if you are at i=1 and
+  !*      looking for point i-1, it will adjust it to be point 360
+  !*      instead of the meaningless point 0 (i=0).
+  !*
+  !****************************************************************************
   subroutine get_ijplus1_check_wrap (imax, jmax, i, j, iplus1, jplus1, iminus1, jminus1, trkrinfo, igicwret)
 
       implicit none
@@ -29166,6 +32741,49 @@ c     Now get the mean land fraction....
         endif
 
   end subroutine get_ijplus1_check_wrap
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine uses an order n*log(n) quick sort to sort a real (dp)
+  !*      array x into increasing order. The algorithim is as follows. ind is 
+  !*      initialized to the ordered sequence of indices 1,...,N and all interchanges
+  !*      are applied to ind. x is divided into two portions by picking a central
+  !*       element t. The first and last elements are compared with t, and 
+  !*       interchanges are applied as necessary so that they three values are in
+  !*       ascending order. Interchanges are then applied so that all elements
+  !*       greater than t are in the upper portion of the array and all elements
+  !*       less than t are in the lower portion. The upper and lower indices of one
+  !*       of the portions are saved in local arrays, and the process is repeated
+  !*       interatively on the other portion. When a portion is completely sorted,
+  !*       the process begins again by retriving the indicies bounding another
+  !*       unsorted portion.
+  !*
+  !*  INPUT:
+  !*      n         :: length of the array x
+  !*      x         :: vector of length n to be sorted
+  !*      ind       :: vector of length >= n
+  !*
+  !*  NOTE: n and x are not altered by this routine
+  !*
+  !*  OUTPUT:
+  !*      ind       :: parameter; sequence of indices 1,...,N permuted in the same
+  !*                   fashion as x would be. Thus, the ordering on
+  !*                   x is defined by y(i) = x(ind(i))
+  !*
+  !*  LOCAL:
+  !*      iu, il    :: temporary storage for the upper and lower
+  !*                   indices of portions of array x
+  !*      m         :: index for iu and il
+  !*      i, j      :: lower and upper indices of a portion of x
+  !*      k, l      :: indices in the range i,...,j
+  !*      ij        :: randomly chosen index between i and j
+  !*      it, itt   :: temporary storage for interchanges in ind
+  !*      indx      :: temporary index for x
+  !*      r         :: psudo random number for generating ij
+  !*      t         :: central element of x
+  !*
+  !*  Code by: Alan Miller
+  !*
+  !****************************************************************************
   subroutine qsort(x, ind, n)
     integer, parameter   :: dp = SELECTED_REAL_KIND(12, 60)
     real(dp), intent(in) :: x(n)
