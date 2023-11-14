@@ -12,31 +12,20 @@
 
       implicit none
 c
-      logical(1) file_open
-      integer date_time(8)
-      character (len=10) big_ben(3)
-      character :: ncfile*180,ncfile_has_hour0*1
-      character :: nc_lsmask_file*180
-      integer itret,iggret,iicret,igcret,iret,ifhmax,maxstorm,numtcv
-      integer iocret,enable_timing,ncfile_id,ncfile_tmax,irnhret
-      integer nc_lsmask_file_id
-      integer, parameter :: lugb=11,lugi=31,lucard=12,lgvcard=14,lout=51
-      integer, parameter :: lunml=555
-c
-      type (datecard) inp
-      type (trackstuff) trkrinfo
-      type (netcdfstuff) netcdfinfo
+  logical(1)         :: file_open
+  integer            :: date_time(8)
+  character(len=10)  :: big_ben(3)
+  character          :: ncfile*180, ncfile_has_hour0*1
+  character          :: nc_lsmask_file*180
+  integer            :: itret, iggret, iicret, igcret, iret, ifhmax, maxstorm, numtcv
+  integer            :: iocret, enable_timing, ncfile_id, ncfile_tmax, irnhret
+  integer            :: nc_lsmask_file_id
+  integer, parameter :: lugb = 11, lugi = 31, lucard = 12, lgvcard = 14, lout=51
+  integer, parameter :: lunml = 555
 
-c     --------------------------------------------------------
-
-      call date_and_time (big_ben(1),big_ben(2),big_ben(3),date_time)
-      write (6,31) date_time(5),date_time(6),date_time(7)
-  31  format (1x,'TIMING: beginning ...  ',i2.2,':',i2.2,':',i2.2)
-
-c      call w3tagb('GETTRK  ',1999,0104,0058,'NP22   ')
-
-      pi = 4. * atan(1.)   ! Both pi and dtr were declared in module 
-      dtr = pi/180.0       ! trig_vals, but were not yet defined.
+  type (datecard)    :: inp
+  type (trackstuff)  :: trkrinfo
+  type (netcdfstuff) :: netcdfinfo
       ncfile_has_hour0 = 'n'  ! Default value; set in read_netcdf_hours
 c
       call read_nlists (inp,trkrinfo,netcdfinfo,lunml)
@@ -369,104 +358,106 @@ c
 c         
       implicit none
 c
-      type (datecard) inp
-      type (trackstuff) trkrinfo,gb_check_trkrinfo
-      type (netcdfstuff) netcdfinfo
-      type (cint_stuff) contour_info
-c
-      character, allocatable :: closed_mslp_ctr_flag(:,:)*1
-      character, allocatable :: closed_mslp_ctr_flag2(:,:)*1
-      character, allocatable :: quad_wind_circ_flag(:,:)*1
-      character, allocatable :: vt850_flag(:,:)*1
-      character :: r34_check_okay*1,had_to_try_backup_850_vt_check*1
-      character :: need_to_expand_r34(4)*1,ncfile_has_hour0*1
-      character :: already_computed_domain_wide_rh*1,gm_wrap_flag*21
-      character :: low_level_wind_circ_flag*1
+    type (datecard)    :: inp
+    type (trackstuff)  :: trkrinfo,gb_check_trkrinfo
+    type (netcdfstuff) :: netcdfinfo
+    type (cint_stuff)  :: contour_info
+
+    character, allocatable    :: closed_mslp_ctr_flag(:,:)*1
+    character, allocatable    :: closed_mslp_ctr_flag2(:,:)*1
+    character, allocatable    :: quad_wind_circ_flag(:,:)*1
+    character, allocatable    :: vt850_flag(:,:)*1
+    character                 :: r34_check_okay*1, had_to_try_backup_850_vt_check*1
+    character(len=1)          :: need_to_expand_r34(4)*1, ncfile_has_hour0
+    character                 :: already_computed_domain_wide_rh*1, gm_wrap_flag*21
+    character                 :: low_level_wind_circ_flag*1
       character*(*), intent(in) :: ncfile
       character*(*), intent(in) :: nc_lsmask_file
-      integer :: ncfile_id
-      integer :: nc_lsmask_file_id
-      real, allocatable :: prstemp(:),iwork(:)
-      integer, parameter :: numdist=14,numquad=4,lout=51
-      integer, parameter :: num_r34_bins=353
+    character                 :: cvort_maxmin*3, isastorm(3)*1, ccflag*1, gotten_avg_value*1
+    character                 :: cmaxmin*3, get_last_isobar_flag*1, wcore_flag*1
+    character                 :: gfilename*120, ifilename*120, gridmove_status*7
+    character                 :: close_to_boundary*1, quad_wind_circ_check*4
+    character(len=10)         :: big_ben(3)
+    character(pfc_cmd_len)    :: pfc_final
+    character                 :: c_undef_wcflag*1
+
+    integer, parameter   :: numdist = 14, numquad = 4, lout = 51
+    integer, parameter   :: num_r34_bins = 353
       integer, allocatable :: prsindex(:)
-      integer   imax,jmax,ifh,ist,irf,jj,istmp,ifhtemp,itret,ivpa
-      integer   isiret1,isiret2,isiret3,idum,m,iix,jjx,imode,numtcv
-      integer   iha,isa,iua,iva,iza,maxstorm,ivort,ifix,jfix,issret
-      integer   imoa,imoca,iksa,isda,ileadtime,leadtime_check,imota
-      integer   ioaret,ioaxret,ifgcret,ifmret,igugret,isoiret,icccret
-      integer   igrret,igmwret,iorret,ignret,iovret,icbret,igucret,ita
-      integer   ifilret,ifret,iaret,isret,iotmret,iwa,iisa,sl_counter
-      integer   iicret,igcret,igwcret,imbowret,iatret,ioapret
-      integer(kind=8) :: pfcret
+    integer              :: imax, jmax, ifh, ist, irf, jj, istmp, ifhtemp, itret, ivpa
+    integer              :: isiret1, isiret2, isiret3, idum, m, iix, jjx, imode, numtcv
+    integer              :: iha, isa, iua, iva, iza, maxstorm, ivort, ifix, jfix, issret
+    integer              :: imoa, imoca, iksa, isda, ileadtime, leadtime_check, imota
+    integer              :: ioaret, ioaxret, ifgcret, ifmret, igugret, isoiret, icccret
+    integer              :: igrret, igmwret, iorret, ignret, iovret, icbret, igucret, ita
+    integer              :: ifilret, ifret, iaret, isret, iotmret, iwa, iisa, sl_counter
+    integer              :: iicret, igcret, igwcret, imbowret, iatret, ioapret
+    integer(kind=8)      :: pfcret
+    integer              :: vradius(3,4), igridzeta(nlevgrzeta), imeanzeta(nlevgrzeta)
+    integer              :: maxmini(maxstorm), maxminj(maxstorm), pdf_ct_bin(16)
+    integer              :: ifcsthour, stormct, prevstormct, kf, istmspd, istmdir, iggret
+    integer              :: igiret, iuret, jdum, icount, ilonfix, jlatfix, igpret, ifhmax
+    integer              :: ibeg, jbeg, iend, jend, ix1, ix2, n, ilev, npts, icpsa, igzvret
+    integer              :: igfwret, ioiret, igisret, iofwret, iowsret, igwsret, igscret
+    integer              :: pdf_ct_tot, lugb, lugi, iret, icmcf, iccfh, ivt8f, icqwret
+    integer              :: igsret, issta, iq850a, irha, ispfha, itempa, iomegaa
+    integer              :: ncfile_tmax, ivr, r34_good_ct, itha, ilma, inctcv
+    integer(kind=8)      :: waitfor_gfile_status, waitfor_ifile_status
+    integer(kind=8)      :: wait_max_ifile_wait
+    integer              :: ix_radii_beg, ix_radii_end, n_r34_iter, iccwcret
+    integer              :: date_time(8), igarret
+    integer              :: int_vtq_ne, int_vtq_se, int_vtq_sw, int_vtq_nw
+    integer(kind=8)      :: dum1, dum2, dum3
+    integer              :: ncfile_id
+    integer              :: nc_lsmask_file_id
+    integer              :: enable_timing, igrct, ipfbret, icmc2f, iqwcf, iggdret
+    integer              :: izero_fhr, i999_stmspd, i999_stmdir, igsstret
+
       logical(1), allocatable :: valid_pt(:,:)
-      logical(1), allocatable :: masked_outc(:,:),masked_out(:,:)
-      logical(1) readflag(nreadparms),calcparm(maxtp,maxstorm)
-      logical(1) readgenflag(nreadgenparms)
-      logical(1) tracking_previously_known_storms
-      logical(1) need_to_flip_lats,need_to_flip_lons
-      logical(1) file_open,first_time_thru_getradii
-      character cvort_maxmin*3,isastorm(3)*1,ccflag*1,gotten_avg_value*1
-      character cmaxmin*3,get_last_isobar_flag*1,wcore_flag*1
-      character gfilename*120,ifilename*120,gridmove_status*7
-      character close_to_boundary*1,quad_wind_circ_check*4
-      integer   vradius(3,4),igridzeta(nlevgrzeta),imeanzeta(nlevgrzeta)
-      integer   maxmini(maxstorm),maxminj(maxstorm),pdf_ct_bin(16)
-      integer   ifcsthour,stormct,prevstormct,kf,istmspd,istmdir,iggret
-      integer   igiret,iuret,jdum,icount,ilonfix,jlatfix,igpret,ifhmax
-      integer   ibeg,jbeg,iend,jend,ix1,ix2,n,ilev,npts,icpsa,igzvret
-      integer   igfwret,ioiret,igisret,iofwret,iowsret,igwsret,igscret
-      integer   pdf_ct_tot,lugb,lugi,iret,icmcf,iccfh,ivt8f,icqwret
-      integer   igsret,issta,iq850a,irha,ispfha,itempa,iomegaa
-      integer   ncfile_tmax,ivr,r34_good_ct,itha,ilma,inctcv
-      integer(kind=8) :: waitfor_gfile_status,waitfor_ifile_status
-      integer(kind=8) :: wait_max_ifile_wait
-      integer   ix_radii_beg,ix_radii_end,n_r34_iter,iccwcret
-      integer   date_time(8),igarret
-      integer   int_vtq_ne,int_vtq_se,int_vtq_sw,int_vtq_nw
-      integer(kind=8)   dum1,dum2,dum3
-      character (len=10) big_ben(3)
-      real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real      gridprs(maxstorm,maxtime)
-      real      wfract_cov(5,5,3)
-      real      vt_quad(numquad),vtquadmax(numquad)
-      real      er_wind(numquad,numdist)
-      real      sr_wind(numquad,numdist)
-      real      er_vr(numquad,numdist)
-      real      er_vt(numquad,numdist)
-      real      sr_vr(numquad,numdist)
-      real      sr_vt(numquad,numdist)
-      real      ike(max_ike_cats)
-      real      clon(maxstorm,maxtime,maxtp)
-      real      clat(maxstorm,maxtime,maxtp)
-      real      xmaxwind(maxstorm,maxtime)
-      real      stderr(maxstorm,maxtime),xval(maxtp),cps_vals(3)
-      real      shear(maxstorm,maxtime,2)
-      real      pctile_quad_bin_wind(numquad,num_r34_bins)
-      real      fp_pctile_quad_bin_wind(numquad,num_r34_bins)
-      real      gridpoint_maxmin,dist,distnm,xknots,xmaxspeed
-      real      uvgeslon,uvgeslat,xavg,stdv,search_cutoff,re,ri,dx,dy
-      real      xinp_fixlat,xinp_fixlon,degrees,plastbar,rlastbar
-      real      xinterval_fhr,cc_time_sum_tot,cc_time_sum_yes
-      real      rmax,sdp,wdp,paramb,vtl_slope,vtu_slope
-      real      xsfclon,xsfclat,cc_time_pct,radmax,r34_dist_thresh
-      real      prev_latmax,prev_latmin,prev_lonmax,prev_lonmin
-      real      vradius_km,hold_old_contint,tcv_max_wind_ms
-      real      tcv_mslp_pa,r34_from_tcv,roci_from_tcv
-      real      proci_from_tcv,roci_prs_contint_thresh,xprstemp
-      real      divg,moist_divg,rh_800_600_smooth,rh_1000_925_smooth
-      real      omega500_smooth,sst_smooth
-      real      axisymet_rmw_dist,axisymet_rmw_val
-      real      x999_lon,x999_lat,xzero_vmax,xzero_minslp,x99_pbar
-      real      x99_rbar,x99_rmax,x999_shrmag,x999_shrdir,x999_sst
-      real      x999_axirmw_dist,x999_axirmw_val,x999_divg
-      real      x999_moist_divg,x999_rh600_800,x999_rh1000_925
-      real      x999_omega500,x999_imzeta,x999_igzeta
-      integer   enable_timing,igrct,ipfbret,icmc2f,iqwcf,iggdret
-      integer   izero_fhr,i999_stmspd,i999_stmdir,igsstret
-      character(pfc_cmd_len) :: pfc_final
-      character :: c_undef_wcflag*1
-c
+    logical(1), allocatable :: masked_outc(:,:) ,masked_out(:,:)
+    logical(1)              :: readflag(nreadparms), calcparm(maxtp, maxstorm)
+    logical(1)              :: readgenflag(nreadgenparms)
+    logical(1)              :: tracking_previously_known_storms
+    logical(1)              :: need_to_flip_lats, need_to_flip_lons
+    logical(1)              :: file_open, first_time_thru_getradii
+
+    real, allocatable :: prstemp(:), iwork(:)
+    real              :: fixlon(maxstorm, maxtime), fixlat(maxstorm, maxtime)
+    real              :: gridprs(maxstorm, maxtime)
+    real              :: wfract_cov(5,5,3)
+    real              :: vt_quad(numquad), vtquadmax(numquad)
+    real              :: er_wind(numquad, numdist)
+    real              :: sr_wind(numquad, numdist)
+    real              :: er_vr(numquad, numdist)
+    real              :: er_vt(numquad, numdist)
+    real              :: sr_vr(numquad, numdist)
+    real              :: sr_vt(numquad, numdist)
+    real              :: ike(max_ike_cats)
+    real              :: clon(maxstorm, maxtime, maxtp)
+    real              :: clat(maxstorm, maxtime, maxtp)
+    real              :: xmaxwind(maxstorm, maxtime)
+    real              :: stderr(maxstorm, maxtime), xval(maxtp), cps_vals(3)
+    real              :: shear(maxstorm, maxtime, 2)
+    real              :: pctile_quad_bin_wind(numquad, num_r34_bins)
+    real              :: fp_pctile_quad_bin_wind(numquad, num_r34_bins)
+    real              :: gridpoint_maxmin, dist, distnm, xknots, xmaxspeed
+    real              :: uvgeslon, uvgeslat, xavg, stdv, search_cutoff, re, ri, dx, dy
+    real              :: xinp_fixlat, xinp_fixlon, degrees, plastbar, rlastbar
+    real              :: xinterval_fhr, cc_time_sum_tot, cc_time_sum_yes
+    real              :: rmax, sdp, wdp, paramb, vtl_slope, vtu_slope
+    real              :: xsfclon, xsfclat, cc_time_pct, radmax, r34_dist_thresh
+    real              :: prev_latmax, prev_latmin, prev_lonmax, prev_lonmin
+    real              :: vradius_km, hold_old_contint, tcv_max_wind_ms
+    real              :: tcv_mslp_pa, r34_from_tcv, roci_from_tcv
+    real              :: proci_from_tcv, roci_prs_contint_thresh, xprstemp
+    real              :: divg, moist_divg, rh_800_600_smooth, rh_1000_925_smooth
+    real              :: omega500_smooth, sst_smooth
+    real              :: axisymet_rmw_dist, axisymet_rmw_val
+    real              :: x999_lon, x999_lat, xzero_vmax, xzero_minslp, x99_pbar
+    real              :: x99_rbar, x99_rmax, x999_shrmag, x999_shrdir, x999_sst
+    real              :: x999_axirmw_dist, x999_axirmw_val, x999_divg
+    real              :: x999_moist_divg, x999_rh600_800, x999_rh1000_925
+    real              :: x999_omega500, x999_imzeta, x999_igzeta
       ! Define a bunch of missing values for variables to be sent to
       ! subroutines that write output....
       x999_lon         = -999.0
@@ -4225,13 +4216,13 @@ c-----------------------------------------------------------------------
 
       implicit none
 
-      integer, intent(in) :: n
+    integer,      intent(in)    :: n
       character(n), intent(inout) :: arg
-      character(*), intent(in) :: name
-      integer, intent(in) :: val
+    character(*), intent(in)    :: name
+    integer,      intent(in)    :: val
 
-      integer found,namelen,i1,i2
-      character(n) :: out
+    integer                     :: found, namelen, i1, i2
+    character(n)                :: out
 
       found=index(arg,name)
       namelen=len(name)
@@ -4300,15 +4291,15 @@ C     iret     The return code from this subroutine
 
       implicit none
 c
-      type (datecard) inp
+    type (datecard) :: inp
 
-      logical(1)  output_file_open
-      logical(1)  file_open
-      logical(4)  file_open4,file_open5
-      character fnameg*7,fnamei*7,fnameo*7
-      character(*) gfilename,ifilename
-      character(120) gopen_g_file,gopen_i_file
-      integer  igoret,iioret,iooret,lugb,lugi,lout,iret,nlen1,nlen2
+    logical(1)      :: output_file_open
+    logical(1)      :: file_open
+    logical(4)      :: file_open4, file_open5
+    character       :: fnameg*7, fnamei*7, fnameo*7
+    character(*)    :: gfilename, ifilename
+    character(120)  :: gopen_g_file, gopen_i_file
+    integer         :: igoret, iioret, iooret, lugb, lugi, lout, iret, nlen1, nlen2
 
       iret=0
 
@@ -4436,7 +4427,7 @@ c     ncfile_id integer, netcdf id assigned to the netcdf file
 
       character*(*), intent(in) :: filename
       integer, intent(out)      :: ncid
-      integer :: status
+      integer                   :: status
 
       status = nf_open (filename, NF_NOWRITE, ncid)
       if (status .ne. NF_NOERR) call handle_netcdf_err(status)
@@ -4486,16 +4477,16 @@ c
 
       implicit none
 c
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      real         vt,vtavg,vr,parmlat,parmlon,parmval,dist
-      real         pthresh,vthresh,degrees,dx,dy,dell,ri,radinf
-      real         pgradient,xmaxpgrad
-      character(*) cparm
-      logical(1)   defined_pt(imax,jmax)
-      character*1  stormcheck
-      integer      isiret,imax,jmax,ist,npts,ilonfix,jlatfix,igvtret
-      integer      ibeg,iend,jbeg,jend,ivt,i,j,iix,jix,bskip,igiret,ifh
+    real         :: vt, vtavg, vr, parmlat, parmlon, parmval, dist
+    real         :: pthresh, vthresh, degrees, dx, dy, dell, ri, radinf
+    real         :: pgradient, xmaxpgrad
+    character(*) :: cparm
+    logical(1)   :: defined_pt(imax,jmax)
+    character*1  :: stormcheck
+    integer      :: isiret, imax, jmax, ist, npts, ilonfix, jlatfix, igvtret
+    integer      :: ibeg, iend, jbeg, jend, ivt, i, j, iix, jix, bskip, igiret, ifh
 
       isiret = 0
       stormcheck = 'N'
@@ -4846,18 +4837,18 @@ c               V850 circulation.
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      character(*) cparm,gm_wrap_flag
-      character*1 :: close_to_boundary
-      character*3 :: maxmin
-      integer, parameter :: numazim=16
-      integer  imax,jmax,ipfbret,ist,iazim,icvpret
-      real, parameter :: bounddist=350.
-      real     dx,dy,pfixlon,pfixlat,bear,targlon,targlat
-      real     fxy(imax,jmax)
-      logical(1) valid_pt(imax,jmax)
-c
+    character(*)       :: cparm, gm_wrap_flag
+    character*1        :: close_to_boundary
+    character*3        :: maxmin
+    integer, parameter :: numazim = 16
+    integer            :: imax, jmax, ipfbret, ist, iazim, icvpret
+    real, parameter    :: bounddist = 350.0
+    real               :: dx, dy, pfixlon, pfixlat, bear, targlon, targlat
+    real               :: fxy(imax,jmax)
+    logical(1)         :: valid_pt(imax,jmax)
+
       ipfbret = 0
       close_to_boundary = 'n'
 
@@ -4946,16 +4937,16 @@ c     will just have it use the Hart cyclone phase space (CPS) scheme.
 
       implicit none
 
-      type (datecard) inp
-      type (trackstuff) trkrinfo
+    type (datecard)   :: inp
+    type (trackstuff) :: trkrinfo
 
-      character wcore_flag*1,okay_to_call_cps_routines*1
-      real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real     cps_vals(3)
-      real     dx,dy,paramb,vtl_slope,vtu_slope
-      integer  imax,jmax,igpret,igcpret,ist,ifh,maxstorm
-      integer  igvpret,igcv1ret,igcv2ret
-      logical(1) valid_pt(imax,jmax)
+    character  :: wcore_flag*1, okay_to_call_cps_routines*1
+    real       :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real       :: cps_vals(3)
+    real       :: dx, dy, paramb, vtl_slope, vtu_slope
+    integer    :: imax, jmax, igpret, igcpret, ist, ifh, maxstorm
+    integer    :: igvpret, igcv1ret, igcv2ret
+    logical(1) :: valid_pt(imax,jmax)
 c         
 
       if ( verb .ge. 3 ) then
@@ -5127,20 +5118,20 @@ c     storm center.
 
       implicit none
 
-      type (datecard) inp
-      type (trackstuff) trkrinfo
+    type (datecard)   :: inp
+    type (trackstuff) :: trkrinfo
 
-      real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real      zthicksum(2)
-      real      rlonc,rlatc,rlonb,rlatb,xdist,degrees,d,cosarg
-      real      st_heading,st_heading_rad,ricps,dx,dy
-      real      pt_dir,pt_dir_rad,zthick,hemval,paramb
-      real      zthick_right_mean,zthick_left_mean
-      integer   imax,jmax,igpret,igcpret,ist,ifh,npts,bskip,i,j
-      integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igiret
-      integer   left_ct,right_ct,hemis,icount,maxstorm,ip
-      logical(1) valid_pt(imax,jmax)
-c
+    real       :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real       :: zthicksum(2)
+    real       :: rlonc, rlatc, rlonb, rlatb, xdist, degrees, d, cosarg
+    real       :: st_heading, st_heading_rad, ricps, dx, dy
+    real       :: pt_dir, pt_dir_rad, zthick, hemval, paramb
+    real       :: zthick_right_mean, zthick_left_mean
+    integer    :: imax, jmax, igpret, igcpret, ist, ifh, npts, bskip, i, j
+    integer    :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret
+    integer    :: left_ct, right_ct, hemis, icount, maxstorm, ip
+    logical(1) :: valid_pt(imax,jmax)
+
       ricps = 500.0
 
 c     -----------------------------------------------------------------
@@ -5466,26 +5457,20 @@ c     only those points that are within 500 km of the storm center.
 
       implicit none
 
-      type (datecard) inp
-      type (trackstuff) trkrinfo
+    type (datecard)   :: inp
+    type (trackstuff) :: trkrinfo
 
-      character clayer*5
-      real      tmp1,tmp2,tmp3
-      real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real      zmax(7),zmin(7),zdiff(7),xlolevs(7),xhilevs(7),plev(7)
-      real      dlnp(7),dzdlnp(7),dz(7),lnp(7)
-      real      vth_slope,xdist,degrees,d,cosarg
-      real      ricps,dx,dy,R2
-      integer   imax,jmax,igpret,igcpret,ist,ifh,npts,bskip,i,j,k,kix
-      integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igcvret,igiret
-      integer   kbeg,kend,maxstorm,ip
-      logical(1) valid_pt(imax,jmax)
-
-      data xlolevs /900.,850.,800.,750.,700.,650.,600./
-      data xhilevs /600.,550.,500.,450.,400.,350.,300./
-c      data xlolevs /90000.,85000.,80000.,75000.,70000.,65000.,60000./
-c      data xhilevs /60000.,55000.,50000.,45000.,40000.,35000.,30000./
-c
+    character  :: clayer*5
+    real       :: tmp1, tmp2, tmp3
+    real       :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real       :: zmax(7), zmin(7), zdiff(7), xlolevs(7), xhilevs(7), plev(7)
+    real       :: dlnp(7), dzdlnp(7), dz(7), lnp(7)
+    real       :: vth_slope, xdist, degrees, d, cosarg
+    real       :: ricps, dx, dy, R2
+    integer    :: imax, jmax, igpret, igcpret, ist, ifh, npts, bskip, i, j, k, kix
+    integer    :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igcvret, igiret
+    integer    :: kbeg, kend, maxstorm, ip
+    logical(1) :: valid_pt(imax,jmax)
       ricps = 500.0
       plev = 0.0
 
@@ -5764,20 +5749,11 @@ c     yresid  array of residuals (ydat(i) - yestim(i))
 
       implicit none
 
-      real    xdat(numpts),ydat(numpts)
-      real    xdiff(numpts),ydiff(numpts)
-      real    yestim(numpts),yresid(numpts)
-      real    xmean,ymean,slope,yint,R2
-      integer numpts,i
-
-c
-      call getmean(xdat,numpts,xmean)
-      call getmean(ydat,numpts,ymean)
-c
-      call getdiff(xdat,numpts,xmean,xdiff)
-      call getdiff(ydat,numpts,ymean,ydiff)
-c
-      call getslope(xdiff,ydiff,numpts,slope)
+    real    :: xdat(numpts), ydat(numpts)
+    real    :: xdiff(numpts), ydiff(numpts)
+    real    :: yestim(numpts), yresid(numpts)
+    real    :: xmean, ymean, slope, yint, R2
+    integer :: numpts, i
       yint = ymean - slope * xmean
 c
       call getyestim(xdat,slope,yint,numpts,yestim)
@@ -5852,9 +5828,9 @@ c      zmean  mean of data values in xarr
 
       implicit none
       
-      real   xarr(inum)
-      real   xsum,zmean
-      integer i,inum
+    real    :: xarr(inum)
+    real    :: xsum, zmean
+    integer :: i, inum
 c     
       xsum = 0.0
       do i = 1,inum
@@ -5886,10 +5862,10 @@ c      zdiff  array containing xarr(i) - zmean
 
       implicit none
       
-      real xarr(inum),zdiff(inum)
-      real zmean
-      integer i,inum
-c     
+    real    :: xarr(inum), zdiff(inum)
+    real    :: zmean
+    integer :: i, inum
+
       do i = 1,inum
         zdiff(i) = xarr(i) - zmean
       enddo
@@ -5916,9 +5892,9 @@ c      slope  slope of regression line
 
       real xarr(inum),yarr(inum)
       real slope,sumxy,sumx2
-      integer i,inum
-
-c     First sum up the xarr*yarr products....
+    real    :: xarr(inum), yarr(inum)
+    real    :: slope, sumxy, sumx2
+    integer :: i, inum
 
       sumxy = 0.0
       do i = 1,inum
@@ -5959,9 +5935,9 @@ c      yestim array of y pts estimated from regression eqn.
 
       implicit none
 
-      real xarr(inum),yestim(inum)
-      real slope,yint
-      integer i,inum
+    real    :: xarr(inum), yestim(inum)
+    real    :: slope, yint
+    integer :: i, inum
 c
       do i = 1,inum
         yestim(i) = yint + xarr(i) * slope
@@ -5989,9 +5965,9 @@ c      yresid array of residuals (ydat(i) - yestim(i))
 
       implicit none
 
-      real yarr(inum),yestim(inum),yresid(inum)
-      integer i,inum
-c
+    real    :: yarr(inum), yestim(inum), yresid(inum)
+    integer :: i, inum
+
       do i = 1,inum
         yresid(i) = yarr(i) - yestim(i)
       enddo
@@ -6019,9 +5995,9 @@ c      R2     R-squared, the coefficient of determination
 
       implicit none
 
-      real yresid(inum),ydiff(inum)
-      real R2,sumyresid,sumydiff
-      integer i,inum
+    real    :: yresid(inum), ydiff(inum)
+    real    :: R2, sumyresid, sumydiff
+    integer :: i, inum
 c
       sumyresid = 0.0
       sumydiff  = 0.0
@@ -6103,22 +6079,22 @@ c              barnes analysis.
 
       implicit none
 
-      type (trackstuff) trkrinfo,wcore_trkrinfo
-      type (cint_stuff) wcore_contour_info
-      type (datecard) inp
+    type (trackstuff) :: trkrinfo,wcore_trkrinfo
+    type (cint_stuff) :: wcore_contour_info
+    type (datecard)   :: inp
 
-      character*1 get_last_contour_flag,wcore_flag
-      real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real      dx,dy,wcore_mean_val,wcore_mean_lon,wcore_mean_lat
-      real      wcore_point_max,tlastcont,rlastcont,tlastout,rlastout
-      integer   imax,jmax,igvpret,ist,ifh,npts,bskip,i,j
-      integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igiret
-      integer   icount,maxstorm,ip,ifmret,ifilret,ifix,jfix,icccret
-      integer   num_check_conts
-      integer(kind=8)   dum1,dum2,dum3
-      logical(1) valid_pt(imax,jmax),compflag,wcore_mask(imax,jmax)
-      logical(1) output_file_open
-c
+    character*1     :: get_last_contour_flag, wcore_flag
+    real            :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real            :: dx, dy, wcore_mean_val, wcore_mean_lon, wcore_mean_lat
+    real            :: wcore_point_max, tlastcont, rlastcont, tlastout, rlastout
+    integer         :: imax, jmax, igvpret, ist, ifh, npts, bskip, i, j
+    integer         :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret
+    integer         :: icount, maxstorm, ip, ifmret, ifilret, ifix, jfix, icccret
+    integer         :: num_check_conts
+    integer(kind=8) :: dum1, dum2, dum3
+    logical(1)      :: valid_pt(imax,jmax), compflag, wcore_mask(imax,jmax)
+    logical(1)      :: output_file_open
+
 
       if ( verb .ge. 3 ) then
         print *,' '
@@ -6327,12 +6303,12 @@ c     igscret  Return code from this subroutine
 
       implicit none
 
-      integer  ist,ifh,ipct,igscret,maxstorm
-      real     clon(maxstorm,maxtime,maxtp)
-      real     clat(maxstorm,maxtime,maxtp)
-      real     xmeanlon,xmeanlat
-      real     xsfclon,xsfclat,xlonsum,xlatsum
-      logical(1) calcparm(maxtp,maxstorm)
+    integer    :: ist, ifh, ipct, igscret, maxstorm
+    real       :: clon(maxstorm,maxtime,maxtp)
+    real       :: clat(maxstorm,maxtime,maxtp)
+    real       :: xmeanlon, xmeanlat
+    real       :: xsfclon, xsfclat, xlonsum, xlatsum
+    logical(1) :: calcparm(maxtp,maxstorm)
 
       ipct = 0
       xlonsum = 0.0
@@ -6448,20 +6424,20 @@ c     icqwret  return code from this subroutine
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff)  :: trkrinfo
 
-      integer, parameter :: numdist=5,numquad=4,num_qtr_azim=6
-      integer  imax,jmax,ist,ifh,iquad,idist,ibiret1,ibiret2,bimct
-      integer  igvtret,iazim,bad_quad_ct,good_quad_ct,icqwret
-      integer  azimuth_ct
-      character*4  quad_wind_circ_check
-      character (*)  gm_wrap_flag
-      real     rdist(numdist),vt_quad(numquad)
-      real     dx,dy,bear,targlat,targlon,xintrp_u,xintrp_v
-      real     temp_bear,xdist,xclon,xclat,wmag,wmag_sum,wmag_mean,d
-      real     vr,vt,vr_sum,vt_sum,degrees,hemisphere,hem_adj_vt_quad
-      logical(1) valid_pt(imax,jmax)
-c
+    integer, parameter :: numdist = 5, numquad = 4, num_qtr_azim = 6
+    integer            :: imax, jmax, ist, ifh, iquad, idist, ibiret1, ibiret2, bimct
+    integer            :: igvtret, iazim, bad_quad_ct, good_quad_ct, icqwret
+    integer            :: azimuth_ct
+    character*4        :: quad_wind_circ_check
+    character(*)       :: gm_wrap_flag
+    real               :: rdist(numdist), vt_quad(numquad)
+    real               :: dx, dy, bear, targlat, targlon, xintrp_u, xintrp_v
+    real               :: temp_bear, xdist, xclon, xclat, wmag, wmag_sum, wmag_mean, d
+    real               :: vr, vt, vr_sum, vt_sum, degrees, hemisphere, hem_adj_vt_quad
+    logical(1)         :: valid_pt(imax,jmax)
+
       data rdist/50.,100.,150.,200.,250./
 
       icqwret = 0
@@ -6645,26 +6621,26 @@ c       sr_vt:    Quadrant tangential winds in storm-relative framework
 
       implicit none
 
-      type (datecard) inp
-      type (trackstuff) trkrinfo
+    type (datecard)    :: inp
+    type (trackstuff)  :: trkrinfo
 
-      character (*)  gm_wrap_flag
-      integer, parameter :: numdist=14,numquad=4,num_qtr_azim=6
-      integer  imax,jmax,igwsret,ist,ifh,iquad,idist,ibiret1,ibiret2
-      integer  igvtret,ipct,maxstorm,iazim,azimuth_ct,bimct
-      real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real     rdist(numdist)
-      real     er_wind(numquad,numdist)
-      real     sr_wind(numquad,numdist)
-      real     er_vr(numquad,numdist)
-      real     er_vt(numquad,numdist)
-      real     sr_vr(numquad,numdist)
-      real     sr_vt(numquad,numdist)
-      real     dx,dy,bear,targlat,targlon,xintrp_u,xintrp_v,st_heading
-      real     d,cosarg,rlonc,rlatc,rlonb,rlatb,st_heading_rad,degrees
-      real     temp_bear,xdist,xsfclon,xsfclat,wmag,wmag_sum
-      real     vr,vt,vr_sum,vt_sum
-      logical(1) valid_pt(imax,jmax)
+    character(*)       :: gm_wrap_flag
+    integer, parameter :: numdist = 14, numquad = 4, num_qtr_azim = 6
+    integer            :: imax, jmax, igwsret, ist, ifh, iquad, idist, ibiret1, ibiret2
+    integer            :: igvtret, ipct, maxstorm, iazim, azimuth_ct, bimct
+    real               :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real               :: rdist(numdist)
+    real               :: er_wind(numquad,numdist)
+    real               :: sr_wind(numquad,numdist)
+    real               :: er_vr(numquad,numdist)
+    real               :: er_vt(numquad,numdist)
+    real               :: sr_vr(numquad,numdist)
+    real               :: sr_vt(numquad,numdist)
+    real               :: dx, dy, bear, targlat, targlon, xintrp_u, xintrp_v, st_heading
+    real               :: d, cosarg, rlonc, rlatc, rlonb, rlatb, st_heading_rad, degrees
+    real               :: temp_bear, xdist, xsfclon, xsfclat, wmag, wmag_sum
+    real               :: vr, vt, vr_sum, vt_sum
+    logical(1)         :: valid_pt(imax,jmax)
 c
       data rdist/10.,25.,50.,75.,100.,125.,150.,200.,250.,300.,350.
      &          ,400.,450.,500./
@@ -7023,36 +6999,34 @@ c       rdist     Radii (km) at which the winds will be evaluated
 
       implicit none
 
-      type (datecard) inp
-      type (trackstuff) trkrinfo
+    type (datecard)    :: inp
+    type (trackstuff)  :: trkrinfo
 
-      integer, parameter :: numdist=14,numquad=4,numbin=5,numthresh=3
-      real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real     rdist(numdist)
-      real     wfract_cov(numquad+1,numbin,numthresh)
-      real     area_total_quad_bin(numquad,numbin)
-      real     area_exceed_quad_bin(numquad,numbin,numthresh)
-      real     xintlon,xintlat
-      real ::  windthresh(numthresh) = (/17.5,25.74,32.94/)
-      real     dx,dy,bear,targlat,targlon,xintrp_u,xintrp_v,st_heading
-      real     d,cosarg,rlonc,rlatc,rlonb,rlatb,st_heading_rad,degrees
-      real     temp_bear,xdist,conv_ms_knots,vmagkts
-      real     rads,ri,dell,vmag,xarea,grdintincr,xsfclon,xsfclat
-      real     sum_exceed_area(numbin,numthresh)
-      real     sum_total_area(numbin,numthresh)
-      integer  pdf_ct_bin(16)
-      integer  imax,jmax,igwsret,ist,ifh,iquad,idist,ibiret1,ibiret2
-      integer  igfwret,ipct,i,j,numinterp,ixoa,ixaa,iq,ib,it,ii
-      integer  jlatfix,ilonfix,npts,ibeg,iend,jbeg,jend,ngridint,ni,nj
-      integer  itret,igiret,idistbin,ipdfbin,pdf_ct_tot,maxstorm
-      logical(1) calcparm(maxtp,maxstorm)
-      logical(1) valid_pt(imax,jmax)
-      character  got_pdf*6
-      character*2 :: cquad(4) = (/'NE','SE','SW','NW'/)
-      character*5 :: cbin(5) = 
-     &               (/'0-100','0-200','0-300','0-400','0-500'/)
-      character*2 :: cthresh(3) = (/'34','50','64'/)
-c
+    integer, parameter :: numdist = 14, numquad = 4, numbin = 5, numthresh = 3
+    real               :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real               :: rdist(numdist)
+    real               :: wfract_cov(numquad+1,numbin,numthresh)
+    real               :: area_total_quad_bin(numquad,numbin)
+    real               :: area_exceed_quad_bin(numquad,numbin,numthresh)
+    real               :: xintlon, xintlat
+    real               :: windthresh(numthresh) = (/17.5,25.74,32.94/)
+    real               :: dx, dy, bear, targlat, targlon, xintrp_u, xintrp_v, st_heading
+    real               :: d, cosarg, rlonc, rlatc, rlonb, rlatb, st_heading_rad, degrees
+    real               :: temp_bear, xdist, conv_ms_knots, vmagkts
+    real               :: rads, ri, dell, vmag, xarea, grdintincr, xsfclon, xsfclat
+    real               :: sum_exceed_area(numbin,numthresh)
+    real               :: sum_total_area(numbin,numthresh)
+    integer            :: pdf_ct_bin(16)
+    integer            :: imax, jmax, igwsret, ist, ifh, iquad, idist, ibiret1, ibiret2
+    integer            :: igfwret, ipct, i, j, numinterp, ixoa, ixaa, iq, ib, it, ii
+    integer            :: jlatfix, ilonfix, npts, ibeg, iend, jbeg, jend, ngridint, ni, nj
+    integer            :: itret, igiret, idistbin, ipdfbin, pdf_ct_tot, maxstorm
+    logical(1)         :: calcparm(maxtp,maxstorm)
+    logical(1)         :: valid_pt(imax,jmax)
+    character          :: got_pdf*6
+    character*2        :: cquad(4) = (/'NE','SE','SW','NW'/)
+    character*5        :: cbin(5) =(/'0-100','0-200','0-300','0-400','0-500'/)
+    character*2        :: cthresh(3) = (/'34','50','64'/)
       igfwret = 0
       conv_ms_knots = 1.9427
       rads = 500.0
@@ -7675,19 +7649,19 @@ c     sdp   Storm surge damage potential
 
       implicit none
 
-      type (datecard) inp
-      type (trackstuff) trkrinfo
+    type (datecard)    :: inp
+    type (trackstuff)  :: trkrinfo
 
-      integer, parameter :: numdist=14,numquad=4
-      integer  npts,ipct,igisret,imax,jmax,ist,ifh,ilonfix,jlatfix
-      integer  ibeg,jbeg,iend,jend,igiret,i,j,maxstorm,ii
-      real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real     ike(max_ike_cats)
-      real     dx,dy,degrees,rads,ri,dell,xdist,vmag,xarea
-      real     xsfclon,xsfclat,sdp,wdp
-      logical(1) calcparm(maxtp,maxstorm)
-      logical(1) valid_pt(imax,jmax)
-c
+    integer, parameter :: numdist = 14, numquad = 4
+    integer            :: npts, ipct, igisret, imax, jmax, ist, ifh, ilonfix, jlatfix
+    integer            :: ibeg, jbeg, iend, jend, igiret, i, j, maxstorm, ii
+    real               :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real               :: ike(max_ike_cats)
+    real               :: dx, dy, degrees, rads, ri, dell, xdist, vmag, xarea
+    real               :: xsfclon, xsfclat, sdp, wdp
+    logical(1)         :: calcparm(maxtp,maxstorm)
+    logical(1)         :: valid_pt(imax,jmax)
+
       igisret = 0
       ike = 0.0
       sdp = 0.0
@@ -8003,34 +7977,34 @@ c            is for 200 mb.
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      type (datecard) inp
+    type (trackstuff)  :: trkrinfo
+    type (datecard)    :: inp
 
-      character :: found_vt_ge_1_flag*1
-      character (*)  gm_wrap_flag
-      integer, parameter :: numdist=19,numazim=24,numlev=2
-      integer u_cart_sum_ct(numlev),v_cart_sum_ct(numlev)
-      integer max_dist_index(2)
-      integer imax,jmax,ist,ifh,maxstorm,idist,azimuth_ct,iazim
-      integer level,ibiret1,ibiret2,bimct,igvtret,igsret,ilev
-      real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real    clon(maxstorm,maxtime,maxtp)
-      real    clat(maxstorm,maxtime,maxtp)
-      real    shear(maxstorm,maxtime,2)
-      real    rdist(numdist),vr(numazim,numdist,numlev)
-      real    vt(numazim,numdist,numlev)
-      real    vt_prime(numazim,numdist,numlev)
-      real    vr_prime(numazim,numdist,numlev)
-      real    u_from_vt(numazim,numdist),v_from_vt(numazim,numdist)
-      real    u_from_vr(numazim,numdist),v_from_vr(numazim,numdist)
-      real    vt_mean(numdist,numlev),vr_mean(numdist,numlev)
-      real    u_cart(numazim,numdist,numlev),u_cart_mean(numlev)
-      real    v_cart(numazim,numdist,numlev),v_cart_mean(numlev)
-      real    u_cart_sum(numlev),v_cart_sum(numlev)
-      real    dx,dy,xcenlon,xcenlat,vt_azim_sum,vr_azim_sum,bear
-      real    targlat,targlon,xintrp_u,xintrp_v,local_angle
-      real    ushear,vshear,shear_dir_point_to,shear_dir_from,shear_mag
-      logical(1) calcparm(maxtp,maxstorm),valid_pt(imax,jmax)
+    character          :: found_vt_ge_1_flag*1
+    character(*)       :: gm_wrap_flag
+    integer, parameter :: numdist = 19, numazim = 24, numlev = 2
+    integer            :: u_cart_sum_ct(numlev), v_cart_sum_ct(numlev)
+    integer            :: max_dist_index(2)
+    integer            :: imax, jmax, ist, ifh, maxstorm, idist, azimuth_ct, iazim
+    integer            :: level, ibiret1, ibiret2, bimct, igvtret, igsret, ilev
+    real               :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real               :: clon(maxstorm,maxtime,maxtp)
+    real               :: clat(maxstorm,maxtime,maxtp)
+    real               :: shear(maxstorm,maxtime,2)
+    real               :: rdist(numdist), vr(numazim,numdist,numlev)
+    real               :: vt(numazim,numdist,numlev)
+    real               :: vt_prime(numazim,numdist,numlev)
+    real               :: vr_prime(numazim,numdist,numlev)
+    real               :: u_from_vt(numazim,numdist), v_from_vt(numazim,numdist)
+    real               :: u_from_vr(numazim,numdist), v_from_vr(numazim,numdist)
+    real               :: vt_mean(numdist,numlev), vr_mean(numdist,numlev)
+    real               :: u_cart(numazim,numdist,numlev), u_cart_mean(numlev)
+    real               :: v_cart(numazim,numdist,numlev), v_cart_mean(numlev)
+    real               :: u_cart_sum(numlev), v_cart_sum(numlev)
+    real               :: dx, dy, xcenlon, xcenlat, vt_azim_sum, vr_azim_sum, bear
+    real               :: targlat, targlon, xintrp_u, xintrp_v, local_angle
+    real               :: ushear, vshear, shear_dir_point_to, shear_dir_from, shear_mag
+    logical(1)         :: calcparm(maxtp,maxstorm), valid_pt(imax,jmax)
 
       data rdist/50.,75.,100.,125.,150.,175.,200.,225.,250.,275.,300.
      &          ,325.,350.,375.,400.,425.,450.,475.,500./
@@ -8605,15 +8579,15 @@ c     trkrinfo derived type detailing user-specified grid info
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      type (datecard) inp
+    type (trackstuff) :: trkrinfo
+    type (datecard)   :: inp
 
-      integer imax,jmax,ist,ifh,maxstorm
-      integer level,igsvret,igsstret
-      real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real    dx,dy,re,ri,xsmoothval,sst_smooth
-      logical(1) valid_pt(imax,jmax)
-      logical(1) readflag(nreadparms)
+    integer    :: imax, jmax, ist, ifh, maxstorm
+    integer    :: level, igsvret, igsstret
+    real       :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real       :: dx, dy, re, ri, xsmoothval, sst_smooth
+    logical(1) :: valid_pt(imax,jmax)
+    logical(1) :: readflag(nreadparms)
 
       !----------------------------------------------------------------
       ! Now get a smoothed, barnes-averaged value of SST at the center
@@ -8709,30 +8683,23 @@ c
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      type (datecard) inp
+    type (trackstuff) :: trkrinfo
+    type (datecard)   :: inp
 
-      integer date_time(8)
-      character (len=10) big_ben(3)
+    integer            :: date_time(8)
+    character(len=10)  :: big_ben(3)
 
-      integer imax,jmax,ist,ifh,maxstorm
-      integer level,iggdret,igdret,ilev,igrhret,igsvret
-      real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real    clon(maxstorm,maxtime,maxtp)
-      real    clat(maxstorm,maxtime,maxtp)
-      real    dx,dy,xcenlon,xcenlat,q850conv,q850_smooth
-      real    rh_1000_925_smooth,rh_800_600_smooth,omega500_smooth
-      real    divg,moist_divg,re,ri,xsmoothval
-      character :: already_computed_domain_wide_rh*1
-      logical(1) calcparm(maxtp,maxstorm),valid_pt(imax,jmax)
-      logical(1) readflag(nreadparms),readgenflag(nreadgenparms)
-c
-      !----------------------------------------------------------------
-      ! Call  get_divg, which will call a routine to compute divergence
-      ! over the whole domain and then compute just a barnes-averaged
-      ! value at the center point, returned in the variable "divg".
-      ! In get_divg, I'll be doing this analysis only at 850 mb.
-      !----------------------------------------------------------------
+    integer            :: imax, jmax, ist, ifh, maxstorm
+    integer            :: level, iggdret, igdret, ilev, igrhret, igsvret
+    real               :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real               :: clon(maxstorm,maxtime,maxtp)
+    real               :: clat(maxstorm,maxtime,maxtp)
+    real               :: dx, dy, xcenlon, xcenlat, q850conv, q850_smooth
+    real               :: rh_1000_925_smooth, rh_800_600_smooth, omega500_smooth
+    real               :: divg, moist_divg, re, ri, xsmoothval
+    character          :: already_computed_domain_wide_rh*1
+    logical(1)         :: calcparm(maxtp,maxstorm), valid_pt(imax,jmax)
+    logical(1)         :: readflag(nreadparms), readgenflag(nreadgenparms)
 
       if ( verb .ge. 3 ) then
         call date_and_time (big_ben(1),big_ben(2),big_ben(3)
@@ -8897,18 +8864,18 @@ c
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      type (datecard) inp
+    type (trackstuff) :: trkrinfo
+    type (datecard)   :: inp
 
-      integer imax,jmax,ist,ifh,maxstorm
-      integer level,iggdret,igdret,ilev,idvgf,idvcret,igsvret
+    integer           :: imax, jmax, ist, ifh, maxstorm
+    integer           :: level, iggdret, igdret, ilev, idvgf, idvcret, igsvret
       real, allocatable :: divg_850(:,:)
-      real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real    clon(maxstorm,maxtime,maxtp)
-      real    clat(maxstorm,maxtime,maxtp)
-      real    dx,dy,xcenlon,xcenlat,divg,xsmoothval,re,ri
+    real              :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real              :: clon(maxstorm,maxtime,maxtp)
+    real              :: clat(maxstorm,maxtime,maxtp)
+    real              :: dx, dy, xcenlon, xcenlat, divg, xsmoothval, re, ri
       
-      logical(1) calcparm(maxtp,maxstorm),valid_pt(imax,jmax)
+    logical(1)        :: calcparm(maxtp,maxstorm), valid_pt(imax,jmax)
 c
       if (allocated(divg_850)) deallocate(divg_850)
       allocate (divg_850(imax,jmax),stat=idvgf)
@@ -8988,13 +8955,13 @@ c
 
       implicit none
 c
-      character (*)  gm_wrap_flag
+    character(*)    :: gm_wrap_flag
       real, parameter :: rad_earth_nm = 3440.170  ! radius of earth
       real, parameter :: rad_earth_km = 6372.797  ! radius of earth
-      real     xlato,xlono,dist,bear,xlatt,xlont,xlatin,xlonin
-      real     cdist,sdist,clato,slato,clono,slono,cbear,sbear
-      real     z,y,x,r,xlattz,xlontz,ddist,dbear,dxlato,dxlono
-c
+    real            :: xlato, xlono, dist, bear, xlatt, xlont, xlatin, xlonin
+    real            :: cdist, sdist, clato, slato, clono, slono, cbear, sbear
+    real            :: z, y, x, r, xlattz, xlontz, ddist, dbear, dxlato, dxlono
+
       xlato = xlatin
       xlono = xlonin
 
@@ -9125,14 +9092,14 @@ c
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      character  cparm*1
-      logical(1) valid_pt(imax,jmax)
-      real       targlat,targlon,xintrp_val,dx,dy,tmp_targlon
-      real       to,ta,d1,d2,d3,d4,z,eastlon
-      integer    ie,iw,jn,js,ibiret,imax,jmax,level,nlev,bimct
-      integer    ie_hold,iw_hold,ifh
+    character  :: cparm*1
+    logical(1) :: valid_pt(imax,jmax)
+    real       :: targlat, targlon, xintrp_val, dx, dy, tmp_targlon
+    real       :: to, ta, d1, d2, d3, d4, z, eastlon
+    integer    :: ie, iw, jn, js, ibiret, imax, jmax, level, nlev, bimct
+    integer    :: ie_hold, iw_hold, ifh
 
       ibiret = 0
 
@@ -9377,86 +9344,12 @@ c        endif
       endif
 
       z = 1.9427
-
-cstr      print '(2x,4(a4,f8.2))','  d1= ',d1*z,'  d2= ',d2*z
-cstr     &                       ,'  d3= ',d3*z,' d4= ',d4*z
-
-c     -------------------------------------------------------------
-c     Compute the interpolated value
-c     -------------------------------------------------------------
-
-      xintrp_val = (1.-to) * (1.-ta) * d1
-     &           + to * (1.-ta) * d2
-     &           + to * ta * d3
-     &           + (1.-to) * ta * d4
-
-c      if (ifh == 24) then
-c        print '(2x,a15,f8.2,a11,f8.2)','bxx:   xintrp= ',xintrp_val
-c     &            ,' (in kts)= ',xintrp_val*z
-c      endif
-c
-      return
-      end
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine sort_storms_by_pressure (gridprs,ifh,maxstorm,sortindex
-     &                                   ,issret)
-c
-c     ABSTRACT: This subroutine  sorts storms by mslp.  It is called by
-c     subroutine  tracker just before the loop for "stormloop" is done
-c     for all the storms at a particular forecast hour.  It is only
-c     called for the "midlat" and "tcgen" cases.  The end result of
-c     this sort is an array (prsindex) that contains the indeces of
-c     the storms, arranged from lowest pressure to highest (and note
-c     that the "undefined" storms have a pressure of 9999.99 mb and
-c     thus get sorted to the bottom of the array).  The purpose of
-c     doing this is so that we track the most intense storms first.
-c     Why go to the trouble?  Imagine a scenario in which we are
-c     tracking a complex system in which there are 2 low pressure
-c     centers.  Let's say that one is becoming dominant and
-c     intensifying, while the other is weakening.  Now, let's assume
-c     that the weakening one eventually gets absorbed into the
-c     stronger, more dominant low.  Now we only have 1 low, but if in
-c     the  tracker stormloop, we first process the data for the
-c     weakening low, we will attribute the track to that storm, and
-c     then when we get to the point in the loop where we are trying
-c     to get the track for the stronger storm, we will (erroneously)
-c     stop the tracking for that storm since the storm center has
-c     already been attributed to the weaker storm.  But by using this
-c     subroutine, we will track the stronger storm first, and thus
-c     avoid this problem.
-c
-c     NOTE: The pressures used in the  sort are those obtained at the
-c     previous forecast hour.  At forecast hour = 0, just use the
-c     values as they were input to this routine, since they were
-c     found in first_ges_center from strongest to weakest already.
-c
-c     INPUT:
-c     gridprs  real array of storm mslp values
-c     ifh      integer index for the current forecast hour
-c     maxstorm max num of storms that can be handled in this run
-c
-c     OUTPUT:
-c     sortindex contains a sorted array of indeces.  The  orders
-c               sort routine does NOT rearrange the data.  Rather, it
-c               returns this array of sorted indeces which point to
-c               the correct order of data values in the data array.
-c     issret    return code from this subroutine
-c
-      USE set_max_parms
-      USE verbose_output
-
-      real, allocatable :: iwork(:)
-      real      gridprs(maxstorm,maxtime)
-      integer   ifh,maxstorm
-      integer   sortindex(maxstorm)
-      integer, parameter  :: dp = selected_real_kind(12, 60)
-      real (dp), allocatable ::  prstemp(:)
-c
-      allocate (prstemp(maxstorm),stat=iva)
-      allocate (iwork(maxstorm),stat=iwa)
+    real, allocatable      :: iwork(:)
+    real                   :: gridprs(maxstorm,maxtime)
+    integer                :: ifh, maxstorm
+    integer                :: sortindex(maxstorm)
+    integer, parameter     :: dp = selected_real_kind(12, 60)
+    real(dp), allocatable  :: prstemp(:)
       if (iva /= 0 .or. iwa /= 0) then
 
         if ( verb .ge. 1 ) then
@@ -9558,23 +9451,11 @@ c
 
       implicit none
 
-      real centlon,centlat,xlon,xlat,udat,vdat,vr,vt,degrees,tmpxlon
-      real angle,xlondiff,xlatdiff,opp_dist,hyp_dist,sin_value
-      real cos_value,adj_dist,tmpangle,sin_angle,cos_angle
-      real uvrcomp,vvrcomp,uvtcomp,vvtcomp,tmpcentlon
-      integer igvtret,ifh
-c
-      call calcdist(centlon,centlat,xlon,xlat,hyp_dist,degrees)
-
-c      if (ifh == 751) then
-c        print *,' '
-c        write (6,108) centlon,centlat,xlon,xlat,hyp_dist,degrees
-c  108   format (1x,'vhx: centlon= ',f11.6,'  centlat= ',f11.6
-c     &            ,'  xlon= ',f11.6,' xlat= ',f11.6
-c     &            ,'  hyp_dist= ',f13.4,' degrees= ',f11.4)
-c      endif
-
-c      xxxx
+    real    :: centlon, centlat, xlon, xlat, udat, vdat, vr, vt, degrees, tmpxlon
+    real    :: angle, xlondiff, xlatdiff, opp_dist, hyp_dist, sin_value
+    real    :: cos_value, adj_dist, tmpangle, sin_angle, cos_angle
+    real    :: uvrcomp, vvrcomp, uvtcomp, vvtcomp, tmpcentlon
+    integer :: igvtret, ifh
 
       tmpxlon    = xlon
       tmpcentlon = centlon
@@ -9874,22 +9755,22 @@ c
 
       implicit none
 
-      type (datecard) inp
-      type (trackstuff) trkrinfo
+    type (datecard)   :: inp
+    type (trackstuff) :: trkrinfo
 
       real, intent(in) :: outlon,outlat
-      real    cps_vals(3)
-      real    rmax,mslp_outp_adj,xoutlon
-      real    vmaxwind,conv_ms_knots,xminmslp,plastbar,rlastbar
-      real    shear_mag,shear_dir,sst_smooth
-      real    axisymet_rmw_dist,axisymet_rmw_val
-      integer intlon,intlat,irmax,output_fhr,ic,iplastbar,irlastbar
-      integer ishear_mag,ishear_dir,istmspd,istmdir,isst,ioaxret
-      integer irmw_dist,irmw_val,maxstorm,ist,ifh,ifcsthour
-      integer vradius(3,4),icps_vals(3)
-      character  basinid*2,clatns*1,clonew*1,wcore_flag*1
-      character comma_fill1*48,comma_fill2*31,comma_filler*79
-      character comma_fill1n*25,comma_fill2n*44
+    real             :: cps_vals(3)
+    real             :: rmax, mslp_outp_adj, xoutlon
+    real             :: vmaxwind, conv_ms_knots, xminmslp, plastbar, rlastbar
+    real             :: shear_mag, shear_dir, sst_smooth
+    real             :: axisymet_rmw_dist, axisymet_rmw_val
+    integer          :: intlon, intlat, irmax, output_fhr, ic, iplastbar, irlastbar
+    integer          :: ishear_mag, ishear_dir, istmspd, istmdir, isst, ioaxret
+    integer          :: irmw_dist, irmw_val, maxstorm, ist, ifh, ifcsthour
+    integer          :: vradius(3,4), icps_vals(3)
+    character        :: basinid*2, clatns*1, clonew*1, wcore_flag*1
+    character        :: comma_fill1*48, comma_fill2*31, comma_filler*79
+    character        :: comma_fill1n*25, comma_fill2n*44
 
       if ( verb .ge. 3 ) then
         print *,'TTT top of atcfunix, ist= ',ist,' ifh= ',ifcsthour
@@ -10225,104 +10106,25 @@ c     bug fix for IBM: flush the output stream so it actually writes
       flush(64)
 
       return
-      end
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine output_aext (outlon,outlat,inp,ist
-     &         ,ifcsthour,vmaxwind,xminmslp,vradius,maxstorm
-     &         ,trkrinfo,plastbar,rlastbar,rmax,cps_vals
-     &         ,wcore_flag,istmspd,istmdir,shear_mag,shear_dir
-     &         ,sst_smooth,axisymet_rmw_dist,axisymet_rmw_val
-     &         ,divg,moist_divg
-     &         ,rh_800_600_smooth,rh_1000_925_smooth
-     &         ,omega500_smooth,imeanzeta,igridzeta,ioaxret)
+    type (datecard)   ::inp
+    type (trackstuff) :: trkrinfo
 
-c     ABSTRACT: This subroutine  is very similar to subroutine
-c     output_atcfunix, however it also writes out additional 
-c     parameters on the end that are not part of the standard 
-c     ATCF format.  As of March 2022, that includes these parms:
-c       
-c       850 mb convergence
-c       850 mb moisture convergence
-c       800-600 mb layer mean RH
-c       1000-925 mb layer mean RH
-c       500 mb omega
-c       SST
-c
-c     INPUT:
-c     outlon    longitude  fix position for this storm at this time 
-c               which is to be written out to the  output file
-c     outlat    latitude  fix position for this storm at this time 
-c               which is to be written out to the  output file
-c     inp       contains input date and model number information
-c     ist       the number storm that we're processing (can be 1-15)
-c     ifcsthr   the current forecast hour being output
-c     vmaxwind  the max surface wind for this storm at this fcst hour
-c     xminmslp  the min mslp for this storm at this fcst hour
-c     vradius   Contains the distance from the storm fix position to
-c               each of the various wind threshhold distances in each
-c               quadrant. (3,4) ==> (# of threshholds, # of quadrants)
-c     maxstorm  max # of storms that can be handled
-c     plastbar  pressure of the outermost closed isobar
-c     rlastbar  radius (nm) of the outermost closed isobar
-c     rmax      radius of max winds (n mi).... it was already converted
-c               from km to n mi in subroutine  get_max_wind
-c     cps_vals  real array with the values for the 3 cyclone phase 
-c               space parameters: (1) is for Parameter B (thermal
-c               asymmetry); (2) is for lower level (600-900 mb) thermal
-c               wind; (3) is for upper level (300-600 mb) thermal wind.
-c     wcore_flag character for value of 300-500 mb warm core: y, n, or 
-c               'u' for undetermined.
-c     istmspd   integer storm translation speed.
-c     istmdir   integer storm motion vector direction (to).
-c     shear_mag real magnitude of 850-200 mb vertical shear.
-c     shear_dir real vector direction the 850-200 mb vertical shear
-c               is heading to.
-c     sst_smooth real barnes-averaged SST centered on mean fix 
-c     axisymet_rmw_dist real distance to axisymmetric RMW
-c     axisymet_rmw_val  real value of axiysymmetric RMW
-c     divg      real barnes-averaged 850 mb convergence
-c     moist_divg real barnes-averaged 850 mb moisture convergence
-c     rh_800_600_smooth real barnes-averaged 800-600 mb layer mean RH
-c     rh_1000_925_smooth real barnes-averaged 1000-925 mb layer mean RH
-c     omega500_smooth real barnes-averaged 500 mb omega
-c     imeanzeta array with values of mean 850 & 700 zeta
-c     igridzeta array with values of max (gridpoint) 850 & 700 zeta
-c
-c     OUTPUT:
-c     ioaxret   integer return code from this subroutine
-c     
-c     LOCAL:
-c     intlon    integer that holds the value of outlon*10
-c     intlat    integer that holds the value of outlat*10
-c     storm     An array of type tcvcard.  Use this for the storm ID
-c
-
-      USE def_vitals; USE inparms; USE set_max_parms; USE atcf
-      USE trkrparms; USE phase; USE shear_diags; USE genesis_diags
-      USE verbose_output; USE level_parms
-
-      type (datecard) inp
-      type (trackstuff) trkrinfo
-
-      real, intent(in) :: outlon,outlat
-      real    cps_vals(3)
-      real    rmax,mslp_outp_adj,xoutlon
-      real    axisymet_rmw_dist,axisymet_rmw_val
-      real    vmaxwind,conv_ms_knots,xminmslp,plastbar,rlastbar
-      real    shear_mag,shear_dir,sst_smooth,divg,moist_divg
-      real    rh_800_600_smooth,rh_1000_925_smooth,omega500_smooth
-      integer intlon,intlat,irmax,output_fhr,ic,iplastbar,irlastbar
-      integer ishear_mag,ishear_dir,istmspd,istmdir,isst
-      integer irmw_dist,irmw_val
-      integer idivg,imoistdivg,irh_800_600,irh_1000_925,iomega500
-      integer vradius(3,4),icps_vals(3)
-      integer imeanzeta(nlevgrzeta),igridzeta(nlevgrzeta)
-      character  basinid*2,clatns*1,clonew*1,wcore_flag*1
-      character comma_fill1*48,comma_fill2*31,comma_filler*79
-      character comma_fill1n*27,comma_fill2n*44
+    real, intent(in)  :: outlon, outlat
+    real              :: cps_vals(3)
+    real              :: rmax, mslp_outp_adj, xoutlon
+    real              :: axisymet_rmw_dist, axisymet_rmw_val
+    real              :: vmaxwind, conv_ms_knots, xminmslp, plastbar, rlastbar
+    real              :: shear_mag, shear_dir, sst_smooth, divg, moist_divg
+    real              :: rh_800_600_smooth, rh_1000_925_smooth, omega500_smooth
+    integer           :: intlon, intlat, irmax, output_fhr, ic, iplastbar, irlastbar
+    integer           :: ishear_mag, ishear_dir, istmspd, istmdir, isst
+    integer           :: irmw_dist, irmw_val
+    integer           :: idivg, imoistdivg, irh_800_600, irh_1000_925, iomega500
+    integer           :: vradius(3,4), icps_vals(3)
+    integer           :: imeanzeta(nlevgrzeta), igridzeta(nlevgrzeta)
+    character         :: basinid*2, clatns*1, clonew*1, wcore_flag*1
+    character         :: comma_fill1*48, comma_fill2*31, comma_filler*79
+    character         :: comma_fill1n*27, comma_fill2n*44
 c
       if ( verb .ge. 3 ) then
         print *,'TXX top of atcfunix_ext, ist= ',ist,' ifh= ',ifcsthour
@@ -10788,36 +10590,12 @@ c     bug fix for IBM: flush the output stream so it actually writes
       flush(68)
 
       return
-      end
+    type (datecard) :: inp
 
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine output_all (fixlon,fixlat,inp,maxstorm,ifhmax,ioaret)
-c
-c     ABSTRACT: This subroutine  outputs a 1-line message for each
-c     storm.  This message contains the model identifier, the forecast
-c     initial date, and the positions for 0, 12, 24, 36, 48, 60 and 72
-c     hours.  In the case of the regional models (NGM, Eta), which
-c     only go out to 48h, zeroes are included for forecast hours
-c     60 and 72.
-c
-c     NOTE: The longitudes that are passed into this subroutine are
-c     given in 0 - 360, increasing eastward.  The  output of this
-c     subroutine is used by Steve Lord for plotting purposes, and his
-c     plotting routines need the longitudes in 0 - 360, increasing
-c     westward.  Thus, a necessary adjustment is made.
-c
-      USE def_vitals; USE inparms; USE set_max_parms; USE atcf
-      USE tracked_parms
-c
-      type (datecard) inp
-c
-      real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      integer modelnum(maxmodel)
-      integer intlon(maxtime),intlat(maxtime)
-      character  modelchar(maxmodel)*4
+    real      :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    integer   :: modelnum(maxmodel)
+    integer   :: intlon(maxtime), intlat(maxtime)
+    character :: modelchar(maxmodel)*4
 
 c     First convert all of the lat/lon values from reals into integers.
 c     These integer values must be 10x their real value (eg. 125.4 will
@@ -10933,52 +10711,13 @@ c            print *,'!!! ist = ',ist,' Model number = ',atcfnum
   81  format (i2,a4,4i2.2,14i4,1x,a3)
 c
       return
-      end
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine output_atcf (fixlon,fixlat,inp,xmaxwind,maxstorm
-     &                       ,ifhmax,ioaret)
-c
-c     ABSTRACT: This subroutine  outputs a 1-line message for each storm
-c     in ATCF format.  This message contains the model identifier, the
-c     forecast initial date, and the positions for 12, 24, 36, 48
-c     and 72 hours.  This message also contains the intensity
-c     estimates (in knots) for those same hours.  The  conversion for
-c     m/s to knots is to multiply m/s by 1.9427 (3.281 ft/m,
-c     1 naut mile/6080 ft, 3600s/h).
-c
-c     NOTE: The longitudes that are passed into this subroutine are
-c     given in 0 - 360, increasing eastward.  The  output of this
-c     subroutine is used by the atcf system at TPC for plotting
-c     purposes, and the atcf plotting routines need the longitudes in
-c     0 - 360, increasing westward.  Thus, a necessary adjustment is
-c     made.
-c
-      USE def_vitals; USE inparms; USE set_max_parms; USE atcf
-      USE tracked_parms
-c
-      type (datecard) inp
-c
-      real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real    xmaxwind(maxstorm,maxtime)
-      real    conv_ms_knots
-      integer modelnum(maxmodel)
-      integer intlon(maxtime),intlat(maxtime)
-      character  modelchar(maxmodel)*4,basinid*4
-
-c     First convert all of the lat/lon values from reals into integers.
-c     These integer values must be 10x their real value (eg. 125.4 will
-c     be written out as 1254).  Convert the lon values so that they go
-c     from 0 - 360, increasing westward.
-c     Also, because the fixlon value may be >360 due to GM wrapping, we
-c     need to mod it to get it in a 0-360 framework.
-
-      conv_ms_knots = 1.9427
-
-      stormloop: do ist = 1,maxstorm
-
+    type (datecard) :: inp
+    real      :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real      :: xmaxwind(maxstorm,maxtime)
+    real      :: conv_ms_knots
+    integer   :: modelnum(maxmodel)
+    integer   :: intlon(maxtime), intlat(maxtime)
+    character :: modelchar(maxmodel)*4, basinid*4
         if (stormswitch(ist) == 3) cycle stormloop
         intlon = 0; intlat = 0
 
@@ -11122,110 +10861,14 @@ c            print *,'!!! ist = ',ist,' Model number = ',atcfnum
   82  format (i2,a4,4i2.2,10i4,5i3,1x,a4,i2.2)
 c
       return
-      end
+    type (datecard) :: inp
 
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine output_hfip (outlon,outlat,inp,ist
-     &          ,ifh,vmaxwind,xminmslp,vradius,rmax,ioaxret)
-
-c     ABSTRACT: This subroutine  outputs a 1-line message for a given
-c     storm at an input forecast hour in a modified ATCF UNIX format.
-c     The modification is to allow for sub-hourly output.  That is,
-c     instead of just integer output hours, we can have output at 
-c     10, 15 or 20 past an hour.  This necessitates a change in the 
-c     "forecast hour" placeholder in the ATCF format.  Instead of it
-c     being an I3, we'll make it an I5, with something like a lead time
-c     of 36.25h being rounded and truncated to 03625 for output.
-c     
-c     An example set of output records using the standard atcf format
-c     looks like the following:
-c     
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  34,
-c             NEQ,  242,  163,  124,  208
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  50,
-c             NEQ,  155,  000,  000,  000
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  64,
-c             NEQ,  000,  000,  000,  000
-c     
-c     An example set of modified output records will look like the
-c     following, for the case of a lead time of 36:15 (36.25):
-c     
-c     AL, 13, 2000092500, 03, AVNO, 03625, 243N, 675W, 42, 995, XX,  34,
-c             NEQ,  242,  163,  124,  208
-c     AL, 13, 2000092500, 03, AVNO, 03625, 243N, 675W, 42, 995, XX,  50,
-c             NEQ,  155,  000,  000,  000
-c     AL, 13, 2000092500, 03, AVNO, 03625, 243N, 675W, 42, 995, XX,  64,
-c             NEQ,  000,  000,  000,  000
-c     
-c     (NOTE: Each of the above lines beginning with "AL" is output as
-c            a single line of text.)
-c     
-c     Note that in this example, for this 36h forecast hour, there are
-c     3 entries.  This is so that we can include the radii for the
-c     3 different wind thresholds (34kt, 50kt and 64kt).  So the only
-c     thing different in each entry is the wind radii info;  all the
-c     other info is identical for each entry.
-c     
-c     This message also contains the intensity estimates (in knots)
-c     for every forecast hours  The  conversion for m/s to knots is
-c     to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft,
-c     3600s/h).
-c     
-c     NOTE: The longitudes that are passed into this subroutine are
-c     given in 0 - 360, increasing eastward.  The format for the
-c     atcfunix system requires that the  output be 0-180E or
-c     0-180W, so we must adjust the values, if needed.  Also, the
-c     values for southern latitudes must be positive (use 'N' and
-c     'S' to distinguish Northern/Southern Hemispheres).
-c     
-c     INPUT:    
-c     storm     An array of type tcvcard.  Use this for the storm ID
-c     outlon    longitude  fix position for this storm at this time
-c               which is to be written out to the  output file
-c     outlat    latitude  fix position for this storm at this time
-c               which is to be written out to the  output file
-c     inp       contains input date and model number information
-c     ist       the number storm that we're processing (can be 1-15)
-c     ifh       index for the lead time array
-c     vmaxwind  the max surface wind for this storm at this fcst hour
-c     xminmslp  the min mslp for this storm at this fcst hour
-c     vradius   Contains the distance from the storm fix position to
-c               each of the various wind threshhold distances in each
-c               quadrant. (3,4) ==> (# of threshholds, # of quadrants)
-c     rmax      Radius of max winds (n mi).... it was already converted
-c               from km to n mi in subroutine  get_max_wind
-c
-c     OUTPUT:
-c     ioaxret   integer return code from this subroutine
-c
-c     LOCAL:
-c     intlon    integer that holds the value of outlon*10
-c     intlat    integer that holds the value of outlat*10
-c
-
-      USE def_vitals; USE inparms; USE set_max_parms; USE atcf
-      USE tracked_parms
-      USE verbose_output
-
-      type (datecard) inp
-
-      real, intent(in) :: outlon,outlat
-      real    mslp_outp_adj,xoutlon
-      real    vmaxwind,conv_ms_knots,xminmslp,rmax
-      integer intlon,intlat,output_fhr,irmax,ileadtime
-      integer vradius(3,4)
-      character  basinid*2,clatns*1,clonew*1
-
-c     First convert all of the lat/lon values from reals into integers.
-c     These integer values must be 10x their real value (eg. 125.4 will
-c     be written out as 1254).  Convert the lon values so that they go
-c     from 0-180E or 0-180W, and convert the lat values so that they are
-c     positive and use 'N' or 'S' to differentiate hemispheres.
-c     Also, because the outlon value may be >360 due to GM wrapping, we
-c     need to mod it to get it in a 0-360 framework.
+    real, intent(in) :: outlon, outlat
+    real             :: mslp_outp_adj, xoutlon
+    real             :: vmaxwind, conv_ms_knots, xminmslp, rmax
+    integer          :: intlon, intlat, output_fhr, irmax, ileadtime
+    integer          :: vradius(3,4)
+    character        :: basinid*2, clatns*1, clonew*1
 
       if (xminmslp == 999999.0) xminmslp = 0.0
 
@@ -11443,26 +11086,18 @@ c
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE verbose_output
 
-      type (datecard) inp
-c
-      real, intent(in) :: outlon,outlat
-      integer, parameter :: numdist=14,numquad=4,numbin=5,numthresh=3
-      real    xoutlon,pdfval
-      real    wfract_cov(numquad+1,numbin,numthresh)
-      real    vmaxwind,conv_ms_knots,xminmslp,xsfclon,xsfclat
-      integer ::  windthresh(numthresh) = (/34,50,64/)
-      integer pdf_ct_bin(16)
-      integer intlon,intlat,output_fhr,intlon100,intlat100,pdf_ct_tot
-      integer maxstorm
-      character  basinid*2,clatns*1,clonew*1,wfract_type*5,wt*1,cquad*2
+    type (datecard)    :: inp
 
-c     First convert all of the lat/lon values from reals into integers.
-c     These integer values must be 10x their real value (eg. 125.4 will
-c     be written out as 1254).  Convert the lon values so that they go
-c     from 0-180E or 0-180W, and convert the lat values so that they are
-c     positive and use 'N' or 'S' to differentiate hemispheres.
-c     Also, because the outlon value may be >360 due to GM wrapping, we
-c     need to mod it to get it in a 0-360 framework.
+    real, intent(in)   :: outlon, outlat
+    integer, parameter :: numdist = 14, numquad = 4, numbin = 5, numthresh = 3 !CAITLYN - are these repeated variables
+    real               :: xoutlon, pdfval
+    real               :: wfract_cov(numquad+1,numbin,numthresh)
+    real               :: vmaxwind, conv_ms_knots, xminmslp, xsfclon, xsfclat
+    integer            ::  windthresh(numthresh) = (/34,50,64/)
+    integer            :: pdf_ct_bin(16)
+    integer            :: intlon, intlat, output_fhr, intlon100, intlat100, pdf_ct_tot
+    integer            :: maxstorm
+    character          :: basinid*2, clatns*1, clonew*1, wfract_type*5, wt*1, cquad*2
 
       conv_ms_knots = 1.9427
 
@@ -11586,143 +11221,25 @@ c     bug fix for IBM: flush the output stream so it actually writes
       flush(73)
 
       return
-      end
+    type (datecard)    :: inp
 
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine output_wind_structure (outlon,outlat,xsfclon
-     &          ,xsfclat,inp,ist,ifcsthour,vmaxwind,xminmslp,er_wind
-     &          ,sr_wind,er_vr,sr_vr,er_vt,sr_vt,maxstorm,iofwret)
-c
-c     ABSTRACT: This subroutine  outputs a 1-line message for a given
-c     storm at an input forecast hour.  This message contains the
-c     values of the winds at specified distances along 45-degree
-c     radials in each storm quadrant.  These are  output
-c     twice -- First, for an earth-relative coordinate system, and
-c     second, for a storm-relative coordinate system.  For the
-c     earth-relative estimates, we will always have 4 radials: NE, SE,
-c     SW and NW (45,135,225,315).  For the storm-relative estimates,
-c     these radials will be computed at the same relative angles (i.e.,
-c     45,135,225,315), but with respect (positive clockwise) to the
-c     direction of storm motion.  For example, for a storm moving with
-c     a heading of 280, the wind structure is evaluated at these
-c     radials: 325 (front-right; 45 deg CW from heading), 55 (back-
-c     right; 135 deg CW from heading), 145 (back-left; 225 deg CW from
-c     heading), 235 (front-left; 315 deg CW from heading).
-c
-c     LOCAL:
-c       numdist   Number of discrete radii at which the winds will
-c                 be evaluated
-c
-c
-c     This format will mimic the current atcfunix format with the
-c     difference coming late in the record, where the various wind radii
-c     will be replaced with wind values at the 13 specified distances
-c     (10, 25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500 km)
-c
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
-c             71, NEE, 1137, 1221,  854,  655, etc., ... out to 500 km
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
-c             71, SEE,  947,  982,  474,  396, etc., ... out to 500 km
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
-c             71, SWE,  645,  683,  328,  277, etc., ... out to 500 km
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
-c             71, NWE,  725,  753,  619,  429, etc., ... out to 500 km
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
-c             72, FRR, 1134, 1224,  852,  654, etc., ... out to 500 km
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
-c             72, BRR,  944,  984,  472,  393, etc., ... out to 500 km
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
-c             72, BLR,  649,  686,  321,  272, etc., ... out to 500 km
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N,  675W,  42,  995, XX,
-c             72, FLR,  729,  756,  613,  421, etc., ... out to 500 km
-c
-c     NOTE: Each of the above lines beginning with "AL" is output as
-c           a single line of text.
-c     NOTE: These winds are in m/s coming into this routine and will
-c           be converted to knots*10 for output (e.g., 1221 = 122.1 kts)
-c
-c     The "71" ID indicates earth-relative winds, the "72" ID indicates
-c     storm-relative winds.  Here are the other IDs that will be used:
-c       81: Tangential winds, earth-relative
-c       82: Tangential winds, storm motion-relative
-c       91: Radial winds, earth-relative
-c       92: Radial winds, storm motion-relative
-c
-c     Note that in this example, for this 36h forecast hour, there are
-c     8 entries.  This is so that we can include the wind values for
-c     the 4 different quadrants, for both the earth relative analyses
-c     (NEE, SEE, SWE, NWE) and the storm-relative analyses (FRR, BRR,
-c     BLR, FLR).
-c
-c     This message also contains the intensity estimates (in knots)
-c     for every forecast hour.  The  conversion for m/s to knots is
-c     to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft,
-c     3600s/h).
-c
-c     NOTE: The longitudes that are passed into this subroutine are
-c     given in 0 - 360, increasing eastward.  The format for the
-c     atcfunix system requires that the  output be 0-180E or
-c     0-180W, so we must adjust the values, if needed.  Also, the
-c     values for southern latitudes must be positive (use 'N' and
-c     'S' to distinguish Northern/Southern Hemispheres).
-c
-c     INPUT:
-c     outlon    longitude  fix position for this storm at this time
-c               which is to be written out to the  output file
-c     outlat    latitude  fix position for this storm at this time
-c               which is to be written out to the  output file
-c     inp       contains input date and model number information
-c     ist       the number storm that we're processing (can be 1-15)
-c     ifcsthr   the current forecast hour being output
-c     vmaxwind  the max surface wind for this storm at this fcst hour
-c     xminmslp  the min mslp for this storm at this fcst hour
-c     er_wind   Quadrant winds in earth-relative framework
-c     sr_wind   Quadrant winds in storm-relative framework
-c     er_vr     Quadrant radial winds in earth-relative framework
-c     sr_vr     Quadrant radial winds in storm-relative framework
-c     er_vt     Quadrant tangential winds in earth-relative framework
-c     sr_vt     Quadrant tangential winds in storm-relative framework
-c
-c     OUTPUT:
-c     ioaxret   integer return code from this subroutine
-c
-c     LOCAL:
-c     intlon    integer that holds the value of outlon*10
-c     intlat    integer that holds the value of outlat*10
-c
+    real, intent(in)   :: outlon,outlat
+    integer, parameter :: numdist = 14, numquad = 4, numbin = 5, numthresh = 3
+    integer            :: ioutwind(numdist)
+    real               :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real               :: er_wind(numquad,numdist)
+    real               :: sr_wind(numquad,numdist)
+    real               :: er_vr(numquad,numdist)
+    real               :: er_vt(numquad,numdist)
+    real               :: sr_vr(numquad,numdist)
+    real               :: sr_vt(numquad,numdist)
+    real               :: xoutlon
+    real               :: vmaxwind, conv_ms_knots, xminmslp, xsfclon, xsfclat
+    integer            :: intlon, intlat, output_fhr, id, intlon100, intlat100, ir
+    character          :: basinid*2, clatns*1, clonew*1, wfract_type*5, wt*1
+    character*2        :: cquad(4) = (/'NE','SE','SW','NW'/)
+    character*2        :: crel(4) = (/'FR','BR','BL','FL'/)
 
-      USE def_vitals; USE inparms; USE set_max_parms; USE atcf
-      USE verbose_output
-
-      type (datecard) inp
-
-      real, intent(in) :: outlon,outlat
-      integer, parameter :: numdist=14,numquad=4,numbin=5,numthresh=3
-      integer  ioutwind(numdist)
-      real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real     er_wind(numquad,numdist)
-      real     sr_wind(numquad,numdist)
-      real     er_vr(numquad,numdist)
-      real     er_vt(numquad,numdist)
-      real     sr_vr(numquad,numdist)
-      real     sr_vt(numquad,numdist)
-      real     xoutlon
-      real     vmaxwind,conv_ms_knots,xminmslp,xsfclon,xsfclat
-      integer intlon,intlat,output_fhr,id,intlon100,intlat100,ir
-      character  basinid*2,clatns*1,clonew*1,wfract_type*5,wt*1
-      character*2 :: cquad(4) = (/'NE','SE','SW','NW'/)
-      character*2 :: crel(4) = (/'FR','BR','BL','FL'/)
-
-
-c     First convert all of the lat/lon values from reals into integers.
-c     These integer values must be 10x their real value (eg. 125.4 will
-c     be written out as 1254).  Convert the lon values so that they go
-c     from 0-180E or 0-180W, and convert the lat values so that they are
-c     positive and use 'N' or 'S' to differentiate hemispheres.
-c     Also, because the outlon value may be >360 due to GM wrapping, we
-c     need to mod it to get it in a 0-360 framework.
 
       conv_ms_knots = 1.9427
 
@@ -11937,117 +11454,15 @@ c     bug fix for IBM: flush the output stream so it actually writes
       flush(72)
 
       return
-      end
+    type (datecard)    :: inp
 
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine output_ike (outlon,outlat,xsfclon,xsfclat,inp,ist
-     &          ,ifcsthour,vmaxwind,xminmslp,ike,sdp,wdp,maxstorm
-     &          ,ioiret)
-c
-c     ABSTRACT: This subroutine  outputs a 1-line message for a given
-c     storm at an input forecast hour.  This message contains the values
-c     for the Integrated Kinetic Energy (IKE) and Storm Surge Damage
-c     Potential (SDP), based on Powell (BAMS, 2007).  At this time, we
-c     are only computing the IKE values for TS threshold (17.5 m/s) and
-c     above.  We are not yet computing wind damage potential (WDP)
-c     since, per Mark Powell (4/2008), he is currently re-formulating
-c     an algorithm for it.
-c
-c     LOCAL:
-c
-c     Arrays:
-c
-c     ike   Integrated kinetic energy:
-c           ike(1) = IKE_10m/s  (storm energy)
-c           ike(2) = IKE_18m/s  (IKE_ts, tropical storm)
-c           ike(3) = IKE_33m/s  (IKE_h,  hurricane)
-c           ike(4) = IKE_25_40 m/s  (Not currently computed)
-c           ike(5) = IKE_41_54 m/s  (Not currently computed)
-c           ike(6) = IKE_55 m/s     (Not currently computed)
-c
-c
-c     The format used will mimic the current atcfunix format with the
-c     difference coming late in the record, where the various wind radii
-c     will be replaced with WDP, SDP and IKE values:
-c
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  91,
-c             IKE,  340,  560,  212,  174,   42,   93,   12,    0
-c
-c     Where the places are identified as follows:
-c
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  91,
-c             IKE,  WDP,  SDP,  I10,  ITS,  IH ,I2540,I4154,  I55
-c
-c     (NOTE: Each of the above lines beginning with "AL" is output as
-c            a single line of text.)
-c
-c     Values for WDP and SDP are multiplied by 10 in this routine
-c     before being written out.
-c
-c     This message also contains the intensity estimates (in knots)
-c     for every forecast hour.  The  conversion for m/s to knots is
-c     to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft,
-c     3600s/h).
-c
-c     NOTE: The longitudes that are passed into this subroutine are
-c     given in 0 - 360, increasing eastward.  The format for the
-c     atcfunix system requires that the  output be 0-180E or
-c     0-180W, so we must adjust the values, if needed.  Also, the
-c     values for southern latitudes must be positive (use 'N' and
-c     'S' to distinguish Northern/Southern Hemispheres).
-c
-c     INPUT:
-c     storm     An array of type tcvcard.  Use this for the storm ID
-c     outlon    longitude  fix position for this storm at this time
-c               which is to be written out to the  output file
-c     outlat    latitude  fix position for this storm at this time
-c               which is to be written out to the  output file
-c     xsfclon   low-level longitude estimate for this storm & time,
-c               computed ideally from mean of mslp & low-level winds.
-c     xsfclat   low-level latitude estimate for this storm & time,
-c               computed ideally from mean of mslp & low-level winds.
-c     inp       contains input date and model number information
-c     ist       the number storm that we're processing (can be 1-15)
-c     ifcsthr   the current forecast hour being output
-c     vmaxwind  the max surface wind for this storm at this fcst hour
-c     xminmslp  the min mslp for this storm at this fcst hour
-c     ike       integrated kinetic energy, in units of TJ
-c     sdp       storm surge damage potential
-c     wdp       wind damage potential
-c
-c     OUTPUT:
-c     ioaxret   integer return code from this subroutine
-c
-c     LOCAL:
-c     intlon    integer that holds the value of outlon*10
-c     intlat    integer that holds the value of outlat*10
-c
-
-      USE def_vitals; USE inparms; USE set_max_parms; USE atcf
-      USE verbose_output
-
-      type (datecard) inp
-c
-      integer, parameter :: numdist=14,numquad=4,numbin=5,numthresh=3
-      real, intent(in) :: outlon,outlat
-      real    xoutlon,sdp,wdp
-      real    ike(max_ike_cats)
-      real    vmaxwind,conv_ms_knots,xminmslp,xsfclon,xsfclat
-      integer intlon,intlat,output_fhr,intlon100,intlat100,maxstorm
-      character  basinid*2,clatns*1,clonew*1,wfract_type*5,wt*1,cquad*2
-
-c     First convert all of the lat/lon values from reals into integers.
-c     These integer values must be 10x their real value (eg. 125.4 will
-c     be written out as 1254).  Convert the lon values so that they go
-c     from 0-180E or 0-180W, and convert the lat values so that they are
-c     positive and use 'N' or 'S' to differentiate hemispheres.
-c     Also, because the outlon value may be >360 due to GM wrapping, we
-c     need to mod it to get it in a 0-360 framework.
-
-      conv_ms_knots = 1.9427
+    integer, parameter :: numdist = 14, numquad = 4, numbin = 5, numthresh = 3
+    real, intent(in)   :: outlon, outlat
+    real               :: xoutlon, sdp, wdp
+    real               :: ike(max_ike_cats)
+    real               :: vmaxwind, conv_ms_knots, xminmslp, xsfclon, xsfclat
+    integer            :: intlon, intlat, output_fhr, intlon100, intlat100, maxstorm
+    character          :: basinid*2, clatns*1, clonew*1, wfract_type*5, wt*1, cquad*2
 
       if (outlon < -998.0 .or. outlat < -998.0) then
         intlon = 0
@@ -12120,96 +11535,13 @@ c     bug fix for IBM: flush the output stream so it actually writes
       flush(74)
 
       return
-      end
+    type (datecard)  :: inp
 
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine output_phase (outlon,outlat,inp,ist
-     &          ,ifcsthour,vmaxwind,xminmslp,paramb,vtl_slope
-     &          ,vtu_slope,ioiret)
-c
-c     ABSTRACT: This subroutine  outputs a 1-line message for a given
-c     storm at an input forecast hour.  This message contains the values
-c     for the three parameters that comprise Bob Hart's cyclone phase
-c     space (CPS).  These parameters are his "parameter B", which
-c     assesses the left-right thermal asymmetry, and the upper
-c     troposphere (300-600 mb) and lower troposphere (900-600 mb)
-c     thermal wind values.
-c
-c     LOCAL:
-c
-c     Arrays:
-c
-c     The format used will mimic the current atcfunix format with the
-c     difference coming late in the record, where the various wind radii
-c     will be replaced with paramb, vtl_slope and vtu_slope values:
-c
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  95,
-c             CPS,   340,   560,   212
-c
-c     Where the places are identified as follows:
-c
-c     AL, 13, 2000092500, 03, AVNO, 036, 243N, 675W, 42, 995, XX,  95,
-c             CPS,     B,   VTL,   VTU
-c
-c     (NOTE: Each of the above lines beginning with "AL" is output as
-c            a single line of text.)
-c
-c     This message also contains the intensity estimates (in knots)
-c     for every forecast hour.  The  conversion for m/s to knots is
-c     to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft,
-c     3600s/h).
-c
-c     NOTE: The longitudes that are passed into this subroutine are
-c     given in 0 - 360, increasing eastward.  The format for the
-c     atcfunix system requires that the  output be 0-180E or
-c     0-180W, so we must adjust the values, if needed.  Also, the
-c     values for southern latitudes must be positive (use 'N' and
-c     'S' to distinguish Northern/Southern Hemispheres).
-c
-c     INPUT:
-c     storm     An array of type tcvcard.  Use this for the storm ID
-c     outlon    longitude  fix position for this storm at this time
-c               which is to be written out to the  output file
-c     outlat    latitude  fix position for this storm at this time
-c               which is to be written out to the  output file
-c     inp       contains input date and model number information
-c     ist       the number storm that we're processing (can be 1-15)
-c     ifcsthr   the current forecast hour being output
-c     vmaxwind  the max surface wind for this storm at this fcst hour
-c     xminmslp  the min mslp for this storm at this fcst hour
-c     paramb    thermal asymmetry
-c     vtl_slope thermal wind value for lower troposphere (900-600 mb)
-c     vtu_slope thermal wind value for upper troposphere (600-300 mb)
-c
-c     OUTPUT:
-c     ioiret    integer return code from this subroutine
-c
-c     LOCAL:
-c     intlon    integer that holds the value of outlon*10
-c     intlat    integer that holds the value of outlat*10
-c
-
-      USE def_vitals; USE inparms; USE set_max_parms; USE atcf
-      USE verbose_output
-
-      type (datecard) inp
-
-      real, intent(in) :: outlon,outlat
-      real    xoutlon,paramb,vtl_slope,vtu_slope
-      real    vmaxwind,conv_ms_knots,xminmslp
-      integer intlon,intlat,output_fhr
-      character  basinid*2,clatns*1,clonew*1
-
-c     First convert all of the lat/lon values from reals into integers.
-c     These integer values must be 10x their real value (eg. 125.4 will
-c     be written out as 1254).  Convert the lon values so that they go
-c     from 0-180E or 0-180W, and convert the lat values so that they are
-c     positive and use 'N' or 'S' to differentiate hemispheres.
-c     Also, because the outlon value may be >360 due to GM wrapping, we
-c     need to mod it to get it in a 0-360 framework.
+    real, intent(in) :: outlon, outlat
+    real             :: xoutlon, paramb, vtl_slope, vtu_slope
+    real             :: vmaxwind, conv_ms_knots, xminmslp
+    integer          :: intlon, intlat, output_fhr
+    character        :: basinid*2, clatns*1, clonew*1
 
       conv_ms_knots = 1.9427
 
@@ -12276,135 +11608,24 @@ c     bug fix for IBM: flush the output stream so it actually writes
       flush(71)
 
       return
-      end
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine output_atcf_gen (outlon,outlat,inp,ist
-     &         ,ifcsthour,vmaxwind,xminmslp,vradius,maxstorm
-     &         ,trkrinfo,istmspd,istmdir,plastbar,rlastbar,rmax
-     &         ,cps_vals,wcore_flag,imeanzeta,igridzeta
-     &         ,shear_mag,shear_dir,divg,moist_divg
-     &         ,rh_800_600_smooth,rh_1000_925_smooth
-     &         ,omega500_smooth,sst_smooth
-     &         ,axisymet_rmw_dist,axisymet_rmw_val,ioaxret)
+    type (gencard)    :: gstm
+    type (datecard)   :: inp
+    type (trackstuff) :: trkrinfo
 
-c     ABSTRACT: This subroutine  outputs a 1-line message for a given 
-c     storm at an input forecast hour in a modified atcfunix format.  
-c     The reason that it's called "modified" is that the format is 
-c     slightly different from the standard TPC-accepted atcfunix 
-c     format that they use for TCs.  Specifically, the first part that
-c     identifies the storm is different.  Here's an example of the 
-c     TPC standard atcfunix format:
-c
-c     AL, 13, 2000092500, 03, GFSO, 036, 243N, 675W, 42, 995, XX,  34,
-c             NEQ,  242,  163,  124,  208
-c     AL, 13, 2000092500, 03, GFSO, 036, 243N, 675W, 42, 995, XX,  50,
-c             NEQ,  155,  000,  000,  000
-c     AL, 13, 2000092500, 03, GFSO, 036, 243N, 675W, 42, 995, XX,  64,
-c             NEQ,  000,  000,  000,  000
-c
-c     (NOTE: Each of the above lines beginning with "AL" is output as 
-c            a single line of text.... they're just broken up into 2 
-c            lines here for readability.)
-c
-c     Here's an example of the modified output format for the same 
-c     storm.  Note that the lat/lon identifier in the new storm id at
-c     the beginning of the record is different from that shown later
-c     in the record.  The reason is that the lat/lon identifier will
-c     be the one that is pulled from the tcvitals or gen_vitals 
-c     record:
-c
-c     2000092500_230N_0658W_13L, 2000092500, 03, GFSO, 036, 243N, 675W,
-c             42, 995, XX,  34, NEQ,  242,  163,  124,  208
-c     2000092500_230N_0658W_13L, 2000092500, 03, GFSO, 036, 243N, 675W,
-c             42, 995, XX,  50, NEQ,  155,  000,  000,  000
-c     2000092500_230N_0658W_13L, 2000092500, 03, GFSO, 036, 243N, 675W,
-c             42, 995, XX,  64, NEQ,  000,  000,  000,  000
-c
-c
-c     Note that in this example, for this 36h forecast hour, there are 
-c     3 entries.  This is so that we can include the radii for the 
-c     3 different wind thresholds (34kt, 50kt and 64kt).  So the only
-c     thing different in each entry is the wind radii info;  all the
-c     other info is identical for each entry.
-c
-c     This message also contains the intensity estimates (in knots) 
-c     for every forecast hours  The  conversion for m/s to knots is 
-c     to multiply m/s by 1.9427 (3.281 ft/m, 1 naut mile/6080 ft, 
-c     3600s/h).
-c
-c     NOTE: The longitudes that are passed into this subroutine are
-c     given in 0 - 360, increasing eastward.  The format for the 
-c     atcfunix system requires that the  output be 0-180E or
-c     0-180W, so we must adjust the values, if needed.  Also, the
-c     values for southern latitudes must be positive (use 'N' and 
-c     'S' to distinguish Northern/Southern Hemispheres).
-c
-c     INPUT:
-c     outlon    longitude  fix position for this storm at this time 
-c               which is to be written out to the  output file
-c     outlat    latitude  fix position for this storm at this time 
-c               which is to be written out to the  output file
-c     inp       contains input date and model number information
-c     ist       the number storm that we're processing (can be 1-15)
-c     ifcsthr   the current forecast hour being output
-c     vmaxwind  the max surface wind for this storm at this fcst hour
-c     xminmslp  the min mslp for this storm at this fcst hour
-c     vradius   Contains the distance from the storm fix position to
-c               each of the various wind threshhold distances in each
-c               quadrant. (3,4) ==> (# of threshholds, # of quadrants)
-c     maxstorm  max # of storms that can be handled
-c     istmspd   storm translation speed
-c     istmdir   direction of storm movement
-c     plastbar  pressure of last closed isobar
-c     rlastbar  radius of last closed isobar
-c     rmax      radius of max winds
-c     cps_vals  Hart's cyclone phase space values: (1) is for parameter
-c               B (thickness asymmetry), (2) and (3) are for thermal
-c               wind values.
-c     wcore_flag 'u'=undetermined, 'y'=yes, 'n'=no
-c     imeanzeta array with values of mean 850 & 700 zeta
-c     igridzeta array with values of max (gridpoint) 850 & 700 zeta
-c     shear_mag real magnitude of 850-200 mb vertical shear.
-c     shear_dir real vector direction the 850-200 mb vertical shear
-c               is heading to.
-c     sst_smooth real barnes-averaged SST centered on mean fix 
-c     axisymet_rmw_dist real distance to axisymmetric RMW
-c     axisymet_rmw_val  real value of axisymmetric RMW
-c 
-c     OUTPUT:
-c     ioaxret   integer return code from this subroutine
-c     
-c     LOCAL:
-c     intlon    integer that holds the value of outlon*10
-c     intlat    integer that holds the value of outlat*10
-c     storm     An array of type tcvcard.  Use this for the storm ID
-c
-
-      USE def_vitals; USE inparms; USE set_max_parms; USE atcf
-      USE trkrparms; USE gen_vitals; USE level_parms
-      USE verbose_output; USE shear_diags; USE genesis_diags
-
-      type (gencard) gstm
-      type (datecard) inp
-      type (trackstuff) trkrinfo
-c
-      real, intent(in) ::  outlon,outlat
-      real    xoutlon,plastbar,rlastbar,rmax
-      real    vmaxwind,conv_ms_knots,xminmslp,mslp_outp_adj
-      real    cps_vals(3)
-      real    shear_mag,shear_dir,axisymet_rmw_dist,axisymet_rmw_val
-      real    divg,moist_divg,rh_800_600_smooth,rh_1000_925_smooth
-      real    omega500_smooth,sst_smooth
-      integer intlon,intlat,istmspd,istmdir,iplastbar,irlastbar,irmax
-      integer ivtl,ivtu,iparamb,output_fhr,ishear_mag,ishear_dir
-      integer vradius(3,4)
-      integer imeanzeta(nlevgrzeta),igridzeta(nlevgrzeta)
-      integer idivg,imoistdivg,irh_800_600,irh_1000_925,iomega500,isst
-      integer irmw_dist,irmw_val
-      character  basinid*2,clatns*1,clonew*1,wcore_flag*1
+    real, intent(in)  ::  outlon,outlat
+    real              :: xoutlon, plastbar, rlastbar, rmax
+    real              :: vmaxwind, conv_ms_knots, xminmslp, mslp_outp_adj
+    real              :: cps_vals(3)
+    real              :: shear_mag, shear_dir, axisymet_rmw_dist, axisymet_rmw_val
+    real              :: divg, moist_divg, rh_800_600_smooth, rh_1000_925_smooth
+    real              :: omega500_smooth, sst_smooth
+    integer           :: intlon, intlat, istmspd, istmdir, iplastbar, irlastbar, irmax
+    integer           :: ivtl, ivtu, iparamb, output_fhr, ishear_mag, ishear_dir
+    integer           :: vradius(3,4)
+    integer           :: imeanzeta(nlevgrzeta), igridzeta(nlevgrzeta)
+    integer           :: idivg, imoistdivg, irh_800_600, irh_1000_925, iomega500, isst
+    integer           :: irmw_dist, irmw_val
+    character         :: basinid*2, clatns*1, clonew*1, wcore_flag*1
 
       if ( verb .ge. 3) then
         print *,'+++ Top of output_atcf_gen, ist= ',ist,' ifh= '
@@ -12856,19 +12077,19 @@ c     ioapret   integer return code from this subroutine
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE trkrparms; USE gen_vitals; USE verbose_output
 
-      type (gencard) gstm
-      type (datecard) inp
-      type (trackstuff) trkrinfo
+    type (gencard)    :: gstm
+    type (datecard)   :: inp
+    type (trackstuff) :: trkrinfo
 
-      real, intent(in) :: xmeanlon,xmeanlat
-      real    xoutlon,vmaxwind,xminmslp
-      real    clon(maxstorm,maxtime,maxtp),clat(maxstorm,maxtime,maxtp)
-      real    xval(maxtp)
-      integer ist,ifcsthour,maxstorm,ioapret,intmeanlon,intmeanlat
-      integer ip,icc,output_fhr,k,intlonew,intlatns,ifh
-      integer iclon(9),iclat(9),icxval(9)
-      character :: icvalid(9)*1,clatns*1,clonew*1
-      logical(1) calcparm(maxtp,maxstorm)
+    real, intent(in)  :: xmeanlon, xmeanlat
+    real              :: xoutlon, vmaxwind, xminmslp
+    real              :: clon(maxstorm,maxtime,maxtp), clat(maxstorm,maxtime,maxtp)
+    real              :: xval(maxtp)
+    integer           :: ist, ifcsthour, maxstorm, ioapret, intmeanlon, intmeanlat
+    integer           :: ip, icc, output_fhr, k, intlonew, intlatns, ifh
+    integer           :: iclon(9), iclat(9), icxval(9)
+    character         :: icvalid(9)*1, clatns*1, clonew*1
+    logical(1)        :: calcparm(maxtp,maxstorm)
 c
       if ( verb .ge. 3) then
         print *,'+++ Top of output_atcf_parms, ist= ',ist,' ifh= '
@@ -13088,36 +12309,9 @@ c     bug fix for IBM: flush the output stream so it actually writes
       flush(81)
 c
       return
-      end
-c
-c---------------------------------------------------------------------
-c
-c---------------------------------------------------------------------
-      subroutine output_tcvitals (xlon,xlat,inp,ist,iovret)
-c
-c     ABSTRACT: This subroutine  outputs a tcvitals record.  The
-c     lat/lon location is given by the xlon and xlat that are
-c     input to this subroutine.
-c
-c     INPUT:
-c     xlon   longitude of storm position to be  output
-c     xlat   latitude of storm position to be  output
-c     inp    contains input date and model number information
-c     ist    the number storm that we're processing (can be 1-15)
-c
-c     OUTPUT:
-c     iovret return code from this subroutine
-c
-c     OTHER:
-c     storm  contains the tcvitals info (from module def_vitals)
-c
-      USE def_vitals; USE inparms; USE set_max_parms
-      USE verbose_output
-
-      type (tcvcard) stm
-      type (datecard) inp
-      real       xlon,xlat
-c
+    type (tcvcard)  :: stm
+    type (datecard) :: inp
+    real            :: xlon, xlat
       iovret = 0
 
 c     Initially, set all "stm" components equal to the input "storm"
@@ -13223,22 +12417,10 @@ c
 
       implicit none
 
-      type (gencard) gstm
-      type (datecard) inp
-      real       xlon,xlat
-      integer    ist,iovret,istmspd,istmdir
-c
-      iovret = 0
-
-c     Because the xlon value may be >360 due to GM wrapping, we
-c     need to mod it to get it in a 0-360 framework.
-
-      xlon = mod(xlon,360.)
-
-c     Initially, set all "stm" components equal to the input "gstorm"
-c     components for this storm, then we will change the specific
-c     components that we need to.
-
+    type (gencard)  :: gstm
+    type (datecard) :: inp
+    real            :: xlon, xlat
+    integer         :: ist, iovret, istmspd, istmdir
       gstm = gstorm(ist)
 
 c     If the "gv_gen_date" for this storm does not equal 99999, 
@@ -13368,11 +12550,11 @@ c     iotmret  return code from this subroutine
 
       implicit none
 c
-      integer   ifh,imax,jmax,iotmret,kf,igoret,iix,jjx,ipret
-      integer   ifcsthour
-      integer   kpds(200),kgds(200)
-      logical(1) masked_outc(imax,jmax),lb(imax,jmax)
-      real      xmask(imax,jmax)
+    integer    :: ifh, imax, jmax, iotmret, kf, igoret, iix, jjx, ipret
+    integer    :: ifcsthour
+    integer    :: kpds(200), kgds(200)
+    logical(1) :: masked_outc(imax,jmax), lb(imax,jmax)
+    real       :: xmask(imax,jmax)
 c
       if (ifh == 1) then
         call baopenw (77,"fort.77",igoret)
@@ -13594,28 +12776,27 @@ c
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      integer   icutmax,istmspd,istmdir,bskip,ileadtime,ifcsthour
-      integer   ifh,ist,npts,ilonfix,jlatfix,ibeg,jbeg,iend,jend
-      integer   igiret,ignret,icut,iuret,ivret,ibarnct,n,ix1,ix2
-      integer   icount,imax,jmax,modelid,maxstorm
-      real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real      dist,distm,xincr,yincr,stmspd,stmdir,atan,arct,degrees
-      real      barneswt,extrapwt,dtkm,dt,ucomp,vcomp,xdist,ydist,ydeg
-      real      extraplat,avglat,cosfac,xdeg,extraplon,ylatdegmove_last
-      real      xlondegmove_last,xnumh_last,ylatdegmove_last_perhour
-      real      xlondegmove_last_perhour,xnumh_next,yoldavglat
-      real      yoldcosfac,xdistmove_last,xdistmove_last_perhour
-      real      ynewavglat,ynewcosfac,xdegnew,dx,dy,re,ri,ubar,vbar
-      real      wgttot,uavg,vavg,reold,riold,barnlat,barnlon,wt_total
-      real      tmp_fix_lon_curr,tmp_fix_lon_prev,conv_ms_knots
-      real      stmspdkts
-      character*1 :: in_grid, extrap_flag, barnes_flag
-      character(*)  ctype
-      character(*)  gm_wrap_flag
-      logical(1) valid_pt(imax,jmax),readflag(14)
-c
-      in_grid = 'n'
+    type (trackstuff) :: trkrinfo
+    integer           :: icutmax, istmspd, istmdir, bskip, ileadtime, ifcsthour
+    integer           :: ifh, ist, npts, ilonfix, jlatfix, ibeg, jbeg, iend, jend
+    integer           :: igiret, ignret, icut, iuret, ivret, ibarnct, n, ix1, ix2
+    integer           :: icount, imax, jmax, modelid, maxstorm
+    real              :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real              :: dist, distm, xincr, yincr, stmspd, stmdir, atan, arct, degrees
+    real              :: barneswt, extrapwt, dtkm, dt, ucomp, vcomp, xdist, ydist, ydeg
+    real              :: extraplat, avglat, cosfac, xdeg, extraplon, ylatdegmove_last
+    real              :: xlondegmove_last, xnumh_last, ylatdegmove_last_perhour
+    real              ::  xlondegmove_last_perhour, xnumh_next, yoldavglat
+    real              :: yoldcosfac, xdistmove_last, xdistmove_last_perhour
+    real              :: ynewavglat, ynewcosfac, xdegnew, dx, dy, re, ri, ubar, vbar
+    real              :: wgttot, uavg, vavg, reold, riold, barnlat, barnlon, wt_total
+    real              :: tmp_fix_lon_curr, tmp_fix_lon_prev, conv_ms_knots
+    real              :: stmspdkts
+    character*1       :: in_grid, extrap_flag, barnes_flag
+    character(*)      :: ctype
+    character(*)      :: gm_wrap_flag
+    logical(1)        :: valid_pt(imax,jmax), readflag(14)
+
       extrap_flag = 'y'
       conv_ms_knots = 1.9427
 
@@ -14504,50 +13685,13 @@ c     is requested.
       endif
 
       return
-      end       
-
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine advect_tcvitals_from_hour0 (fixlon,fixlat,maxstorm
-     &                                 ,inctcv,ifh,trkrinfo,iatret)
-c
-c     ABSTRACT: This subroutine calculates a guess position for the next
-c     forecast time.  It is called for a couple different cases, one in
-c     which we've got NetCDF data and no hour0 data, and the other is 
-c     for any case in which the storm can't be found at 00h, and so we 
-c     assume there may be an issue at 00h with the storm initialization, 
-c     and we will give the  tracker one more try at the next lead time
-c     to try and track the storm.
-c    
-c     We simply take the TC Vitals data and advect the current position
-c     to a position at the next lead time.  We can't use the code in 
-c     subroutine  get_next_ges because there are certain allocatable 
-c     arrays in that subroutine that need to have been allocated first, 
-c     and at this point prior to the first lead time in hour0, they 
-c     haven't been allocated.
-c
-c     INPUT:
-c     inctcv  Index for storm number currently being processed
-c     ifh     Forecast hour currently being processed
-c     trkrinfo derived type detailing user-specified grid info
-c
-c     OUTPUT:
-c     iatret  Return code from this subroutine
-c
-      USE def_vitals; USE trkrparms; USE tracked_parms
-      USE verbose_output; USE trig_vals; USE set_max_parms
-      USE gen_vitals
-
-      type (trackstuff) trkrinfo
-      integer   iatret,inctcv
-      real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real      dist,distm,xincr,yincr,stmspd,stmdir,atan,arct,degrees
-      real      ucomp,vcomp,xdist,ydist,ydeg,dt,extraplat
-      real      cosfac
-      real      dtkm
-c
+    type (trackstuff) :: trkrinfo
+    integer           :: iatret, inctcv
+    real              :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real              :: dist, distm, xincr, yincr, stmspd, stmdir, atan, arct, degrees
+    real              :: ucomp, vcomp, xdist, ydist, ydeg, dt, extraplat
+    real              :: cosfac
+    real              :: dtkm
       in_grid = 'n'
       extrap_flag = 'y'
 
@@ -14680,125 +13824,23 @@ c
 
 
       return
-      end       
-c
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine getradii (xcenlon,xcenlat,imax,jmax,dx,dy,valid_pt
-     &                    ,cstormid,ifcsthr,vmaxwind,vradius,trkrinfo
-     &                    ,need_to_expand_r34,radmax
-     &                    ,first_time_thru_getradii,igrct,igrret)
-c
-c     ABSTRACT: This subroutine looks through the wind data near an
-c     input storm center (fixlon,fixlat) and gets the radii of various
-c     surface winds in each of the 4 storm quadrants (NE,NW,SE,SW).  
-c     The wind thresholds that are sought are gale force (34kt|17.5m/s),
-c     storm force (50kt|25.7m/s), and hurricane force (64kt|32.9m/s). 
-c     This subroutine calls the Cray subroutine  orders, which is a 
-c     Cray-optimized sort routine.
-c
-c     UPDATE (AUG 2001): The Cray subroutine  orders was ported to the
-c     SP by NCEP personnel.  On the SP version, some changes were
-c     apparently made so that the size of the arrays for calling
-c     arguments 2, 3 and 4 (iwork, dtemp and isortix in my calling
-c     routine) must be the same.  This was not the case on the Crays,
-c     and this was causing the  tracker to crash for cases far north
-c     on fine grids (GFDL 1/3 grid).
-c
-c     UPDATE (AUG 2012): The call to the Cray subroutine orders was
-c     replaced with a call to qsort, which uses a quicksort sorting
-c     algorithm.  While this is not the fastest sorting routine out
-c     there, we don't do a lot of sorting here, and qsort is simple
-c     and it is portable.
-c
-c     UPDATE (April 2013):  For the radii, we encountered a problem with
-c     radmax being too small.  It was set at 650 km.  Hurricane Sandy
-c     exceeded this in the models, so the values returned from getradii
-c     were close to the default radmax value of 650 km (350 nm), instead
-c     of much higher as they should have been.  To fix it, we now use an
-c     iterative technique, where we start with radmax as a small value
-c     (450 km).  If getradii returns a value for R34 in a quadrant that
-c     does not exceed 0.97*radmax, then that value is ok.  If it does
-c     exceed 0.97*radmax, then we bump up radmax by 50 km and call
-c     getradii again, looking to diagnose radii only in those quadrants
-c     where the need_to_expand_r34 flag = 'n'.
-c
-c     INPUT:
-c
-c     xcenlon   fix longitude of storm center for current forecast hour
-c     xcenlat   fix latitude of storm center for current forecast hour
-c     imax      max i dimension of model grid
-c     jmax      max j dimension of model grid
-c     dx        grid spacing in i-direction of model grid
-c     dy        grid spacing in j-direction of model grid
-c     valid_pt  logical bitmap for valid data at a grid point
-c     cstormid  3-character storm ATCF ID (e.g., 03L, 11E, etc)
-c     ifcsthr   integer value for current forecast hour
-c     trkrinfo  derived type containing various info on the storm
-c     need_to_expand_r34 1-character array that specifies which of the
-c               4 quadrants still need to be expanded on this time
-c               through getradii in order to get an R34 value that is
-c               not right at the outermost boundary.
-c     vmaxwind  max wind (in m/s) that was reported from the 
-c               get_max_wind subroutine
-c     radmax    input max radius (km) that will be used for this
-c               iteration of getradii.
-c     first_time_thru_getradii  logical flag.  It is used so that any
-c               checking for 50- or 64-kt radii is only done on the 
-c               first time through getradii.  Only the checking for 
-c               34-kt radii is done on multiple iterations.
-c     igrct     integer that indicates what iteration of getradii this
-c               call is.
-c
-c     OUTPUT:
-c   
-c     igrret    return code from this subroutine
-c     vradius   Contains the distance from the storm fix position to
-c               each of the various wind threshhold distances in each
-c               quadrant. (3,4) ==> (# of threshholds, # of quadrants)
-c
-c     LOCAL:
-c
-c     radmax    the maximum radius to look for winds for the various
-c               thresholds.
-c     quadinfo  This array contains the magnitude of the near-surface 
-c               winds and the distance from the gridpoint to the fix 
-c               position for each point in each quadrant that is within
-c               the maximum allowed radius, radmax.  quadinfo is 
-c               allocated within this subroutine, and is allocated as
-c               (quadrant, num_pts_in_quadrant, data_type), where 
-c               data_type is either windspeed(1) or distance(2) from 
-c               storm center to grid point.
-c     quadmax   This array contains the max surface wind in each 
-c               quadrant, plus the location of it and the distance from
-c               the storm center.  This information is critical to 
-c               identifying when this subroutine is malfunctioning.
+    type (trackstuff) :: trkrinfo
 
-      USE grid_bounds; USE tracked_parms; USE trig_vals; USE level_parms
-      USE trkrparms
-      USE verbose_output
-
-c
-      type (trackstuff) trkrinfo
-c
-      logical(1) valid_pt(imax,jmax)     
-      logical(1) first_time_thru_getradii
-c      dimension iwork(257)
-      real, allocatable :: quadinfo(:,:,:),iwork(:)
-      real      quadmax(4,4)
-      real      exactdistnm,exactdistkm,radmax,degrees,cosarg
-      real      rlonb,rlonc,rlatb,rlatc,vmaxwind
-      real      pt_heading_rad,pt_heading,d
-      integer, allocatable :: isortix(:)
-      integer   iwindix,ipoint,ifcsthr,igrct
-      integer   quadct(4),vradius(3,4)
-      integer, parameter  :: dp = selected_real_kind(12, 60)
-      real (dp), allocatable :: dtemp(:)
-      real ::   windthresh(3) = (/17.5,25.7,32.9/)
-      character cstormid*3
-      character :: need_to_expand_r34(4)*1
+    logical(1)            :: valid_pt(imax,jmax)
+    logical(1)            :: first_time_thru_getradii
+    real, allocatable     :: quadinfo(:,:,:), iwork(:)
+    real                  :: quadmax(4,4)
+    real                  :: exactdistnm, exactdistkm, radmax, degrees, cosarg
+    real                  :: rlonb, rlonc, rlatb, rlatc, vmaxwind
+    real                  :: pt_heading_rad, pt_heading, d
+    integer, allocatable  :: isortix(:)
+    integer               :: iwindix, ipoint, ifcsthr, igrct
+    integer               :: quadct(4), vradius(3,4)
+    integer, parameter    :: dp = selected_real_kind(12, 60)
+    real(dp), allocatable :: dtemp(:)
+    real                  :: windthresh(3) = (/17.5,25.7,32.9/)
+    character             :: cstormid*3
+    character             :: need_to_expand_r34(4)*1
 
       if ( verb .ge. 3 ) then
         print *,' '
@@ -15708,51 +14750,45 @@ c     LOCAL:
 
       implicit none
 c
-      type (trackstuff) trkrinfo
-c
-      logical(1) valid_pt(imax,jmax)
-      logical(1) first_time_thru_getradii
-      integer, parameter :: num_qtr_azim = 90,numquad = 4
-      integer, parameter :: dp = selected_real_kind(12, 60)
-      integer   isortix(num_qtr_azim),vradius(3,4)
-      integer   iwindix,ipoint,ifcsthr,igrct,azimuth_ct,bimct
-      integer   num_r34_bins,good_quad_ct,valid_wind_ct,imax,jmax
-      integer   ix_radii_beg,ix_radii_end,first_valid_ix,ifh,iprint
-      integer   n_r34_iter,ifh99,ilevint,target_ix,idist,iquad
-      integer   holland_good_1_ct,holland_good_2_ct,i,n,iazim,igvtret
-      integer   num_bins_to_check,checkct,ihc,igrret,ibiret1,ibiret2
-      integer   free_pass_ix,ist,ijunk
-      real, parameter :: r34_bin_width = 3.0  !width of radial bins(km)
-      real (dp) :: radii_wmag_bucket(num_qtr_azim)
-      real      mean_radii_wind(numquad,num_r34_bins)
-      real      mean_radii_vr(numquad,num_r34_bins)
-      real      mean_radii_vt(numquad,num_r34_bins)
-      real      mean_radii_vt_4quad(num_r34_bins)
-      real      pctile_quad_bin_wind(numquad,num_r34_bins)
-      real      fp_pctile_quad_bin_wind(numquad,num_r34_bins)
-      real      rdist(num_r34_bins)
-      real      exactdistnm,exactdistkm,radmax,vmaxwind,bear
-      real      xcenlon,xcenlat,xintrp_u,xintrp_v,vr,vt
-      real      wmag_sum,vr_sum,vt_sum,target_remainder,target_slot
-      real      mean_radii_wind_4quad_sum,mean_radii_vt_4quad_sum
-      real      targlat,targlon,dx,dy,wmag,hemisphere,b
-      real      v_holland,check_dist,one_minus_target_remainder
-      real      holl_rmw,pct_holland_good_1,pct_holland_good_2
-      real      free_pass_slot,free_pass_remainder
-      real      one_minus_free_pass_remainder
-      real, intent(in) :: axi_rmw
-      real ::   windthresh(3) = (/17.5,25.7,32.9/)
-      character cstormid*3
-      character :: need_to_expand_r34(4)*1
-      character :: holland_good_1_flag*1,holland_good_2_flag*1
-      character :: free_pass*1
-      character (*)   gm_wrap_flag
+    type (trackstuff)  :: trkrinfo
 
-c     ---------------------------------------------------------------- 
-c     Fill the rdist array, initially using an r34_bin_width of every 
-c     3 km, starting from 3 km from the center and going out to 
-c     1059 km max radius (num_r34_bins = 353)
-c     ---------------------------------------------------------------- 
+    logical(1)         :: valid_pt(imax,jmax)
+    logical(1)         :: first_time_thru_getradii
+    integer, parameter :: num_qtr_azim = 90, numquad = 4
+      integer, parameter :: dp = selected_real_kind(12, 60)
+    integer            :: isortix(num_qtr_azim), vradius(3,4)
+    integer            :: iwindix, ipoint, ifcsthr, igrct, azimuth_ct, bimct
+    integer            :: num_r34_bins, good_quad_ct, valid_wind_ct, imax, jmax
+    integer            :: ix_radii_beg, ix_radii_end, first_valid_ix, ifh, iprint
+    integer            :: n_r34_iter, ifh99, ilevint, target_ix, idist, iquad
+    integer            :: holland_good_1_ct, holland_good_2_ct, i, n, iazim, igvtret
+    integer            :: num_bins_to_check, checkct, ihc, igrret, ibiret1, ibiret2
+    integer            :: free_pass_ix, ist, ijunk
+    real, parameter    :: r34_bin_width = 3.0  !width of radial bins(km)
+    real(dp)           :: radii_wmag_bucket(num_qtr_azim)
+    real               :: mean_radii_wind(numquad,num_r34_bins)
+    real               :: mean_radii_vr(numquad,num_r34_bins)
+    real               :: mean_radii_vt(numquad,num_r34_bins)
+    real               :: mean_radii_vt_4quad(num_r34_bins)
+    real               :: pctile_quad_bin_wind(numquad,num_r34_bins)
+    real               :: fp_pctile_quad_bin_wind(numquad,num_r34_bins)
+    real               :: rdist(num_r34_bins)
+    real               :: exactdistnm, exactdistkm, radmax, vmaxwind, bear
+    real               :: xcenlon, xcenlat, xintrp_u, xintrp_v, vr, vt
+    real               :: wmag_sum, vr_sum, vt_sum, target_remainder, target_slot
+    real               :: mean_radii_wind_4quad_sum, mean_radii_vt_4quad_sum
+    real               :: targlat, targlon, dx, dy, wmag, hemisphere, b
+    real               :: v_holland, check_dist, one_minus_target_remainder
+    real               :: holl_rmw, pct_holland_good_1, pct_holland_good_2
+    real               :: free_pass_slot, free_pass_remainder
+    real               :: one_minus_free_pass_remainder
+    real, intent(in)   :: axi_rmw
+    real               :: windthresh(3) = (/17.5,25.7,32.9/)
+    character          :: cstormid*3
+    character          :: need_to_expand_r34(4)*1
+    character          :: holland_good_1_flag*1, holland_good_2_flag*1
+    character          :: free_pass*1
+    character(*)       :: gm_wrap_flag
 
       igrret  = 0
 
@@ -16819,14 +15855,14 @@ c                model grids with coarse resolution (ECMWF 2.5 degree).
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      real      radmaxwind,degrees,dx,dy,rmax,xcenlon,xcenlat,vmax
-      real      cosfac,dist,vmag
-      logical(1) valid_pt(imax,jmax)
-      integer   jbeg_hold,jend_hold,bimect,bimwct,levsfc,imax,jmax
-      integer   igmwret,ilonfix,jlatfix,numipts,numjpts,i,j,ip
-      integer   ibeg,jbeg,iend,jend
+    real       :: radmaxwind, degrees, dx, dy, rmax, xcenlon, xcenlat, vmax
+    real       :: cosfac, dist, vmag
+    logical(1) :: valid_pt(imax,jmax)
+    integer    :: jbeg_hold, jend_hold, bimect, bimwct, levsfc, imax, jmax
+    integer    :: igmwret, ilonfix, jlatfix, numipts, numjpts, i, j, ip
+    integer    :: ibeg, jbeg, iend, jend
 c
       igmwret = 0
       rmax    = -99.0
@@ -17164,47 +16200,25 @@ c
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff)  :: trkrinfo
 
-      integer, parameter :: numdist=42,numazim=24
-      real      rdist1(numdist),rdist2(numdist),rdist3(numdist)
-      real      rdist4(numdist),rdist(numdist),azim_ave_wmag(numdist)
-      real      degrees,dx,dy,rmax,xcenlon,xcenlat,vmax
-      real      cosfac,dist,vmag,targlat,targlon,bear,xintrp_u,xintrp_v
-      real      wmag,wmag_sum,maxrmw_wmag,maxrmw_dist
-      real      axisymet_rmw_dist,axisymet_rmw_val,integ_dvdr_thresh
-      real      rising_sum_dvdr,declining_sum_dvdr,dvdr
-      logical(1) valid_pt(imax,jmax)
-      integer   jbeg_hold,jend_hold,bimect,bimwct,imax,jmax
-      integer   igmwret,ilonfix,jlatfix,numipts,numjpts,i,j,ip
-      integer   ibeg,jbeg,iend,jend,igarret,bimct,ibiret1,ibiret2
-      integer   azimuth_ct,maxrmw_ix,rdist_ix,ir,idv_start,idv_end
-      integer   rising_sum_dvdr_ct,declining_sum_dvdr_ct,kr,mr
-      integer   idist,iazim,ird
-      character :: got_good_armw*1,perform_rising_dvdr*1
-      character (*)  gm_wrap_flag
-c
-      data rdist1/  3.,  6.,  9., 12., 15., 18., 21., 24., 27., 30.
-     &           , 33., 36., 39., 42., 45., 48., 51., 54., 57., 60.
-     &           , 63., 66., 69., 72., 75., 78., 81., 84., 87., 90.
-     &           , 93., 96., 99.,102.,105.,108.,111.,114.,117.,120.
-     &           ,123.,126./
-      data rdist2/ 75., 78., 81., 84., 87., 90., 93., 96., 99.,102.
-     &           ,105.,108.,111.,114.,117.,120.,123.,126.,129.,132.
-     &           ,135.,138.,141.,144.,147.,150.,153.,156.,159.,162.
-     &           ,165.,168.,171.,174.,177.,180.,183.,186.,189.,192.
-     &           ,195.,198./
-      data rdist3/150.,153.,156.,159.,162.,165.,168.,171.,174.,177.
-     &           ,180.,183.,186.,189.,192.,195.,198.,201.,204.,207.
-     &           ,210.,213.,216.,219.,222.,225.,228.,231.,234.,237.
-     &           ,240.,243.,246.,249.,252.,255.,258.,261.,264.,267.
-     &           ,270.,273./
-      data rdist4/225.,228.,231.,234.,237.,240.,243.,246.,249.,252.
-     &           ,255.,258.,261.,264.,267.,270.,273.,276.,279.,282.
-     &           ,285.,288.,291.,294.,297.,300.,303.,306.,309.,312.
-     &           ,315.,318.,321.,324.,327.,330.,333.,336.,339.,342.
-     &           ,345.,348./
-c
+    integer, parameter :: numdist = 42, numazim = 24
+    real               :: rdist1(numdist), rdist2(numdist), rdist3(numdist)
+    real               :: rdist4(numdist), rdist(numdist), azim_ave_wmag(numdist)
+    real               :: degrees, dx, dy, rmax, xcenlon, xcenlat, vmax
+    real               :: cosfac, dist, vmag, targlat, targlon, bear, xintrp_u, xintrp_v
+    real               :: wmag, wmag_sum, maxrmw_wmag, maxrmw_dist
+    real               :: axisymet_rmw_dist, axisymet_rmw_val, integ_dvdr_thresh
+    real               :: rising_sum_dvdr, declining_sum_dvdr, dvdr
+    logical(1)         :: valid_pt(imax,jmax)
+    integer            :: jbeg_hold, jend_hold, bimect, bimwct, imax, jmax
+    integer            :: igmwret, ilonfix, jlatfix, numipts, numjpts, i, j, ip
+    integer            :: ibeg, jbeg, iend, jend, igarret, bimct, ibiret1, ibiret2
+    integer            :: azimuth_ct, maxrmw_ix, rdist_ix, ir, idv_start, idv_end
+    integer            :: rising_sum_dvdr_ct, declining_sum_dvdr_ct, kr, mr
+    integer            :: idist, iazim, ird
+    character          :: got_good_armw*1, perform_rising_dvdr*1
+    character(*)       :: gm_wrap_flag
       got_good_armw = 'n'
       rdist_ix = 1
       axisymet_rmw_dist = -999.0
@@ -17585,29 +16599,21 @@ c
 
       implicit none
 
-      type (datecard) inp
+    type (datecard) :: inp
 
-      real      clon(maxstorm,maxtime,maxtp),temp_clon(maxtp)
-      real      clat(maxstorm,maxtime,maxtp),temp_clat(maxtp)
-      real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real      trkerr(maxtp),errdist(maxtp),xvalues(maxtp)
-      real      stderr(maxstorm,maxtime),devia(maxtp),wtpos(maxtp)
-      real      dist_from_mean(maxtp)
-      real      degrees,errtmp,errmax,errinit,xavg_stderr,trkerr_avg
-      real      clonsum,clatsum,geslon,geslat,clon_fguess,clat_fguess
-      real      dist,xmn_dist_from_mean,stderr_close
-      integer   gt345_ct,lt15_ct,ist,ifh,iclose,itot4next,ip,maxstorm
-      integer   ifret,isret,kprm,iwtret1,iwtret2,iaret
-      logical(1) calcparm(maxtp,maxstorm),use4next(maxtp)
-      character charparm(maxtp)*8,charmaxmin(maxtp)*8
-c
-      data charparm /'zeta 850','zeta 700','circ 850','NOT USED'
-     &   ,'circ 700','NOT USED',' gph 850',' gph 700','    MSLP'
-     &   ,'circ sfc','zeta sfc',' thk 5-8',' thk 2-5',' thk 2-8'/
-      data charmaxmin /'  Max   ','  Max   ','  Min   ','NOT USED'
-     &   ,'  Min   ','NOT USED','  Min   ','  Min   ','  Min   '
-     &   ,'  Min   ','  Max   ','  Max   ','  Max   ','  Max   '/
-c
+    real       :: clon(maxstorm,maxtime,maxtp), temp_clon(maxtp)
+    real       :: clat(maxstorm,maxtime,maxtp), temp_clat(maxtp)
+    real       :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real       :: trkerr(maxtp), errdist(maxtp), xvalues(maxtp)
+    real       :: stderr(maxstorm,maxtime), devia(maxtp), wtpos(maxtp)
+    real       :: dist_from_mean(maxtp)
+    real       :: degrees, errtmp, errmax, errinit, xavg_stderr, trkerr_avg
+    real       :: clonsum, clatsum, geslon, geslat, clon_fguess, clat_fguess
+    real       :: dist, xmn_dist_from_mean, stderr_close
+    integer    :: gt345_ct, lt15_ct, ist, ifh, iclose, itot4next, ip, maxstorm
+    integer    :: ifret, isret, kprm, iwtret1, iwtret2, iaret
+    logical(1) :: calcparm(maxtp,maxstorm), use4next(maxtp)
+    character  :: charparm(maxtp)*8, charmaxmin(maxtp)*8
       ifret=0
 c
 c     We need to judge whether each parameter position is reasonable,
@@ -18166,23 +17172,8 @@ c     time.
       endif
 c
       return
-      end
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine avgcalc (xdat,kmax,valid,xavg,iaret)
-c
-c     ABSTRACT: This subroutine just calculates a straight average of
-c     the parameters in the input array (xdat).  The logical array 
-c     (valid) indicates whether or not to include a particular array
-c     member or not in the calculation.
- 
-      USE verbose_output
-
-      real      xdat(kmax)
-      logical(1) valid(kmax)
-c
+    real       :: xdat(kmax)
+    logical(1) :: valid(kmax)
       iaret = 0
 c
       xsum = 0.0
@@ -18208,22 +17199,7 @@ c
       endif
 c 
       return
-      end
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine wtavrg (xdat,wt,kmax,xwtavg,iwtret)
-c
-c     ABSTRACT: This subroutine calculates a weighted average of the 
-c     parameters in the input array (xdat) using the input weights
-c     in the input array (wt).  It is used to calculate the center lat
-c     and lon fix positions.
-c
-      USE verbose_output
-
-      real     xdat(kmax),wt(kmax)
-c
+    real :: xdat(kmax), wt(kmax)
       iwtret = 0
 c
       xwtavg = 0.0
@@ -18246,26 +17222,8 @@ c
       endif
 c
       return
-      end
-
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine wtavrg_lon (xlon,wt,kmax,xwtavg,iwtret)
-c
-c     ABSTRACT: This subroutine calculates a weighted average of the
-c     parameters in the input array (xlon) using the input weights
-c     in the input array (wt).  This subroutine is specifically used
-c     to find the center lon fix positions.  It contains code to 
-c     account for wrapping around the Greenwich Meridian.
-c
-
-      USE verbose_output
-
-      real     xlon(kmax),wt(kmax)
-      integer  gt345_ct,lt15_ct
-c
+    real     :: xlon(kmax), wt(kmax)
+    integer  :: gt345_ct, lt15_ct
       iwtret = 0
       gt345_ct = 0
       lt15_ct  = 0
@@ -18326,8 +17284,8 @@ c-----------------------------------------------------------------------
 
       USE verbose_output
 
-      real      xdat(kmax)
-      logical(1) valid(kmax)
+    real       :: xdat(kmax)
+    logical(1) :: valid(kmax)
 
       isret = 0
 
@@ -18419,35 +17377,31 @@ c
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff)  :: trkrinfo
 
-      integer date_time(8)
-      character (len=10) big_ben(3)
-
-      character(*)  cmodel_type,maxmin
-      character(*)  gm_wrap_flag
-      character :: threshold_tripped*1
-      integer, parameter :: numdist=7,numazim=24
-      integer imax,jmax,ist,level,igwcret,icvpret,idist,iazim
-      real rdist(numdist),vr(numazim,numdist),vt(numazim,numdist)
-      real vt_mean(numdist),circul_band(numdist)
-      real grid_maxlat,grid_minlat,grid_maxlon,grid_minlon
-      real rads,ri,uvgeslon,uvgeslat,dx,dy,ctlon,ctlat,fxval
-      real temp_grid_minlon,temp_guesslon,rlatt,rlont,bear
-      real targlon,targlat,xintrp_u,xintrp_v,vt_azim_sum,degrees
-      real circ_diff,circ_diff_sum,hemisphere,wind_mag_ctr,dist
-      real xmin_circ_diff_mean,xmax_circ_diff_mean,tlon,tlat
-      real dell,fmax,fmin,grid_buffer,circ_diff_mean
-      real circumference,arclength
-      real circul_disk,xmax_circul_disk,xmin_circul_disk
-      integer ibiret1,ibiret2,igvtret,azimuth_ct,igiret,npts
-      integer igibret,bimct,ifh
-      integer circ_diff_ct,ir,nhalf,bskip1,bskip2,iskip,nlev
-      integer ilonfix,jlatfix,ibeg,iend,jbeg,jend,i,j,k,iix,jix
-      logical(1) cflag, valid_pt(imax,jmax)
-
-c----------------
-c
+    integer            :: date_time(8)
+    character(len=10)  :: big_ben(3)
+    character(*)       :: cmodel_type, maxmin
+    character(*)       :: gm_wrap_flag
+    character          :: threshold_tripped*1
+    integer, parameter :: numdist = 7, numazim = 24
+    integer            :: imax, jmax, ist, level, igwcret, icvpret, idist, iazim
+    real               :: rdist(numdist), vr(numazim,numdist), vt(numazim,numdist)
+    real               :: vt_mean(numdist), circul_band(numdist)
+    real               :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
+    real               :: rads, ri, uvgeslon, uvgeslat, dx, dy, ctlon, ctlat, fxval
+    real               :: temp_grid_minlon, temp_guesslon, rlatt, rlont, bear
+    real               :: targlon, targlat, xintrp_u, xintrp_v, vt_azim_sum, degrees
+    real               :: circ_diff, circ_diff_sum, hemisphere, wind_mag_ctr, dist
+    real               :: xmin_circ_diff_mean, xmax_circ_diff_mean, tlon, tlat
+    real               :: dell, fmax, fmin, grid_buffer, circ_diff_mean
+    real               :: circumference, arclength
+    real               :: circul_disk, xmax_circul_disk, xmin_circul_disk
+    integer            :: ibiret1, ibiret2, igvtret, azimuth_ct, igiret, npts
+    integer            :: igibret, bimct, ifh
+    integer            :: circ_diff_ct, ir, nhalf, bskip1, bskip2, iskip, nlev
+    integer            :: ilonfix, jlatfix, ibeg, iend, jbeg, jend, i, j, k, iix, jix
+    logical(1)         :: cflag, valid_pt(imax,jmax)
 
       if (verb .ge. 3) then
         print *,' '
@@ -19204,48 +18158,15 @@ c                vt_mean(idist) = -999.0
       endif
 c
       return
-      end
+    type (trackstuff) :: trkrinfo
 
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine get_uv_center (uvgeslon,uvgeslat,imax,jmax,dx,dy
-     &                     ,ist,level,valid_pt,cflag
-     &                     ,ctlon,ctlat,xval,trkrinfo,igucret)
-c
-c     ABSTRACT: This subroutine calculates the center fix position for
-c     the minimum in the wind speed near the storm center.  This center
-c     fix is done differently than for the other parms.  With this fix,
-c     we severely limit the area that is searched, because we do not 
-c     want to confuse a wind minimum out on the periphery of a storm 
-c     with the center wind minimum.  Therefore, this subroutine is not
-c     called until center fixes have been made for the 5 other parms
-c     (z850, z700, zeta850, zeta700, mslp).  Once those  fixes have been
-c     made, a modified first guess is made of the average of the guess
-c     position for this time and the 5 other parm fixes.  That modified
-c     guess position is passed into this subroutine as uvgeslon and 
-c     uvgeslat, and that's where the searching for the wind minimum 
-c     is done.  To get the wind minimum, the u and v data are first 
-c     interpolated down to a fine grid (see details below for exact
-c     figures), and then a single-pass barnes analysis is done on that
-c     fine grid.  The reason that we first interpolate the data (which
-c     is different from how we do the other parms) is that if we just 
-c     use the original grid resolution, we may not be able to 
-c     accurately pick out a minimum in the wind field at the center.
-c
-      USE radii; USE grid_bounds; USE tracked_parms; USE trig_vals
-      USE level_parms; USE trkrparms
-      USE verbose_output
-
-      type (trackstuff) trkrinfo
-
-      real, allocatable ::  uold(:,:),vold(:,:),unew(:,:),vnew(:,:)
-      real, allocatable ::  rlonold(:),rlatold(:),rlonnew(:),rlatnew(:)
-      real, allocatable ::  vmag(:,:)
-      real :: dx,dy
-      real  :: grid_maxlat,grid_minlat,grid_maxlon,grid_minlon
-      character*1 ::   gotlat
-      logical(1)        cflag, valid_pt(imax,jmax)
+    real, allocatable       :: uold(:,:), vold(:,:), unew(:,:), vnew(:,:)
+    real, allocatable       :: rlonold(:), rlatold(:), rlonnew(:), rlatnew(:)
+    real, allocatable       :: vmag(:,:)
+    real                    :: dx, dy
+    real                    :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
+    character*1             :: gotlat
+    logical(1)              :: cflag, valid_pt(imax,jmax)
       logical(1), allocatable :: lbi(:,:)
 c
       gotlat = 'n'
@@ -19842,12 +18763,12 @@ c
 
       implicit none
 
-      logical(1) calcparm(maxtp,maxstorm)
-      real      clon(maxstorm,maxtime,maxtp)
-      real      clat(maxstorm,maxtime,maxtp)
-      real      uvgeslon, uvgeslat,sumlon,sumlat
-      real      guesslon,guesslat,dist,degrees
-      integer   gt345_ct,lt15_ct,ict,ip,igugret,maxstorm,ist,ifh
+    logical(1) :: calcparm(maxtp,maxstorm)
+    real       :: clon(maxstorm,maxtime,maxtp)
+    real       :: clat(maxstorm,maxtime,maxtp)
+    real       :: uvgeslon, uvgeslat, sumlon, sumlat
+    real       :: guesslon, guesslat, dist, degrees
+    integer    :: gt345_ct, lt15_ct, ict, ip, igugret, maxstorm, ist, ifh
 
       sumlon = 0.0
       sumlat = 0.0
@@ -19947,18 +18868,7 @@ c        endif
       endif
 c
       return
-      end      
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine calc_vmag (xu,xv,imx,jmx,wspeed,icvret)
-c
-c     ABSTRACT: This subroutine calculates the magnitude of the wind
-c     speed for an array of points, given real u and real v arrays.
-c
-      real    xu(imx,jmx),xv(imx,jmx),wspeed(imx,jmx)
-c
+    real    :: xu(imx,jmx), xv(imx,jmx), wspeed(imx,jmx)
       do i=1,imx
         do j=1,jmx
           wspeed(i,j) = sqrt( xu(i,j)*xu(i,j) + xv(i,j)*xv(i,j) )
@@ -20010,7 +18920,7 @@ c     NOTE: Remember that the arrays that are read in are indexed as
 c     (lon,lat), so that in the diagram above, pt (1,1) is at the upper
 c     left and pt (imax,jmax) is at the lower right, and each column is
 c     a new latitude and each row is a new longitude.
-c
+    real  :: xold(imxold,jmxold), xnew(imxnew,jmxnew)
 c     -----------------------------------------------------------------
 c     Put original (O) values from input array into new, expanded array
 c     -----------------------------------------------------------------
@@ -20081,20 +18991,7 @@ c
       enddo
 c
       return
-      end
-c
-c-----------------------------------------------------------------------
-c
-c-----------------------------------------------------------------------
-      subroutine lin_int (ioldmax,inewmax,xold,xnew,iliret)
-c
-c     ABSTRACT: This subroutine linearly interpolates evenly spaced
-c               data from one grid to another.
-c 
-      real      xold(ioldmax), xnew(inewmax)
-c
-c     First just copy points from old grid onto new, larger grid
-c
+    real    :: xold(ioldmax), xnew(inewmax)
       do i=1,ioldmax
         xnew(2*i-1) = xold(i)
       enddo
@@ -20121,7 +19018,7 @@ c               longitudes, and it factors in the possibility of
 c               interpolating across the greenwich meridian.
 c
       real      xold(ioldmax), xnew(inewmax)
-c
+    real  :: xold(ioldmax), xnew(inewmax)
 c     First just copy points from old grid onto new, larger grid
 c
       do i=1,ioldmax
@@ -20163,21 +19060,17 @@ c     the atcfunix file (the "atcf_gen" file).
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      type (datecard) inp
+    type (trackstuff) :: trkrinfo
+    type (datecard)   :: inp
 
-      logical(1) readflag(14),valid_pt(imax,jmax),compflag
-      character  cmaxmin*3,cvort_maxmin*3,csmooth_var*8
-      real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real     gridpoint_maxmin,dx,dy,re,ri,parmlon,parmlat,xsmoothval
-      integer  igridzeta(nlevgrzeta),imeanzeta(nlevgrzeta)
-      integer  n,ix1,ix2,ilev,npts,imax,jmax,igzvret,ilonfix,jlatfix
-      integer  idum,jdum,ibeg,jbeg,iend,jend,igiret,icount,iuret
-      integer  ifilret,ist,ifh,ifmret,maxstorm,igsvret
-
-c     First, call  get_ij_bounds in order to get the (i,j) coordinates
-c     of the (fixlon,fixlat) position that we need to search around.
-c     These (i,j) coordinates are returned as ilonfix and jlatfix.
+    logical(1) :: readflag(14), valid_pt(imax,jmax), compflag
+    character  :: cmaxmin*3, cvort_maxmin*3, csmooth_var*8
+    real       :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real       :: gridpoint_maxmin, dx, dy, re, ri, parmlon, parmlat, xsmoothval
+    integer    :: igridzeta(nlevgrzeta), imeanzeta(nlevgrzeta)
+    integer    :: n, ix1, ix2, ilev, npts, imax, jmax, igzvret, ilonfix, jlatfix
+    integer    :: idum, jdum, ibeg, jbeg, iend, jend, igiret, icount, iuret
+    integer    :: ifilret, ist, ifh, ifmret, maxstorm, igsvret
 
       npts = imax * jmax
 
@@ -20441,22 +19334,22 @@ c     buffer (grid_buffer) here to prevent this from occurring.
 
       implicit none
 c
-      type (trackstuff) trkrinfo
+    type (trackstuff)  :: trkrinfo
 
-      character(*)  maxmin,cparm,cmodel_type
-      logical(1)    compflag, valid_pt(imax,jmax)
-      real    fxy(imax,jmax),rlonv(imax),rlatv(jmax)
-      real    ctlon,ctlat,degrees,dx,dy,guesslon,guesslat,xval
-      real    rads,re,ri,dell,fmax,fmin,rlatt,rlont,dist,ftemp,ritmp
-      real    vmag_latmax,vmag_latmin,vmag_lonmax,vmag_lonmin,retmp
-      real    tlon,tlat,grid_buffer,temp_grid_minlon,temp_guesslon
-      real    grid_maxlat,grid_minlat,grid_maxlon,grid_minlon
-      integer imax,jmax,ist,bskip1,bskip2,iskip,ifmret,npts,maxvgrid
-      integer ibeg,iend,jbeg,jend,ilonfix,jlatfix,igiret,icount,iret
-      integer ibct,ibarnes_loopct,i,j,k,iix,jix,jvlatfix,ivlonfix
-      integer nhalf,icvpret
-      integer date_time(8)
-      character (len=10) big_ben(3)
+    character(*)       :: maxmin, cparm, cmodel_type
+    logical(1)         :: compflag, valid_pt(imax,jmax)
+    real               :: fxy(imax,jmax), rlonv(imax), rlatv(jmax)
+    real               :: ctlon, ctlat, degrees, dx, dy, guesslon, guesslat, xval
+    real               :: rads, re, ri, dell, fmax, fmin, rlatt, rlont, dist, ftemp, ritmp
+    real               :: vmag_latmax, vmag_latmin, vmag_lonmax, vmag_lonmin, retmp
+    real               :: tlon, tlat, grid_buffer, temp_grid_minlon, temp_guesslon
+    real               :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
+    integer            :: imax, jmax, ist, bskip1, bskip2, iskip, ifmret, npts, maxvgrid
+    integer            :: ibeg, iend, jbeg, jend, ilonfix, jlatfix, igiret, icount, iret
+    integer            :: ibct, ibarnes_loopct, i, j, k, iix, jix, jvlatfix, ivlonfix
+    integer            :: nhalf, icvpret
+    integer            :: date_time(8)
+    character(len=10)  :: big_ben(3)
 c
       ifmret = 0
       nhalf = 5
@@ -21300,16 +20193,14 @@ c
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      real      fxy(iimax,jjmax), rlon(iimax), rlat(jjmax)
-      real      degrees,wt,wts,favg,flon,flat,dist,ri,re,res
-      integer   bskip,i,j,iix,jix,iibeg,iiend,jjbeg,jjend,icount
-      integer   iimax,jjmax,iret
-      logical(1) defined_pt(iimax,jjmax)
-      character(*) ctype
-
-c     --------------------------
+    real         :: fxy(iimax,jjmax), rlon(iimax), rlat(jjmax)
+    real         :: degrees, wt, wts, favg, flon, flat, dist, ri, re, res
+    integer      :: bskip, i, j, iix, jix, iibeg, iiend, jjbeg, jjend, icount
+    integer      :: iimax, jjmax, iret
+    logical(1)   :: defined_pt(iimax,jjmax)
+    character(*) :: ctype
 
       res = re*re
       wts = 0.0
@@ -21465,17 +20356,15 @@ c
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      real      fxy(iimax,jjmax), rlon(iimax), rlat(jjmax)
-      real      degrees,sea_fract,favg,wt,wts,res,re,ri,flon,flat
-      real      dist
-      integer   bskip,seact,landct,totct,icount,i,j,iret
-      integer   jjbeg,jjend,iibeg,iiend,iix,jix,iimax,jjmax
-      logical(1) defined_pt(iimax,jjmax)
-      character(*) ctype
-
-c     --------------------------
+    real         :: fxy(iimax,jjmax), rlon(iimax), rlat(jjmax)
+    real         :: degrees, sea_fract, favg, wt, wts, res, re, ri, flon, flat
+    real         :: dist
+    integer      :: bskip, seact, landct, totct, icount, i, j, iret
+    integer      :: jjbeg, jjend, iibeg, iiend, iix, jix, iimax, jjmax
+    logical(1)   :: defined_pt(iimax,jjmax)
+    character(*) :: ctype
 
       res = re*re
       wts = 0.0
@@ -21670,8 +20559,8 @@ c
       USE trig_vals; USE trkrparms
       USE verbose_output
 
-      type (trackstuff) trkrinfo
-      real tmpangle
+    type (trackstuff) :: trkrinfo
+    real              :: tmpangle
 c
       igiret = 0
 c
@@ -21944,9 +20833,9 @@ c
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      real :: guesslon,guesslat
-      integer :: icbret,ist,ifh
+    type (trackstuff) :: trkrinfo
+    real              :: guesslon, guesslat
+    integer           :: icbret, ist, ifh
 
       if (trkrinfo%gridtype == 'regional') then
         if (guesslon > glonmax .or. guesslon < glonmin .or.
@@ -22049,9 +20938,9 @@ c
       implicit none
 
       integer, parameter  :: dp = selected_real_kind(12, 60)
-      real rlonb,rlatb,rlonc,rlatc,xdist,degrees
-      real (dp) :: difflon8,distlatb8,distlatc8,pole8,degrees8,xdist8
-      real (dp) :: rlonb8,rlatb8,rlonc8,rlatc8,cosanga,circ_fract
+    real                :: rlonb, rlatb, rlonc, rlatc, xdist, degrees
+    real(dp)            :: difflon8, distlatb8, distlatc8, pole8, degrees8, xdist8
+    real(dp)            :: rlonb8, rlatb8, rlonc8, rlatc8, cosanga, circ_fract
 c
       rlonb8 = rlonb
       rlatb8 = rlatb
@@ -22109,8 +20998,8 @@ c
 
       implicit none
 
-      integer :: i,j,imax,jmax,level
-      real    :: dy,coriolis,rlat
+    integer :: i, j, imax, jmax, level
+    real    :: dy, coriolis, rlat
 c
       do j=1,jmax
         rlat = glatmax - ((j-1) * dy)
@@ -22152,14 +21041,9 @@ c     ifilename GRIB index file name
 
       implicit none
 
-      character(*) gfilename,ifilename
-      character  cfmin*5,cymdh*10
-      integer    ifh,nlen1,nlen2,nlen3,nlen4,nlen5
-
-c     Convert integer minutes to 5-position character, with
-c     leading zeroes, and convert 10-digit integer date into
-c     10-position character.  Then trim the various input variables
-c     and combine all into the file name.
+    character(*) :: gfilename, ifilename
+    character    :: cfmin*5, cymdh*10
+    integer      :: ifh, nlen1, nlen2, nlen3, nlen4, nlen5
 
       write (cfmin,'(i5.5)') iftotalmins(ifh)
       write (cymdh,'(i10.10)') atcfymdh
@@ -22301,59 +21185,59 @@ c                 valid data at the point (used for regional grids)
 
       implicit none
 c
-      type (trackstuff) trkrinfo
-      type (datecard) inp
-      type (gribfield) :: gfld
-c
-      integer, parameter :: jf=40000000
-      real, allocatable :: f(:)
-      real :: dmin,dmax,firstval,lastval
-      logical(1), allocatable :: lb(:)
-      logical(1) valid_pt(imax,jmax),readflag(nreadparms)
-      logical(1) readgenflag(nreadgenparms)
-      logical(1) ::  need_to_flip_lats,need_to_flip_lons
-      logical(1) file_open
-      logical :: unpack=.true.
-      logical :: open_grb=.false.
-      character*1 :: lbrdflag
-      character*8 :: chparm(nreadparms),ch_genparm(nreadgenparms)
-      CHARACTER(len=8) :: pabbrev
-      character (len=10) big_ben(3)
-      integer   date_time(8)
-      integer,dimension(200) :: jids,jpdt,jgdt
-      integer :: listsec1(13), enable_timing
-      integer, intent(in) :: imax,jmax
-      integer   igparm(nreadparms),iglev(nreadparms)
-      integer   genparm(nreadgenparms),genlev(nreadgenparms)
-      integer   ec_genparm(nreadgenparms)
-      integer   ec_genlevtyp(nreadgenparms)
-      integer   ec_genlev(nreadgenparms)
-      integer   iglevtyp(nreadparms),genlevtyp(nreadgenparms)
-      integer   ig2_parm_cat(nreadparms),ig2_parm_num(nreadparms)
-      integer   ig2_lev_val(nreadparms),ig2_lev_typ(nreadparms)
-      integer   cpsig2_parm_cat(nreadcpsparms)
-      integer   cpsig2_parm_num(nreadcpsparms)
-      integer   cpsig2_lev_typ(nreadcpsparms)
-      integer   cpsig2_lev_val(nreadcpsparms)
-      integer   gensig2_parm_cat(nreadgenparms)
-      integer   gensig2_parm_num(nreadgenparms)
-      integer   gensig2_lev_typ(nreadgenparms)
-      integer   gensig2_lev_val(nreadgenparms)
-      integer   ec_igparm(nreadparms),ec_iglev(nreadparms)
-      integer   ec_iglevtyp(nreadparms)
-      integer   cpsgparm(nreadcpsparms)
-      integer   cpsglev(nreadcpsparms)
-      integer   cpsglevtyp(nreadcpsparms)
-      integer   ec_cpsgparm(nreadcpsparms)
-      integer   jpds(200),jgds(200),kpds(200),kgds(200)
-      integer   igvret,ifa,ila,ip,ifh,i,j,k,kj,iret,kf,lugb,lugi
-      integer   jskp,jdisc,np,igrh,igrhct
-      integer   jpdtn,jgdtn,npoints,icount,ipack,krec
-      integer   pdt_4p0_vert_level,pdt_4p0_vtime
-      integer :: listsec0(2)=(/0,2/)
-      integer :: igds(5)=(/0,0,0,0,0/),previgds(5)
-      integer :: idrstmpl(200)
-      integer :: currlen=1000000
+    type (trackstuff) :: trkrinfo
+    type (datecard)   :: inp
+    type (gribfield)  :: gfld
+
+    integer, parameter       :: jf = 40000000
+    real, allocatable        :: f(:)
+    real                     :: dmin, dmax, firstval, lastval
+    logical(1), allocatable  :: lb(:)
+    logical(1)               :: valid_pt(imax,jmax), readflag(nreadparms)
+    logical(1)               :: readgenflag(nreadgenparms)
+    logical(1)               :: need_to_flip_lats, need_to_flip_lons
+    logical(1)               :: file_open
+    logical                  :: unpack = .true.
+    logical                  :: open_grb = .false.
+    character*1              :: lbrdflag
+    character*8              :: chparm(nreadparms), ch_genparm(nreadgenparms)
+    character(len=8)         :: pabbrev
+    character(len=10)        :: big_ben(3)
+    integer                  :: date_time(8)
+    integer, dimension(200)  :: jids, jpdt, jgdt
+    integer                  :: listsec1(13), enable_timing
+    integer, intent(in)      :: imax, jmax
+    integer                  :: igparm(nreadparms), iglev(nreadparms)
+    integer                  :: genparm(nreadgenparms), genlev(nreadgenparms)
+    integer                  :: ec_genparm(nreadgenparms)
+    integer                  :: ec_genlevtyp(nreadgenparms)
+    integer                  :: ec_genlev(nreadgenparms)
+    integer                  :: iglevtyp(nreadparms), genlevtyp(nreadgenparms)
+    integer                  :: ig2_parm_cat(nreadparms), ig2_parm_num(nreadparms)
+    integer                  :: ig2_lev_val(nreadparms), ig2_lev_typ(nreadparms)
+    integer                  :: cpsig2_parm_cat(nreadcpsparms)
+    integer                  :: cpsig2_parm_num(nreadcpsparms)
+    integer                  :: cpsig2_lev_typ(nreadcpsparms)
+    integer                  :: cpsig2_lev_val(nreadcpsparms)
+    integer                  :: gensig2_parm_cat(nreadgenparms)
+    integer                  :: gensig2_parm_num(nreadgenparms)
+    integer                  :: gensig2_lev_typ(nreadgenparms)
+    integer                  :: gensig2_lev_val(nreadgenparms)
+    integer                  :: ec_igparm(nreadparms), ec_iglev(nreadparms)
+    integer                  :: ec_iglevtyp(nreadparms)
+    integer                  :: cpsgparm(nreadcpsparms)
+    integer                  :: cpsglev(nreadcpsparms)
+    integer                  :: cpsglevtyp(nreadcpsparms)
+    integer                  :: ec_cpsgparm(nreadcpsparms)
+    integer                  :: jpds(200), jgds(200), kpds(200), kgds(200)
+    integer                  :: igvret, ifa, ila, ip, ifh, i, j, k, kj, iret, kf, lugb, lugi
+    integer                  :: jskp, jdisc, np, igrh, igrhct
+    integer                  :: jpdtn, jgdtn, npoints, icount, ipack, krec
+    integer                  :: pdt_4p0_vert_level, pdt_4p0_vtime
+    integer                  :: listsec0(2) = (/0,2/)
+    integer                  :: igds(5) = (/0,0,0,0,0/), previgds(5)
+    integer                  :: idrstmpl(200)
+    integer                  :: currlen = 1000000
 c
       lbrdflag = 'n'
       enable_timing=trkrinfo%enable_timing
@@ -24323,30 +23207,30 @@ c                 valid data at the point (used for regional grids)
       USE genesis_diags; USE trkrparms
 
       implicit none
-c
-      type (trackstuff) trkrinfo
-      type (netcdfstuff) netcdfinfo
-      real, allocatable :: f(:)
-      real(kind=4) :: f4(imax*jmax)
-      real(kind=8) :: f8(imax*jmax)
-      real :: dmin,dmax,xfill_value
-      real         :: xmissing_value
-      real(kind=4) :: xmissing_val4
-      real(kind=8) :: xmissing_val8
-      logical(1) valid_pt(imax,jmax),readflag(nreadparms)
-      logical(1) readgenflag(nreadgenparms)
-      logical(1) ::  need_to_flip_lats,need_to_flip_lons
-      character*1  :: lbrdflag,match_check,match_zero_check
-      character*30 :: chparm(nreadparms)
-      character*30 :: chparm_cps(nreadcpsparms)
-      character*30 :: chparm_gen(nreadgenparms)
-      integer, intent(in) :: ncfile_id,nc_lsmask_file_id,imax,jmax
-      integer :: igvret,ifa,ip,ifh,i,j,k,m,n,ncfile_tmax,nf_get_att_real
-      integer :: nf_get_att_double,nf_inq_attlen,imvlen,ifvlen
-      integer :: usertime,ncix,missing_val_length,nf_status
-      integer :: nf_inq_varid,varid,igrh,igrhct,nc_zero_ix
-      integer :: xtype,ignrret
-c
+    type (trackstuff)  :: trkrinfo
+    type (netcdfstuff) :: netcdfinfo
+
+    real, allocatable   :: f(:)
+    real(kind=4)        :: f4(imax*jmax)
+    real(kind=8)        :: f8(imax*jmax)
+    real                :: dmin, dmax, xfill_value
+    real                :: xmissing_value
+    real(kind=4)        :: xmissing_val4
+    real(kind=8)        :: xmissing_val8
+    logical(1)          :: valid_pt(imax,jmax), readflag(nreadparms)
+    logical(1)          :: readgenflag(nreadgenparms)
+    logical(1)          :: need_to_flip_lats, need_to_flip_lons
+    character*1         :: lbrdflag, match_check, match_zero_check
+    character*30        :: chparm(nreadparms)
+    character*30        :: chparm_cps(nreadcpsparms)
+    character*30        :: chparm_gen(nreadgenparms)
+    integer, intent(in) :: ncfile_id, nc_lsmask_file_id, imax, jmax
+    integer             :: igvret, ifa, ip, ifh, i, j, k, m, n, ncfile_tmax, nf_get_att_real
+    integer             :: nf_get_att_double, nf_inq_attlen, imvlen, ifvlen
+    integer             :: usertime, ncix, missing_val_length, nf_status
+    integer             :: nf_inq_varid, varid, igrh, igrhct, nc_zero_ix
+    integer             :: xtype,ignrret
+
       lbrdflag = 'n'
 
 cnc      data cpsgparm   /13*7/
@@ -25246,15 +24130,14 @@ c     tracker was compiled in.
 
       include "netcdf.inc"
 
-      integer, intent(in):: ncid
-      character*(*), intent(in)::  var1_name
-      integer, intent(in):: nmax
-      integer    :: xtype,ira,i
-      real, intent(out) :: var1(nmax)
-      real(kind=4), allocatable :: readvar4(:)
-      real(kind=8), allocatable :: readvar8(:)
-
-      integer ::  status, var1id
+    integer,       intent(in)  :: ncid
+    character*(*), intent(in)  :: var1_name
+    integer,       intent(in)  :: nmax
+    integer                    :: xtype,ira,i
+    real,          intent(out) :: var1(nmax)
+    real(kind=4), allocatable  :: readvar4(:)
+    real(kind=8), allocatable  :: readvar8(:)
+    integer                    :: status, var1id
 
       if (allocated(readvar4)) deallocate (readvar4)
       if (allocated(readvar8)) deallocate (readvar8)
@@ -25344,13 +24227,12 @@ c     array of real, 4-byte data.
 
       include "netcdf.inc"
 
-      integer, intent(in):: ncid
-      character*(*), intent(in)::  var1_name
-      integer, intent(in):: nmax
-      integer    :: ira
-      real(kind=4), intent(out) :: readvar4(nmax)
-
-      integer ::  status, var1id
+    integer,       intent(in)  :: ncid
+    character*(*), intent(in)  :: var1_name
+    integer,       intent(in)  :: nmax
+    integer                    :: ira
+    real(kind=4),  intent(out) :: readvar4(nmax)
+    integer                    :: status, var1id
 
       status = nf_inq_varid (ncid,var1_name,var1id)
       if (status .ne. NF_NOERR) call handle_netcdf_err(status)
@@ -25377,13 +24259,12 @@ c     array of real, 8-byte data.
 
       include "netcdf.inc"
 
-      integer, intent(in):: ncid
-      character*(*), intent(in)::  var1_name
-      integer, intent(in):: nmax
-      integer    :: ira
-      real(kind=8), intent(out) :: readvar8(nmax)
-
-      integer ::  status, var1id
+    integer,       intent(in)  :: ncid
+    character*(*), intent(in)  :: var1_name
+    integer,       intent(in)  :: nmax
+    integer                    :: ira
+    real(kind=8),  intent(out) :: readvar8(nmax)
+    integer                    :: status, var1id
 
       status = nf_inq_varid (ncid,var1_name,var1id)
       if (status .ne. NF_NOERR) call handle_netcdf_err(status)
@@ -25420,10 +24301,10 @@ c     ignrret integer return code from this routine
       implicit         none
 
       include "netcdf.inc"
-      integer, intent(in)       :: ncid
+    integer,       intent(in) :: ncid
       character*(*), intent(in) :: var3_name
       integer                   :: xtype
-      integer :: status,var3id,ignrret
+    integer                   :: status, var3id, ignrret
 
       if (verb .ge. 3) then
         print *,' '
@@ -25499,13 +24380,13 @@ c     igvret integer return code from this routine
 
       include "netcdf.inc"
 c
-      integer, intent(in)       :: ncid,ncix
-      character*(*), intent(in) :: var3_name
-      integer, intent(in)       :: imax,jmax
-      integer                   :: xtype
-      real(kind=4), intent(out)   :: var3(imax,jmax)
-      integer :: istart(3),ilength(3)
-      integer :: status,var3id,igvret
+    integer,       intent(in)  :: ncid, ncix
+    character*(*), intent(in)  :: var3_name
+    integer,       intent(in)  :: imax, jmax
+    integer                    :: xtype
+    real(kind=4),  intent(out) :: var3(imax,jmax)
+    integer                    :: istart(3), ilength(3)
+    integer                    :: status, var3id, igvret
 
       if (verb .ge. 3) then
         print *,' '
@@ -25580,13 +24461,13 @@ c     igvret integer return code from this routine
 
       include "netcdf.inc"
 c
-      integer, intent(in)       :: ncid,ncix
-      character*(*), intent(in) :: var3_name
-      integer, intent(in)       :: imax,jmax
-      integer                   :: xtype
-      real(kind=8), intent(out)   :: var3(imax,jmax)
-      integer :: istart(3),ilength(3)
-      integer :: status,var3id,igvret
+    integer,       intent(in)  :: ncid, ncix
+    character*(*), intent(in)  :: var3_name
+    integer,       intent(in)  :: imax, jmax
+    integer                    :: xtype
+    real(kind=8),  intent(out) :: var3(imax,jmax)
+    integer                    :: istart(3), ilength(3)
+    integer                    :: status, var3id, igvret
 
       if (verb .ge. 3) then
         print *,' '
@@ -25633,7 +24514,7 @@ c     related functions.
 
       include          "netcdf.inc"
 
-      integer          status
+    integer :: status
 c
       if (status /= nf_noerr) then
         print *,' '
@@ -25643,29 +24524,8 @@ c
       endif
 
       end subroutine handle_netcdf_err
-c
-c-------------------------------------------------------------------
-c                                                   
-c-------------------------------------------------------------------
-      subroutine bitmapchk (n,ld,d,dmin,dmax)
-c
-c     This subroutine checks the bitmap for non-existent data values.
-c     Since the data from the regional models have been interpolated
-c     from either a polar stereographic or lambert conformal grid
-c     onto a lat/lon grid, there will be some gridpoints around the
-c     edges of this lat/lon grid that have no data; these grid 
-c     points have been bitmapped out by Mark Iredell's interpolater.
-c     To provide another means of checking for invalid data points
-c     later in the program, set these bitmapped data values to a 
-c     value of -999.0.  The min and max of this array are also 
-c     returned if a user wants to check for reasonable values.
-c
-      logical(1) ld
-      dimension  ld(n),d(n)
-c
-      dmin=1.E15
-      dmax=-1.E15
-c
+    logical(1) :: ld
+    dimension  :: ld(n), d(n) !CAITLYN - i have never seen this data type before
       do i=1,n
 c        if (i >= 1415928 .and. i <= 1415930) then
 c          print *,' '
@@ -25681,51 +24541,9 @@ c        endif
       enddo
 c
       return
-      end
-c
-c------------------------------------------------------------------
-c
-c------------------------------------------------------------------
-      subroutine conv1d2d_logic (imax,jmax,lb1d,lb2d,need_to_flip_lats)
-c
-c     ABSTRACT: This subroutine converts a 1-dimensional input 
-c     array of logical data (lb1d) into a 2-dimensional output
-c     array (dimension imax,jmax) of logical data (lb2d).
-c
-c     This subroutine was updated in 6/2000 to add the scanning mode
-c     flag (iscanflag) as an input.  This is in order to handle grids
-c     that are flipped.  Most grids -- NCEP, UKMET, ECMWF -- have
-c     point (1,1) as the uppermost left point on the grid, and the
-c     data goes from north to south.  Some grids -- GFDL and the new
-c     NAVGEM grid -- are flipped; their point (1,1) is the lowermost
-c     left point, and their data goes from south to north.  So if
-c     the scanning mode flag indicates northward scanning data
-c     (bit 2 in the flag is turned on), we catch it in this
-c     subroutine and flip the data ourselves for our own arrays,
-c     since this whole program is structured around the data going
-c     from north to south.  As of the writing of this, only the
-c     first 3 bits of the scanning flag are used, which is why we
-c     can use the mod statement in the code below.
-c
-c     UPDATE 8/2009: I removed the scanning mode flag, since that is
-c     GRIB-specific.  The north-south determination is now handled with
-c     the logical flag need_to_flip_lats.
-c
-c     PARAMETERS:
-c
-c     INPUT:
-c     imax     Number of gridpoints in i direction in input box
-c     jmax     Number of gridpoints in j direction in input box
-c     lb1d     1-d array containing logical bitmap values
-c     iscanflag This is kgds(11), an integer value in the GDS,
-c              which holds the scanning mode for the data values
-c
-c     OUTPUT:
-c     lb2d     2-d array containing logical bitmap values
-c
-      logical(1) lb1d(imax*jmax),lb2d(imax,jmax)
+    logical(1) :: lb1d(imax*jmax), lb2d(imax,jmax)
       logical(1) :: need_to_flip_lats
-      integer :: ilat,ilatix,ilon,imax,jmax
+    integer    :: ilat, ilatix, ilon, imax, jmax
 c
       if (need_to_flip_lats) then
 
@@ -25805,11 +24623,11 @@ c
 
       implicit none
 
-      logical(1) lb2d(imax,jmax)
-      logical(1) need_to_flip_lats
-      integer    ilat,ilatix,ilon,imax,jmax,tct,fct,mct
-      real ::  dat1d(imax*jmax)
-      real ::  xmissing_val
+    logical(1) :: lb2d(imax,jmax)
+    logical(1) :: need_to_flip_lats
+    integer    :: ilat, ilatix, ilon, imax, jmax, tct, fct, mct
+    real       :: dat1d(imax*jmax)
+    real       :: xmissing_val
 c
       tct = 0
       fct = 0
@@ -25907,7 +24725,7 @@ c     OUTPUT:
 c     dat2d    2-d real array of data
 c
       logical(1) :: need_to_flip_lats
-      real    dat1d(imax*jmax),dat2d(imax,jmax)
+    real       :: dat1d(imax*jmax), dat2d(imax,jmax)
 c
       if (need_to_flip_lats) then
 
@@ -25978,8 +24796,8 @@ c     OUTPUT:
 c     dat2d    2-d real array of data
 c
       logical(1) :: need_to_flip_lats
-      real ::   dat1d(imax*jmax)
-      real ::   dat2d(imax,jmax)
+    real       :: dat1d(imax*jmax)
+    real       :: dat2d(imax,jmax)
 c
       if (need_to_flip_lats) then
 
@@ -26027,38 +24845,11 @@ c
 
       implicit none
 
-      logical(1) :: namelist_file_exists
-      integer ifh,lunml
-      type (datecard) inp
-      type (trackstuff) trkrinfo
-      type (netcdfstuff) netcdfinfo
-c
-      namelist/datein/inp
-      namelist/atcfinfo/atcfnum,atcfname,atcfymdh,atcffreq
-      namelist/trackerinfo/trkrinfo
-      namelist/phaseinfo/phaseflag,phasescheme,wcore_depth
-      namelist/structinfo/structflag,ikeflag,radii_pctile
-     &                   ,radii_free_pass_pctile,radii_width_thresh
-      namelist/fnameinfo/gmodname,rundescr,atcfdescr
-      namelist/cintinfo/contint_grid_bound_check
-      namelist/verbose/verb,verb_g2
-      namelist/waitinfo/use_waitfor,wait_min_age,wait_min_size
-     &                 ,wait_max_wait,wait_sleeptime
-     &                 ,use_per_fcst_command,per_fcst_command
-      namelist/netcdflist/netcdfinfo
-      namelist/parmpreflist/user_wants_to_track_zeta850
-     &       ,user_wants_to_track_zeta700,user_wants_to_track_wcirc850
-     &       ,user_wants_to_track_wcirc700,user_wants_to_track_gph850
-     &       ,user_wants_to_track_gph700,user_wants_to_track_mslp
-     &       ,user_wants_to_track_wcircsfc,user_wants_to_track_zetasfc
-     &       ,user_wants_to_track_thick500850
-     &       ,user_wants_to_track_thick200500
-     &       ,user_wants_to_track_thick200850
-      namelist/sheardiaginfo/shearflag
-      namelist/sstdiaginfo/sstflag
-      namelist/gendiaginfo/genflag,gen_read_rh_fields
-     &                    ,need_to_compute_rh_from_q
-     &                    ,smoothe_mslp_for_gen_scan
+    type (datecard)    :: inp
+    type (trackstuff)  :: trkrinfo
+    type (netcdfstuff) :: netcdfinfo
+    logical(1)         :: namelist_file_exists
+    integer            :: ifh, lunml
 
 c     Set namelist default values:
       use_per_fcst_command='t'
@@ -26621,10 +25412,10 @@ c
 
       implicit none
 c
-      integer, parameter :: iunit_fh=15
-      integer itmphrs(750),itmpmins(750),input_mins(750),itmpltix(750)
-      integer ifhmax,inphr,inpmin,ict,i,ifa,ifma,icma,ira,inpltix,ila
-      real    xminfract
+    integer, parameter :: iunit_fh = 15
+    integer            :: itmphrs(750), itmpmins(750), input_mins(750), itmpltix(750)
+    integer            :: ifhmax, inphr, inpmin, ict, i, ifa, ifma, icma, ira, inpltix, ila
+    real               :: xminfract
 
       itmphrs  = -99
       itmpmins = -99
@@ -26778,11 +25569,11 @@ c      defined in module def_vitals)
 
       implicit none
 
-      logical(1) :: vit_file_exists
-      type (tcvcard) tmpstorm(maxstorm_tc)
-      type (trackstuff) trkrinfo
-      integer    isa,issa,ioa,iaa,ita,iret,ict,maxstorm
-      integer    i,ii,lucard,numtcv
+    type (tcvcard)    :: tmpstorm(maxstorm_tc)
+    type (trackstuff) :: trkrinfo
+    logical(1)        :: vit_file_exists
+    integer           :: isa, issa, ioa, iaa, ita, iret, ict, maxstorm
+    integer           :: i, ii, lucard, numtcv
 c------
 
       ! Check to see if the TC Vitals file exists.  If so, then open it
@@ -27157,11 +25948,11 @@ c
 
       implicit none
 
-      type (gencard) tmpstorm(maxstorm_mg)
-      type (trackstuff) trkrinfo
-      logical(1) :: vit_file_exists
-      integer    iret,maxstorm
-      integer    i,ii,lgvcard,numtcv,num_mod_vit,vitix,iga
+    type (gencard)    :: tmpstorm(maxstorm_mg)
+    type (trackstuff) :: trkrinfo
+    logical(1)        :: vit_file_exists
+    integer           :: iret, maxstorm
+    integer           :: i, ii, lgvcard, numtcv, num_mod_vit, vitix, iga
 c------
 
       ! Check to see if the genesis TC Vitals file exists.  If so, then
@@ -27383,34 +26174,34 @@ c
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      type (datecard) inp
+    type (trackstuff) :: trkrinfo
+    type (datecard)   :: inp
+    type(gribfield)   :: gfld
 
-      type(gribfield) :: gfld
-      logical(1) :: need_to_flip_lats,need_to_flip_lons
-      logical(1), allocatable :: lb(:)
-      logical :: unpack=.true.
-      logical :: open_grb=.false.
-      CHARACTER(len=8) :: pabbrev
-      character(*) :: gm_wrap_flag
-      integer,dimension(200) :: jids,jpdt,jgdt
-      integer, parameter :: jf=40000000
-      integer :: listsec1(13)
-      integer   pdt_4p0_vert_level,pdt_4p0_vtime
-      real      xhold,xlondiff,xlatdiff,temp,firstval,lastval
-      real, allocatable :: f(:)
-      real, allocatable :: tmplon(:),tmplat(:)
-      real, intent(out) :: dx,dy
-      integer   jpds(200),jgds(200),igetpds(200),igetgds(200)
-      integer, intent(in)  :: ifh
-      integer, intent(out) :: imax,jmax
-      integer   iia,ija,ila,midi,midj,i,j,iix,jix,ifa,iret
-      integer   iscanflag,iggret,kf,k,lugb,lugi,jskp,jdisc
-      integer   jpdtn,jgdtn,npoints,icount,ipack,krec
-      integer :: listsec0(2)=(/0,2/)
-      integer :: igds(5)=(/0,0,0,0,0/),previgds(5)
-      integer :: idrstmpl(200)
-      integer :: currlen=1000000
+    logical(1)               :: need_to_flip_lats, need_to_flip_lons
+    logical(1), allocatable  :: lb(:)
+    logical                  :: unpack = .true.
+    logical                  :: open_grb = .false.
+    character(len=8)         :: pabbrev
+    character(*)             :: gm_wrap_flag
+    integer, dimension(200)  :: jids, jpdt, jgdt
+    integer, parameter       :: jf = 40000000
+    integer                  :: listsec1(13)
+    integer                  :: pdt_4p0_vert_level, pdt_4p0_vtime
+    real                     :: xhold, xlondiff, xlatdiff, temp, firstval, lastval
+    real, allocatable        :: f(:)
+    real, allocatable        :: tmplon(:), tmplat(:)
+    real, intent(out)        :: dx, dy
+    integer                  :: jpds(200), jgds(200), igetpds(200), igetgds(200)
+    integer, intent(in)      :: ifh
+    integer, intent(out)     :: imax, jmax
+    integer                  :: iia, ija, ila, midi, midj, i, j, iix, jix, ifa, iret
+    integer                  :: iscanflag, iggret, kf, k, lugb, lugi, jskp, jdisc
+    integer                  :: jpdtn, jgdtn, npoints, icount, ipack, krec
+    integer                  :: listsec0(2) = (/0,2/)
+    integer                  :: igds(5) = (/0,0,0,0,0/), previgds(5)
+    integer                  :: idrstmpl(200)
+    integer                  :: currlen = 1000000
 
       iggret = 0
 
@@ -28157,21 +26948,21 @@ c
 
       implicit none
 c
-      type (trackstuff) trkrinfo
-      type (netcdfstuff) netcdfinfo
-      type (datecard) inp
+    type (trackstuff)  :: trkrinfo
+    type (netcdfstuff) :: netcdfinfo
+    type (datecard)    :: inp
 
-      logical(1) :: need_to_flip_lats,need_to_flip_lons
-      real      xhold,xlondiff,xlatdiff
-      real, allocatable :: tmplon(:),tmplat(:)
-      real(kind=4), allocatable :: temp_tmplon4(:),temp_tmplat4(:)
-      real(kind=8), allocatable :: temp_tmplon8(:),temp_tmplat8(:)
-      real, intent(out) :: dx,dy
-      integer   iscanflag,iggret
-      integer, intent(in)  :: ncfile_id
-      integer, intent(out) :: imax,jmax
-      integer :: iia,ija,midi,midj,i,j,iix,jix,xtype,ignrret
-      integer :: ii4a,ii8a,ij4a,ij8a
+    logical(1)                :: need_to_flip_lats, need_to_flip_lons
+    real                      :: xhold, xlondiff, xlatdiff
+    real, allocatable         :: tmplon(:), tmplat(:)
+    real(kind=4), allocatable :: temp_tmplon4(:), temp_tmplat4(:)
+    real(kind=8), allocatable :: temp_tmplon8(:), temp_tmplat8(:)
+    real, intent(out)         :: dx, dy
+    integer                   :: iscanflag, iggret
+    integer, intent(in)       :: ncfile_id
+    integer, intent(out)      :: imax, jmax
+    integer                   :: iia, ija, midi, midj, i, j, iix, jix, xtype, ignrret
+    integer                   :: ii4a, ii8a, ij4a, ij8a
 c
       iggret = 0
 
@@ -28502,12 +27293,14 @@ c
 c
       type (netcdfstuff) netcdfinfo
 
-      character :: ncfile*180,ncfile_has_hour0*1,match_check*1
+    type (netcdfstuff) :: netcdfinfo
+
+    character                 :: ncfile*180, ncfile_has_hour0*1, match_check*1
       real(kind=4), allocatable :: temp_nc_time_vals_r4(:)
       real(kind=8), allocatable :: temp_nc_time_vals_r8(:)
-      integer, intent(in)  :: ncfile_id
-      integer, intent(out) :: ncfile_tmax
-      integer :: infta,k,m,n,ifhmax,irnhret,usertime,xtype,ignrret
+    integer, intent(in)       :: ncfile_id
+    integer, intent(out)      :: ncfile_tmax
+    integer                   :: infta, k, m, n, ifhmax, irnhret, usertime, xtype, ignrret
 c
 
       irnhret = 0
@@ -28772,21 +27565,15 @@ c              data.
 
       implicit none
 c
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      integer    imax,jmax,ifix,jfix
-      integer    ifilret,icvpret
-      character(*)  cmaxmin
-      logical(1) valid_pt(imax,jmax)
-      real       fxy(imax,jmax)
-      real       rlont,rlatt,xdum,gridpoint_maxmin
-      real       dx,dy,grid_maxlat,grid_minlat,grid_maxlon,grid_minlon
-c
-      call fix_latlon_to_ij (imax,jmax,dx,dy,fxy,cmaxmin
-     &        ,valid_pt,rlont,rlatt
-     &        ,xdum,ifix,jfix,gridpoint_maxmin,'checker'
-     &        ,'checker',grid_maxlat,grid_minlat,grid_maxlon,grid_minlon
-     &        ,trkrinfo,ifilret)
+    integer      :: imax, jmax, ifix, jfix
+    integer      :: ifilret, icvpret
+    character(*) :: cmaxmin
+    logical(1)   :: valid_pt(imax,jmax)
+    real         :: fxy(imax,jmax)
+    real         :: rlont, rlatt, xdum, gridpoint_maxmin
+    real         :: dx, dy, grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
 
       if (ifilret /= 0) then
         icvpret = 99
@@ -28873,16 +27660,16 @@ c              gridpoint.
 
       implicit none
 c
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      integer    imax,jmax,istart,iend,jstart,jend,ifix,jfix
-      integer    ipfix,jpfix,i,j,ifilret,iix,jix,grfact
-      character(*)  cmaxmin,ccall,stopcheck
-      logical(1) valid_pt(imax,jmax)
-      real       fxy(imax,jmax)
-      real       parmlon,parmlat,xdataval,gridpoint_maxmin
-      real       xplon,yplat,dmin,dmax,dx,dy,grdspc
-      real       grid_maxlat,grid_minlat,grid_maxlon,grid_minlon
+    integer      :: imax, jmax, istart, iend, jstart, jend, ifix, jfix
+    integer      :: ipfix, jpfix, i, j, ifilret, iix, jix, grfact
+    character(*) :: cmaxmin, ccall, stopcheck
+    logical(1)   :: valid_pt(imax,jmax)
+    real         :: fxy(imax,jmax)
+    real         :: parmlon, parmlat, xdataval, gridpoint_maxmin
+    real         :: xplon, yplat, dmin, dmax, dx, dy, grdspc
+    real         :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
 
       ifilret = 0
 
@@ -29206,14 +27993,14 @@ c
 
       implicit none
 
-      dimension cosfac(jmax),tanfac(jmax)
-      real      tmpzeta(imax,jmax)
-      real      xlondiff,xlatdiff,dlon,dlat,dfix
-      real      dlat_edge,dlat_inter,dlon_edge,dlon_inter
-      real      rlat(jmax),cosfac,tanfac
-      integer   z,iscanflag,nlat,nlon,i,j,imax,jmax,w
-      integer   ii,jj
-      logical(1) vp(imax,jmax)
+    dimension  :: cosfac(jmax), tanfac(jmax) !CAITLYN - i still have never seen this data type
+    real       :: tmpzeta(imax,jmax)
+    real       :: xlondiff, xlatdiff, dlon, dlat, dfix
+    real       :: dlat_edge, dlat_inter, dlon_edge, dlon_inter
+    real       :: rlat(jmax), cosfac, tanfac
+    integer    :: z, iscanflag, nlat, nlon, i, j, imax, jmax, w
+    integer    :: ii, jj
+    logical(1) :: vp(imax,jmax)
 
 c     --------------------------
 
@@ -29531,16 +28318,16 @@ c
 
       implicit none
 
-      real, parameter :: xsmalldiff = 0.0
-      dimension cosfac(jmax),tanfac(jmax)
+    real, parameter   :: xsmalldiff = 0.0
+    dimension         :: cosfac(jmax),tanfac(jmax)
       real, allocatable :: div(:,:)
-      real      divx4(imax,jmax)
-      real      xlondiff,xlatdiff,dlon,dlat,dfix
-      real      dlat_edge,dlat_inter,dlon_edge,dlon_inter
-      real      rlat(jmax),cosfac,tanfac
-      integer   nlat,nlon,i,j,imax,jmax,w
-      integer   ii,jj,idvcret,ida
-      logical(1) vp(imax,jmax)
+    real              :: divx4(imax,jmax)
+    real              :: xlondiff, xlatdiff, dlon, dlat, dfix
+    real              :: dlat_edge, dlat_inter, dlon_edge, dlon_inter
+    real              :: rlat(jmax), cosfac, tanfac
+    integer           :: nlat, nlon, i, j, imax, jmax, w
+    integer           :: ii, jj, idvcret, ida
+    logical(1)        :: vp(imax,jmax)
 c
       if (allocated(div)) deallocate (div)
       allocate (div(imax,jmax),stat=ida)
@@ -29859,14 +28646,15 @@ c     LOCAL:
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      integer   ist,ifh,imax,jmax,maxstorm,igsvret,npts,bskip,icut
-      integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igiret,icutmax
-      integer   icount,ibret
-      real      xarray(imax,jmax)
-      real      re,ri,xsmoothval,xcenlon,xcenlat,dx,dy,reold,riold
-      logical(1) valid_pt(imax,jmax)
-      character*1 :: in_grid
+    type (trackstuff) :: trkrinfo
+
+    integer      :: ist, ifh, imax, jmax, maxstorm, igsvret, npts, bskip, icut
+    integer      :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret, icutmax
+    integer      :: icount, ibret
+    real         :: xarray(imax,jmax)
+    real         :: re, ri, xsmoothval, xcenlon, xcenlat, dx, dy, reold, riold
+    logical(1)   :: valid_pt(imax,jmax)
+    character*1  :: in_grid
       character(*) :: cvar
 
       xsmoothval = -9999.0
@@ -30077,15 +28865,16 @@ c     LOCAL:
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      integer   ist,ifh,imax,jmax,maxstorm,igsvret,npts,bskip,icut
-      integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igiret,icutmax
-      integer   icount,ibret,imrhf,ichrret,icmlret,ip,igrhret
+    type (trackstuff) :: trkrinfo
+    
+    integer           :: ist, ifh, imax, jmax, maxstorm, igsvret, npts, bskip, icut
+    integer           :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret, icutmax
+    integer           :: icount, ibret, imrhf, ichrret, icmlret, ip, igrhret
       real, allocatable :: mean_rh(:,:)
-      real      re,ri,xsmoothval,xcenlon,xcenlat,dx,dy,reold,riold
-      real      rh_1000_925_smooth,rh_800_600_smooth
-      character :: already_computed_domain_wide_rh*1
-      logical(1) valid_pt(imax,jmax),readgenflag(nreadgenparms)
+    real              :: re, ri, xsmoothval, xcenlon, xcenlat, dx, dy, reold, riold
+    real              :: rh_1000_925_smooth, rh_800_600_smooth
+    character         :: already_computed_domain_wide_rh*1
+    logical(1)        :: valid_pt(imax,jmax), readgenflag(nreadgenparms)
 c
       if (allocated(mean_rh)) deallocate (mean_rh)
       allocate (mean_rh(imax,jmax),stat=imrhf)
@@ -30221,19 +29010,19 @@ c     LOCAL:
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      real, parameter :: rd_over_rv=0.622
-      real, parameter :: l_over_rv_water=5423.0
-      real, parameter :: l_over_rv_ice=6139.0
-      real, parameter :: one_over_tnot=0.003663  ! (1/273)
-      real, parameter :: eo=0.611
-      real, parameter :: b=17.2694
-      real, parameter :: t1=273.16
-      real, parameter :: t2=35.86
-      integer   ist,ifh,imax,jmax,maxstorm,ichrret,ip,qix,tix,i,j
-      integer   z,x999ct,rhgt100ct
-      real      dx,dy,penv,es,qs,xminrh,xmaxrh
-      logical(1) valid_pt(imax,jmax),readgenflag(nreadgenparms)
+    type (trackstuff) :: trkrinfo
+    real, parameter   :: rd_over_rv = 0.622
+    real, parameter   :: l_over_rv_water = 5423.0
+    real, parameter   :: l_over_rv_ice = 6139.0
+    real, parameter   :: one_over_tnot = 0.003663  ! (1/273)
+    real, parameter   :: eo = 0.611
+    real, parameter   :: b = 17.2694
+    real, parameter   :: t1 = 273.16
+    real, parameter   :: t2 = 35.86
+    integer           :: ist, ifh, imax, jmax, maxstorm, ichrret, ip, qix, tix, i, j
+    integer           :: z, x999ct, rhgt100ct
+    real              :: dx, dy, penv, es, qs, xminrh, xmaxrh
+    logical(1)        :: valid_pt(imax,jmax), readgenflag(nreadgenparms)
 c
       select case (ip)
         case (2); z=1; qix=9;  tix=16; penv=100.0;
@@ -30389,17 +29178,18 @@ c     LOCAL:
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff)    :: trkrinfo
+    
       integer, allocatable :: point_ct(:,:)
-      integer   ist,ifh,imax,jmax,maxstorm,igsvret,npts,bskip,icut
-      integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igiret,icutmax
-      integer   icount,ibret,z,zstart,zend,ipc,icmlret,i,j
-      real      xmean_arr(imax,jmax)
-      real      re,ri,xsmoothval,xcenlon,xcenlat,dx,dy,reold,riold
-      real      xmaxrh,xminrh
-      logical(1) valid_pt(imax,jmax)
-      character*1 :: in_grid
-      character(*) :: clevstr,cvar
+    integer              :: ist, ifh, imax, jmax, maxstorm, igsvret, npts, bskip, icut
+    integer              :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret, icutmax
+    integer              :: icount, ibret, z, zstart, zend, ipc, icmlret, i, j
+    real                 :: xmean_arr(imax,jmax)
+    real                 :: re, ri, xsmoothval, xcenlon, xcenlat, dx, dy, reold, riold
+    real                 :: xmaxrh, xminrh
+    logical(1)           :: valid_pt(imax,jmax)
+    character*1          :: in_grid
+    character(*)         :: clevstr, cvar
 c
       if (allocated(point_ct)) deallocate(point_ct)
       allocate (point_ct(imax,jmax),stat=ipc)
@@ -30490,40 +29280,8 @@ c     &             ,point_ct(i,j)
       deallocate (point_ct)
 c
       return
-      end
-c
-c---------------------------------------------------------------------
-c
-c---------------------------------------------------------------------
-      subroutine thickness_calc (imax,jmax,vp)
-c
-c     ABSTRACT: This routine calculates the  thicknesses for three 
-c     different layers: 200-500, 500-850 and 200-850 mb.
-c
-c     LOCAL VARIABLES:
-c
-      USE tracked_parms; USE verbose_output
-
-      implicit none
-
-      integer   i,j,layer,upper,lower,imax,jmax
-      logical(1) vp(imax,jmax)
-
-c     --------------------------
-
-c     The array indices for the 3 different thickness layers are
-c     as follows:
-c       1: 500-850
-c       2: 200-500
-c       3: 200-850
-c
-c     The array indices for the levels for the 4 different GP height 
-c     arrays (as assigned in subroutine  getdata) are as follows:
-c       1: 850 mb
-c       2: 700 mb
-c       3: 500 mb
-c       4: 200 mb
-
+    integer    :: i, j, layer, upper, lower, imax, jmax
+    logical(1) :: vp(imax,jmax)
 
       do layer = 1,3
 
@@ -30608,21 +29366,21 @@ c     storm    Contains the tcvitals for the storms (module def_vitals)
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      type (cint_stuff) contour_info
+    type (trackstuff) :: trkrinfo
+    type (cint_stuff) :: contour_info
 
-      integer       i,j,n,isstart,ifamret,ibeg,jbeg,iend,jend
-      integer       ifh,maxstorm,imax,jmax,itemp,ifgcret
-      integer       stormct,oldstormct,mm
-      logical(1)    valid_pt(imax,jmax),masked_out(imax,jmax)
-      character(*)  cparm,cmaxmin
-      character(*)  gm_wrap_flag
-      integer       maxmini(maxstorm),maxminj(maxstorm)
-      integer(kind=8)   ssct1,yyct1,yyct2,zzct1,zzct2,zzct3
-      integer(kind=8)   ict,iinvct
-      real          fxy(imax,jmax)
-      real          dmax,dmin,dx,dy,dbuffer,tmp
-      real(kind=8)  xsum,xavg,stdx
+    integer         :: i, j, n, isstart, ifamret, ibeg, jbeg, iend, jend
+    integer         :: ifh, maxstorm, imax, jmax, itemp, ifgcret
+    integer         :: stormct,oldstormct,mm
+    logical(1)      :: valid_pt(imax,jmax), masked_out(imax,jmax)
+    character(*)    :: cparm, cmaxmin
+    character(*)    :: gm_wrap_flag
+    integer         :: maxmini(maxstorm), maxminj(maxstorm)
+    integer(kind=8) :: ssct1, yyct1, yyct2, zzct1, zzct2, zzct3
+    integer(kind=8) :: ict, iinvct
+    real            :: fxy(imax,jmax)
+    real            :: dmax, dmin, dx, dy, dbuffer, tmp
+    real(kind=8)    :: xsum, xavg, stdx
 
       if ( verb .ge. 3 ) then
         print *,' '
@@ -31124,43 +29882,44 @@ c     ifamret  return code from this subroutine
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      type (cint_stuff) contour_info
-      integer    date_time(8)
-      integer    stormct,i,j,ibeg,iend,jbeg,jend,ix,jx,ixp1,ixm1
-      integer    igiret,bskip,ibeg_sm,iend_sm,jbeg_sm,jend_sm
-      integer    ip,jp,maxstorm,jxp1,jxm1,ifamret,isret,iaret,iclmret
-      integer    isoiret,icccret,igicwret,imax,jmax,ifh,totpts,kct
-      integer    eligible_pts,isia,ipa,candidate_ct,ist,ict,iia,ija,imsa
-      integer    icmrgret,cand_not_valid_ct,cand_masked_out_ct,ivsa
-      integer    cand_cc_good_ct,cand_cc_bad_ct,iccwcret,icvpret,isla
-      integer    ilonfix,jlatfix,icount,npts,nhalf,igsvret,ibret,isaa
-      integer    compute_ct,num_smooth_iter,k,maxip,maxjp,cmrg_fail_ct
-      integer    int_vtq_ne,int_vtq_se,int_vtq_sw,int_vtq_nw
-      integer(kind=8)    ssct1,yyct1,yyct2,zzct1,zzct2,zzct3
-      character (len=10) big_ben(3)
-      character ccflag*1,get_last_isobar_flag*1,point_is_over_water*1
-      character pass_checks*1,low_level_wind_circ_flag*1
-      character try_low_level_circ*1,maxmin*3,cvar*3
-      character(*) cmaxmin
-      character(*) gm_wrap_flag
-      logical(1) still_finding_valid_maxmins,rough_gradient_check_okay
-      logical(1) valid_pt(imax,jmax),masked_out(imax,jmax)
-      logical(1) pt_eligible(imax,jmax)
-      logical(1), allocatable :: slp_valid_pt(:,:),valid_smoothe(:,:)
-      integer    maxmini(maxstorm),maxminj(maxstorm)
-      integer, allocatable :: sortindex(:),ipos(:),jpos(:)
-      integer, parameter  :: dp = selected_real_kind(12, 60)
-      real (dp), allocatable ::  prstemp(:)
-      real, allocatable :: mslp_smoothe(:,:),slp_array(:,:)
-      real, intent(in) :: fxy(imax,jmax)
-      real       realmask(imax,jmax)
-      real       vtquadmax(4)
-      real       search_cutoff,dmin,dmax,sphere_cutoff
-      real       plastbar,rlastbar,fract_land,dx,dy
-      real       xmlat,xmlon,ylat,xlon,xsmoothval
-      real       wgt1,wgt3,wgt5,wgt7,wgt9,sdiff,maxmslpsmooth
-      real(kind=8)  xavg,stdv
+    type (trackstuff) :: trkrinfo
+    type (cint_stuff) :: contour_info
+    
+    integer                 :: date_time(8)
+    integer                 :: stormct, i, j, ibeg, iend, jbeg, jend, ix, jx, ixp1, ixm1
+    integer                 :: igiret, bskip, ibeg_sm, iend_sm, jbeg_sm, jend_sm
+    integer                 :: ip, jp, maxstorm, jxp1, jxm1, ifamret, isret, iaret, iclmret
+    integer                 :: isoiret, icccret, igicwret, imax, jmax, ifh, totpts, kct
+    integer                 :: eligible_pts, isia, ipa, candidate_ct, ist, ict, iia, ija, imsa
+    integer                 :: icmrgret, cand_not_valid_ct, cand_masked_out_ct, ivsa
+    integer                 :: cand_cc_good_ct, cand_cc_bad_ct, iccwcret, icvpret, isla
+    integer                 :: ilonfix, jlatfix, icount, npts, nhalf, igsvret, ibret, isaa
+    integer                 :: compute_ct, num_smooth_iter, k, maxip, maxjp, cmrg_fail_ct
+    integer                 :: int_vtq_ne, int_vtq_se, int_vtq_sw, int_vtq_nw
+    integer(kind=8)         :: ssct1, yyct1, yyct2, zzct1, zzct2, zzct3
+    character(len=10)       :: big_ben(3)
+    character               :: ccflag*1, get_last_isobar_flag*1, point_is_over_water*1
+    character               :: pass_checks*1, low_level_wind_circ_flag*1
+    character               :: try_low_level_circ*1, maxmin*3, cvar*3
+    character(*)            :: cmaxmin
+    character(*)            :: gm_wrap_flag
+    logical(1)              :: still_finding_valid_maxmins, rough_gradient_check_okay
+    logical(1)              :: valid_pt(imax,jmax), masked_out(imax,jmax)
+    logical(1)              :: pt_eligible(imax,jmax)
+    logical(1), allocatable :: slp_valid_pt(:,:), valid_smoothe(:,:)
+    integer                 :: maxmini(maxstorm), maxminj(maxstorm)
+    integer, allocatable    :: sortindex(:), ipos(:), jpos(:)
+    integer, parameter      :: dp = selected_real_kind(12, 60)
+    real(dp), allocatable   ::  prstemp(:)
+    real, allocatable       :: mslp_smoothe(:,:), slp_array(:,:)
+    real, intent(in)        :: fxy(imax,jmax)
+    real                    :: realmask(imax,jmax)
+    real                    :: vtquadmax(4)
+    real                    :: search_cutoff, dmin, dmax, sphere_cutoff
+    real                    :: plastbar, rlastbar, fract_land, dx, dy
+    real                    :: xmlat, xmlon, ylat, xlon, xsmoothval
+    real                    :: wgt1, wgt3, wgt5, wgt7, wgt9, sdiff, maxmslpsmooth
+    real(kind=8)            :: xavg, stdv
 
 c-----
       still_finding_valid_maxmins = .true.
@@ -32130,29 +30889,22 @@ c              what GM-wrapping setting to use.
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      character  one_radial_mslp_depth_flag*1
-      character  continuous_gradient_flag*1
-      character(*)  gm_wrap_flag
-      integer, parameter :: distmax=11,num_azim=8
-      integer  imax,jmax,ip,jp,idist,ilevint,bimct,iazim,ifh99,iquadct
-      integer  iazim_good_depth_ct,ibiret1,icmrgret,i,j
-      integer  iazim_full_dist_ct
-      real, intent(in) :: fxy(imax,jmax)
-      real     max_radial_grad_dist(num_azim)
-      real     rdist(distmax)
-      real     dx,dy,bear,xmlat,xmlon,targlat,targlon,xintrp_mslp
-      real     xcent_mslpval,xmslp_thresh,xmslp_noise
-      real     xnext_radially_inward_mslpval
-      logical(1) valid_pt(imax,jmax)
-
-c      data rdist/75.,100.,125.,150.,175.,200.,250.,300./
-c      data rdist/5.,10.,15.,20.,25.,30.,35.,40.,50.,75.,100.,125.,150.
-c     &          ,175.,200./
-c      data rdist/5.,10.,15.,20.,25.,30.,35.,40.,50.,60.,75.,100./
-      data rdist/10.,15.,20.,25.,30.,35.,40.,50.,60.,75.,100./
-c      data rdist/5.,10.,15.,20.,25.,30.,35.,40.,50.,60.,75./
+    character          :: one_radial_mslp_depth_flag*1
+    character          :: continuous_gradient_flag*1
+    character(*)       :: gm_wrap_flag
+    integer, parameter :: distmax = 11, num_azim = 8
+    integer            :: imax, jmax, ip, jp, idist, ilevint, bimct, iazim, ifh99, iquadct
+    integer            :: iazim_good_depth_ct, ibiret1, icmrgret, i, j
+    integer            :: iazim_full_dist_ct
+    real, intent(in)   :: fxy(imax,jmax)
+    real               :: max_radial_grad_dist(num_azim)
+    real               :: rdist(distmax)
+    real               :: dx, dy, bear, xmlat, xmlon, targlat, targlon, xintrp_mslp
+    real               :: xcent_mslpval, xmslp_thresh, xmslp_noise
+    real               :: xnext_radially_inward_mslpval
+    logical(1)         :: valid_pt(imax,jmax)
 
       ilevint = 1020  ! This is an input to bilin_int_uneven.  In this
                       ! case, the number does not really matter, since
@@ -32576,27 +31328,27 @@ c     iccwcret  return code from this subroutine
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      integer, parameter :: numdist=3,numazim=16,numquad=4
-      integer, intent(in) :: ip,jp
-      integer   vt_exceed_17kts_ct(numquad,numdist)
-      integer   vtct(numquad,numdist)
-      integer   date_time(8)
-      integer   imax,jmax,idist,azimuth_ct,ibiret1,ibiret2,bimct,iq,nq
-      integer   final_quad_full_vt_ct,iccwcret,iazim,igvtret,ifh
-      integer   final_quad_half_vt_ct,final_quad_sum_ct
-      real      xcandlon,ycandlat
-      real      rdist(numdist)
-      real      vtsum(numquad,numdist),vtquadmax(numquad)
-      real      dx,dy,bear,targlat,targlon,xintrp_u,xintrp_v,vr,vt
-      real      hemisphere,vtavg,full_vt_thresh,half_vt_thresh
-      character :: low_level_wind_circ_flag*1
-      character :: quad_pass_flag(numquad)*1
-      character :: quad_pass_half_vt_flag(numquad)*1
-      character (*)  gm_wrap_flag
-      character (*)  tracker_application
-      logical(1) valid_pt(imax,jmax)
+    integer, parameter  :: numdist = 3, numazim = 16, numquad = 4
+    integer, intent(in) :: ip, jp
+    integer             :: vt_exceed_17kts_ct(numquad,numdist)
+    integer             :: vtct(numquad,numdist)
+    integer             :: date_time(8)
+    integer             :: imax, jmax, idist, azimuth_ct, ibiret1, ibiret2, bimct, iq, nq
+    integer             :: final_quad_full_vt_ct, iccwcret, iazim, igvtret, ifh
+    integer             :: final_quad_half_vt_ct, final_quad_sum_ct
+    real                :: xcandlon, ycandlat
+    real                :: rdist(numdist)
+    real                :: vtsum(numquad,numdist), vtquadmax(numquad)
+    real                :: dx, dy, bear, targlat, targlon, xintrp_u, xintrp_v, vr, vt
+    real                :: hemisphere, vtavg, full_vt_thresh, half_vt_thresh
+    character           :: low_level_wind_circ_flag*1
+    character           :: quad_pass_flag(numquad)*1
+    character           :: quad_pass_half_vt_flag(numquad)*1
+    character(*)        :: gm_wrap_flag
+    character(*)        :: tracker_application
+    logical(1)          :: valid_pt(imax,jmax)
 c
       data rdist/75.,125.,175./  ! Distances in km
 c
@@ -32843,20 +31595,20 @@ c              which GM-wrapping setting to use.
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      character(*)  cmodel_type
-      character(*)  gm_wrap_flag
-      integer, parameter :: numazim=24
-      integer    imax,jmax,level,imbowret,nlev,iazim,i,j
-      integer    ibiret1,ibiret2,azimuth_ct,igvtret
-      integer    jnfix,jsfix,iefix,iwfix,bimct,ifh
-      real       vr(numazim),vt(numazim)
-      real       dx,dy,ctlon,ctlat,rdist,bear,targlat,targlon
-      real       xintrp_u,xintrp_v,grid_buffer,xmax_rdist_reached
-      real       vt_mean,vt_azim_sum,xbear,dist,degrees
-      logical(1) valid_pt(imax,jmax),masked_outc(imax,jmax)
-      logical(1) searching_valid_pts
+    character(*)       :: cmodel_type
+    character(*)       :: gm_wrap_flag
+    integer, parameter :: numazim = 24
+    integer            :: imax, jmax, level, imbowret, nlev, iazim, i, j
+    integer            :: ibiret1, ibiret2, azimuth_ct, igvtret
+    integer            :: jnfix, jsfix, iefix, iwfix, bimct, ifh
+    real               :: vr(numazim), vt(numazim)
+    real               :: dx, dy, ctlon, ctlat, rdist, bear, targlat, targlon
+    real               :: xintrp_u, xintrp_v, grid_buffer, xmax_rdist_reached
+    real               :: vt_mean, vt_azim_sum, xbear, dist, degrees
+    logical(1)         :: valid_pt(imax,jmax), masked_outc(imax,jmax)
+    logical(1)         :: searching_valid_pts
 
       imbowret = 0
 
@@ -33340,43 +32092,43 @@ c              not if we just delete them now.
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      type (cint_stuff) contour_info
+    type (trackstuff) :: trkrinfo
+    type (cint_stuff) :: contour_info
 
-      integer    i,j,ir,iria,irja,irx,jrx,ix,jx,imax,jmax
-      integer    nb,ibx,jby,nct,iflip
-      integer    mr,ringct,ixp1,ixm1,jxp1,jxm1,nring,iter
-      integer    icenx,jcenx,icccret,next_ring_ct,igicwret
-      integer    num_pts_in_all_contours,next_contour_ct
-      integer    beyond_contour_ct
-      integer(kind=8)    zzct1,zzct2,zzct3
-      integer    num_pts_in_one_contour
-      integer    num_requested_contours,num_found_contours
-      integer    nm,im,jm,inall,insingle,isc_count,rlast_distct
-      character  found_a_point_in_our_contour*1,closed_contour*1
-      character  found_a_point_below_contour*1
-      character  found_a_point_above_contour*1,get_last_isobar_flag*1
-      character(*) cmaxmin
-      logical(1) still_scanning
-      logical(1) valid_pt(imax,jmax),masked_out(imax,jmax)
-      logical(1) point_is_already_in_our_contour(imax,jmax)
-      logical(1) point_is_already_in_next_contour(imax,jmax)
-      logical(1) point_is_already_in_beyond_pool(imax,jmax)
-      integer    isni,isnj,inci,incj,ibci,ibcj,ihmi,ihmj,itmi,itmj
-      integer, allocatable ::  search_next_i(:)
-      integer, allocatable ::  search_next_j(:)
-      integer, allocatable ::  next_contour_i(:)
-      integer, allocatable ::  next_contour_j(:)
-      integer, allocatable ::  beyond_contour_i(:)
-      integer, allocatable ::  beyond_contour_j(:)
-      integer, allocatable ::  hold_mask_i_loc(:)
-      integer, allocatable ::  hold_mask_j_loc(:)
-      integer, allocatable ::  temp_mask_i_loc(:)
-      integer, allocatable ::  temp_mask_j_loc(:)
-      integer, allocatable ::  ringposi(:),ringposj(:)
-      real       fxy(imax,jmax),contvals(maxconts)
-      real       contlo,conthi,xcentval,contlo_next,conthi_next
-      real       dist,degrees,rlast_distsum,plastbar,rlastbar
+    integer              :: i, j, ir, iria, irja, irx, jrx, ix, jx, imax, jmax
+    integer              :: nb, ibx, jby, nct, iflip
+    integer              :: mr, ringct, ixp1, ixm1, jxp1, jxm1, nring, iter
+    integer              :: icenx, jcenx, icccret, next_ring_ct, igicwret
+    integer              :: num_pts_in_all_contours, next_contour_ct
+    integer              :: beyond_contour_ct
+    integer(kind=8)      :: zzct1, zzct2, zzct3
+    integer              :: num_pts_in_one_contour
+    integer              :: num_requested_contours, num_found_contours
+    integer              :: nm, im, jm, inall, insingle, isc_count, rlast_distct
+    character            :: found_a_point_in_our_contour*1, closed_contour*1
+    character            :: found_a_point_below_contour*1
+    character            :: found_a_point_above_contour*1, get_last_isobar_flag*1
+    character(*)         :: cmaxmin
+    logical(1)           :: still_scanning
+    logical(1)           :: valid_pt(imax,jmax), masked_out(imax,jmax)
+    logical(1)           :: point_is_already_in_our_contour(imax,jmax)
+    logical(1)           :: point_is_already_in_next_contour(imax,jmax)
+    logical(1)           :: point_is_already_in_beyond_pool(imax,jmax)
+    integer              :: isni, isnj, inci, incj, ibci, ibcj, ihmi, ihmj, itmi, itmj
+    integer, allocatable :: search_next_i(:)
+    integer, allocatable :: search_next_j(:)
+    integer, allocatable :: next_contour_i(:)
+    integer, allocatable :: next_contour_j(:)
+    integer, allocatable :: beyond_contour_i(:)
+    integer, allocatable :: beyond_contour_j(:)
+    integer, allocatable :: hold_mask_i_loc(:)
+    integer, allocatable :: hold_mask_j_loc(:)
+    integer, allocatable :: temp_mask_i_loc(:)
+    integer, allocatable :: temp_mask_j_loc(:)
+    integer, allocatable :: ringposi(:),ringposj(:)
+    real                 :: fxy(imax,jmax), contvals(maxconts)
+    real                 :: contlo, conthi, xcentval, contlo_next, conthi_next
+    real                 :: dist, degrees, rlast_distsum, plastbar, rlastbar
 c
       if (allocated(search_next_i))    deallocate (search_next_i)
       if (allocated(search_next_j))    deallocate (search_next_j)
@@ -34345,18 +33097,17 @@ c
 
       implicit none
 
-      type (trackstuff) trkrinfo
+    type (trackstuff) :: trkrinfo
 
-      integer date_time(8)
-      character (len=10) big_ben(3)
-
-      logical(1) valid_pt(imax,jmax)
-      character  point_is_over_water*1
-      character (*)  gm_wrap_flag
-      integer, parameter :: numazim=8
-      integer  iazim,ibiret1,imax,jmax,ix,jx,iclmret,imct,bimct,ifh
-      real     bear,targlat,targlon,xplon,yplat,rdist,xintrp_mask
-      real     fract_land,dx,dy,xmask_sum
+    integer            :: date_time(8)
+    character(len=10)  :: big_ben(3)
+    logical(1)         :: valid_pt(imax,jmax)
+    character          :: point_is_over_water*1
+    character(*)       :: gm_wrap_flag
+    integer, parameter :: numazim = 8
+    integer            :: iazim, ibiret1, imax, jmax, ix, jx, iclmret, imct, bimct, ifh
+    real               :: bear, targlat, targlon, xplon, yplat, rdist, xintrp_mask
+    real               :: fract_land, dx, dy, xmask_sum
 c
       iclmret = 0
 
@@ -34513,8 +33264,8 @@ c     instead of the meaningless point 0 (i=0).
 
       implicit none
 
-      type (trackstuff) trkrinfo
-      integer   i,j,imax,jmax,iplus1,jplus1,iminus1,jminus1,igicwret
+    type (trackstuff) :: trkrinfo
+    integer           :: i, j, imax, jmax, iplus1, jplus1, iminus1, jminus1, igicwret
 
       igicwret = 0
 
@@ -34598,83 +33349,14 @@ c     instead of the meaningless point 0 (i=0).
       endif
     
       return
-      end
-
-c------------------------------------------------------------------
-c
-c------------------------------------------------------------------
-      SUBROUTINE qsort(x,ind,n)
-c
-c     Code converted using TO_F90 by Alan Miller
-c     Date: 2002-12-18  Time: 11:55:47
-
-      IMPLICIT NONE
-      INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
-
-      REAL (dp), INTENT(IN)  :: x(n)
-      INTEGER, INTENT(OUT)   :: ind(n)
-      INTEGER, INTENT(IN)    :: n
-
-c     ***************************************************************************
-c
-c                                                              ROBERT RENKA
-c                                                      OAK RIDGE NATL. LAB.
-c
-c        THIS SUBROUTINE USES AN ORDER N*LOG(N) QUICK SORT TO SORT A REAL (dp)
-c      ARRAY X INTO INCREASING ORDER.  THE ALGORITHM IS AS FOLLOWS.  IND IS
-c      INITIALIZED TO THE ORDERED SEQUENCE OF INDICES 1,...,N, AND ALL INTERCHANGES
-c      ARE APPLIED TO IND.  X IS DIVIDED INTO TWO PORTIONS BY PICKING A CENTRAL
-c      ELEMENT T.  THE FIRST AND LAST ELEMENTS ARE COMPARED WITH T, AND
-c      INTERCHANGES ARE APPLIED AS NECESSARY SO THAT THE THREE VALUES ARE IN
-c      ASCENDING ORDER.  INTERCHANGES ARE THEN APPLIED SO THAT ALL ELEMENTS
-c      GREATER THAN T ARE IN THE UPPER PORTION OF THE ARRAY AND ALL ELEMENTS
-c      LESS THAN T ARE IN THE LOWER PORTION.  THE UPPER AND LOWER INDICES OF ONE
-c      OF THE PORTIONS ARE SAVED IN LOCAL ARRAYS, AND THE PROCESS IS REPEATED
-c      ITERATIVELY ON THE OTHER PORTION.  WHEN A PORTION IS COMPLETELY SORTED,
-c      THE PROCESS BEGINS AGAIN BY RETRIEVING THE INDICES BOUNDING ANOTHER
-c      UNSORTED PORTION.
-c
-c      INPUT PARAMETERS -   N - LENGTH OF THE ARRAY X.
-c
-c                           X - VECTOR OF LENGTH N TO BE SORTED.
-c
-c                         IND - VECTOR OF LENGTH >= N.
-c
-c      N AND X ARE NOT ALTERED BY THIS ROUTINE.
-c
-c      OUTPUT PARAMETER - IND - SEQUENCE OF INDICES 1,...,N PERMUTED IN THE SAME
-c                               FASHION AS X WOULD BE.  THUS, THE ORDERING ON
-c                               X IS DEFINED BY Y(I) = X(IND(I)).
-c
-c     *********************************************************************
-
-      ! NOTE -- IU AND IL MUST BE DIMENSIONED >= LOG(N) WHERE LOG HAS BASE 2.
-
-      !*********************************************************************
-
-      INTEGER   :: iu(21), il(21)
-      INTEGER   :: m, i, j, k, l, ij, it, itt, indx
-      REAL      :: r
-      REAL (dp) :: t
-
-      ! LOCAL PARAMETERS -
-
-      ! IU,IL =  TEMPORARY STORAGE FOR THE UPPER AND LOWER
-      !            INDICES OF PORTIONS OF THE ARRAY X
-      ! M =      INDEX FOR IU AND IL
-      ! I,J =    LOWER AND UPPER INDICES OF A PORTION OF X
-      ! K,L =    INDICES IN THE RANGE I,...,J
-      ! IJ =     RANDOMLY CHOSEN INDEX BETWEEN I AND J
-      ! IT,ITT = TEMPORARY STORAGE FOR INTERCHANGES IN IND
-      ! INDX =   TEMPORARY INDEX FOR X
-      ! R =      PSEUDO RANDOM NUMBER FOR GENERATING IJ
-      ! T =      CENTRAL ELEMENT OF X
-
-      IF (n <= 0) RETURN
-
-      ! INITIALIZE IND, M, I, J, AND R
-
-      DO  i = 1, n
+    integer, parameter   :: dp = SELECTED_REAL_KIND(12, 60)
+    real(dp), intent(in) :: x(n)
+    integer, intent(out) :: ind(n)
+    integer, intent(in)  :: n
+    integer              :: iu(21), il(21) ! must be dimensioned >= log(n) where log has base 2
+    integer              :: m, i, j, k, l, ij, it, itt, indx
+    real                 :: r
+    real(dp)             :: t
         ind(i) = i
       END DO
       m = 1
