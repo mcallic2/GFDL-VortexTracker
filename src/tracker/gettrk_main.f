@@ -6985,7 +6985,8 @@ c      shear(ist,ifh,2) = shear_dir_from
             ' shear(ist,ifh,1) = shear_mag = ', shear(ist,ifh,1)
       print '(2x,22x,a40,f8.2)', ' shear(ist,ifh,2) = shear_dir_point_to = ', shear(ist,ifh,2)
 
-  end subroutine get_ike_stats
+  end subroutine get_shear
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine calls a routine to create an
@@ -9312,6 +9313,10 @@ c          print *,'   ---> ifh= ',ifh
   !*      intlat      :: integer that holds the value of outlat*10
   !*
   !****************************************************************************
+  subroutine output_fract_wind (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour,    &
+                               & vmaxwind, xminmslp, wfract_cov, wfract_type, pdf_ct_bin, &
+                               & pdf_ct_tot, maxstorm, iofwret)
+
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
 
     type (datecard)    :: inp
@@ -11919,6 +11924,9 @@ c     ------------------------------------------------------------------
   !*                  identifying when this subroutine is malfunctioning.
   !*
   !****************************************************************************
+  subroutine getradii (xcenlon, xcenlat, imax, jmax, dx, dy, valid_pt, cstormid, ifcsthr, vmaxwind, vradius, &
+                      & trkrinfo, need_to_expand_r34, radmax, first_time_thru_getradii, igrct, igrret)
+
     use grid_bounds; use tracked_parms;  use trig_vals;
     use trkrparms;   use verbose_output; use level_parms
     type (trackstuff) :: trkrinfo
