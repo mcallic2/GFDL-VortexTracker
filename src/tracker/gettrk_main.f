@@ -79,6 +79,21 @@ c
     use shear_diags;   use genesis_diags;  use sst_diags;     use atcf;
     use read_parms;    use radii;          use trig_vals;     use tracking_parm_prefs;
 
+    type (datecard)    :: inp
+    type (trackstuff)  :: trkrinfo,gb_check_trkrinfo
+    type (netcdfstuff) :: netcdfinfo
+    type (cint_stuff)  :: contour_info
+
+    character, allocatable    :: closed_mslp_ctr_flag(:,:)*1
+    character, allocatable    :: closed_mslp_ctr_flag2(:,:)*1
+    character, allocatable    :: quad_wind_circ_flag(:,:)*1
+    character, allocatable    :: vt850_flag(:,:)*1
+    character                 :: r34_check_okay*1, had_to_try_backup_850_vt_check*1
+    character(len=1)          :: need_to_expand_r34(4)*1, ncfile_has_hour0
+    character                 :: already_computed_domain_wide_rh*1, gm_wrap_flag*21
+    character                 :: low_level_wind_circ_flag*1
+    character*(*), intent(in) :: ncfile
+    character*(*), intent(in) :: nc_lsmask_file
     character                 :: cvort_maxmin*3, isastorm(3)*1, ccflag*1, gotten_avg_value*1
     character                 :: cmaxmin*3, get_last_isobar_flag*1, wcore_flag*1
     character                 :: gfilename*120, ifilename*120, gridmove_status*7
@@ -89,7 +104,7 @@ c
 
     integer, parameter   :: numdist = 14, numquad = 4, lout = 51
     integer, parameter   :: num_r34_bins = 353
-      integer, allocatable :: prsindex(:)
+    integer, allocatable :: prsindex(:)
     integer              :: imax, jmax, ifh, ist, irf, jj, istmp, ifhtemp, itret, ivpa
     integer              :: isiret1, isiret2, isiret3, idum, m, iix, jjx, imode, numtcv
     integer              :: iha, isa, iua, iva, iza, maxstorm, ivort, ifix, jfix, issret
@@ -119,7 +134,7 @@ c
     integer              :: enable_timing, igrct, ipfbret, icmc2f, iqwcf, iggdret
     integer              :: izero_fhr, i999_stmspd, i999_stmdir, igsstret
 
-      logical(1), allocatable :: valid_pt(:,:)
+    logical(1), allocatable :: valid_pt(:,:)
     logical(1), allocatable :: masked_outc(:,:) ,masked_out(:,:)
     logical(1)              :: readflag(nreadparms), calcparm(maxtp, maxstorm)
     logical(1)              :: readgenflag(nreadgenparms)
@@ -3381,7 +3396,7 @@ c            print *,'!!! Storm ID = ',storm(ist)%tcv_storm_id
       implicit none
 
     integer,      intent(in)    :: n
-      character(n), intent(inout) :: arg
+    character(n), intent(inout) :: arg
     character(*), intent(in)    :: name
     integer,      intent(in)    :: val
 
@@ -4906,6 +4921,11 @@ c     OUTPUT:
   !*
   !****************************************************************************
   subroutine getyestim(xarr, slope, yint, inum, yestim)
+
+    real    :: xarr(inum), yestim(inum)
+    real    :: slope, yint
+    integer :: i, inum
+
   end subroutine getyestim
   !****************************************************************************
   !*
@@ -4923,6 +4943,10 @@ c     OUTPUT:
   !*
   !****************************************************************************
   subroutine getresid(yarr, yestim, inum, yresid)
+
+    real    :: yarr(inum), yestim(inum), yresid(inum)
+    integer :: i, inum
+
   end subroutine getresid
   !****************************************************************************
   !*
@@ -7032,6 +7056,17 @@ c      shear(ist,ifh,2) = shear_dir_from
 
     use tracked_parms; use trkrparms;     use def_vitals
     use inparms;       use set_max_parms; use read_parms
+
+    type (trackstuff) :: trkrinfo
+    type (datecard)   :: inp
+
+    integer    :: imax, jmax, ist, ifh, maxstorm
+    integer    :: level, igsvret, igsstret
+    real       :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real       :: dx, dy, re, ri, xsmoothval, sst_smooth
+    logical(1) :: valid_pt(imax,jmax)
+    logical(1) :: readflag(nreadparms)
+
       call get_smooth_value_at_pt (fixlon(ist,ifh), fixlat(ist,ifh), ist, ifh, imax, jmax, sst(1,1), &
            & 'sst', dx, dy, valid_pt, maxstorm, re, ri, trkrinfo, xsmoothval, igsvret)
   end subroutine get_sst
@@ -7218,12 +7253,12 @@ c
 
     integer           :: imax, jmax, ist, ifh, maxstorm
     integer           :: level, iggdret, igdret, ilev, idvgf, idvcret, igsvret
-      real, allocatable :: divg_850(:,:)
+    real, allocatable :: divg_850(:,:)
     real              :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
     real              :: clon(maxstorm,maxtime,maxtp)
     real              :: clat(maxstorm,maxtime,maxtp)
     real              :: dx, dy, xcenlon, xcenlat, divg, xsmoothval, re, ri
-      
+
     logical(1)        :: calcparm(maxtp,maxstorm), valid_pt(imax,jmax)
       print *, ' '
       print *, '!!! ERROR in sub get_divg allocating divg_850 array,'
@@ -7294,10 +7329,10 @@ c
     use trig_vals
 
       implicit none
-c
+
     character(*)    :: gm_wrap_flag
-      real, parameter :: rad_earth_nm = 3440.170  ! radius of earth
-      real, parameter :: rad_earth_km = 6372.797  ! radius of earth
+    real, parameter :: rad_earth_nm = 3440.170  ! radius of earth
+    real, parameter :: rad_earth_km = 6372.797  ! radius of earth
     real            :: xlato, xlono, dist, bear, xlatt, xlont, xlatin, xlonin
     real            :: cdist, sdist, clato, slato, clono, slono, cbear, sbear
     real            :: z, y, x, r, xlattz, xlontz, ddist, dbear, dxlato, dxlono
@@ -8033,7 +8068,7 @@ c      endif
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
 
-      real, intent(in) :: outlon,outlat
+    real, intent(in) :: outlon,outlat
     real             :: cps_vals(3)
     real             :: rmax, mslp_outp_adj, xoutlon
     real             :: vmaxwind, conv_ms_knots, xminmslp, plastbar, rlastbar
@@ -12684,7 +12719,7 @@ cc             vradius(iwindix,k) = int( (exactdistnm / 5.0) + 0.5) * 5
     logical(1)         :: valid_pt(imax,jmax)
     logical(1)         :: first_time_thru_getradii
     integer, parameter :: num_qtr_azim = 90, numquad = 4
-      integer, parameter :: dp = selected_real_kind(12, 60)
+    integer, parameter :: dp = selected_real_kind(12, 60)
     integer            :: isortix(num_qtr_azim), vradius(3,4)
     integer            :: iwindix, ipoint, ifcsthr, igrct, azimuth_ct, bimct
     integer            :: num_r34_bins, good_quad_ct, valid_wind_ct, imax, jmax
@@ -14999,6 +15034,7 @@ c                vt_mean(idist) = -999.0
     real                    :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
     character*1             :: gotlat
     logical(1)              :: cflag, valid_pt(imax,jmax)
+    logical(1), allocatable :: lbi(:,:)
     call get_ij_bounds (npts, 0, ritrk_vmag, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, &
          & uvgeslon, uvgeslat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
@@ -16396,6 +16432,16 @@ ctpm   npts = 3
                    & defined_pt, bskip, re, ri, favg, icount, ctype, trkrinfo, iret)
 
     use trkrparms; use verbose_output
+
+    type (trackstuff) :: trkrinfo
+
+    real         :: fxy(iimax,jjmax), rlon(iimax), rlat(jjmax)
+    real         :: degrees, wt, wts, favg, flon, flat, dist, ri, re, res
+    integer      :: bskip, i, j, iix, jix, iibeg, iiend, jjbeg, jjend, icount
+    integer      :: iimax, jjmax, iret
+    logical(1)   :: defined_pt(iimax,jjmax)
+    character(*) :: ctype
+
               print *, ' '
               print *, '!!! ERROR: i < 1 in subroutine  barnes for'
               print *, '!!! a non-global grid.  STOPPING....'
@@ -16985,7 +17031,7 @@ c     Roughly fix geslon to the grid point just EASTward of geslon.
 
       implicit none
 
-      integer, parameter  :: dp = selected_real_kind(12, 60)
+    integer, parameter  :: dp = selected_real_kind(12, 60)
     real                :: rlonb, rlatb, rlonc, rlatc, xdist, degrees
     real(dp)            :: difflon8, distlatb8, distlatc8, pole8, degrees8, xdist8
     real(dp)            :: rlonb8, rlatb8, rlonc8, rlatc8, cosanga, circ_fract
@@ -18925,10 +18971,10 @@ c     *--------------------------------------------------------------*
 
       include "netcdf.inc"
 
-      integer,       intent(in)  :: ncid
-      character*(*), intent(in)  :: var1_name
-      integer,       intent(out) :: nmax
-      integer                    :: status, var1id
+    integer,       intent(in)  :: ncid
+    character*(*), intent(in)  :: var1_name
+    integer,       intent(out) :: nmax
+    integer                    :: status, var1id
 
       status = nf_inq_dimid (ncid,var1_name,var1id)
       if (status .ne. NF_NOERR) call handle_netcdf_err(status)
@@ -19090,8 +19136,8 @@ c
 
     use tracked_parms; use verbose_output; use netcdf_parms
     integer,       intent(in) :: ncid
-      character*(*), intent(in) :: var3_name
-      integer                   :: xtype
+    character*(*), intent(in) :: var3_name
+    integer                   :: xtype
     integer                   :: status, var3id, ignrret
 
       if (verb .ge. 3) then
@@ -19323,7 +19369,7 @@ c
   !****************************************************************************
   subroutine conv1d2d_logic (imax, jmax, lb1d, lb2d, need_to_flip_lats)
     logical(1) :: lb1d(imax*jmax), lb2d(imax,jmax)
-      logical(1) :: need_to_flip_lats
+    logical(1) :: need_to_flip_lats
     integer    :: ilat, ilatix, ilon, imax, jmax
 c
       if (need_to_flip_lats) then
@@ -19471,7 +19517,7 @@ c-----------------------------------------------------------------------
 c     OUTPUT:
 c     dat2d    2-d real array of data
 c
-      logical(1) :: need_to_flip_lats
+    logical(1) :: need_to_flip_lats
     real       :: dat1d(imax*jmax), dat2d(imax,jmax)
 c
       if (need_to_flip_lats) then
@@ -19521,6 +19567,7 @@ c
   !*
   !****************************************************************************
   subroutine conv1d2d_real_netcdf (imax, jmax, dat1d, dat2d, need_to_flip_lats)
+    logical(1) :: need_to_flip_lats
     real       :: dat1d(imax*jmax)
     real       :: dat2d(imax,jmax)
 c
@@ -21276,8 +21323,8 @@ c
     type (netcdfstuff) :: netcdfinfo
 
     character                 :: ncfile*180, ncfile_has_hour0*1, match_check*1
-      real(kind=4), allocatable :: temp_nc_time_vals_r4(:)
-      real(kind=8), allocatable :: temp_nc_time_vals_r8(:)
+    real(kind=4), allocatable :: temp_nc_time_vals_r4(:)
+    real(kind=8), allocatable :: temp_nc_time_vals_r8(:)
     integer, intent(in)       :: ncfile_id
     integer, intent(out)      :: ncfile_tmax
     integer                   :: infta, k, m, n, ifhmax, irnhret, usertime, xtype, ignrret
@@ -22051,7 +22098,7 @@ c
 
     real, parameter   :: xsmalldiff = 0.0
     dimension         :: cosfac(jmax),tanfac(jmax)
-      real, allocatable :: div(:,:)
+    real, allocatable :: div(:,:)
     real              :: divx4(imax,jmax)
     real              :: xlondiff, xlatdiff, dlon, dlat, dfix
     real              :: dlat_edge, dlat_inter, dlon_edge, dlon_inter
@@ -22325,7 +22372,7 @@ c
     real         :: re, ri, xsmoothval, xcenlon, xcenlat, dx, dy, reold, riold
     logical(1)   :: valid_pt(imax,jmax)
     character*1  :: in_grid
-      character(*) :: cvar
+    character(*) :: cvar
 
       xsmoothval = -9999.0
 
@@ -22513,7 +22560,7 @@ c     Abstract of subroutine  get_next_ges for further details.
     integer           :: ist, ifh, imax, jmax, maxstorm, igsvret, npts, bskip, icut
     integer           :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret, icutmax
     integer           :: icount, ibret, imrhf, ichrret, icmlret, ip, igrhret
-      real, allocatable :: mean_rh(:,:)
+    real, allocatable :: mean_rh(:,:)
     real              :: re, ri, xsmoothval, xcenlon, xcenlat, dx, dy, reold, riold
     real              :: rh_1000_925_smooth, rh_800_600_smooth
     character         :: already_computed_domain_wide_rh*1
@@ -22714,7 +22761,7 @@ c                endif
 
     type (trackstuff)    :: trkrinfo
     
-      integer, allocatable :: point_ct(:,:)
+    integer, allocatable :: point_ct(:,:)
     integer              :: ist, ifh, imax, jmax, maxstorm, igsvret, npts, bskip, icut
     integer              :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret, icutmax
     integer              :: icount, ibret, z, zstart, zend, ipc, icmlret, i, j
