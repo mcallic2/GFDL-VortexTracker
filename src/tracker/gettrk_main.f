@@ -72,6 +72,13 @@ c
                      & ncfile_id, nc_lsmask_file, nc_lsmask_file_id,   &
                      & netcdfinfo, ncfile_has_hour0, ncfile_tmax,  itret)
 
+    use def_vitals;    use inparms;        use tracked_parms; use error_parms
+    use set_max_parms; use level_parms;    use grid_bounds;   use trkrparms
+    use contours;      use gen_vitals;     use structure;     use verbose_output
+    use waitfor_parms; use module_waitfor; use netcdf_parms;  use phase
+    use shear_diags;   use genesis_diags;  use sst_diags;     use atcf;
+    use read_parms;    use radii;          use trig_vals;     use tracking_parm_prefs;
+
     character                 :: cvort_maxmin*3, isastorm(3)*1, ccflag*1, gotten_avg_value*1
     character                 :: cmaxmin*3, get_last_isobar_flag*1, wcore_flag*1
     character                 :: gfilename*120, ifilename*120, gridmove_status*7
