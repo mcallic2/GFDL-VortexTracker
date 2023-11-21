@@ -68,6 +68,10 @@ c
                & netcdfinfo, ncfile_has_hour0, ncfile_tmax, itret)
     print *, 'baclose: igcret = ', igcret, ' iicret = ', iicret
     print *, 'baclose: iocret = ', iocret
+  subroutine tracker (inp, maxstorm, numtcv, ifhmax, trkrinfo, ncfile, &
+                     & ncfile_id, nc_lsmask_file, nc_lsmask_file_id,   &
+                     & netcdfinfo, ncfile_has_hour0, ncfile_tmax,  itret)
+
     character                 :: cvort_maxmin*3, isastorm(3)*1, ccflag*1, gotten_avg_value*1
     character                 :: cmaxmin*3, get_last_isobar_flag*1, wcore_flag*1
     character                 :: gfilename*120, ifilename*120, gridmove_status*7
