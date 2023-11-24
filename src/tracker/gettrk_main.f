@@ -15,8 +15,8 @@ c
   logical(1)         :: file_open
   integer            :: date_time(8)
   character(len=10)  :: big_ben(3)
-  character          :: ncfile*180, ncfile_has_hour0*1
-  character          :: nc_lsmask_file*180
+  character(len=180) :: ncfile, nc_lsmask_file
+  character(len=1)   :: ncfile_has_hour0
   integer            :: itret, iggret, iicret, igcret, iret, ifhmax, maxstorm, numtcv
   integer            :: iocret, enable_timing, ncfile_id, ncfile_tmax, irnhret
   integer            :: nc_lsmask_file_id
@@ -84,23 +84,25 @@ c
     type (netcdfstuff) :: netcdfinfo
     type (cint_stuff)  :: contour_info
 
-    character, allocatable    :: closed_mslp_ctr_flag(:,:)*1
-    character, allocatable    :: closed_mslp_ctr_flag2(:,:)*1
-    character, allocatable    :: quad_wind_circ_flag(:,:)*1
-    character, allocatable    :: vt850_flag(:,:)*1
-    character                 :: r34_check_okay*1, had_to_try_backup_850_vt_check*1
-    character(len=1)          :: need_to_expand_r34(4)*1, ncfile_has_hour0
-    character                 :: already_computed_domain_wide_rh*1, gm_wrap_flag*21
-    character                 :: low_level_wind_circ_flag*1
-    character*(*), intent(in) :: ncfile
-    character*(*), intent(in) :: nc_lsmask_file
-    character                 :: cvort_maxmin*3, isastorm(3)*1, ccflag*1, gotten_avg_value*1
-    character                 :: cmaxmin*3, get_last_isobar_flag*1, wcore_flag*1
-    character                 :: gfilename*120, ifilename*120, gridmove_status*7
-    character                 :: close_to_boundary*1, quad_wind_circ_check*4
-    character(len=10)         :: big_ben(3)
-    character(pfc_cmd_len)    :: pfc_final
-    character                 :: c_undef_wcflag*1
+    character(len=*), dimension(*), intent(in) :: ncfile
+    character(len=*), dimension(*), intent(in) :: nc_lsmask_file
+
+    character(len=1), allocatable    :: closed_mslp_ctr_flag(:,:)
+    character(len=1), allocatable    :: closed_mslp_ctr_flag2(:,:)
+    character(len=1), allocatable    :: quad_wind_circ_flag(:,:)
+    character(len=1), allocatable    :: vt850_flag(:,:)
+    character(len=1)                 :: r34_check_okay, had_to_try_backup_850_vt_check
+    character(len=1)                 :: need_to_expand_r34(4), already_computed_domain_wide_rh
+    character(len=1)                 :: low_level_wind_circ_flag, ccflag, gotten_avg_value, close_to_boundary
+    character(len=1)                 :: get_last_isobar_flag, wcore_flag, c_undef_wcflag, isastorm(3)
+    character(len=3)                 :: cvort_maxmin, cmaxmin
+    character(len=4)                 :: quad_wind_circ_check
+    character(len=7)                 :: gridmove_status
+    character(len=10)                :: big_ben(3)
+    character(len=21)                :: gm_wrap_flag
+    character(len=120)               :: gfilename, ifilename
+    character                        :: ncfile_has_hour0
+    character(pfc_cmd_len)           :: pfc_final
 
     integer, parameter   :: numdist = 14, numquad = 4, lout = 51
     integer, parameter   :: num_r34_bins = 353
@@ -3395,13 +3397,13 @@ c            print *,'!!! Storm ID = ',storm(ist)%tcv_storm_id
 
       implicit none
 
-    integer,      intent(in)    :: n
-    character(n), intent(inout) :: arg
-    character(*), intent(in)    :: name
-    integer,      intent(in)    :: val
+    integer,                 intent(in)    :: n
+    character, dimension(n), intent(inout) :: arg
+    character(len=*),        intent(in)    :: name
+    integer,                 intent(in)    :: val
 
-    integer                     :: found, namelen, i1, i2
-    character(n)                :: out
+    integer                                :: found, namelen, i1, i2
+    character(len=n)                       :: out
 
       found=index(arg,name)
       namelen=len(name)
@@ -3451,16 +3453,16 @@ c            print *,'!!! Storm ID = ',storm(ist)%tcv_storm_id
     use inparms ; use verbose_output
 
       implicit none
-c
-    type (datecard) :: inp
 
-    logical(1)      :: output_file_open
-    logical(1)      :: file_open
-    logical(4)      :: file_open4, file_open5
-    character       :: fnameg*7, fnamei*7, fnameo*7
-    character(*)    :: gfilename, ifilename
-    character(120)  :: gopen_g_file, gopen_i_file
-    integer         :: igoret, iioret, iooret, lugb, lugi, lout, iret, nlen1, nlen2
+    type (datecard)    :: inp
+
+    logical(1)         :: output_file_open
+    logical(1)         :: file_open
+    logical(4)         :: file_open4, file_open5
+    character(len=7)   :: fnameg, fnamei, fnameo
+    character(len=*)   :: gfilename, ifilename
+    character(len=120) :: gopen_g_file, gopen_i_file
+    integer            :: igoret, iioret, iooret, lugb, lugi, lout, iret, nlen1, nlen2
 
       iret=0
 
@@ -3548,9 +3550,9 @@ c
 
       include "netcdf.inc"
 
-      character*(*), intent(in) :: filename
-      integer, intent(out)      :: ncid
-      integer                   :: status
+      character(len=*), dimension(*), intent(in) :: filename
+      integer, intent(out)                       :: ncid
+      integer                                    :: status
 
       status = nf_open (filename, NF_NOWRITE, ncid)
       if (status .ne. NF_NOERR) call handle_netcdf_err(status)
@@ -3602,14 +3604,14 @@ c
 c
     type (trackstuff) :: trkrinfo
 
-    real         :: vt, vtavg, vr, parmlat, parmlon, parmval, dist
-    real         :: pthresh, vthresh, degrees, dx, dy, dell, ri, radinf
-    real         :: pgradient, xmaxpgrad
-    character(*) :: cparm
-    logical(1)   :: defined_pt(imax,jmax)
-    character*1  :: stormcheck
-    integer      :: isiret, imax, jmax, ist, npts, ilonfix, jlatfix, igvtret
-    integer      :: ibeg, iend, jbeg, jend, ivt, i, j, iix, jix, bskip, igiret, ifh
+    real             :: vt, vtavg, vr, parmlat, parmlon, parmval, dist
+    real             :: pthresh, vthresh, degrees, dx, dy, dell, ri, radinf
+    real             :: pgradient, xmaxpgrad
+    character(len=*) :: cparm
+    logical(1)       :: defined_pt(imax,jmax)
+    character(len=1) :: stormcheck
+    integer          :: isiret, imax, jmax, ist, npts, ilonfix, jlatfix, igvtret
+    integer          :: ibeg, iend, jbeg, jend, ivt, i, j, iix, jix, bskip, igiret, ifh
 
       isiret = 0
       stormcheck = 'N'
@@ -3931,9 +3933,9 @@ c
 
     type (trackstuff) :: trkrinfo
 
-    character(*)       :: cparm, gm_wrap_flag
-    character*1        :: close_to_boundary
-    character*3        :: maxmin
+    character(len=*)   :: cparm, gm_wrap_flag
+    character(len=1)   :: close_to_boundary
+    character(len=3)   :: maxmin
     integer, parameter :: numazim = 16
     integer            :: imax, jmax, ipfbret, ist, iazim, icvpret
     real, parameter    :: bounddist = 350.0
@@ -4025,14 +4027,14 @@ c
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
 
-    character  :: wcore_flag*1, okay_to_call_cps_routines*1
-    real       :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
-    real       :: cps_vals(3)
-    real       :: dx, dy, paramb, vtl_slope, vtu_slope
-    integer    :: imax, jmax, igpret, igcpret, ist, ifh, maxstorm
-    integer    :: igvpret, igcv1ret, igcv2ret
-    logical(1) :: valid_pt(imax,jmax)
-c         
+    character(len=1)  :: wcore_flag, okay_to_call_cps_routines
+    real              :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real              :: cps_vals(3)
+    real              :: dx, dy, paramb, vtl_slope, vtu_slope
+    integer           :: imax, jmax, igpret, igcpret, ist, ifh, maxstorm
+    integer           :: igvpret, igcv1ret, igcv2ret
+    logical(1)        :: valid_pt(imax,jmax)
+
 
       if ( verb .ge. 3 ) then
       write (6,*) ' '
@@ -4495,19 +4497,18 @@ c
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
 
-    character  :: clayer*5
-    real       :: tmp1, tmp2, tmp3
-    real       :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
-    real       :: zmax(7), zmin(7), zdiff(7), xlolevs(7), xhilevs(7), plev(7)
-    real       :: dlnp(7), dzdlnp(7), dz(7), lnp(7)
-    real       :: vth_slope, xdist, degrees, d, cosarg
-    real       :: ricps, dx, dy, R2
-    integer    :: imax, jmax, igpret, igcpret, ist, ifh, npts, bskip, i, j, k, kix
-    integer    :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igcvret, igiret
-    integer    :: kbeg, kend, maxstorm, ip
-    logical(1) :: valid_pt(imax,jmax)
-      ricps = 500.0
-      plev = 0.0
+    character(len=5) :: clayer
+    real             :: tmp1, tmp2, tmp3
+    real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real             :: zmax(7), zmin(7), zdiff(7), xlolevs(7), xhilevs(7), plev(7)
+    real             :: dlnp(7), dzdlnp(7), dz(7), lnp(7)
+    real             :: vth_slope, xdist, degrees, d, cosarg
+    real             :: ricps, dx, dy, R2
+    integer          :: imax, jmax, igpret, igcpret, ist, ifh, npts, bskip, i, j, k, kix
+    integer          :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igcvret, igiret
+    integer          :: kbeg, kend, maxstorm, ip
+    logical(1)       :: valid_pt(imax,jmax)
+
 
       if (clayer == 'lower') then
         kbeg = 1
@@ -5040,17 +5041,17 @@ c
     type (cint_stuff) :: wcore_contour_info
     type (datecard)   :: inp
 
-    character*1     :: get_last_contour_flag, wcore_flag
-    real            :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
-    real            :: dx, dy, wcore_mean_val, wcore_mean_lon, wcore_mean_lat
-    real            :: wcore_point_max, tlastcont, rlastcont, tlastout, rlastout
-    integer         :: imax, jmax, igvpret, ist, ifh, npts, bskip, i, j
-    integer         :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret
-    integer         :: icount, maxstorm, ip, ifmret, ifilret, ifix, jfix, icccret
-    integer         :: num_check_conts
-    integer(kind=8) :: dum1, dum2, dum3
-    logical(1)      :: valid_pt(imax,jmax), compflag, wcore_mask(imax,jmax)
-    logical(1)      :: output_file_open
+    character(len=1) :: get_last_contour_flag, wcore_flag
+    real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real             :: dx, dy, wcore_mean_val, wcore_mean_lon, wcore_mean_lat
+    real             :: wcore_point_max, tlastcont, rlastcont, tlastout, rlastout
+    integer          :: imax, jmax, igvpret, ist, ifh, npts, bskip, i, j
+    integer          :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret
+    integer          :: icount, maxstorm, ip, ifmret, ifilret, ifix, jfix, icccret
+    integer          :: num_check_conts
+    integer(kind=8)  :: dum1, dum2, dum3
+    logical(1)       :: valid_pt(imax,jmax), compflag, wcore_mask(imax,jmax)
+    logical(1)       :: output_file_open
 
 
       if ( verb .ge. 3 ) then
@@ -5313,8 +5314,8 @@ c        xlatsum = xlatsum + 2.*clat(ist,ifh,10)
     integer            :: imax, jmax, ist, ifh, iquad, idist, ibiret1, ibiret2, bimct
     integer            :: igvtret, iazim, bad_quad_ct, good_quad_ct, icqwret
     integer            :: azimuth_ct
-    character*4        :: quad_wind_circ_check
-    character(*)       :: gm_wrap_flag
+    character(len=4)   :: quad_wind_circ_check
+    character(len=*)   :: gm_wrap_flag
     real               :: rdist(numdist), vt_quad(numquad)
     real               :: dx, dy, bear, targlat, targlon, xintrp_u, xintrp_v
     real               :: temp_bear, xdist, xclon, xclat, wmag, wmag_sum, wmag_mean, d
@@ -5476,7 +5477,7 @@ c-----------------------------------------------------------------------
     type (datecard)    :: inp
     type (trackstuff)  :: trkrinfo
 
-    character(*)       :: gm_wrap_flag
+    character(len=*)   :: gm_wrap_flag
     integer, parameter :: numdist = 14, numquad = 4, num_qtr_azim = 6
     integer            :: imax, jmax, igwsret, ist, ifh, iquad, idist, ibiret1, ibiret2
     integer            :: igvtret, ipct, maxstorm, iazim, azimuth_ct, bimct
@@ -5762,16 +5763,10 @@ c            temp_bear = st_heading + ((iquad-1) * 90.) + 45.
     integer            :: itret, igiret, idistbin, ipdfbin, pdf_ct_tot, maxstorm
     logical(1)         :: calcparm(maxtp,maxstorm)
     logical(1)         :: valid_pt(imax,jmax)
-    character          :: got_pdf*6
-    character*2        :: cquad(4) = (/'NE','SE','SW','NW'/)
-    character*5        :: cbin(5) =(/'0-100','0-200','0-300','0-400','0-500'/)
-    character*2        :: cthresh(3) = (/'34','50','64'/)
-      igfwret = 0
-      conv_ms_knots = 1.9427
-      rads = 500.0
-      ri   = 300.0
-      dell = (dx+dy)/2.
-      npts = rads/(dtk*dell)
+    character(len=6)   :: got_pdf
+    character(len=2)   :: cquad(4) = (/'NE','SE','SW','NW'/)
+    character(len=5)   :: cbin(5) =(/'0-100','0-200','0-300','0-400','0-500'/)
+    character(len=2)   :: cthresh(3) = (/'34','50','64'/)
 
       wfract_cov            = 0.0
       area_total_quad_bin   = 0.0
@@ -6568,8 +6563,8 @@ c     Compute the storm surge damage potential (sdp)
     type (trackstuff)  :: trkrinfo
     type (datecard)    :: inp
 
-    character          :: found_vt_ge_1_flag*1
-    character(*)       :: gm_wrap_flag
+    character(len=1)   :: found_vt_ge_1_flag
+    character(len=*)   :: gm_wrap_flag
     integer, parameter :: numdist = 19, numazim = 24, numlev = 2
     integer            :: u_cart_sum_ct(numlev), v_cart_sum_ct(numlev)
     integer            :: max_dist_index(2)
@@ -7144,7 +7139,7 @@ c      shear(ist,ifh,2) = shear_dir_from
     real               :: dx, dy, xcenlon, xcenlat, q850conv, q850_smooth
     real               :: rh_1000_925_smooth, rh_800_600_smooth, omega500_smooth
     real               :: divg, moist_divg, re, ri, xsmoothval
-    character          :: already_computed_domain_wide_rh*1
+    character(len=1)   :: already_computed_domain_wide_rh
     logical(1)         :: calcparm(maxtp,maxstorm), valid_pt(imax,jmax)
     logical(1)         :: readflag(nreadparms), readgenflag(nreadgenparms)
 
@@ -7330,12 +7325,12 @@ c
 
       implicit none
 
-    character(*)    :: gm_wrap_flag
-    real, parameter :: rad_earth_nm = 3440.170  ! radius of earth
-    real, parameter :: rad_earth_km = 6372.797  ! radius of earth
-    real            :: xlato, xlono, dist, bear, xlatt, xlont, xlatin, xlonin
-    real            :: cdist, sdist, clato, slato, clono, slono, cbear, sbear
-    real            :: z, y, x, r, xlattz, xlontz, ddist, dbear, dxlato, dxlono
+    character(len=*) :: gm_wrap_flag
+    real, parameter  :: rad_earth_nm = 3440.170  ! radius of earth
+    real, parameter  :: rad_earth_km = 6372.797  ! radius of earth
+    real             :: xlato, xlono, dist, bear, xlatt, xlont, xlatin, xlonin
+    real             :: cdist, sdist, clato, slato, clono, slono, cbear, sbear
+    real             :: z, y, x, r, xlattz, xlontz, ddist, dbear, dxlato, dxlono
 
       xlato = xlatin
       xlono = xlonin
@@ -7433,12 +7428,12 @@ cstr      print *,'xlattz = datan2(z,r)/dtr = ',xlattz
 
     type (trackstuff) :: trkrinfo
 
-    character  :: cparm*1
-    logical(1) :: valid_pt(imax,jmax)
-    real       :: targlat, targlon, xintrp_val, dx, dy, tmp_targlon
-    real       :: to, ta, d1, d2, d3, d4, z, eastlon
-    integer    :: ie, iw, jn, js, ibiret, imax, jmax, level, nlev, bimct
-    integer    :: ie_hold, iw_hold, ifh
+    character(len=1)  :: cparm
+    logical(1)        :: valid_pt(imax,jmax)
+    real              :: targlat, targlon, xintrp_val, dx, dy, tmp_targlon
+    real              :: to, ta, d1, d2, d3, d4, z, eastlon
+    integer           :: ie, iw, jn, js, ibiret, imax, jmax, level, nlev, bimct
+    integer           :: ie_hold, iw_hold, ifh
 
       ibiret = 0
 
@@ -8068,19 +8063,23 @@ c      endif
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
 
-    real, intent(in) :: outlon,outlat
-    real             :: cps_vals(3)
-    real             :: rmax, mslp_outp_adj, xoutlon
-    real             :: vmaxwind, conv_ms_knots, xminmslp, plastbar, rlastbar
-    real             :: shear_mag, shear_dir, sst_smooth
-    real             :: axisymet_rmw_dist, axisymet_rmw_val
-    integer          :: intlon, intlat, irmax, output_fhr, ic, iplastbar, irlastbar
-    integer          :: ishear_mag, ishear_dir, istmspd, istmdir, isst, ioaxret
-    integer          :: irmw_dist, irmw_val, maxstorm, ist, ifh, ifcsthour
-    integer          :: vradius(3,4), icps_vals(3)
-    character        :: basinid*2, clatns*1, clonew*1, wcore_flag*1
-    character        :: comma_fill1*48, comma_fill2*31, comma_filler*79
-    character        :: comma_fill1n*25, comma_fill2n*44
+    real, intent(in)  :: outlon,outlat
+    real              :: cps_vals(3)
+    real              :: rmax, mslp_outp_adj, xoutlon
+    real              :: vmaxwind, conv_ms_knots, xminmslp, plastbar, rlastbar
+    real              :: shear_mag, shear_dir, sst_smooth
+    real              :: axisymet_rmw_dist, axisymet_rmw_val
+    integer           :: intlon, intlat, irmax, output_fhr, ic, iplastbar, irlastbar
+    integer           :: ishear_mag, ishear_dir, istmspd, istmdir, isst, ioaxret
+    integer           :: irmw_dist, irmw_val, maxstorm, ist, ifh, ifcsthour
+    integer           :: vradius(3,4), icps_vals(3)
+    character(len=2)  :: basinid 
+    character(len=1)  :: clatns, clonew, wcore_flag
+    character(len=48) :: comma_fill1
+    character(len=31) :: comma_fill2
+    character(len=79) :: comma_filler
+    character(len=25) :: comma_fill1n
+    character(len=44) :: comma_fill2n
 
       if ( verb .ge. 3 ) then
       print *, 'TTT top of atcfunix, ist = ', ist,  '      ifh = ', ifcsthour
@@ -8460,11 +8459,14 @@ c     bug fix for IBM: flush the output stream so it actually writes
     integer           :: idivg, imoistdivg, irh_800_600, irh_1000_925, iomega500
     integer           :: vradius(3,4), icps_vals(3)
     integer           :: imeanzeta(nlevgrzeta), igridzeta(nlevgrzeta)
-    character         :: basinid*2, clatns*1, clonew*1, wcore_flag*1
-    character         :: comma_fill1*48, comma_fill2*31, comma_filler*79
-    character         :: comma_fill1n*27, comma_fill2n*44
-c
-      if ( verb .ge. 3 ) then
+    character(len=2)  :: basinid
+    character(len=1)  :: clatns, clonew, wcore_flag
+    character(len=48) :: comma_fill1
+    character(len=31) :: comma_fill2
+    character(len=79) :: comma_filler
+    character(len=27) :: comma_fill1n
+    character(len=44) :: comma_fill2n
+
       print *, 'TXX top of atcfunix_ext, ist = ', ist, ' ifh = ', ifcsthour
       endif
 
@@ -8897,12 +8899,13 @@ c      comma_filler = comma_fill1//comma_fill2
   subroutine output_all (fixlon, fixlat, inp, maxstorm, ifhmax, ioaret)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use tracked_parms
-    type (datecard) :: inp
 
-    real      :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
-    integer   :: modelnum(maxmodel)
-    integer   :: intlon(maxtime), intlat(maxtime)
-    character :: modelchar(maxmodel)*4
+    type (datecard)  :: inp
+
+    real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    integer          :: modelnum(maxmodel)
+    integer          :: intlon(maxtime), intlat(maxtime)
+    character(len=4) :: modelchar(maxmodel)
 
     print *, 'top of output_all'
     print *, ' ifhmax   = ', ifhmax
@@ -8989,15 +8992,16 @@ c          print *,'   ---> ifh= ',ifh
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use tracked_parms
 
-    type (datecard) :: inp
-    real      :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
-    real      :: xmaxwind(maxstorm,maxtime)
-    real      :: conv_ms_knots
-    integer   :: modelnum(maxmodel)
-    integer   :: intlon(maxtime), intlat(maxtime)
-    character :: modelchar(maxmodel)*4, basinid*4
-        if (stormswitch(ist) == 3) cycle stormloop
-        intlon = 0; intlat = 0
+
+    type (datecard)  :: inp
+
+    real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real             :: xmaxwind(maxstorm,maxtime)
+    real             :: conv_ms_knots
+    integer          :: modelnum(maxmodel)
+    integer          :: intlon(maxtime), intlat(maxtime)
+    character(len=4) :: modelchar(maxmodel), basinid
+
 
         ifhloop: do ifh = 1,maxtime
 
@@ -9183,7 +9187,8 @@ c          print *,'   ---> ifh= ',ifh
     real             :: vmaxwind, conv_ms_knots, xminmslp, rmax
     integer          :: intlon, intlat, output_fhr, irmax, ileadtime
     integer          :: vradius(3,4)
-    character        :: basinid*2, clatns*1, clonew*1
+    character(len=2) :: basinid
+    character(len=1) :: clatns, clonew
 
       if (xminmslp == 999999.0) xminmslp = 0.0
 
@@ -9376,7 +9381,9 @@ c          print *,'   ---> ifh= ',ifh
     integer            :: pdf_ct_bin(16)
     integer            :: intlon, intlat, output_fhr, intlon100, intlat100, pdf_ct_tot
     integer            :: maxstorm
-    character          :: basinid*2, clatns*1, clonew*1, wfract_type*5, wt*1, cquad*2
+    character(len=1)   :: clatns, clonew, wt
+    character(len=2)   :: basinid, cquad
+    character(len=5)   :: wfract_type
 
       conv_ms_knots = 1.9427
 
@@ -9598,9 +9605,11 @@ c     --------------------------------------------------
     real               :: xoutlon
     real               :: vmaxwind, conv_ms_knots, xminmslp, xsfclon, xsfclat
     integer            :: intlon, intlat, output_fhr, id, intlon100, intlat100, ir
-    character          :: basinid*2, clatns*1, clonew*1, wfract_type*5, wt*1
-    character*2        :: cquad(4) = (/'NE','SE','SW','NW'/)
-    character*2        :: crel(4) = (/'FR','BR','BL','FL'/)
+    character(len=1)   :: clatns, clonew, wt
+    character(len=2)   :: basinid
+    character(len=5)   :: wfract_type
+    character(len=2)   :: cquad(4) = (/'NE','SE','SW','NW'/)
+    character(len=2)   :: crel(4) = (/'FR','BR','BL','FL'/)
 
 
       conv_ms_knots = 1.9427
@@ -9781,7 +9790,10 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
     real               :: ike(max_ike_cats)
     real               :: vmaxwind, conv_ms_knots, xminmslp, xsfclon, xsfclat
     integer            :: intlon, intlat, output_fhr, intlon100, intlat100, maxstorm
-    character          :: basinid*2, clatns*1, clonew*1, wfract_type*5, wt*1, cquad*2
+    character(len=1)   :: clatns, clonew, wt
+    character(len=2)   :: basinid, cquad
+    character(len=5)   :: wfract_type
+
 
       if (outlon < -998.0 .or. outlat < -998.0) then
         intlon = 0
@@ -9917,7 +9929,8 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
     real             :: xoutlon, paramb, vtl_slope, vtu_slope
     real             :: vmaxwind, conv_ms_knots, xminmslp
     integer          :: intlon, intlat, output_fhr
-    character        :: basinid*2, clatns*1, clonew*1
+    character(len=2) :: basinid
+    character(len=1) :: clatns, clonew
 
       conv_ms_knots = 1.9427
 
@@ -10098,7 +10111,8 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
     integer           :: imeanzeta(nlevgrzeta), igridzeta(nlevgrzeta)
     integer           :: idivg, imoistdivg, irh_800_600, irh_1000_925, iomega500, isst
     integer           :: irmw_dist, irmw_val
-    character         :: basinid*2, clatns*1, clonew*1, wcore_flag*1
+    character(len=2)  :: basinid
+    character(len=1)  :: clatns, clonew, wcore_flag
 
       print *, '+++ Top of output_atcf_gen, ist = ', ist, ' ifh = ', ifcsthour
 
@@ -10497,7 +10511,7 @@ c     identifier at the beginning of the modified atcfunix record.
     integer           :: ist, ifcsthour, maxstorm, ioapret, intmeanlon, intmeanlat
     integer           :: ip, icc, output_fhr, k, intlonew, intlatns, ifh
     integer           :: iclon(9), iclat(9), icxval(9)
-    character         :: icvalid(9)*1, clatns*1, clonew*1
+    character(len=1)  :: icvalid(9), clatns, clonew
     logical(1)        :: calcparm(maxtp,maxstorm)
       print *, '+++ Top of output_atcf_parms, ist = ', ist, ' ifh = ', ifcsthour
 
@@ -11144,9 +11158,9 @@ c
     real              :: wgttot, uavg, vavg, reold, riold, barnlat, barnlon, wt_total
     real              :: tmp_fix_lon_curr, tmp_fix_lon_prev, conv_ms_knots
     real              :: stmspdkts
-    character*1       :: in_grid, extrap_flag, barnes_flag
-    character(*)      :: ctype
-    character(*)      :: gm_wrap_flag
+    character(len=1)  :: in_grid, extrap_flag, barnes_flag
+    character(len=*)  :: ctype
+    character(len=*)  :: gm_wrap_flag
     logical(1)        :: valid_pt(imax,jmax), readflag(14)
 
       extrap_flag = 'y'
@@ -11990,8 +12004,8 @@ c     ------------------------------------------------------------------
     integer, parameter    :: dp = selected_real_kind(12, 60)
     real(dp), allocatable :: dtemp(:)
     real                  :: windthresh(3) = (/17.5,25.7,32.9/)
-    character             :: cstormid*3
-    character             :: need_to_expand_r34(4)*1
+    character(len=3)      :: cstormid
+    character(len=1)      :: need_to_expand_r34(4)
 
       if ( verb .ge. 3 ) then
       print *, ' '
@@ -12748,11 +12762,11 @@ cc             vradius(iwindix,k) = int( (exactdistnm / 5.0) + 0.5) * 5
     real               :: one_minus_free_pass_remainder
     real, intent(in)   :: axi_rmw
     real               :: windthresh(3) = (/17.5,25.7,32.9/)
-    character          :: cstormid*3
-    character          :: need_to_expand_r34(4)*1
-    character          :: holland_good_1_flag*1, holland_good_2_flag*1
-    character          :: free_pass*1
-    character(*)       :: gm_wrap_flag
+    character(len=3)   :: cstormid
+    character(len=1)   :: need_to_expand_r34(4)
+    character(len=1)   :: holland_good_1_flag, holland_good_2_flag
+    character(len=1)   :: free_pass
+    character(len=*)   :: gm_wrap_flag
 
       igrret  = 0
 
@@ -13619,12 +13633,9 @@ c     that we are sure radmaxwind is within those points.
     integer            :: azimuth_ct, maxrmw_ix, rdist_ix, ir, idv_start, idv_end
     integer            :: rising_sum_dvdr_ct, declining_sum_dvdr_ct, kr, mr
     integer            :: idist, iazim, ird
-    character          :: got_good_armw*1, perform_rising_dvdr*1
-    character(*)       :: gm_wrap_flag
-      got_good_armw = 'n'
-      rdist_ix = 1
-      axisymet_rmw_dist = -999.0
-      axisymet_rmw_val  = -999.0
+    character(len=1)   :: got_good_armw, perform_rising_dvdr
+    character(len=*)   :: gm_wrap_flag
+
 
       rdistloop: do while (got_good_armw == 'n' .and.  rdist_ix < 5)
 
@@ -13900,65 +13911,23 @@ c              endif
     use error_parms; use set_max_parms; use inparms;        use def_vitals
     use gen_vitals;  use tracked_parms; use verbose_output; use atcf;
 
-    type (datecard) :: inp
 
-    real       :: clon(maxstorm,maxtime,maxtp), temp_clon(maxtp)
-    real       :: clat(maxstorm,maxtime,maxtp), temp_clat(maxtp)
-    real       :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
-    real       :: trkerr(maxtp), errdist(maxtp), xvalues(maxtp)
-    real       :: stderr(maxstorm,maxtime), devia(maxtp), wtpos(maxtp)
-    real       :: dist_from_mean(maxtp)
-    real       :: degrees, errtmp, errmax, errinit, xavg_stderr, trkerr_avg
-    real       :: clonsum, clatsum, geslon, geslat, clon_fguess, clat_fguess
-    real       :: dist, xmn_dist_from_mean, stderr_close
-    integer    :: gt345_ct, lt15_ct, ist, ifh, iclose, itot4next, ip, maxstorm
-    integer    :: ifret, isret, kprm, iwtret1, iwtret2, iaret
-    logical(1) :: calcparm(maxtp,maxstorm), use4next(maxtp)
-    character  :: charparm(maxtp)*8, charmaxmin(maxtp)*8
-      ifret=0
-c
-c     We need to judge whether each parameter position is reasonable,
-c     so we'll check to make sure that the dist from each parameter's 
-c     estimate to the guess position is less than a maximum allowable 
-c     error. If it's the first forecast time, use the initial error max 
-c     (defined as errinit in error_parms) as errmax.  Otherwise, the 
-c     max error criterion is that the distance error must not exceed 3 
-c     times the previous forecast time's standard deviation (after a 
-c     small growth factor has been applied).
-c     UPDATE 3/5/98: During testing, it was found that just using the
-c     previous time's stdev made errmax too "jumpy" (i.e., at vt=48h,
-c     errmax could = 380, and then at vt=54h, errmax could jump down
-c     to 190, so we've changed it so that it uses an average of the 
-c     stdev's from the 3 previous forecast times to maintain some
-c     continuity between successive forecast times).
-c
-      if (ifh == 1) then
-        if (atcfname == 'GFSO' .or. atcfname == 'MRFO' .or. 
-     &      atcfname == 'GDAS' .or. atcfname == 'GFDT' .or.
-     &      atcfname(1:3) == 'AP0' .or. atcfname(1:3) == 'AN0' .or.
-     &      atcfname(1:3) == 'AP1' .or. atcfname(1:3) == 'AN1' .or.
-     &      atcfname(1:3) == 'AC0' .or. atcfname == 'AEAR' ) then
-          errmax  = err_gfs_init
-          errinit = err_gfs_init
-        else if (atcfname == 'EMX ' .or. atcfname == 'FV3 ') then
-          errmax  = err_ecm_max
-          errinit = err_ecm_max
-        else
-          errmax  = err_reg_init
-          errinit = err_reg_init
-        endif
-      else
-        if (atcfname == 'GFSO' .or. atcfname == 'MRFO' .or.
-     &      atcfname == 'GDAS' .or. atcfname == 'GFDT' .or.
-     &      atcfname(1:3) == 'AP0' .or. atcfname(1:3) == 'AN0' .or.
-     &      atcfname(1:3) == 'AP1' .or. atcfname(1:3) == 'AN1' .or.
-     &      atcfname(1:3) == 'AC0' .or. atcfname == 'AEAR') then
-          errinit = err_gfs_init
-        else if (atcfname == 'EMX ' .or. atcfname == 'FV3 ') then
-          errinit = err_ecm_max
-        else
-          errinit = err_reg_max
-        endif
+    type (datecard)  :: inp
+
+    real             :: clon(maxstorm,maxtime,maxtp), temp_clon(maxtp)
+    real             :: clat(maxstorm,maxtime,maxtp), temp_clat(maxtp)
+    real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real             :: trkerr(maxtp), errdist(maxtp), xvalues(maxtp)
+    real             :: stderr(maxstorm,maxtime), devia(maxtp), wtpos(maxtp)
+    real             :: dist_from_mean(maxtp)
+    real             :: degrees, errtmp, errmax, errinit, xavg_stderr, trkerr_avg
+    real             :: clonsum, clatsum, geslon, geslat, clon_fguess, clat_fguess
+    real             :: dist, xmn_dist_from_mean, stderr_close
+    integer          :: gt345_ct, lt15_ct, ist, ifh, iclose, itot4next, ip, maxstorm
+    integer          :: ifret, isret, kprm, iwtret1, iwtret2, iaret
+    logical(1)       :: calcparm(maxtp,maxstorm), use4next(maxtp)
+    character(len=8) :: charparm(maxtp), charmaxmin(maxtp)
+
 
         if (ifh >= 4) then
           xavg_stderr = (stderr(ist,ifh-3) + stderr(ist,ifh-2)
@@ -14422,9 +14391,9 @@ c     and the right of the greenwich meridian
 
     integer            :: date_time(8)
     character(len=10)  :: big_ben(3)
-    character(*)       :: cmodel_type, maxmin
-    character(*)       :: gm_wrap_flag
-    character          :: threshold_tripped*1
+    character(len=*)   :: cmodel_type, maxmin
+    character(len=*)   :: gm_wrap_flag
+    character(len=1)   :: threshold_tripped
     integer, parameter :: numdist = 7, numazim = 24
     integer            :: imax, jmax, ist, level, igwcret, icvpret, idist, iazim
     real               :: rdist(numdist), vr(numazim,numdist), vt(numazim,numdist)
@@ -15032,9 +15001,10 @@ c                vt_mean(idist) = -999.0
     real, allocatable       :: vmag(:,:)
     real                    :: dx, dy
     real                    :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
-    character*1             :: gotlat
+    character(len=1)        :: gotlat
     logical(1)              :: cflag, valid_pt(imax,jmax)
     logical(1), allocatable :: lbi(:,:)
+
     call get_ij_bounds (npts, 0, ritrk_vmag, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, &
          & uvgeslon, uvgeslat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
@@ -15589,14 +15559,15 @@ c        endif
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
 
-    logical(1) :: readflag(14), valid_pt(imax,jmax), compflag
-    character  :: cmaxmin*3, cvort_maxmin*3, csmooth_var*8
-    real       :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
-    real       :: gridpoint_maxmin, dx, dy, re, ri, parmlon, parmlat, xsmoothval
-    integer    :: igridzeta(nlevgrzeta), imeanzeta(nlevgrzeta)
-    integer    :: n, ix1, ix2, ilev, npts, imax, jmax, igzvret, ilonfix, jlatfix
-    integer    :: idum, jdum, ibeg, jbeg, iend, jend, igiret, icount, iuret
-    integer    :: ifilret, ist, ifh, ifmret, maxstorm, igsvret
+    logical(1)       :: readflag(14), valid_pt(imax,jmax), compflag
+    character(len=3) :: cmaxmin, cvort_maxmin
+    character(len=8) :: csmooth_var
+    real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
+    real             :: gridpoint_maxmin, dx, dy, re, ri, parmlon, parmlat, xsmoothval
+    integer          :: igridzeta(nlevgrzeta), imeanzeta(nlevgrzeta)
+    integer          :: n, ix1, ix2, ilev, npts, imax, jmax, igzvret, ilonfix, jlatfix
+    integer          :: idum, jdum, ibeg, jbeg, iend, jend, igiret, icount, iuret
+    integer          :: ifilret, ist, ifh, ifmret, maxstorm, igsvret
 
       npts = imax * jmax
 
@@ -15797,7 +15768,7 @@ c        endif
 c
     type (trackstuff)  :: trkrinfo
 
-    character(*)       :: maxmin, cparm, cmodel_type
+    character(len=*)   :: maxmin, cparm, cmodel_type
     logical(1)         :: compflag, valid_pt(imax,jmax)
     real               :: fxy(imax,jmax), rlonv(imax), rlatv(jmax)
     real               :: ctlon, ctlat, degrees, dx, dy, guesslon, guesslat, xval
@@ -16435,12 +16406,12 @@ ctpm   npts = 3
 
     type (trackstuff) :: trkrinfo
 
-    real         :: fxy(iimax,jjmax), rlon(iimax), rlat(jjmax)
-    real         :: degrees, wt, wts, favg, flon, flat, dist, ri, re, res
-    integer      :: bskip, i, j, iix, jix, iibeg, iiend, jjbeg, jjend, icount
-    integer      :: iimax, jjmax, iret
-    logical(1)   :: defined_pt(iimax,jjmax)
-    character(*) :: ctype
+    real              :: fxy(iimax,jjmax), rlon(iimax), rlat(jjmax)
+    real              :: degrees, wt, wts, favg, flon, flat, dist, ri, re, res
+    integer           :: bskip, i, j, iix, jix, iibeg, iiend, jjbeg, jjend, icount
+    integer           :: iimax, jjmax, iret
+    logical(1)        :: defined_pt(iimax,jjmax)
+    character(len=*)  :: ctype
 
               print *, ' '
               print *, '!!! ERROR: i < 1 in subroutine  barnes for'
@@ -16505,13 +16476,13 @@ ctpm   npts = 3
 
     type (trackstuff) :: trkrinfo
 
-    real         :: fxy(iimax,jjmax), rlon(iimax), rlat(jjmax)
-    real         :: degrees, sea_fract, favg, wt, wts, res, re, ri, flon, flat
-    real         :: dist
-    integer      :: bskip, seact, landct, totct, icount, i, j, iret
-    integer      :: jjbeg, jjend, iibeg, iiend, iix, jix, iimax, jjmax
-    logical(1)   :: defined_pt(iimax,jjmax)
-    character(*) :: ctype
+    real              :: fxy(iimax,jjmax), rlon(iimax), rlat(jjmax)
+    real              :: degrees, sea_fract, favg, wt, wts, res, re, ri, flon, flat
+    real              :: dist
+    integer           :: bskip, seact, landct, totct, icount, i, j, iret
+    integer           :: jjbeg, jjend, iibeg, iiend, iix, jix, iimax, jjmax
+    logical(1)        :: defined_pt(iimax,jjmax)
+    character(len=*)  :: ctype
 
       res = re*re
       wts = 0.0
@@ -17114,9 +17085,12 @@ c     (e.g., 1.00000000007), due to (I'm guessing) rounding errors.
 
       implicit none
 
-    character(*) :: gfilename, ifilename
-    character    :: cfmin*5, cymdh*10
-    integer      :: ifh, nlen1, nlen2, nlen3, nlen4, nlen5
+    character(len=*)  :: gfilename, ifilename
+    character(len=5)  :: cfmin
+    character(len=10) :: cymdh
+    integer           :: ifh, nlen1, nlen2, nlen3, nlen4, nlen5
+    integer           :: ifh, nlen1, nlen2, nlen3, nlen4, nlen5
+    integer           :: ifh, nlen1, nlen2, nlen3, nlen4, nlen5
 
     write (cfmin, '(i5.5)')   iftotalmins(ifh)
     write (cymdh, '(i10.10)') atcfymdh
@@ -17293,8 +17267,8 @@ c     the grib file, with "ix" added to the end of it.
     logical(1)               :: file_open
     logical                  :: unpack = .true.
     logical                  :: open_grb = .false.
-    character*1              :: lbrdflag
-    character*8              :: chparm(nreadparms), ch_genparm(nreadgenparms)
+    character(len=1)         :: lbrdflag
+    character(len=8)         :: chparm(nreadparms), ch_genparm(nreadgenparms)
     character(len=8)         :: pabbrev
     character(len=10)        :: big_ben(3)
     integer                  :: date_time(8)
@@ -18556,10 +18530,10 @@ c           once since using same model for all variables).
     logical(1)          :: valid_pt(imax,jmax), readflag(nreadparms)
     logical(1)          :: readgenflag(nreadgenparms)
     logical(1)          :: need_to_flip_lats, need_to_flip_lons
-    character*1         :: lbrdflag, match_check, match_zero_check
-    character*30        :: chparm(nreadparms)
-    character*30        :: chparm_cps(nreadcpsparms)
-    character*30        :: chparm_gen(nreadgenparms)
+    character(len=1)    :: lbrdflag, match_check, match_zero_check
+    character(len=30)   :: chparm(nreadparms)
+    character(len=30)   :: chparm_cps(nreadcpsparms)
+    character(len=30)   :: chparm_gen(nreadgenparms)
     integer, intent(in) :: ncfile_id, nc_lsmask_file_id, imax, jmax
     integer             :: igvret, ifa, ip, ifh, i, j, k, m, n, ncfile_tmax, nf_get_att_real
     integer             :: nf_get_att_double, nf_inq_attlen, imvlen, ifvlen
@@ -18971,10 +18945,10 @@ c     *--------------------------------------------------------------*
 
       include "netcdf.inc"
 
-    integer,       intent(in)  :: ncid
-    character*(*), intent(in)  :: var1_name
-    integer,       intent(out) :: nmax
-    integer                    :: status, var1id
+    integer,                        intent(in)  :: ncid
+    character(len=*), dimension(*), intent(in)  :: var1_name
+    integer,                        intent(out) :: nmax
+    integer                                     :: status, var1id
 
       status = nf_inq_dimid (ncid,var1_name,var1id)
       if (status .ne. NF_NOERR) call handle_netcdf_err(status)
@@ -19002,14 +18976,14 @@ c
 
       include "netcdf.inc"
 
-    integer,       intent(in)  :: ncid
-    character*(*), intent(in)  :: var1_name
-    integer,       intent(in)  :: nmax
-    integer                    :: xtype,ira,i
-    real,          intent(out) :: var1(nmax)
-    real(kind=4), allocatable  :: readvar4(:)
-    real(kind=8), allocatable  :: readvar8(:)
-    integer                    :: status, var1id
+    integer,                        intent(in)  :: ncid
+    character(len=*), dimension(*), intent(in)  :: var1_name
+    integer,                        intent(in)  :: nmax
+    integer                                     :: xtype,ira,i
+    real,                           intent(out) :: var1(nmax)
+    real(kind=4), allocatable                   :: readvar4(:)
+    real(kind=8), allocatable                   :: readvar8(:)
+    integer                                     :: status, var1id
 
       if (allocated(readvar4)) deallocate (readvar4)
       if (allocated(readvar8)) deallocate (readvar8)
@@ -19072,12 +19046,12 @@ c
 
       include "netcdf.inc"
 
-    integer,       intent(in)  :: ncid
-    character*(*), intent(in)  :: var1_name
-    integer,       intent(in)  :: nmax
-    integer                    :: ira
-    real(kind=4),  intent(out) :: readvar4(nmax)
-    integer                    :: status, var1id
+    integer,                        intent(in)  :: ncid
+    character(len=*), dimension(*), intent(in)  :: var1_name
+    integer,                        intent(in)  :: nmax
+    integer                                     :: ira
+    real(kind=4),                   intent(out) :: readvar4(nmax)
+    integer                                     :: status, var1id
 
       status = nf_inq_varid (ncid,var1_name,var1id)
       if (status .ne. NF_NOERR) call handle_netcdf_err(status)
@@ -19104,12 +19078,12 @@ c
 
       include "netcdf.inc"
 
-    integer,       intent(in)  :: ncid
-    character*(*), intent(in)  :: var1_name
-    integer,       intent(in)  :: nmax
-    integer                    :: ira
-    real(kind=8),  intent(out) :: readvar8(nmax)
-    integer                    :: status, var1id
+    integer,                        intent(in)  :: ncid
+    character(len=*), dimension(*), intent(in)  :: var1_name
+    integer,                        intent(in)  :: nmax
+    integer                                     :: ira
+    real(kind=8),                   intent(out) :: readvar8(nmax)
+    integer                                     :: status, var1id
 
       status = nf_inq_varid (ncid,var1_name,var1id)
       if (status .ne. NF_NOERR) call handle_netcdf_err(status)
@@ -19135,10 +19109,11 @@ c
   subroutine get_netcdf_real_type (ncid, var3_name, xtype, ignrret)
 
     use tracked_parms; use verbose_output; use netcdf_parms
-    integer,       intent(in) :: ncid
-    character*(*), intent(in) :: var3_name
-    integer                   :: xtype
-    integer                   :: status, var3id, ignrret
+
+    integer,                        intent(in) :: ncid
+    character(len=*), dimension(*), intent(in) :: var3_name
+    integer                                    :: xtype
+    integer                                    :: status, var3id, ignrret
 
       if (verb .ge. 3) then
       print *, ' '
@@ -19193,14 +19168,14 @@ c
     use tracked_parms; use verbose_output; use netcdf_parms
 
       include "netcdf.inc"
-c
-    integer,       intent(in)  :: ncid, ncix
-    character*(*), intent(in)  :: var3_name
-    integer,       intent(in)  :: imax, jmax
-    integer                    :: xtype
-    real(kind=4),  intent(out) :: var3(imax,jmax)
-    integer                    :: istart(3), ilength(3)
-    integer                    :: status, var3id, igvret
+
+    integer,                        intent(in)  :: ncid, ncix
+    character(len=*), dimension(*), intent(in)  :: var3_name
+    integer,                        intent(in)  :: imax, jmax
+    integer                                     :: xtype
+    real(kind=4),                   intent(out) :: var3(imax,jmax)
+    integer                                     :: istart(3), ilength(3)
+    integer                                     :: status, var3id, igvret
 
       if (verb .ge. 3) then
       print *, ' '
@@ -19259,14 +19234,14 @@ c
     use tracked_parms; use verbose_output; use netcdf_parms
 
       include "netcdf.inc"
-c
-    integer,       intent(in)  :: ncid, ncix
-    character*(*), intent(in)  :: var3_name
-    integer,       intent(in)  :: imax, jmax
-    integer                    :: xtype
-    real(kind=8),  intent(out) :: var3(imax,jmax)
-    integer                    :: istart(3), ilength(3)
-    integer                    :: status, var3id, igvret
+
+    integer,                        intent(in)  :: ncid, ncix
+    character(len=*), dimension(*), intent(in)  :: var3_name
+    integer,                        intent(in)  :: imax, jmax
+    integer                                     :: xtype
+    real(kind=8),                   intent(out) :: var3(imax,jmax)
+    integer                                     :: istart(3), ilength(3)
+    integer                                     :: status, var3id, igvret
 
       if (verb .ge. 3) then
       print *, ' '
@@ -20602,7 +20577,7 @@ c
     logical                  :: unpack = .true.
     logical                  :: open_grb = .false.
     character(len=8)         :: pabbrev
-    character(*)             :: gm_wrap_flag
+    character(len=*)         :: gm_wrap_flag
     integer, dimension(200)  :: jids, jpdt, jgdt
     integer, parameter       :: jf = 40000000
     integer                  :: listsec1(13)
@@ -21322,7 +21297,8 @@ c
 
     type (netcdfstuff) :: netcdfinfo
 
-    character                 :: ncfile*180, ncfile_has_hour0*1, match_check*1
+    character(len=180)        :: ncfile
+    character(len=1)          :: ncfile_has_hour0, match_check
     real(kind=4), allocatable :: temp_nc_time_vals_r4(:)
     real(kind=8), allocatable :: temp_nc_time_vals_r8(:)
     integer, intent(in)       :: ncfile_id
@@ -21515,13 +21491,13 @@ c
     use trkrparms
     type (trackstuff) :: trkrinfo
 
-    integer      :: imax, jmax, ifix, jfix
-    integer      :: ifilret, icvpret
-    character(*) :: cmaxmin
-    logical(1)   :: valid_pt(imax,jmax)
-    real         :: fxy(imax,jmax)
-    real         :: rlont, rlatt, xdum, gridpoint_maxmin
-    real         :: dx, dy, grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
+    integer          :: imax, jmax, ifix, jfix
+    integer          :: ifilret, icvpret
+    character(len=*) :: cmaxmin
+    logical(1)       :: valid_pt(imax,jmax)
+    real             :: fxy(imax,jmax)
+    real             :: rlont, rlatt, xdum, gridpoint_maxmin
+    real             :: dx, dy, grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
 
     call fix_latlon_to_ij (imax, jmax, dx, dy, fxy, cmaxmin, valid_pt, rlont, rlatt, xdum, ifix, jfix, &
          & gridpoint_maxmin, 'checker', 'checker', grid_maxlat, grid_minlat, grid_maxlon, grid_minlon, &
@@ -21627,14 +21603,14 @@ c
     use grid_bounds; use trkrparms; use verbose_output
     type (trackstuff) :: trkrinfo
 
-    integer      :: imax, jmax, istart, iend, jstart, jend, ifix, jfix
-    integer      :: ipfix, jpfix, i, j, ifilret, iix, jix, grfact
-    character(*) :: cmaxmin, ccall, stopcheck
-    logical(1)   :: valid_pt(imax,jmax)
-    real         :: fxy(imax,jmax)
-    real         :: parmlon, parmlat, xdataval, gridpoint_maxmin
-    real         :: xplon, yplat, dmin, dmax, dx, dy, grdspc
-    real         :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
+    integer           :: imax, jmax, istart, iend, jstart, jend, ifix, jfix
+    integer           :: ipfix, jpfix, i, j, ifilret, iix, jix, grfact
+    character(len=*)  :: cmaxmin, ccall, stopcheck
+    logical(1)        :: valid_pt(imax,jmax)
+    real              :: fxy(imax,jmax)
+    real              :: parmlon, parmlat, xdataval, gridpoint_maxmin
+    real              :: xplon, yplat, dmin, dmax, dx, dy, grdspc
+    real              :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
 
       ifilret = 0
 
@@ -22365,14 +22341,14 @@ c
 
     type (trackstuff) :: trkrinfo
 
-    integer      :: ist, ifh, imax, jmax, maxstorm, igsvret, npts, bskip, icut
-    integer      :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret, icutmax
-    integer      :: icount, ibret
-    real         :: xarray(imax,jmax)
-    real         :: re, ri, xsmoothval, xcenlon, xcenlat, dx, dy, reold, riold
-    logical(1)   :: valid_pt(imax,jmax)
-    character*1  :: in_grid
-    character(*) :: cvar
+    integer           :: ist, ifh, imax, jmax, maxstorm, igsvret, npts, bskip, icut
+    integer           :: ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret, icutmax
+    integer           :: icount, ibret
+    real              :: xarray(imax,jmax)
+    real              :: re, ri, xsmoothval, xcenlon, xcenlat, dx, dy, reold, riold
+    logical(1)        :: valid_pt(imax,jmax)
+    character(len=1)  :: in_grid
+    character(len=*)  :: cvar
 
       xsmoothval = -9999.0
 
@@ -22563,9 +22539,9 @@ c     Abstract of subroutine  get_next_ges for further details.
     real, allocatable :: mean_rh(:,:)
     real              :: re, ri, xsmoothval, xcenlon, xcenlat, dx, dy, reold, riold
     real              :: rh_1000_925_smooth, rh_800_600_smooth
-    character         :: already_computed_domain_wide_rh*1
+    character(len=1)  :: already_computed_domain_wide_rh
     logical(1)        :: valid_pt(imax,jmax), readgenflag(nreadgenparms)
-c
+
       if (allocated(mean_rh)) deallocate (mean_rh)
       allocate (mean_rh(imax,jmax),stat=imrhf)
       if (imrhf /= 0) then
@@ -22769,8 +22745,9 @@ c                endif
     real                 :: re, ri, xsmoothval, xcenlon, xcenlat, dx, dy, reold, riold
     real                 :: xmaxrh, xminrh
     logical(1)           :: valid_pt(imax,jmax)
-    character*1          :: in_grid
-    character(*)         :: clevstr, cvar
+    character(len=1)     :: in_grid
+    character(len=*)     :: clevstr, cvar
+
       print *, ' '
       print *, '!!! ERROR in calc_multi_layer_mean allocating'
       print *, '!!! point_ct array, ipc = ', ipc
@@ -22937,18 +22914,18 @@ c     &             ,point_ct(i,j)
     type (trackstuff) :: trkrinfo
     type (cint_stuff) :: contour_info
 
-    integer         :: i, j, n, isstart, ifamret, ibeg, jbeg, iend, jend
-    integer         :: ifh, maxstorm, imax, jmax, itemp, ifgcret
-    integer         :: stormct,oldstormct,mm
-    logical(1)      :: valid_pt(imax,jmax), masked_out(imax,jmax)
-    character(*)    :: cparm, cmaxmin
-    character(*)    :: gm_wrap_flag
-    integer         :: maxmini(maxstorm), maxminj(maxstorm)
-    integer(kind=8) :: ssct1, yyct1, yyct2, zzct1, zzct2, zzct3
-    integer(kind=8) :: ict, iinvct
-    real            :: fxy(imax,jmax)
-    real            :: dmax, dmin, dx, dy, dbuffer, tmp
-    real(kind=8)    :: xsum, xavg, stdx
+    integer          :: i, j, n, isstart, ifamret, ibeg, jbeg, iend, jend
+    integer          :: ifh, maxstorm, imax, jmax, itemp, ifgcret
+    integer          :: stormct,oldstormct,mm
+    logical(1)       :: valid_pt(imax,jmax), masked_out(imax,jmax)
+    character(len=*) :: cparm, cmaxmin
+    character(len=*) :: gm_wrap_flag
+    integer          :: maxmini(maxstorm), maxminj(maxstorm)
+    integer(kind=8)  :: ssct1, yyct1, yyct2, zzct1, zzct2, zzct3
+    integer(kind=8)  :: ict, iinvct
+    real             :: fxy(imax,jmax)
+    real             :: dmax, dmin, dx, dy, dbuffer, tmp
+    real(kind=8)     :: xsum, xavg, stdx
 
       if ( verb .ge. 3 ) then
       print *, ' '
@@ -23310,11 +23287,11 @@ c     &                 ,contour_info%contvals(n)
     integer                 :: int_vtq_ne, int_vtq_se, int_vtq_sw, int_vtq_nw
     integer(kind=8)         :: ssct1, yyct1, yyct2, zzct1, zzct2, zzct3
     character(len=10)       :: big_ben(3)
-    character               :: ccflag*1, get_last_isobar_flag*1, point_is_over_water*1
-    character               :: pass_checks*1, low_level_wind_circ_flag*1
-    character               :: try_low_level_circ*1, maxmin*3, cvar*3
-    character(*)            :: cmaxmin
-    character(*)            :: gm_wrap_flag
+    character(len=1)        :: ccflag, get_last_isobar_flag, point_is_over_water
+    character(len=1)        :: pass_checks, low_level_wind_circ_flag, try_low_level_circ
+    character(len=3)        :: maxmin, cvar
+    character(len=*)        :: cmaxmin
+    character(len=*)        :: gm_wrap_flag
     logical(1)              :: still_finding_valid_maxmins, rough_gradient_check_okay
     logical(1)              :: valid_pt(imax,jmax), masked_out(imax,jmax)
     logical(1)              :: pt_eligible(imax,jmax)
@@ -23322,7 +23299,7 @@ c     &                 ,contour_info%contvals(n)
     integer                 :: maxmini(maxstorm), maxminj(maxstorm)
     integer, allocatable    :: sortindex(:), ipos(:), jpos(:)
     integer, parameter      :: dp = selected_real_kind(12, 60)
-    real(dp), allocatable   ::  prstemp(:)
+    real(dp), allocatable   :: prstemp(:)
     real, allocatable       :: mslp_smoothe(:,:), slp_array(:,:)
     real, intent(in)        :: fxy(imax,jmax)
     real                    :: realmask(imax,jmax)
@@ -23986,11 +23963,11 @@ c
 
       implicit none
 
-    type (trackstuff) :: trkrinfo
+    type (trackstuff)  :: trkrinfo
 
-    character          :: one_radial_mslp_depth_flag*1
-    character          :: continuous_gradient_flag*1
-    character(*)       :: gm_wrap_flag
+    character(len=1)   :: one_radial_mslp_depth_flag
+    character(len=1)   :: continuous_gradient_flag
+    character(len=*)   :: gm_wrap_flag
     integer, parameter :: distmax = 11, num_azim = 8
     integer            :: imax, jmax, ip, jp, idist, ilevint, bimct, iazim, ifh99, iquadct
     integer            :: iazim_good_depth_ct, ibiret1, icmrgret, i, j
@@ -24346,7 +24323,7 @@ c     ------------------------------------------------------------------
     use grid_bounds; use tracked_parms; use trig_vals; use trkrparms; use verbose_output
 
 
-    type (trackstuff) :: trkrinfo
+    type (trackstuff)   :: trkrinfo
 
     integer, parameter  :: numdist = 3, numazim = 16, numquad = 4
     integer, intent(in) :: ip, jp
@@ -24361,11 +24338,11 @@ c     ------------------------------------------------------------------
     real                :: vtsum(numquad,numdist), vtquadmax(numquad)
     real                :: dx, dy, bear, targlat, targlon, xintrp_u, xintrp_v, vr, vt
     real                :: hemisphere, vtavg, full_vt_thresh, half_vt_thresh
-    character           :: low_level_wind_circ_flag*1
-    character           :: quad_pass_flag(numquad)*1
-    character           :: quad_pass_half_vt_flag(numquad)*1
-    character(*)        :: gm_wrap_flag
-    character(*)        :: tracker_application
+    character(len=1)    :: low_level_wind_circ_flag
+    character(len=1)    :: quad_pass_flag(numquad)
+    character(len=1)    :: quad_pass_half_vt_flag(numquad)
+    character(len=*)    :: gm_wrap_flag
+    character(len=*)    :: tracker_application
     logical(1)          :: valid_pt(imax,jmax)
 c
       data rdist/75.,125.,175./  ! Distances in km
@@ -24565,10 +24542,10 @@ c
     use set_max_parms; use trkrparms; use grid_bounds; use verbose_output; use level_parms
 
 
-    type (trackstuff) :: trkrinfo
+    type (trackstuff)  :: trkrinfo
 
-    character(*)       :: cmodel_type
-    character(*)       :: gm_wrap_flag
+    character(len=*)   :: cmodel_type
+    character(len=*)   :: gm_wrap_flag
     integer, parameter :: numazim = 24
     integer            :: imax, jmax, level, imbowret, nlev, iazim, i, j
     integer            :: ibiret1, ibiret2, azimuth_ct, igvtret
@@ -24963,8 +24940,8 @@ c
     use set_max_parms; use trkrparms; use contours; use grid_bounds; use verbose_output
 
 
-    type (trackstuff) :: trkrinfo
-    type (cint_stuff) :: contour_info
+    type (trackstuff)    :: trkrinfo
+    type (cint_stuff)    :: contour_info
 
     integer              :: i, j, ir, iria, irja, irx, jrx, ix, jx, imax, jmax
     integer              :: nb, ibx, jby, nct, iflip
@@ -24976,10 +24953,10 @@ c
     integer              :: num_pts_in_one_contour
     integer              :: num_requested_contours, num_found_contours
     integer              :: nm, im, jm, inall, insingle, isc_count, rlast_distct
-    character            :: found_a_point_in_our_contour*1, closed_contour*1
-    character            :: found_a_point_below_contour*1
-    character            :: found_a_point_above_contour*1, get_last_isobar_flag*1
-    character(*)         :: cmaxmin
+    character(len=1)     :: found_a_point_in_our_contour, closed_contour
+    character(len=1)     :: found_a_point_below_contour
+    character(len=1)     :: found_a_point_above_contour, get_last_isobar_flag
+    character(len=*)     :: cmaxmin
     logical(1)           :: still_scanning
     logical(1)           :: valid_pt(imax,jmax), masked_out(imax,jmax)
     logical(1)           :: point_is_already_in_our_contour(imax,jmax)
@@ -25000,7 +24977,7 @@ c
     real                 :: fxy(imax,jmax), contvals(maxconts)
     real                 :: contlo, conthi, xcentval, contlo_next, conthi_next
     real                 :: dist, degrees, rlast_distsum, plastbar, rlastbar
-c
+
       if (allocated(search_next_i))    deallocate (search_next_i)
       if (allocated(search_next_j))    deallocate (search_next_j)
       if (allocated(next_contour_i))   deallocate (next_contour_i)
@@ -25769,8 +25746,8 @@ c     &                     ,' fxy= ',fxy(irx,jrx)
     integer            :: date_time(8)
     character(len=10)  :: big_ben(3)
     logical(1)         :: valid_pt(imax,jmax)
-    character          :: point_is_over_water*1
-    character(*)       :: gm_wrap_flag
+    character(len=1)   :: point_is_over_water
+    character(len=*)   :: gm_wrap_flag
     integer, parameter :: numazim = 8
     integer            :: iazim, ibiret1, imax, jmax, ix, jx, iclmret, imct, bimct, ifh
     real               :: bear, targlat, targlon, xplon, yplat, rdist, xintrp_mask
