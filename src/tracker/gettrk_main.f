@@ -222,16 +222,15 @@ c
     real              :: x999_axirmw_dist, x999_axirmw_val, x999_divg
     real              :: x999_moist_divg, x999_rh600_800, x999_rh1000_925
     real              :: x999_omega500, x999_imzeta, x999_igzeta
-    if (iisa /= 0 .or. iva /= 0 .or. iwa /= 0 .or. icmcf /= 0 .or. &
-       & ivt8f /= 0 .or. icmc2f /= 0 .or. iqwcf /= 0) then
-        if ( verb .ge. 1 ) then
-          print *, ' '
-          print *, '!!! ERROR in sub tracker allocating prsindex,'
-          print *, '!!! prstemp or iwork array for storms: iisa = ',      iisa
-          print *, '!!! iva   = ', iva,   ' iwa    = ', iwa, ' icmcf = ', icmcf
-          print *, '!!! ivt8f = ', ivt8f, ' icmc2f = ', icmc2f
-          print *, '!!! iqwcf = ', iqwcf
-        endif
+    if (iisa /= 0 .or. iva /= 0 .or. iwa /= 0 .or. icmcf /= 0 .or. ivt8f /= 0 .or. icmc2f /= 0 .or. iqwcf /= 0) then
+      if (verb .ge. 1) then
+        print *, ' '
+        print *, '!!! ERROR in sub tracker allocating prsindex,'
+        print *, '!!! prstemp or iwork array for storms: iisa = ',      iisa
+        print *, '!!! iva   = ', iva,   ' iwa    = ', iwa, ' icmcf = ', icmcf
+        print *, '!!! ivt8f = ', ivt8f, ' icmc2f = ', icmc2f
+        print *, '!!! iqwcf = ', iqwcf
+      endif
         itret = 94
         return
       endif
@@ -258,31 +257,20 @@ c
       fixlon  =    -999.0
       fixlat  =    -999.0
 
-    if (inp%file_seq == 'multi') then
-        ! Each tau will have a separate file, starting with unit 
-        ! number 200 (GRIB data) and 5200 (GRIB index file) and 
-        ! incrementing upwards from there for each tau.
-      if (trkrinfo%gribver == 1) then
-          lugb =  200
-c          lugi = 5200
-          lugi = 600 ! 3/2017: w3lib on Jet cannot handle unit #'s >999
-      else
-          lugb =  200
-c          lugi = 5200
-          lugi = 600 ! 3/2017: w3lib on Jet cannot handle unit #'s >999
-      endif
-    else
-        ! All lead times are included in one big file.  These values
-        ! for lugb and lugi will remain static for all taus.
+      if (inp%file_seq == 'multi') then
+        if (trkrinfo%gribver == 1) then
+        else
+        endif
+      else ! All lead times are included in one big file; these values for lugb and lugi will remain static for all taus.
         lugb = 11
         lugi = 31
-    endif
+      endif
 
       ifh = 1
 
-    if (verb .ge. 3) then
-      print *, 'top of tracker, ifh = ', ifh, ' ifhmax = ', ifhmax
-    endif
+      if (verb .ge. 3) then
+        print *, 'top of tracker, ifh = ', ifh, ' ifhmax = ', ifhmax
+      endif
 
       !--------------------------------------------------------------
       ! ifhloop - Forecast hour loop
@@ -292,190 +280,165 @@ c          lugi = 5200
 
         already_computed_domain_wide_rh = 'n'
 
-    if (verb .ge. 3) then
-      print *, ' '
-      print *, '*-------------------------------------------*'
-      write (6,402) ifhours(ifh), ifclockmins(ifh)
-402   format (1x, '*   New forecast hour: ', i4, ':', i2.2)
-      print *, '*-------------------------------------------*'
-    endif
+      if (verb .ge. 3) then
+        print *, ' '
+        print *, '*-------------------------------------------*'
+        write (6,402) ifhours(ifh), ifclockmins(ifh)
+  402   format (1x, '*   New forecast hour: ', i4, ':', i2.2)
+        print *, '*-------------------------------------------*'
+      endif
 
-    if (inp%file_seq == 'multi') then
+      if (inp%file_seq == 'multi') then
 
           lugb = lugb + 1
-      call get_grib_file_name (ifh, gfilename, ifilename)
+        call get_grib_file_name (ifh, gfilename, ifilename)
         
-      if (use_waitfor == 'y') then
+        if (use_waitfor == 'y') then
 
-        call waitfor(trim(gfilename), waitfor_gfile_status,       &
-                    & wait_min_age, wait_min_size, wait_max_wait, &
-                    & wait_sleeptime)
+          call waitfor(trim(gfilename), waitfor_gfile_status,       &
+                      & wait_min_age, wait_min_size, wait_max_wait, &
+                      & wait_sleeptime)
 
-        if (waitfor_gfile_status /= 0) then
-          print *, ' '
-          write(6,405)
-          write(6,406) wait_max_wait, trim(gfilename)
-405       format('ERROR: TIMEOUT from waitfor for GRIB file.')
-406       format('Waited longer than ', I0, ' seconds for "', A, '"')
-          stop 91
+          if (waitfor_gfile_status /= 0) then
+            print *, ' '
+            write(6,405)
+            write(6,406) wait_max_wait, trim(gfilename)
+405         format('ERROR: TIMEOUT from waitfor for GRIB file.')
+406         format('Waited longer than ', I0, ' seconds for "', A, '"')
+            stop 91
+          endif
+
+          call waitfor(trim(ifilename), waitfor_ifile_status, wait_min_age, wait_min_size, wait_max_ifile_wait, wait_sleeptime)
+
+          if (waitfor_ifile_status /= 0) then
+            print *, ' '
+            write(6,415)
+            write(6,416) wait_max_ifile_wait, trim(ifilename)
+415         format('ERROR: TIMEOUT from waitfor for INDEX file.')
+416         format('Waited longer than ', I0, ' seconds for "', A, '"')
+            stop 91
+          endif
         endif
-        call waitfor(trim(ifilename), waitfor_ifile_status, wait_min_age, &
-                    & wait_min_size, wait_max_ifile_wait, wait_sleeptime)
 
-        if (waitfor_ifile_status /= 0) then
-          print *, ' '
-          write(6,415)
-          write(6,416) wait_max_ifile_wait, trim(ifilename)
-415       format('ERROR: TIMEOUT from waitfor for INDEX file.')
-416       format('Waited longer than ', I0, ' seconds for "', A, '"')
-          stop 91
+        call open_grib_files (inp, lugb, lugi, gfilename, ifilename, lout, iret)
+
+        if (iret /= 0) then
+          print '(/,a50,i4,/)', '!!! ERROR: from open_grib_files, rc = ', iret
+          print *, '!!! Files after hour0 are missing, exiting normally'
+          stop 0
         endif
       endif
 
-      call open_grib_files (inp, lugb, lugi, gfilename, ifilename, lout, iret)
-
-      if (iret /= 0) then
-        print '(/,a50,i4,/)', '!!! ERROR: from open_grib_files, rc = ', iret
-        print *, '!!! Files after hour0 are missing, exiting normally'
-        stop 0
-      endif
-    endif
-
-    if (trkrinfo%inp_data_type == 'grib') then
-          inquire (unit=lugb, opened=file_open)
+      if (trkrinfo%inp_data_type == 'grib') then
+        inquire (unit = lugb, opened = file_open)
         if (file_open) then
-            print *, 'TEST b4 getgridinfo, unit lugb = ', lugb, ' is OPEN'
-          else
-            print *, 'TEST b4 getgridinfo, unit lugb = ', lugb, ' is CLOSED'
-          endif
-
-          inquire (unit=lugi, opened=file_open)
-
-          if (file_open) then
-            print *, 'TEST b4 getgridinfo, unit lugi = ', lugi, ' is OPEN'
-          else
-            print *, 'TEST b4 getgridinfo, unit lugi = ', lugi, ' is CLOSED'
-          endif
+          print *, 'TEST b4 getgridinfo, unit lugb = ', lugb, ' is OPEN'
+        else
+          print *, 'TEST b4 getgridinfo, unit lugb = ', lugb, ' is CLOSED'
         endif
 
-        if (ifh == 1 .and. iftotalmins(ifh) == 0 .and. &
-           & trkrinfo%inp_data_type == 'netcdf'  .and. &
-           & ncfile_has_hour0 == 'n') then
+        if (file_open) then
+          print *, 'TEST b4 getgridinfo, unit lugi = ', lugi, ' is OPEN'
+        else
+          print *, 'TEST b4 getgridinfo, unit lugi = ', lugi, ' is CLOSED'
+        endif
+      endif
 
-          null_netcdf_hour0_storm_loop: do inctcv = 1,numtcv
+      if (ifh == 1 .and. iftotalmins(ifh) == 0 .and. trkrinfo%inp_data_type == 'netcdf' .and. ncfile_has_hour0 == 'n') then
 
-            call output_atcfunix (x999_lon, x999_lat, inp, inctcv,         &
-                 & izero_fhr, xzero_vmax, xzero_minslp, vradius, maxstorm, &
-                 & trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals,       &
-                 & wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag,      &
-                 & x999_shrdir, x999_sst, x999_axirmw_dist, x999_axirmw_val, ioaxret)
+          call output_atcfunix (x999_lon, x999_lat, inp, inctcv,         &
+               & izero_fhr, xzero_vmax, xzero_minslp, vradius, maxstorm, &
+               & trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals,       &
+               & wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag,      &
+               & x999_shrdir, x999_sst, x999_axirmw_dist, x999_axirmw_val, ioaxret)
 
-            imeanzeta = -99
-            igridzeta = -99
-            call output_aext (x999_lon, x999_lat, inp, inctcv, izero_fhr, xzero_vmax, &
-                 & xzero_minslp, vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar,     &
-                 & x99_rmax, cps_vals, wcore_flag, i999_stmspd, i999_stmdir,          &
-                 & x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,              &
-                 & x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800,       &
-                 & x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
+          call output_aext (x999_lon, x999_lat, inp, inctcv, izero_fhr, xzero_vmax, &
+               & xzero_minslp, vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar,     &
+               & x99_rmax, cps_vals, wcore_flag, i999_stmspd, i999_stmdir,          &
+               & x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,              &
+               & x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800,       &
+               & x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
 
-            if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
+          if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
+            call output_atcf_gen (x999_lon, x999_lat, inp, inctcv, izero_fhr,   &
+                 & xzero_vmax, xzero_minslp, vradius, maxstorm, trkrinfo,       &
+                 & i999_stmspd, i999_stmdir, x99_pbar, x99_rbar, x99_rmax,      &
+                 & cps_vals, c_undef_wcflag, imeanzeta, igridzeta, x999_shrmag, &
+                 & x999_shrdir, x999_divg, x999_moist_divg, x999_rh600_800,     &
+                 & x999_rh1000_925, x999_omega500, x999_sst, x999_axirmw_dist,  &
+                 & x999_axirmw_val, ioaxret)
+          endif
 
-              call output_atcf_gen (x999_lon, x999_lat, inp, inctcv, izero_fhr,   &
-                   & xzero_vmax, xzero_minslp, vradius, maxstorm, trkrinfo,       &
-                   & i999_stmspd, i999_stmdir, x99_pbar, x99_rbar, x99_rmax,      &
-                   & cps_vals, c_undef_wcflag, imeanzeta, igridzeta, x999_shrmag, &
-                   & x999_shrdir, x999_divg, x999_moist_divg, x999_rh600_800,     &
-                   & x999_rh1000_925, x999_omega500, x999_sst, x999_axirmw_dist,  &
-                   & x999_axirmw_val, ioaxret)
-            endif
+          call output_hfip (x999_lon, x999_lat, inp, inctcv, ifh, xzero_vmax &
+               & xzero_minslp, vradius, x99_rmax, ioaxret)
 
-            call output_hfip (x999_lon, x999_lat, inp, inctcv, ifh, xzero_vmax &
-                 & xzero_minslp, vradius, x99_rmax, ioaxret)
+          if (verb .ge. 3) then
+            print *, ' '
+            print *, '++ NOTE: Even though a fix could not be'
+            print *, '   made for this storm at 00h, we will '
+            print *, '   use the storm heading info from tc'
+            print *, '   vitals to create a guess for the next'
+            print *, '   lead time and attempt to track again'
+            print *, '   at that time.'
+            print *, '   ifh = ', ifh, ' ist = ', inctcv
+            write (6,431) storm(inctcv)%tcv_storm_id, storm(inctcv)%tcv_storm_name
+ 431        format (1x, '  storm_id = ', a4, ' storm_name = ', a9)
+          endif
 
-            if (verb .ge. 3) then
-              print *, ' '
-              print *, '++ NOTE: Even though a fix could not be'
-              print *, '   made for this storm at 00h, we will '
-              print *, '   use the storm heading info from tc'
-              print *, '   vitals to create a guess for the next'
-              print *, '   lead time and attempt to track again'
-              print *, '   at that time.'
-              print *, '   ifh = ', ifh, ' ist = ', inctcv
-              write (6,431) storm(inctcv)%tcv_storm_id, storm(inctcv)%tcv_storm_name
- 431          format (1x, '  storm_id = ', a4, ' storm_name = ', a9)
-            endif
+          call advect_tcvitals_from_hour0 (slonfg, slatfg, maxstorm, inctcv, ifh, trkrinfo, iatret)
 
-            call advect_tcvitals_from_hour0 (slonfg, slatfg, maxstorm, inctcv, ifh, trkrinfo, iatret)
-
-            if (iatret /= 0) then
-              fixlon (inctcv,ifh) = -999.0
-              fixlat (inctcv,ifh) = -999.0
-              stormswitch(inctcv) = 2
-              cycle null_netcdf_hour0_storm_loop
-            endif
+          if (iatret /= 0) then
+            fixlon (inctcv,ifh) = -999.0
+            fixlat (inctcv,ifh) = -999.0
+            stormswitch(inctcv) = 2
+            cycle ! null_netcdf_hour0_storm_loop
+          endif
 
             stormswitch(inctcv) = 1
 
           enddo null_netcdf_hour0_storm_loop
 
-          ifh = ifh + 1
-          cycle ifhloop
+        cycle ! ifhloop
+      endif
 
+      if (trkrinfo%inp_data_type == 'grib') then
+        call getgridinfo_grib (imax, jmax, ifh, dx, dy, lugb, lugi, &
+             & trkrinfo, need_to_flip_lats, need_to_flip_lons,      &
+             & inp, gm_wrap_flag, iggret)
+
+      elseif (trkrinfo%inp_data_type == 'netcdf') then
+        call getgridinfo_netcdf (ncfile_id, imax, jmax, dx, dy, &
+             & trkrinfo, need_to_flip_lats, need_to_flip_lons,  &
+             & inp, netcdfinfo, iggret)
+
+      else
+        print *, ' '
+        print *, '!!! ERROR: trkrinfo%inp_data_type NOT VALID '
+        print *, '!!! trkrinfo%inp_data_type= ', trkrinfo%inp_data_type
+        print *, '!!! Should have value of grib or netcdf.'
+        print *, '!!! EXITING....'
+        print *, ' '
+        stop 93
+      endif
+
+      if (iggret == 0) then
+        if ( verb .ge. 1 ) then
+          print *, 'TEST after getgridinfo in sub tracker, iggret = ', iggret
         endif
+      else
+        if (verb .ge. 1) then
+          print '(/,a50,i4,/)', '!!! ERROR: in getgridinfo, rc = ', iggret
+        endif
+        stop 95
+      endif
 
-        !--------------------------------------------------------------
-        ! Make call to getgridinfo in order to get info on the imax,
-        ! jmax, as well as the x- and y-increments, and also to see if
-        ! the grid is correctly oriented for the  tracker so that the 
-        ! data go north to south and west to east or if we need to flip
-        ! either the lats or the lons.
-        !--------------------------------------------------------------
-
-        if (trkrinfo%inp_data_type == 'grib') then
-          call getgridinfo_grib (imax, jmax, ifh, dx, dy, lugb, lugi, &
-               & trkrinfo, need_to_flip_lats, need_to_flip_lons,      &
-               & inp, gm_wrap_flag, iggret)
-
-        elseif (trkrinfo%inp_data_type == 'netcdf') then
-          call getgridinfo_netcdf (ncfile_id, imax, jmax, dx, dy, &
-               & trkrinfo, need_to_flip_lats, need_to_flip_lons,  &
-               & inp, netcdfinfo, iggret)
-
+      if (inp%modtyp == 'regional' .and. inp%nesttyp == 'moveable') then
+        if (glatmax == prev_latmax .and. glatmin == prev_latmin .and. &
+            glonmax == prev_lonmax .and. glonmin == prev_lonmin) then
         else
-          print *, ' '
-          print *, '!!! ERROR: trkrinfo%inp_data_type NOT VALID '
-          print *, '!!! trkrinfo%inp_data_type= ', trkrinfo%inp_data_type
-          print *, '!!! Should have value of grib or netcdf.'
-          print *, '!!! EXITING....'
-          print *, ' '
-          stop 93
         endif
-
-        if (iggret == 0) then
-          if ( verb .ge. 1 ) then
-            print *, 'TEST after getgridinfo in sub tracker, iggret = ', iggret
-          endif
-        else
-          if ( verb .ge. 1 ) then
-            print '(/,a50,i4,/)', '!!! ERROR: in getgridinfo, rc = ', iggret
-          endif
-          stop 95
-        endif
-
-        if (inp%modtyp == 'regional' .and. inp%nesttyp == 'moveable') then
-          if (glatmax == prev_latmax .and. glatmin == prev_latmin .and. &
-             glonmax == prev_lonmax .and. glonmin == prev_lonmin) then
-            ! the last lead time.  This could be an indication that the
-            ! model lost the storm and so the grid has not moved to 
-            ! stay with the cyclone center. Set a flag to indicate this.
-            gridmove_status = 'stopped'
-          else
-            gridmove_status = 'moving'
-          endif
-        else
-          gridmove_status = 'notappl'
-        endif
+      else
+      endif
 
         prev_latmax = glatmax
         prev_latmin = glatmin
@@ -484,26 +447,24 @@ c          lugi = 5200
 
         gotten_avg_value = 'n'
 
-c       First, allocate the working data arrays....
-
-        if (allocated(valid_pt))    deallocate (valid_pt)
-        if (allocated(zeta))        deallocate (zeta)
-        if (allocated(u))           deallocate (u)
-        if (allocated(v))           deallocate (v)
-        if (allocated(hgt))         deallocate (hgt)
-        if (allocated(slp))         deallocate (slp)
-        if (allocated(tmean))       deallocate (tmean)
-        if (allocated(cpshgt))      deallocate (cpshgt)
-        if (allocated(thick))       deallocate (thick)
-        if (allocated(lsmask))      deallocate (lsmask)
-        if (allocated(sst))         deallocate (sst)
-        if (allocated(q850))        deallocate (q850)
-        if (allocated(rh))          deallocate (rh)
-        if (allocated(spfh))        deallocate (spfh)
-        if (allocated(temperature)) deallocate (temperature)
-        if (allocated(omega500))    deallocate (omega500)
-        if (allocated(masked_out))  deallocate (masked_out)
-        if (allocated(masked_outc)) deallocate (masked_outc)
+      if (allocated(valid_pt))    deallocate (valid_pt)
+      if (allocated(zeta))        deallocate (zeta)
+      if (allocated(u))           deallocate (u)
+      if (allocated(v))           deallocate (v)
+      if (allocated(hgt))         deallocate (hgt)
+      if (allocated(slp))         deallocate (slp)
+      if (allocated(tmean))       deallocate (tmean)
+      if (allocated(cpshgt))      deallocate (cpshgt)
+      if (allocated(thick))       deallocate (thick)
+      if (allocated(lsmask))      deallocate (lsmask)
+      if (allocated(sst))         deallocate (sst)
+      if (allocated(q850))        deallocate (q850)
+      if (allocated(rh))          deallocate (rh)
+      if (allocated(spfh))        deallocate (spfh)
+      if (allocated(temperature)) deallocate (temperature)
+      if (allocated(omega500))    deallocate (omega500)
+      if (allocated(masked_out))  deallocate (masked_out)
+      if (allocated(masked_outc)) deallocate (masked_outc)
 
         ! Allocate all of the allocatable arrays....
       
@@ -526,56 +487,47 @@ c       First, allocate the working data arrays....
         itempa  = 0
         iomegaa = 0
 
-        if (sstflag == 'y' .or. sstflag == 'Y') then
+      if (sstflag == 'y' .or. sstflag == 'Y') then
           allocate (sst(imax,jmax),stat=issta)
+      endif
+
+      if (genflag == 'y') then
+      endif
+
+      if (phaseflag == 'y') then
+        if (phasescheme == 'cps' .or. phasescheme == 'both') then
+          if (allocated(cpshgt)) deallocate (cpshgt)
+        endif
+      endif
+
+      if (iza /= 0 .or. iua /= 0 .or. iha /= 0 .or. ivpa /= 0 .or.          &
+         & iva /= 0 .or. isa /= 0 .or. icpsa /= 0 .or. ita /= 0 .or.        &
+         & itha /= 0 .or. imoa /= 0 .or. imoca /= 0 .or. ilma /= 0 .or.     &
+         & issta /= 0 .or. iq850a /= 0 .or. irha /= 0 .or. ispfha /= 0 .or. &
+         & itempa /= 0 .or. iomegaa /= 0) then
+
+        if (verb .ge. 1) then
+          print *, ' '
+          print *, '!!! ERROR in sub tracker allocating arrays.'
+          print *, '!!! iza     = ', iza,    ' iua    = ', iua,  ' iha   = ', iha
+          print *, '!!! iva     = ', iva,    ' isa    = ', isa,  ' icpsa = ', icpsa
+          print *, '!!! iksa    = ', iksa,   ' isda   = ', isda, ' ivpa  = ', ivpa
+          print *, '!!! ita     = ', ita,    ' imoa   = ', imoa, ' imoca = ', imoca
+          print *, '!!! itha    = ', itha,   ' ilma   = ', ilma, ' issta = ', issta
+          print *, '!!! iq850a  = ', iq850a, ' irha   = ', irha
+          print *, '!!! ispfha  = ', ispfha, ' itempa = ', itempa
+          print *, '!!! iomegaa = ', iomegaa
         endif
 
-        if (genflag == 'y') then
-          allocate (q850(imax,jmax),stat=iq850a)
-          allocate (rh(imax,jmax,nlevmoist),stat=irha)
-          allocate (spfh(imax,jmax,nlevmoist),stat=ispfha)
-          allocate (temperature(imax,jmax,nlevmoist)
-     &             ,stat=itempa)
-          allocate (omega500(imax,jmax),stat=iomegaa)
-        endif
-      
-        ita=0
-        icpsa=0 
-        if (phaseflag == 'y') then
-          if (phasescheme == 'cps' .or. phasescheme == 'both') then
-            if (allocated(cpshgt)) deallocate (cpshgt)
-            allocate (cpshgt(imax,jmax,nreadcpsparms),stat=icpsa)
-          endif
-        endif   
-
-        if (iza /= 0 .or. iua /= 0 .or. iha /= 0 .or. ivpa /= 0 .or.          &
-           & iva /= 0 .or. isa /= 0 .or. icpsa /= 0 .or. ita /= 0 .or.        &
-           & itha /= 0 .or. imoa /= 0 .or. imoca /= 0 .or. ilma /= 0 .or.     &
-           & issta /= 0 .or. iq850a /= 0 .or. irha /= 0 .or. ispfha /= 0 .or. &
-           & itempa /= 0 .or. iomegaa /= 0) then
-
-          if ( verb .ge. 1 ) then
-            print *, ' '
-            print *, '!!! ERROR in sub tracker allocating arrays.'
-            print *, '!!! iza     = ', iza,    ' iua    = ', iua,  ' iha   = ', iha
-            print *, '!!! iva     = ', iva,    ' isa    = ', isa,  ' icpsa = ', icpsa
-            print *, '!!! iksa    = ', iksa,   ' isda   = ', isda, ' ivpa  = ', ivpa
-            print *, '!!! ita     = ', ita,    ' imoa   = ', imoa, ' imoca = ', imoca
-            print *, '!!! itha    = ', itha,   ' ilma   = ', ilma, ' issta = ', issta
-            print *, '!!! iq850a  = ', iq850a, ' irha   = ', irha
-            print *, '!!! ispfha  = ', ispfha, ' itempa = ', itempa
-            print *, '!!! iomegaa = ', iomegaa
-          endif
-          itret = 94
-          return
-        endif
+        return
+      endif
 
         masked_out  = .false.   ! Initialize all pts to false at each hr
         masked_outc = .false.   ! Initialize all pts to false at each hr
 
-        if (verb .ge. 3) then
-          print *, 'in beginning of tracker, imax = ', imax, ' jmax = ', jmax
-        endif
+      if (verb .ge. 3) then
+        print *, 'in beginning of tracker, imax = ', imax, ' jmax = ', jmax
+      endif
 
 c       Initialize all readflags to NOT FOUND for this forecast time,
 c       then call subroutine to read data for this forecast time.
@@ -596,126 +548,86 @@ c       then call subroutine to read data for this forecast time.
         readflag    = .FALSE.
         readgenflag = .FALSE.
 
-        if(enable_timing/=0) then
+      if (enable_timing /= 0) then
           ileadtime = nint(fhreal(ifh) * 100.0)
           ifcsthour = ileadtime / 100
-          call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-          write (6,31) ifcsthour, date_time(5), date_time(6), date_time(7)
- 31       format (1x, 'TIMING: b4 getdata at ', i5, 'h ... ', i2.2, ':', i2.2, ':', i2.2)
+        call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+        write (6,31) ifcsthour, date_time(5), date_time(6), date_time(7)
+ 31     format (1x, 'TIMING: b4 getdata at ', i5, 'h ... ', i2.2, ':', i2.2, ':', i2.2)
+      endif
+
+      if (trkrinfo%inp_data_type == 'grib') then
+        call getdata_grib (readflag, readgenflag, valid_pt, imax, jmax, ifh, &
+             & need_to_flip_lats, need_to_flip_lons, inp, lugb, lugi, trkrinfo)
+
+      elseif (trkrinfo%inp_data_type == 'netcdf') then
+        call getdata_netcdf (ncfile_id, nc_lsmask_file_id, readflag, readgenflag, &
+             & valid_pt, imax, jmax, ifh, need_to_flip_lats, need_to_flip_lons,   &
+             & ncfile_tmax, netcdfinfo, trkrinfo)
+      endif
+
+      if (enable_timing /= 0) then
+        call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+        write (6,32) date_time(5), date_time(6), date_time(7)
+ 32     format (1x, 'TIMING: after getdata ... ', i2.2, ':', i2.2, ':', i2.2)
+      endif
+
+        if (readflag(irf)) idum = idum + 1
+
+        if (irf > 2 .and. irf < 10) then
+
         endif
 
-        if (trkrinfo%inp_data_type == 'grib') then
-          call getdata_grib (readflag, readgenflag, valid_pt, imax, jmax, ifh, &
-               & need_to_flip_lats, need_to_flip_lons, inp, lugb, lugi, trkrinfo)
-
-        elseif (trkrinfo%inp_data_type == 'netcdf') then
-          call getdata_netcdf (ncfile_id, nc_lsmask_file_id, readflag, readgenflag, &
-               & valid_pt, imax, jmax, ifh, need_to_flip_lats, need_to_flip_lons,   &
-               & ncfile_tmax, netcdfinfo, trkrinfo)
-        endif
-
-        if(enable_timing/=0) then
-          call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-          write (6,32) date_time(5), date_time(6), date_time(7)
- 32       format (1x, 'TIMING: after getdata ... ', i2.2, ':', i2.2, ':', i2.2)
-        endif
- 
-c       Count how many parms were successfully read for this fcst time.
-c       Also, for right now, put the value of readflag into all of the
-c       calcparms for parameters 3 through 9.  Note that in getdata we
-c       read in 19 parms, but in this next loop we only check the 
-c       readflags up to maxtp (= 14 as of 7/2015).  That's because
-c       read parms 12 & 13 are for 500 mb u & v, which are not used for
-c       tracking (only for calculating the deep layer mean wind for
-c       the next guess), parm 14 is the 300-500 mb mean temperature, 
-c       which is used for determining storm phase, parms 15 & 16 are for
-c       500 & 200 mb hgt, parm 17 is land-sea mask, and parms 18-19 are
-c       200 mb u & v.  Parms 10 & 11 are for the near-surface winds, 
-c       which are used in estimating surface winds near the storm, and 
-c       will now also be used as a parameter for position estimates.  
-
-        idum = 0
-        do irf = 1,nreadparms
-          if (readflag(irf)) idum = idum + 1
-
-          if (irf > 2 .and. irf < 10) then
-            ! calcparm for parms > 9 is done further below.
-            do jj=1,maxstorm
-              calcparm(irf,jj) = readflag(irf)
-            enddo
-          endif
-        enddo          
-
-        if (verb .ge. 3) then
-          print *, ' '
-          print *, 'Of ', nreadparms, ' readable parms, you read in ', idum
-          print *, 'parms for this fcst hour from the input grib file.'
-        endif
+      if (verb .ge. 3) then
+        print *, ' '
+        print *, 'Of ', nreadparms, ' readable parms, you read in ', idum
+        print *, 'parms for this fcst hour from the input grib file.'
+      endif
 
 c       If not enough tracked parms were read in, exit the program....
 
-        if (idum == 0) then
+      if (idum == 0) then
 
-          if (verb .ge. 1) then
-            print *, ' '
-            print *, '!!! ERROR in subroutine  tracker'
-            print *, '!!! Not enough tracked parms read in from getdata.'
-            print *, '!!! Check for a problem with the input GRIB file.'
-            print *, '!!! Model identifier = ', inp%model
-            print *, '!!! STOPPING EXECUTION FOR THIS MODEL'
-          endif
-          itret = 99
-          ifhtemp = ifh
-          do while (ifhtemp <= ifhmax)
-            do istmp=1,maxstorm
-              fixlon (istmp,ifhtemp) = -999.0
-              fixlat (istmp,ifhtemp) = -999.0
-            enddo
-            ifhtemp = ifhtemp + 1
-          enddo
-
-          call output_all (fixlon, fixlat, inp, maxstorm, ifhmax, ioaret)
-          call output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax, ioaret)
-
-          if (ifh == 1) then
-            ! Per Jim Gross (1/01), if the  tracker ran but was unable
-            ! to get an initial fix (or, in this case, unable to get 
-            ! the data needed to run), write out zeroes for the 00h 
-            ! fixes to indicate that the  tracker ran unsuccessfully, 
-            ! but don't write out any subsequent forecast times
-            ! with zeroes....
-            vradius = 0
-            cps_vals(1) =  -9999.0
-            cps_vals(2) =  -9999.0
-            cps_vals(3) =  -9999.0
-            wcore_flag  = 'u'   ! 'u' = initial value of 'undetermined'
-            do istmp = 1,maxstorm
-              if (stormswitch(istmp) /= 3) then
-                call output_atcfunix (x999_lon, x999_lat, inp, istmp, ifcsthour, xzero_vmax,  &
-                     & xzero_minslp, vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar,         &
-                     & x99_rmax, cps_vals, wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag, &
-                     & x999_shrdir, x999_sst, x999_axirmw_dist, x999_axirmw_val, ioaxret)
-                call output_aext (x999_lon, x999_lat, inp, istmp, ifcsthour, xzero_vmax,         &
-                     & xzero_minslp, vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax,  &
-                     & cps_vals, wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, &
-                     & x999_sst, x999_axirmw_dist, x999_axirmw_val, x999_divg, x999_moist_divg,  &
-                     & x999_rh600_800, x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
-
-                call output_hfip (x999_lon, x999_lat, inp, istmp, ifh, xzero_vmax, xzero_minslp, &
-                     & vradius, x99_rmax, ioaxret)
-              endif
-            enddo
-          endif
-          return
+        if (verb .ge. 1) then
+          print *, ' '
+          print *, '!!! ERROR in subroutine  tracker'
+          print *, '!!! Not enough tracked parms read in from getdata.'
+          print *, '!!! Check for a problem with the input GRIB file.'
+          print *, '!!! Model identifier = ', inp%model
+          print *, '!!! STOPPING EXECUTION FOR THIS MODEL'
         endif
 
-        if (user_wants_to_track_gph850 == 'n' .or. user_wants_to_track_gph850 == 'N') then
+
+        call output_all (fixlon, fixlat, inp, maxstorm, ifhmax, ioaret)
+        call output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax, ioaret)
+
+        if (ifh == 1) then
+            if (stormswitch(istmp) /= 3) then
+              call output_atcfunix (x999_lon, x999_lat, inp, istmp, ifcsthour, xzero_vmax,  &
+                   & xzero_minslp, vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar,         &
+                   & x99_rmax, cps_vals, wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag, &
+                   & x999_shrdir, x999_sst, x999_axirmw_dist, x999_axirmw_val, ioaxret)
+              call output_aext (x999_lon, x999_lat, inp, istmp, ifcsthour, xzero_vmax,         &
+                   & xzero_minslp, vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax,  &
+                   & cps_vals, wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, &
+                   & x999_sst, x999_axirmw_dist, x999_axirmw_val, x999_divg, x999_moist_divg,  &
+                   & x999_rh600_800, x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
+
+              call output_hfip (x999_lon, x999_lat, inp, istmp, ifh, xzero_vmax, xzero_minslp, &
+                   & vradius, x99_rmax, ioaxret)
+            endif
+            enddo
+        endif
+        return
+      endif
+
+      if (user_wants_to_track_gph850 == 'n' .or. user_wants_to_track_gph850 == 'N') then
           do jj=1,maxstorm
             calcparm(7,jj) = .FALSE.
           enddo
         endif
 
-        if (user_wants_to_track_gph700 == 'n' .or. user_wants_to_track_gph700 == 'N') then
+      if (user_wants_to_track_gph700 == 'n' .or. user_wants_to_track_gph700 == 'N') then
           do jj=1,maxstorm
             calcparm(8,jj) = .FALSE.
           enddo
@@ -780,158 +692,87 @@ c       vorticity calcparms to TRUE for all storms for now.
         endif
 
 
-        if (readflag(3) .and. readflag(4)) then
-          if (user_wants_to_track_wcirc850 == 'n' .or. user_wants_to_track_wcirc850 == 'N') then
+      if (readflag(3) .and. readflag(4)) then
+        if (user_wants_to_track_wcirc850 == 'n' .or. user_wants_to_track_wcirc850 == 'N') then
             do jj=1,maxstorm
               calcparm(3,jj) = .FALSE.
             enddo
-          else
+        else
             do jj=1,maxstorm
               calcparm(3,jj) = .TRUE.
             enddo
-          endif
-        else
+        endif
+      else
           do jj=1,maxstorm
             calcparm(3,jj) = .FALSE.
           enddo
-        endif
+      endif
 
-        if (readflag(5) .and. readflag(6)) then
-          if (user_wants_to_track_wcirc700 == 'n' .or. user_wants_to_track_wcirc700 == 'N') then
+      if (readflag(5) .and. readflag(6)) then
+        if (user_wants_to_track_wcirc700 == 'n' .or. user_wants_to_track_wcirc700 == 'N') then
             do jj=1,maxstorm
               calcparm(5,jj) = .FALSE.
             enddo
-          else
+        else
             do jj=1,maxstorm
               calcparm(5,jj) = .TRUE.
             enddo
-          endif
-        else
+        endif
+      else
           do jj=1,maxstorm
             calcparm(5,jj) = .FALSE.
           enddo
-        endif
+      endif
 
-
-c       Compute the sfc vorticity if sfc_u and sfc_v have been read in.
-
-        if (readflag(10) .and. readflag(11)) then
-          if (user_wants_to_track_wcircsfc == 'n' .or. user_wants_to_track_wcircsfc == 'N') then
-            do jj=1,maxstorm
-              calcparm(10,jj) = .FALSE.
-            enddo
-          else
-            do jj=1,maxstorm
-              calcparm(10,jj) = .TRUE.
-            enddo
-          endif
-
-          if (user_wants_to_track_zetasfc == 'n' .or. user_wants_to_track_zetasfc == 'N') then
-            do jj=1,maxstorm
-              calcparm(11,jj) = .FALSE.
-            enddo
-          else
-            ! The 3 in the next call to rvcal is to indicate the 3rd 
-            ! level for the zeta array, which is for the surface (or 
-            ! 10m) data.
-            call rvcal (imax, jmax, dx, dy, 3, valid_pt)
-            do jj=1,maxstorm
-              calcparm(11,jj) = .TRUE.
-            enddo
-          endif
-
+      if (readflag(10) .and. readflag(11)) then
+        if (user_wants_to_track_wcircsfc == 'n' .or. user_wants_to_track_wcircsfc == 'N') then
         else
-          do jj=1,maxstorm
-            calcparm(10,jj) = .FALSE.
-            calcparm(11,jj) = .FALSE.
-          enddo
         endif
 
+        if (user_wants_to_track_zetasfc == 'n' .or. user_wants_to_track_zetasfc == 'N') then
+        else
+          call rvcal (imax, jmax, dx, dy, 3, valid_pt)
+        endif
 
-c       Compute the  thicknesses for 200-850, 200-500 and 500-850 mb
-c       if the gp hgt fields have been read in for 200, 500 and 850.
+      else
+      endif
 
-        if (readflag(7) .and. readflag(15) .and. readflag(16)) then
+      if (readflag(7) .and. readflag(15) .and. readflag(16)) then
+          if (user_wants_to_track_thick500850 == 'n' .or. user_wants_to_track_thick500850 == 'N') then
+      
 
-          call thickness_calc (imax,jmax,valid_pt)
-
-          do jj=1,maxstorm
-
-            if (user_wants_to_track_thick500850 == 'n' .or. user_wants_to_track_thick500850 == 'N') then
+          if (user_wants_to_track_thick500850 == 'n' .or. user_wants_to_track_thick500850 == 'N') then
               calcparm(12,jj) = .FALSE.
-            else
+          else
               calcparm(12,jj) = .TRUE.
-            endif
-
-            if (user_wants_to_track_thick200500 == 'n' .or. user_wants_to_track_thick200500 == 'N') then
-              calcparm(13,jj) = .FALSE.
-            else
-              calcparm(13,jj) = .TRUE.
-            endif
-
-            if (user_wants_to_track_thick200850 == 'n' .or. user_wants_to_track_thick200850 == 'N') then
-              calcparm(14,jj) = .FALSE.
-            else
-              calcparm(14,jj) = .TRUE.
-            endif
-
-          enddo
-        else
-          if (verb .ge. 3) then
-            print *, ' '
-            print *, 'NOTE: Thickness will not be tracked since at least'
-            print *, 'one of the gp height fields was not read in.'
-            print *, '  readflag(7)  -- 850 mb ---> ', readflag(7)
-            print *, '  readflag(15) -- 500 mb ---> ', readflag(15)
-            print *, '  readflag(16) -- 200 mb ---> ', readflag(16)
-            print *, ' '
           endif
-          do jj=1,maxstorm
-            calcparm(12,jj) = .FALSE.
-            calcparm(13,jj) = .FALSE.
-            calcparm(14,jj) = .FALSE.
-          enddo
-        endif
- 
-c       ---------------------------------------------------------------
-c       Now call  find_maxmin for the variables zeta, hgt and slp. Only
-c       process those storms for which stormswitch is set to 1.  If a
-c       storm is selected to be processed, we still have to check the
-c       calcparm for each parameter, to make sure that the particular
-c       parm exists at that level and is able to be processed.
-c
-c       The following commented-out data statements are just included 
-c       as a reference so you can see the array positioning of the 
-c       different parameters and levels that are read in:
-c
-c       data igparm   /41,41,33,34,33,34,7,7,2,33,34,33,34,11,7,7/
-c       data iglevtyp /100,100,100,100,100,100,100,100,102,sfc,sfc
-c                     ,100,100,100,100,100/
-c       data iglev    /850,700,850,850,700,700,850,700,0,sfc,sfc
-c                     ,500,500,400,500,200/
-c  
-c       And also for reference, here are the variables / levels for
-c       the *tracked* parameters (i.e., the "calcparm" elements):
-c  
-c          1: 850 mb relative vorticity
-c          2: 700 mb relative vorticity
-c          3: 850 mb wind circulation
-c          4: NOT USED
-c          5: 700 mb wind circulation
-c          6: NOT USED
-c          7: 850 mb geopotential height
-c          8: 700 mb geopotential height
-c          9: MSLP
-c         10: 10-m wind circulation
-c         11: 10-m relative vorticity
-c         12: 500-850 mb thickness (lower level)
-c         13: 200-500 mb thickness (upper level)
-c         14: 200-850 mb thickness (deep-layer)
-c
-c       NOTE: For mid-latitude cases, we will track ONLY mslp, which
-c       is why we set all the other calcparms to 'false' just below.
 
-        if (trkrinfo%type == 'midlat') then
+          if (user_wants_to_track_thick200500 == 'n' .or. user_wants_to_track_thick200500 == 'N') then
+              calcparm(13,jj) = .FALSE.
+          else
+              calcparm(13,jj) = .TRUE.
+          endif
+
+          if (user_wants_to_track_thick200850 == 'n' .or. user_wants_to_track_thick200850 == 'N') then
+              calcparm(14,jj) = .FALSE.
+          else
+              calcparm(14,jj) = .TRUE.
+          endif
+
+        
+      else
+        if (verb .ge. 3) then
+          print *, ' '
+          print *, 'NOTE: Thickness will not be tracked since at least'
+          print *, 'one of the gp height fields was not read in.'
+          print *, '  readflag(7)  -- 850 mb ---> ', readflag(7)
+          print *, '  readflag(15) -- 500 mb ---> ', readflag(15)
+          print *, '  readflag(16) -- 200 mb ---> ', readflag(16)
+          print *, ' '
+        endif
+      endif
+
+      if (trkrinfo%type == 'midlat') then
           do m = 1,maxstorm
             calcparm(1,m) = .false.
             calcparm(2,m) = .false.
@@ -947,14 +788,14 @@ c       is why we set all the other calcparms to 'false' just below.
             calcparm(13,m) = .false.
             calcparm(14,m) = .false.
           enddo
-        endif
+      endif
 
-        if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
-          call sort_storms_by_pressure (gridprs, ifh, maxstorm, prsindex, issret)
-          if ((ifh == 1) .or. (ifh == 2 .and. trkrinfo%inp_data_type == 'netcdf' .and. ncfile_has_hour0 == 'n')) then
+      if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
+        call sort_storms_by_pressure (gridprs, ifh, maxstorm, prsindex, issret)
+        if ((ifh == 1) .or. (ifh == 2 .and. trkrinfo%inp_data_type == 'netcdf' .and. ncfile_has_hour0 == 'n')) then
             stormct = numtcv
-          endif
         endif
+      endif
 
         prevstormct = stormct
         tracking_previously_known_storms = .true.
@@ -977,59 +818,18 @@ c       is why we set all the other calcparms to 'false' just below.
          cps_vals(3) =  -9999.0
          wcore_flag  = 'u'   ! 'u' = initialized value of 'undetermined'
 
-         if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
+        if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
            ist = prsindex(sl_counter)
-         else
+        else
            ist = sl_counter
-         endif
+        endif
 
-         if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
+        if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
 
-           if (ist == (prevstormct + 1)) then
+          if (ist == (prevstormct + 1)) then
+            if (readflag(9)) then
 
-             ! For the mid-latitude and tropical cyclogenesis cases, we
-             ! need to scan the mslp field to find new storms.  If we 
-             ! are at this point inside the if statement in stormloop,
-             ! then that means we have looped through and attempted to 
-             ! track all storms that have already been found up to this 
-             ! point in the forecast, and we need to scan the field for
-             ! any new storms at this forecast hour.  If this is for 
-             ! forecast hour = 0, then right off the bat we may be 
-             ! scanning the field (if there were no tcvitals records
-             ! read in for this forecast), since ist = 1 and 
-             ! (prevstormct + 1) = 0 + 1 = 1.  All that the call just 
-             ! below to first_ges_center does is return a rough idea 
-             ! of the location of new lows; more specific locations are
-             ! obtained through the  barnes analysis tracking algorithm 
-             ! further below.
-
-             if (readflag(9)) then
-
-cnov22tpm               if (ifh > 1) then
-
-               ! We need the use of 2 different masks.  One 
-               ! (masked_out) is to be used when looking for new lows,
-               ! so that after we find a new low, we mask out the 
-               ! surrounding area so we don't find it on a subsequent 
-               ! search for this forecast hour.  The other 
-               ! (masked_outc) is used in the routine to check for a 
-               ! closed contour.  If checking for a closed contour
-               ! at, say 70W/25N, this and surrounding points may have
-               ! already been masked out in first_ges_center, so "N"
-               ! would misleadingly/incorrectly be returned from 
-               ! check_closed_contour, so that is why we need 2 masks.
-               ! But now after the first forecast hour (t=0), the way 
-               ! we have this set up is that we track previously known
-               ! storms first, and once we're done with them, we 
-               ! search for new storms at that same forecast hour.  
-               ! But when looking for new storms, we need to know the 
-               ! positions of the previously tracked storms at this 
-               ! current forecast hour, so we copy the masked_outc 
-               ! array to masked_out in this case....
-
-               masked_out = masked_outc
-
-              if (enable_timing /=0 ) then
+              if (enable_timing /= 0) then
                 call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
                 write (6,41) date_time(5), date_time(6), date_time(7)
   41            format (1x, 'TIMING: Before first_ges_ctr ... ', i2.2, ':', i2.2, ':', i2.2)
@@ -1049,22 +849,22 @@ cnov22tpm               if (ifh > 1) then
 
             else
               if (verb .ge. 1) then
-                 print *, ' '
-                 print *, '!!! ERROR: In subroutine  tracker, readflag'
-                 print *, '!!!    for mslp indicates that the mslp data'
-                 print *, '!!!    is not available for this forecast '
-                 print *, '!!!    hour, and it is needed for a "midlat"'
-                 print *, '!!!    or "tcgen" run of the  tracker.  '
-                 print *, '!!!    We will exit....'
-                 print *, '!!!    readflag(9) = ', readflag(9)
-                 print *, '!!!    ifh = ', ifh
-                 print *, ' '
-               endif
+                print *, ' '
+                print *, '!!! ERROR: In subroutine  tracker, readflag'
+                print *, '!!!    for mslp indicates that the mslp data'
+                print *, '!!!    is not available for this forecast '
+                print *, '!!!    hour, and it is needed for a "midlat"'
+                print *, '!!!    or "tcgen" run of the  tracker.  '
+                print *, '!!!    We will exit....'
+                print *, '!!!    readflag(9) = ', readflag(9)
+                print *, '!!!    ifh = ', ifh
+                print *, ' '
+              endif
                itret = 98
-               return
-             endif
-           endif
-         endif
+              return
+            endif
+          endif
+        endif
 
          xval = 0.0     ! initialize entire xval array to 0
          isastorm = 'U' ! re-initialize flag for each time, each storm
@@ -1075,768 +875,909 @@ cnov22tpm               if (ifh > 1) then
 
             vradius = 0
 
-            if ( verb .ge. 2 ) then
-              print *, '   ---------------------------------------------'
-              print *, '   |      *** TOP OF STORM LOOP ***             '
-              print *, '   | Beginning of storm loop in tracker for'
-              print *, '   | Storm number ', ist
-              write (6,418) ifhours(ifh), ifclockmins(ifh)
- 418          format (1x, '| Forecast hour: ', i4, ':', i2.2)
-              print *, '   | Storm name = ', storm(ist)%tcv_storm_name
-              print *, '   | Storm ID   = ', storm(ist)%tcv_storm_id
-              write (6,420) gstorm(ist)%gv_gen_date, gstorm(ist)%gv_gen_fhr,   &
-                            gstorm(ist)%gv_gen_lat,  gstorm(ist)%gv_gen_latns, &
-                            gstorm(ist)%gv_gen_lon,  gstorm(ist)%gv_gen_lonew, &
-                            gstorm(ist)%gv_gen_type
-              print *, '   ---------------------------------------------'
-              print *, ' '
- 420          format ('    | Gen ID (if available): ', i10.10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1, '_', a3)
-            endif
-c           First, make sure storm is within the grid boundaries...
+          if (verb .ge. 2) then
+            print *, '   ---------------------------------------------'
+            print *, '   |      *** TOP OF STORM LOOP ***             '
+            print *, '   | Beginning of storm loop in tracker for'
+            print *, '   | Storm number ', ist
+            write (6,418) ifhours(ifh), ifclockmins(ifh)
+ 418        format (1x, '| Forecast hour: ', i4, ':', i2.2)
+            print *, '   | Storm name = ', storm(ist)%tcv_storm_name
+            print *, '   | Storm ID   = ', storm(ist)%tcv_storm_id
+            write (6,420) gstorm(ist)%gv_gen_date, gstorm(ist)%gv_gen_fhr,   &
+                          gstorm(ist)%gv_gen_lat,  gstorm(ist)%gv_gen_latns, &
+                          gstorm(ist)%gv_gen_lon,  gstorm(ist)%gv_gen_lonew, &
+                          gstorm(ist)%gv_gen_type
+            print *, '   ---------------------------------------------'
+            print *, ' '
+ 420        format ('    | Gen ID (if available): ', i10.10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1, '_', a3)
+          endif
 
-            if (ifh == 1) then
-              if (gm_wrap_flag == 'none') then
-                continue
-              else if (gm_wrap_flag == 'maxplus360') then
-                if (slonfg(ist,ifh) >= 0.0 .and. slonfg(ist,ifh) < 180.0) then
-                  slonfg(ist,ifh) = slonfg(ist,ifh) + 360.0
-                endif
+          if (ifh == 1) then
+            if (gm_wrap_flag == 'none') then
+              continue
+            else if (gm_wrap_flag == 'maxplus360') then
+              if (slonfg(ist,ifh) >= 0.0 .and. slonfg(ist,ifh) < 180.0) then
+                slonfg(ist,ifh) = slonfg(ist,ifh) + 360.0
               endif
             endif
-            call check_bounds (slonfg(ist,ifh), slatfg(ist,ifh), ist, ifh, trkrinfo, icbret)
-            if (icbret == 95) then   ! Out of regional grid bounds
+          endif
+
+          call check_bounds (slonfg(ist,ifh), slatfg(ist,ifh), ist, ifh, trkrinfo, icbret)
+          if (icbret == 95) then   ! Out of regional grid bounds
+            fixlon (ist,ifh) = -999.0
+            fixlat (ist,ifh) = -999.0
+            stormswitch(ist) = 2
+            cycle ! stormloop
+          endif
+
+          if (slatfg(ist,ifh) > 0.0) then
+              cvort_maxmin = 'max'
+          else
+              cvort_maxmin = 'min'
+          endif
+
+          if (calcparm(1,ist)) then
+            if (verb .ge. 3) then
+              print *, ' '
+              print *, '         ---    ---    ---'
+              print *, 'Now calling find_maxmin for zeta at 850 mb'
+            endif
+
+            call find_maxmin (imax, jmax, dx, dy, 'zeta', zeta(1,1,1), cvort_maxmin,      &
+                 & ist, slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
+                 & calcparm(1,ist), clon(ist,ifh,1), clat(ist,ifh,1), xval(1), glatmax,   &
+                 & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
+            if (ifmret /= 0) then   ! Out of regional grid bounds
               fixlon (ist,ifh) = -999.0
               fixlat (ist,ifh) = -999.0
               stormswitch(ist) = 2
-              cycle stormloop
+              cycle ! stormloop
+            endif
+          endif
+
+          if (calcparm(2,ist)) then
+            if (verb .ge. 3) then
+              print *, ' '
+              print *, '         ---    ---    ---'
+              print *, 'Now calling find_maxmin for zeta at 700 mb'
             endif
 
-            if (slatfg(ist,ifh) > 0.0) then
-              cvort_maxmin = 'max'
-            else
-              cvort_maxmin = 'min'
-            endif
+            call find_maxmin (imax, jmax, dx, dy, 'zeta', zeta(1,1,2), cvort_maxmin,      &
+                  & ist, slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
+                  & calcparm(2,ist), clon(ist,ifh,2), clat(ist,ifh,2), xval(2), glatmax,   &
+                  & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (calcparm(1,ist)) then
-
-              if ( verb .ge. 3 ) then
-                print *, ' '
-                print *, '         ---    ---    ---'
-                print *, 'Now calling find_maxmin for zeta at 850 mb'
-              endif
-
-              call find_maxmin (imax, jmax, dx, dy, 'zeta', zeta(1,1,1), cvort_maxmin,      &
-                   & ist, slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
-                   & calcparm(1,ist), clon(ist,ifh,1), clat(ist,ifh,1), xval(1), glatmax,   &
-                   & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
-              if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! Out of regional grid bounds
                 fixlon (ist,ifh) = -999.0
                 fixlat (ist,ifh) = -999.0
                 stormswitch(ist) = 2
-                cycle stormloop
-              endif
+              cycle ! stormloop
+            endif
+          endif
+
+          if (calcparm(7,ist)) then
+            if (verb .ge. 3) then
+              print *, ' '
+              print *, '         ---    ---    ---'
+              print *, 'Now calling find_maxmin for hgt at 850 mb'
             endif
 
-            if (calcparm(2,ist)) then
+            call find_maxmin (imax, jmax, dx, dy, 'hgt', hgt(1,1,1), 'min', ist,    &
+                  & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
+                  & calcparm(7,ist), clon(ist,ifh,7), clat(ist,ifh,7), xval(7),       &
+                  & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-              if ( verb .ge. 3 ) then
-                print *, ' '
-                print *, '         ---    ---    ---'
-                print *, 'Now calling find_maxmin for zeta at 700 mb'
-              endif
+            if (ifmret /= 0) then   ! Out of regional grid bounds
+              fixlon (ist,ifh) = -999.0
+              fixlat (ist,ifh) = -999.0
+              stormswitch(ist) = 2
+              cycle ! stormloop
+            endif
+          endif
 
-              call find_maxmin (imax, jmax, dx, dy, 'zeta', zeta(1,1,2), cvort_maxmin,      &
-                   & ist, slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
-                   & calcparm(2,ist), clon(ist,ifh,2), clat(ist,ifh,2), xval(2), glatmax,   &
-                   & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
+          if (calcparm(8,ist)) then
+            if (verb .ge. 3) then
+              print *, ' '
+              print *, '         ---    ---    ---'
+              print *, 'Now calling find_maxmin for hgt at 700 mb'
+            endif
 
-              if (ifmret /= 0) then   ! Out of regional grid bounds
+            call find_maxmin (imax, jmax, dx, dy, 'hgt', hgt(1,1,2), 'min', ist,        &
+                 & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo,    &
+                 & calcparm(8,ist), clon(ist,ifh,8), clat(ist,ifh,8), xval(8), glatmax, &
+                 & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
+
+            if (ifmret /= 0) then   ! Out of regional grid bounds
+              fixlon (ist,ifh) = -999.0
+              fixlat (ist,ifh) = -999.0
+              stormswitch(ist) = 2
+              cycle ! stormloop
+            endif
+          endif
+
+          if (calcparm(9,ist)) then
+            if (verb .ge. 3) then
+              print *, ' '
+              print *, '         ---    ---    ---'
+              print *, 'Now calling find_maxmin for mslp'
+            endif
+
+            call find_maxmin (imax, jmax, dx, dy, 'slp', slp, 'min', ist,               &
+                 & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo,    &
+                 & calcparm(9,ist), clon(ist,ifh,9), clat(ist,ifh,9), xval(9), glatmax, &
+                 & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
+
+            if (ifmret /= 0) then   ! Out of regional grid bounds
                 fixlon (ist,ifh) = -999.0
                 fixlat (ist,ifh) = -999.0
                 stormswitch(ist) = 2
-                cycle stormloop
-              endif
+              cycle ! stormloop
+            endif
+          endif
+
+          if (calcparm(11,ist)) then
+            if (verb .ge. 3) then
+              print *, ' '
+              print *, '         ---    ---    ---'
+              print *, 'Now calling find_maxmin for sfc zeta'
             endif
 
-            if (calcparm(7,ist)) then
+            call find_maxmin (imax, jmax, dx, dy, 'zeta', zeta(1,1,3), cvort_maxmin,        &
+                 & ist, slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo,   &
+                 & calcparm(11,ist), clon(ist,ifh,11), clat(ist,ifh,11), xval(11), glatmax, &
+                 & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-              if ( verb .ge. 3 ) then
-                print *, ' '
-                print *, '         ---    ---    ---'
-                print *, 'Now calling find_maxmin for hgt at 850 mb'
-              endif
+            if (ifmret /= 0) then   ! Out of regional grid bounds
+              fixlon (ist,ifh) = -999.0
+              fixlat (ist,ifh) = -999.0
+              stormswitch(ist) = 2
+              cycle ! stormloop
+            endif
+          endif
 
-              call find_maxmin (imax, jmax, dx, dy, 'hgt', hgt(1,1,1), 'min', ist,    &
-                   & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
-                   & calcparm(7,ist), clon(ist,ifh,7), clat(ist,ifh,7), xval(7),       &
-                   & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
+          if (calcparm(12,ist)) then
+            if (verb .ge. 3) then
+              print *, ' '
+              print *, '         ---    ---    ---'
+              print *, 'Now calling find_maxmin for thickness in'
+              print *, 'the 500-850 mb layer.'
+            endif
 
-              if (ifmret /= 0) then   ! Out of regional grid bounds
+            call find_maxmin (imax, jmax, dx, dy, 'thick', thick(1,1,1), 'max', ist, &
+                 & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
+                 & calcparm(12,ist), clon(ist,ifh,12), clat(ist,ifh,12), xval(12),   &
+                 & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
+
+            if (ifmret /= 0) then   ! Out of regional grid bounds
+              fixlon (ist,ifh) = -999.0
+              fixlat (ist,ifh) = -999.0
+              stormswitch(ist) = 2
+              cycle ! stormloop
+            endif
+          endif
+
+          if (calcparm(13,ist)) then
+            if (verb .ge. 3) then
+              print *, ' '
+              print *, '         ---    ---    ---'
+              print *, 'Now calling find_maxmin for thickness in'
+              print *, 'the 200-500 mb layer.'
+            endif
+
+            call find_maxmin (imax, jmax, dx, dy, 'thick', thick(1,1,2), 'max', ist, &
+                 & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
+                 & calcparm(13,ist), clon(ist,ifh,13), clat(ist,ifh,13), xval(13),   &
+                 & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
+
+            if (ifmret /= 0) then   ! Out of regional grid bounds
                 fixlon (ist,ifh) = -999.0
                 fixlat (ist,ifh) = -999.0
                 stormswitch(ist) = 2
-                cycle stormloop
-              endif
+              cycle ! stormloop
+            endif
+          endif
+
+          if (calcparm(14,ist)) then
+            if (verb .ge. 3) then
+              print *, ' '
+              print *, '         ---    ---    ---'
+              print *, 'Now calling find_maxmin for thickness in'
+              print *, 'the 200-850 mb layer.'
             endif
 
-            if (calcparm(8,ist)) then
+            call find_maxmin (imax, jmax, dx, dy, 'thick', thick(1,1,3), 'max', ist, &
+                 & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
+                 & calcparm(14,ist), clon(ist,ifh,14), clat(ist,ifh,14), xval(14),   &
+                 & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-              if (verb .ge. 3) then
-                print *, ' '
-                print *, '         ---    ---    ---'
-                print *, 'Now calling find_maxmin for hgt at 700 mb'
-              endif
-
-              call find_maxmin (imax, jmax, dx, dy, 'hgt', hgt(1,1,2), 'min', ist,        &
-                   & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo,    &
-                   & calcparm(8,ist), clon(ist,ifh,8), clat(ist,ifh,8), xval(8), glatmax, &
-                   & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
-
-              if (ifmret /= 0) then   ! Out of regional grid bounds
-                fixlon (ist,ifh) = -999.0
-                fixlat (ist,ifh) = -999.0
-                stormswitch(ist) = 2
-                cycle stormloop
-              endif
+            if (ifmret /= 0) then   ! Out of regional grid bounds
+              cycle ! stormloop
             endif
+          endif
 
-            if (calcparm(9,ist)) then
-
-              if (verb .ge. 3) then
-                print *, ' '
-                print *, '         ---    ---    ---'
-                print *, 'Now calling find_maxmin for mslp'
-              endif
-
-              call find_maxmin (imax, jmax, dx, dy, 'slp', slp, 'min', ist,               &
-                   & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo,    &
-                   & calcparm(9,ist), clon(ist,ifh,9), clat(ist,ifh,9), xval(9), glatmax, &
-                   & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
-
-              if (ifmret /= 0) then   ! Out of regional grid bounds
-                fixlon (ist,ifh) = -999.0
-                fixlat (ist,ifh) = -999.0
-                stormswitch(ist) = 2
-                cycle stormloop
-              endif
-            endif
-
-            if (calcparm(11,ist)) then
-
-              if (verb .ge. 3) then
-                print *, ' '
-                print *, '         ---    ---    ---'
-                print *, 'Now calling find_maxmin for sfc zeta'
-              endif
-
-              call find_maxmin (imax, jmax, dx, dy, 'zeta', zeta(1,1,3), cvort_maxmin,        &
-                   & ist, slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo,   &
-                   & calcparm(11,ist), clon(ist,ifh,11), clat(ist,ifh,11), xval(11), glatmax, &
-                   & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
-
-              if (ifmret /= 0) then   ! Out of regional grid bounds
-                fixlon (ist,ifh) = -999.0
-                fixlat (ist,ifh) = -999.0
-                stormswitch(ist) = 2
-                cycle stormloop
-              endif
-            endif
-
-c           The array indices for the 3 different thickness layers are
-c           as follows:
-c             1: 500-850
-c             2: 200-500
-c             3: 200-850
-
-            if (calcparm(12,ist)) then
-
-              if (verb .ge. 3) then
-                print *, ' '
-                print *, '         ---    ---    ---'
-                print *, 'Now calling find_maxmin for thickness in'
-                print *, 'the 500-850 mb layer.'
-              endif
-
-              call find_maxmin (imax, jmax, dx, dy, 'thick', thick(1,1,1), 'max', ist, &
-                   & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
-                   & calcparm(12,ist), clon(ist,ifh,12), clat(ist,ifh,12), xval(12),   &
-                   & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
-
-              if (ifmret /= 0) then   ! Out of regional grid bounds
-                fixlon (ist,ifh) = -999.0
-                fixlat (ist,ifh) = -999.0
-                stormswitch(ist) = 2
-                cycle stormloop
-              endif
-            endif
-
-            if (calcparm(13,ist)) then
-
-              if (verb .ge. 3) then
-                print *, ' '
-                print *, '         ---    ---    ---'
-                print *, 'Now calling find_maxmin for thickness in'
-                print *, 'the 200-500 mb layer.'
-              endif
-
-              call find_maxmin (imax, jmax, dx, dy, 'thick', thick(1,1,2), 'max', ist, &
-                   & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
-                   & calcparm(13,ist), clon(ist,ifh,13), clat(ist,ifh,13), xval(13),   &
-                   & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
-
-              if (ifmret /= 0) then   ! Out of regional grid bounds
-                fixlon (ist,ifh) = -999.0
-                fixlat (ist,ifh) = -999.0
-                stormswitch(ist) = 2
-                cycle stormloop
-              endif
-            endif
-
-            if (calcparm(14,ist)) then
-
-              if (verb .ge. 3) then
-                print *, ' '
-                print *, '         ---    ---    ---'
-                print *, 'Now calling find_maxmin for thickness in'
-                print *, 'the 200-850 mb layer.'
-              endif
-
-              call find_maxmin (imax, jmax, dx, dy, 'thick', thick(1,1,3), 'max', ist, &
-                   & slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
-                   & calcparm(14,ist), clon(ist,ifh,14), clat(ist,ifh,14), xval(14),   &
-                   & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
-
-              if (ifmret /= 0) then   ! Out of regional grid bounds
-                fixlon (ist,ifh) = -999.0
-                fixlat (ist,ifh) = -999.0
-                stormswitch(ist) = 2
-                cycle stormloop
-              endif
-            endif
-
-c           Now get centers for wind circulation at 700 & 850 mb and
-c           at 10m.  First, get a modified guess lat/lon position for
-c           wind circulation.  Do this because we will be searching 
-c           for this wind circulation center over a smaller area and
-c           so it's more crucial to have a better first guess position.
-c           This modified guess position will be an average of the first
-c           guess position for this time and the  fix positions for this
-c           time from some of the other parameters.
-
-            if (slatfg(ist,ifh) >= 0.0) then
+          if (slatfg(ist,ifh) >= 0.0) then
               cmaxmin = 'max'
-            else
+          else
               cmaxmin = 'min'
-            endif
+          endif
 
-            if (calcparm(3,ist) .and. calcparm(4,ist)) then
-              call get_uv_guess (slonfg(ist,ifh), slatfg(ist,ifh), clon, clat, &
-                   & calcparm, ist, ifh, maxstorm, uvgeslon, uvgeslat, igugret)
-              if (igugret == 0) then
+          if (calcparm(3,ist) .and. calcparm(4,ist)) then
+            call get_uv_guess (slonfg(ist,ifh), slatfg(ist,ifh), clon, clat, &
+                  & calcparm, ist, ifh, maxstorm, uvgeslon, uvgeslat, igugret)
+            if (igugret == 0) then
 
-                if (verb .ge. 3) then
-                  print *, ' '
-                  print *, '          ---    ---    ---'
-                  print *, 'Now calling get_wind_circulation for 850 mb '
-                endif
+              if (verb .ge. 3) then
+                print *, ' '
+                print *, '          ---    ---    ---'
+                print *, 'Now calling get_wind_circulation for 850 mb '
+              endif
 
-                if (verb .ge. 3) then
-                  print *, ' '
-                  print *, 'Before first call to get_wind_circulation, '
-                  print *, '                glatmax = ', glatmax
-                  print *, '                glatmin = ', glatmin
-                  print *, '                glonmax = ', glonmax
-                  print *, '                glonmin = ', glonmin
-                  print *, '      trkrinfo%gridtype = ', trkrinfo%gridtype
-                  print *, '             inp%modtyp = ', inp%modtyp
-                  print *, '                cmaxmin = ', cmaxmin
-                  print *, '                nlev850 = ', nlev850
-                  print *, '         u(1,1,nlev850) = ', u(1,1,nlev850)
-                  print *, '   u(imax,jmax,nlev850) = ', u(imax,jmax,nlev850)
-                  print *, '                   imax = ', imax,     '      jmax = ', jmax
-                  print *, '               uvgeslon = ', uvgeslon, '  uvgeslat = ', uvgeslat
-                  print *, '       (0-360 uvgeslon) = ', mod(uvgeslon,360.0)
-                  print *, ' dx = ', dx,       ' dy = ', dy,             ' ist = ', ist
-                  print *, '        calcparm(3,ist) = ', calcparm(3,ist)
-                  print *, '        clon(ist,ifh,3) = ', clon(ist,ifh,3)
-                  print *, '(0-360) clon(ist,ifh,3) = ', mod(clon(ist,ifh,3),360.0)
-                  print *, '        clat(ist,ifh,3) = ', clat(ist,ifh,3)
-                  print *, '                xval(3) = ', xval(3)
-                endif
+              if (verb .ge. 3) then
+                print *, ' '
+                print *, 'Before first call to get_wind_circulation, '
+                print *, '                glatmax = ', glatmax
+                print *, '                glatmin = ', glatmin
+                print *, '                glonmax = ', glonmax
+                print *, '                glonmin = ', glonmin
+                print *, '      trkrinfo%gridtype = ', trkrinfo%gridtype
+                print *, '             inp%modtyp = ', inp%modtyp
+                print *, '                cmaxmin = ', cmaxmin
+                print *, '                nlev850 = ', nlev850
+                print *, '         u(1,1,nlev850) = ', u(1,1,nlev850)
+                print *, '   u(imax,jmax,nlev850) = ', u(imax,jmax,nlev850)
+                print *, '                   imax = ', imax,     '      jmax = ', jmax
+                print *, '               uvgeslon = ', uvgeslon, '  uvgeslat = ', uvgeslat
+                print *, '       (0-360 uvgeslon) = ', mod(uvgeslon,360.0)
+                print *, ' dx = ', dx,       ' dy = ', dy,             ' ist = ', ist
+                print *, '        calcparm(3,ist) = ', calcparm(3,ist)
+                print *, '        clon(ist,ifh,3) = ', clon(ist,ifh,3)
+                print *, '(0-360) clon(ist,ifh,3) = ', mod(clon(ist,ifh,3),360.0)
+                print *, '        clat(ist,ifh,3) = ', clat(ist,ifh,3)
+                print *, '                xval(3) = ', xval(3)
+              endif
 
-                if (enable_timing /=0 ) then
-                  call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                  write (6,141) date_time(5), date_time(6), date_time(7)
- 141              format (1x, 'TIMING: Before GWC 850 ... ', i2.2, ':', i2.2, ':', i2.2)
-                endif
+              if (enable_timing /=0 ) then
+                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+                write (6,141) date_time(5), date_time(6), date_time(7)
+ 141            format (1x, 'TIMING: Before GWC 850 ... ', i2.2, ':', i2.2, ':', i2.2)
+              endif
 
-                call get_wind_circulation (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, 850, &
-                     & valid_pt, calcparm(3,ist), clon(ist,ifh,3), clat(ist,ifh,3), xval(3), &
-                     & trkrinfo, inp%modtyp, cmaxmin, ifh, gm_wrap_flag, igwcret)
+              call get_wind_circulation (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, 850, &
+                   & valid_pt, calcparm(3,ist), clon(ist,ifh,3), clat(ist,ifh,3), xval(3), &
+                   & trkrinfo, inp%modtyp, cmaxmin, ifh, gm_wrap_flag, igwcret)
 
-                if (enable_timing /= 0) then
-                  call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                  write (6,142) date_time(5), date_time(6), date_time(7)
- 142              format (1x, 'TIMING: After GWC 850 ... ', i2.2, ':', i2.2, ':', i2.2)
-                endif
+              if (enable_timing /= 0) then
+                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+                write (6,142) date_time(5), date_time(6), date_time(7)
+ 142            format (1x, 'TIMING: After GWC 850 ... ', i2.2, ':', i2.2, ':', i2.2)
+              endif
 
-c                call get_uv_center (uvgeslon,uvgeslat,imax,jmax,dx,dy
-c     &               ,ist,850,valid_pt,calcparm(3,ist)
-c     &               ,clon(ist,ifh,3),clat(ist,ifh,3),xval(3),trkrinfo
-c     &               ,igucret)
-
-                if (igwcret /= 0) then
-                  calcparm(3,ist) = .FALSE.
-                  calcparm(4,ist) = .FALSE.
-                endif
-              else
+              if (igwcret /= 0) then
                 calcparm(3,ist) = .FALSE.
                 calcparm(4,ist) = .FALSE.
-                clon(ist,ifh,3) = 0.0
-                clat(ist,ifh,3) = 0.0
               endif
+            else
+              calcparm(3,ist) = .FALSE.
+              calcparm(4,ist) = .FALSE.
+              clon(ist,ifh,3) = 0.0
+              clat(ist,ifh,3) = 0.0
             endif
+          endif
 
-            if (calcparm(5,ist) .and. calcparm(6,ist)) then
-              call get_uv_guess (slonfg(ist,ifh), slatfg(ist,ifh), clon, clat, calcparm, ist, &
-                   & ifh, maxstorm, uvgeslon, uvgeslat, igugret)
-              if (igugret == 0) then
+          if (calcparm(5,ist) .and. calcparm(6,ist)) then
+            call get_uv_guess (slonfg(ist,ifh), slatfg(ist,ifh), clon, clat, calcparm, ist, &
+                 & ifh, maxstorm, uvgeslon, uvgeslat, igugret)
+            if (igugret == 0) then
 
-                if (verb .ge. 3) then
-                  print *, ' '
-                  print *, '          ---    ---    ---'
-                  print *, 'Now calling get_wind_circulation for 700 mb '
-                endif
+              if (verb .ge. 3) then
+                print *, ' '
+                print *, '          ---    ---    ---'
+                print *, 'Now calling get_wind_circulation for 700 mb '
+              endif
 
-                if (enable_timing /= 0) then
-                  call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                  write (6,143) date_time(5), date_time(6), date_time(7)
- 143              format (1x, 'TIMING: Before GWC 700 ... ', i2.2, ':', i2.2, ':', i2.2)
-                endif
+              if (enable_timing /= 0) then
+                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+                write (6,143) date_time(5), date_time(6), date_time(7)
+ 143            format (1x, 'TIMING: Before GWC 700 ... ', i2.2, ':', i2.2, ':', i2.2)
+              endif
 
-                call get_wind_circulation (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, 700, &
-                     & valid_pt, calcparm(5,ist), clon(ist,ifh,5), clat(ist,ifh,5), xval(5), &
-                     & trkrinfo, inp%modtyp, cmaxmin, ifh, gm_wrap_flag, igwcret)
+              call get_wind_circulation (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, 700, &
+                   & valid_pt, calcparm(5,ist), clon(ist,ifh,5), clat(ist,ifh,5), xval(5), &
+                   & trkrinfo, inp%modtyp, cmaxmin, ifh, gm_wrap_flag, igwcret)
 
-                if (enable_timing /= 0) then
-                  call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                  write (6,144) date_time(5), date_time(6), date_time(7)
- 144              format (1x, 'TIMING: After GWC 700 ... ', i2.2, ':', i2.2, ':', i2.2)
-                endif
+              if (enable_timing /= 0) then
+                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+                write (6,144) date_time(5), date_time(6), date_time(7)
+ 144            format (1x, 'TIMING: After GWC 700 ... ', i2.2, ':', i2.2, ':', i2.2)
+              endif
 
-c                call get_uv_center (uvgeslon,uvgeslat,imax,jmax,dx,dy
-c     &               ,ist,700,valid_pt,calcparm(5,ist)
-c     &               ,clon(ist,ifh,5),clat(ist,ifh,5),xval(5),trkrinfo
-c     &               ,igucret)
-
-                if (igwcret /= 0) then
+              if (igwcret /= 0) then
                   calcparm(5,ist) = .FALSE.
                   calcparm(6,ist) = .FALSE.
-                endif
-              else
+              endif
+            else
                 calcparm(5,ist) = .FALSE.
                 calcparm(6,ist) = .FALSE.
                 clon(ist,ifh,5) = 0.0
                 clat(ist,ifh,5) = 0.0
-              endif
             endif
+          endif
 
-            if (calcparm(10,ist)) then
-              call get_uv_guess (slonfg(ist,ifh), slatfg(ist,ifh), clon, clat, calcparm, ist, &
-                   & ifh, maxstorm, uvgeslon, uvgeslat, igugret)
-              if (igugret == 0) then
+          if (calcparm(10,ist)) then
+            call get_uv_guess (slonfg(ist,ifh), slatfg(ist,ifh), clon, clat, calcparm, ist, &
+                 & ifh, maxstorm, uvgeslon, uvgeslat, igugret)
+            if (igugret == 0) then
 
-                if (verb .ge. 3) then
-                  print *, ' '
-                  print *, '          ---    ---    ---'
-                  print *, 'Now calling get_wind_circulation for the'
-                  print *, 'surface (10m) level'
-                endif
-
-                ! NOTE: The 1020 in the call here is just a number/code
-                ! to indicate to the subroutine to process sfc winds.
-
-                if (enable_timing /= 0) then
-                  call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                  write (6,145) date_time(5), date_time(6), date_time(7)
- 145              format (1x, 'TIMING: Before GWC Sfc ... ', i2.2, ':', i2.2, ':', i2.2)
-                endif
-
-                call get_wind_circulation (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, 1020,   &
-                     & valid_pt, calcparm(10,ist), clon(ist,ifh,10), clat(ist,ifh,10), xval(10) &
-                     & trkrinfo, inp%modtyp, cmaxmin, ifh, gm_wrap_flag, igwcret)
-
-                if (enable_timing /=0 ) then
-                  call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                  write (6,146) date_time(5), date_time(6), date_time(7)
- 146              format (1x, 'TIMING: After GWC Sfc ... ', i2.2, ':', i2.2, ':', i2.2)
-                endif
-
-c                call get_uv_center (uvgeslon,uvgeslat,imax,jmax,dx,dy
-c     &               ,ist,1020,valid_pt,calcparm(10,ist)
-c     &               ,clon(ist,ifh,10),clat(ist,ifh,10),xval(10)
-c     &               ,trkrinfo,igucret)
-
-                if (igwcret /= 0) then
-                  calcparm(10,ist) = .FALSE.
-                endif
-              else
-                calcparm(10,ist) = .FALSE.
-                clon(ist,ifh,10) = 0.0
-                clat(ist,ifh,10) = 0.0
+              if (verb .ge. 3) then
+                print *, ' '
+                print *, '          ---    ---    ---'
+                print *, 'Now calling get_wind_circulation for the'
+                print *, 'surface (10m) level'
               endif
+
+              if (enable_timing /= 0) then
+                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+                write (6,145) date_time(5), date_time(6), date_time(7)
+ 145            format (1x, 'TIMING: Before GWC Sfc ... ', i2.2, ':', i2.2, ':', i2.2)
+              endif
+
+              call get_wind_circulation (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, 1020,   &
+                   & valid_pt, calcparm(10,ist), clon(ist,ifh,10), clat(ist,ifh,10), xval(10) &
+                   & trkrinfo, inp%modtyp, cmaxmin, ifh, gm_wrap_flag, igwcret)
+
+              if (enable_timing /=0 ) then
+                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+                write (6,146) date_time(5), date_time(6), date_time(7)
+ 146            format (1x, 'TIMING: After GWC Sfc ... ', i2.2, ':', i2.2, ':', i2.2)
+              endif
+
+              if (igwcret /= 0) then
+              endif
+            else
             endif
-  
-c           ------------------------------------------------------
-c           All of the parameter center fixes have been done.  Now 
-c           average those positions together to get the best guess
-c           fix position.  If a center fix is able to be made, then
-c           call subroutine  get_max_wind to get the maximum near-
-c           surface wind near the center, and then call  get_next_ges
-c           to get a guess position for the next forecast hour.
+          endif
 
-            if (stormswitch(ist) == 1) then
+          if (stormswitch(ist) == 1) then
 
-              call fixcenter (clon, clat, ist, ifh, calcparm,slonfg(ist,ifh), slatfg(ist,ifh), &
-                   & inp, stderr, fixlon, fixlat, xval, maxstorm, ifret)
+            call fixcenter (clon, clat, ist, ifh, calcparm,slonfg(ist,ifh), slatfg(ist,ifh), &
+                 & inp, stderr, fixlon, fixlat, xval, maxstorm, ifret)
 
-              if (ifret == 0) then
-                if ((trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') .and.
-                   & trkrinfo%gridtype == 'regional')then
-                  if (fixlon(ist,ifh) > (trkrinfo%eastbd + 7.0) .or.
-                     & fixlon(ist,ifh) < (trkrinfo%westbd - 7.0) .or.
-                     & fixlat(ist,ifh) > (trkrinfo%northbd + 7.0) .or.
-                     & fixlat(ist,ifh) < (trkrinfo%southbd - 7.0)) then
+            if (ifret == 0) then
+              if ((trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') .and. trkrinfo%gridtype == 'regional') then
+                if (fixlon(ist,ifh) > (trkrinfo%eastbd + 7.0) .or. fixlon(ist,ifh) < (trkrinfo%westbd - 7.0) .or. &
+                   & fixlat(ist,ifh) > (trkrinfo%northbd + 7.0) .or.
+                   & fixlat(ist,ifh) < (trkrinfo%southbd - 7.0)) then
 
-                    if (verb .ge. 3) then
-                      print *, ' '
-                      print *, '!!! For a midlat or tcgen case, a fix '
-                      print *, '!!! will NOT be made for this time due'
-                      print *, '!!! the storm being more than 7 degrees'
-                      print *, '!!! outside the user-specified lat/lon'
-                      print *, '!!! bounds for this run.  We will stop'
-                      print *, '!!! tracking this storm.'
-                      print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
-                      print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
-                      write (6,432) ifhours(ifh), ifclockmins(ifh)
- 432                  format (1x, '!!! Fcst hr  = ', i4, ':', i2.2)
-                      print *, '!!!           fixlat = ', fixlat(ist,ifh)
-                      print *, '!!!           fixlon = ', fixlon(ist,ifh)
-                      print *, '!!!  (0-360E) fixlon = ', mod(fixlon(ist,ifh),360.0)
-                      print *, '!!! User East  Bound = ', trkrinfo%eastbd
-                      print *, '!!! User West  Bound = ', trkrinfo%westbd
-                      print *, '!!! User North Bound = ', trkrinfo%northbd
-                      print *, '!!! User South Bound = ', trkrinfo%southbd
-                    endif
+                  if (verb .ge. 3) then
+                    print *, ' '
+                    print *, '!!! For a midlat or tcgen case, a fix '
+                    print *, '!!! will NOT be made for this time due'
+                    print *, '!!! the storm being more than 7 degrees'
+                    print *, '!!! outside the user-specified lat/lon'
+                    print *, '!!! bounds for this run.  We will stop'
+                    print *, '!!! tracking this storm.'
+                    print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
+                    print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
+                    write (6,432) ifhours(ifh), ifclockmins(ifh)
+ 432                format (1x, '!!! Fcst hr  = ', i4, ':', i2.2)
+                    print *, '!!!           fixlat = ', fixlat(ist,ifh)
+                    print *, '!!!           fixlon = ', fixlon(ist,ifh)
+                    print *, '!!!  (0-360E) fixlon = ', mod(fixlon(ist,ifh),360.0)
+                    print *, '!!! User East  Bound = ', trkrinfo%eastbd
+                    print *, '!!! User West  Bound = ', trkrinfo%westbd
+                    print *, '!!! User North Bound = ', trkrinfo%northbd
+                    print *, '!!! User South Bound = ', trkrinfo%southbd
+                  endif
 
                     fixlon (ist,ifh) = -999.0
                     fixlat (ist,ifh) = -999.0
                     stormswitch(ist) = 2
-                    if (ifh == 1) then
+                  if (ifh == 1) then
                       vradius = 0     
                       ileadtime = nint(fhreal(ifh) * 100.0)
                       ifcsthour = ileadtime / 100
 
-                      call output_atcfunix (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax,       &
-                           & xzero_minslp, vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax,  &
-                           & cps_vals, wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, &
-                           & x999_sst, x999_axirmw_dist, x999_axirmw_val, ioaxret)
+                    call output_atcfunix (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax,       &
+                         & xzero_minslp, vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax,  &
+                         & cps_vals, wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, &
+                         & x999_sst, x999_axirmw_dist, x999_axirmw_val, ioaxret)
 
                       imeanzeta = -99
                       igridzeta = -99
 
-                      call output_aext (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp,  &
-                           & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals,           &
-                           & wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst,      &
-                           & x999_axirmw_dist, x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800, &
-                           & x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
+                    call output_aext (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp,  &
+                         & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals,           &
+                         & wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst,      &
+                         & x999_axirmw_dist, x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800, &
+                         & x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
 
-                      call output_atcf_gen (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax,  &
-                           & xzero_minslp, vradius, maxstorm, trkrinfo, i999_stmspd, i999_stmdir, &
-                           & x99_pbar, x99_rbar, x99_rmax, cps_vals, c_undef_wcflag, imeanzeta,   &
-                           & igridzeta, x999_shrmag, x999_shrdir, x999_divg, x999_moist_divg,     &
-                           & x999_rh600_800, x999_rh1000_925, x999_omega500, x999_sst,            &
-                           & x999_axirmw_dist, x999_axirmw_val, ioaxret)
-                    endif
-                    cycle stormloop
+                    call output_atcf_gen (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax,  &
+                         & xzero_minslp, vradius, maxstorm, trkrinfo, i999_stmspd, i999_stmdir, &
+                         & x99_pbar, x99_rbar, x99_rmax, cps_vals, c_undef_wcflag, imeanzeta,   &
+                         & igridzeta, x999_shrmag, x999_shrdir, x999_divg, x999_moist_divg,     &
+                         & x999_rh600_800, x999_rh1000_925, x999_omega500, x999_sst,            &
+                         & x999_axirmw_dist, x999_axirmw_val, ioaxret)
                   endif
+                  cycle ! stormloop
                 endif
-              else
-                fixlon (ist,ifh) = -999.0
-                fixlat (ist,ifh) = -999.0
-                stormswitch(ist) = 2
               endif
+            else
+            endif
 
-c             Just because we've found a center doesn't mean there is
-c             actually a storm there.  I noticed in the first year that
-c             for some decaying or just weak storms, the  tracker would
-c             identify a center to follow, but it may have only been
-c             a weak trough passing by, or something else that's not
-c             our storm.  This next subroutine checks to see that the 
-c             surface pressure gradient and/or tangential winds at 
-c             850 mb resemble a storm.  It is called twice; the first
-c             time for MSLP, the 2nd time for 850 mb winds.  We will
-c             apply these storm-checking criteria if either the mslp
-c             or v850 check come back negative.  Remember, there
-c             is the possibility that centers could not be found for 
-c             1 or both of these parameters, in which case the isastorm
-c             flag will have a value of 'U', for "undetermined".
+            print *, ' ttest, ifret = ', ifret
 
-              isiret1 = 0; isiret2 = 0; isiret3 = 0
+            if (ifret == 0) then
+              print *, ' ttest, calcparm(9,ist) = ', calcparm(9,ist)
 
-              print *, ' ttest, ifret = ', ifret
+              if (calcparm(9,ist)) then
+                print *, ' Before call to is_it_a_storm for MSLP'
+                print *, '                clon(ist,ifh,9) = ', clon(ist,ifh,9)
+                print *, '       (0-360E clon(ist,ifh,9)) = ', mod(clon(ist,ifh,9),360.0)
+                print *, '                clat(ist,ifh,9) = ', clat(ist,ifh,9)
+                print *, '                        xval(9) = ', xval(9)
 
-              if (ifret == 0) then
+                call is_it_a_storm (imax, jmax, dx, dy, 'slp', ist, valid_pt, clon(ist,ifh,9), &
+                     & clat(ist,ifh,9), xval(9), trkrinfo, isastorm(1), ifh, isiret1)
 
-                print *, ' ttest, calcparm(9,ist) = ', calcparm(9,ist)
+              else
+                print *, ' test, in ELSE part: '
+                
+                if (trkrinfo%use_backup_mslp_grad_check == 'y' .or. trkrinfo%use_backup_mslp_grad_check == 'Y') then
+                  print *, ' ttest ELSE, readflag(9) = ', readflag(9)
 
-                if (calcparm(9,ist)) then
-                  print *, ' Before call to is_it_a_storm for MSLP'
-                  print *, '                clon(ist,ifh,9) = ', clon(ist,ifh,9)
-                  print *, '       (0-360E clon(ist,ifh,9)) = ', mod(clon(ist,ifh,9),360.0)
-                  print *, '                clat(ist,ifh,9) = ', clat(ist,ifh,9)
-                  print *, '                        xval(9) = ', xval(9)
-                  call is_it_a_storm (imax, jmax, dx, dy, 'slp', ist, valid_pt, clon(ist,ifh,9), &
-                       & clat(ist,ifh,9), xval(9), trkrinfo, isastorm(1), ifh, isiret1)
+                  if (readflag(9)) then
+                    print *, 'ttest ELSE A, ist = ', ist, ' ifh = ', ifh
+                    print *, 'ttest ELSE A, fixlon(ist,ifh) = ', fixlon(ist,ifh), &
+                             ' (0-360E)     fixlon(ist,ifh) = ', mod(fixlon(ist,ifh), 360.0)
+                    print *, 'ttest ELSE A, fixlat(ist,ifh) = ', fixlat(ist,ifh)
 
-                else
+                    call fix_latlon_to_ij (imax, jmax, dx, dy, slp, 'min', valid_pt, fixlon(ist,ifh), &
+                         & fixlat(ist,ifh), 9999.0, ifix, jfix, gridpoint_maxmin, 'tracker', 'xxxxxxx', &
+                         & glatmax, glatmin, glonmax, glonmin, trkrinfo, ifilret)
 
-                  print *, ' test, in ELSE part: '
-                  if (trkrinfo%use_backup_mslp_grad_check == 'y' .or. trkrinfo%use_backup_mslp_grad_check == 'Y') then
-                    print *, ' ttest ELSE, readflag(9) = ', readflag(9)
+                    print *, 'ttest ELSE B, ifilret = ', ifilret
 
-                    if (readflag(9)) then
-                      print *, 'ttest ELSE A, ist = ', ist, ' ifh = ', ifh
-                      print *, 'ttest ELSE A, fixlon(ist,ifh) = ', fixlon(ist,ifh), &
-                               ' (0-360E)     fixlon(ist,ifh) = ', mod(fixlon(ist,ifh), 360.0)
-                      print *, 'ttest ELSE A, fixlat(ist,ifh) = ', fixlat(ist,ifh)
+                    if (ifilret == 0) then
+                      print *, 'ttest ELSE B,         ifilret = ', ifilret
+                      print *, 'ttest ELSE B, fixlon(ist,ifh) = ', fixlon(ist,ifh),  &
+                               ' (0-360E) fixlon(ist,ifh)     = ', mod(fixlon(ist,ifh),360.0)
+                      print *, 'ttest ELSE B, fixlat(ist,ifh) = ', fixlat(ist,ifh)
 
-                      call fix_latlon_to_ij (imax, jmax, dx, dy, slp, 'min', valid_pt, fixlon(ist,ifh), &
-                           & fixlat(ist,ifh), 9999.0, ifix, jfix, gridpoint_maxmin, 'tracker', 'xxxxxxx', &
-                           & glatmax, glatmin, glonmax, glonmin, trkrinfo, ifilret)
+                      call is_it_a_storm (imax, jmax, dx, dy, 'slp', ist, valid_pt, fixlon(ist,ifh), &
+                           & fixlat(ist,ifh), gridpoint_maxmin, trkrinfo, isastorm(1), ifh, isiret1)
 
-                      print *, 'ttest ELSE B, ifilret = ', ifilret
-
-                      if (ifilret == 0) then
-                        print *, 'ttest ELSE B,         ifilret = ', ifilret
-                        print *, 'ttest ELSE B, fixlon(ist,ifh) = ', fixlon(ist,ifh),  &
-                                 ' (0-360E) fixlon(ist,ifh)     = ', mod(fixlon(ist,ifh),360.0)
-                        print *, 'ttest ELSE B, fixlat(ist,ifh) = ', fixlat(ist,ifh)
-
-                        call is_it_a_storm (imax, jmax, dx, dy, 'slp', ist, valid_pt, fixlon(ist,ifh), &
-                             & fixlat(ist,ifh), gridpoint_maxmin, trkrinfo, isastorm(1), ifh, isiret1)
-
-                        if (isiret1 == 0) then
-                          ! Even though calcparm(9) is FALSE and mslp 
-                          ! will not be used for center-fixing 
-                          ! purposes, we need to fill the clat and clon
-                          ! arrays just a few lines below so that 
-                          ! calls to fix_latlon_to_ij below do not 
-                          ! get screwed up.  So, into the clat and clon
-                          ! arrays we put the mean fixlat and fixlon
-                          ! positions for this lead time. 
-                          clat(ist,ifh,9) = fixlat(ist,ifh)
-                          clon(ist,ifh,9) = fixlon(ist,ifh)
-                          xval(9) = gridpoint_maxmin
-                        endif
-
+                      if (isiret1 == 0) then
                       endif
-
                     endif
-
                   endif
-
                 endif
-
-                ! If we have found a valid mslp gradient, then make
-                ! a call to fix_latlon_to_ij to (1) get the actual
-                ! gridpoint value of the mslp (the value previously
-                ! stored in xval(9) is an area-averaged value coming
-                ! from the  barnes analysis), and (2) to get the 
-                ! (i,j) indices for this gridpoint to be used in the
-                ! call to check_closed_contour below.
-                !
-                ! NOTE: If a mslp fix was not made, or if the mslp
-                ! "isastorm" flag comes back as no, we make the same
-                ! call to fix_latlon_to_ij, but we use the mean fix
-                ! position as our input to search around, and then
-                ! basically we just find the lowest mslp near that
-                ! mean fix position.  There is a check on the value
-                ! of xinp_fixlat and xinp_fixlon to make sure that 
-                ! they contain valid values and not just the 
-                ! initialized -99 or -999 values.
+              endif
 
                 xinp_fixlat = -99.0
                 xinp_fixlat = -990.0
 
-                if (isiret1 == 0 .and. isastorm(1) == 'Y') then
-                  if (calcparm(9,ist)) then
-                    xinp_fixlat = clat(ist,ifh,9)
-                    xinp_fixlon = clon(ist,ifh,9)
-                    if (verb >= 3) then
-                      print *, ' ttest at location C IF....'
-                      print *, '     xinp_fixlat = ', xinp_fixlat
-                      print *, '     xinp_fixlon = ', xinp_fixlon, ' (0-360E) xinp_fixlon= ', mod(xinp_fixlon,360.0)
-                    endif
-                  else
-                    xinp_fixlat = fixlat(ist,ifh)
-                    xinp_fixlon = fixlon(ist,ifh)
-                    if (verb >= 3) then
-                      print *, ' ttest at location C ELSE....'
-                      print *, '     xinp_fixlat = ', xinp_fixlat
-                      print *, '     xinp_fixlon = ', xinp_fixlon, ' (0-360E) xinp_fixlon = ', mod(xinp_fixlon,360.0)
-                    endif
+              if (isiret1 == 0 .and. isastorm(1) == 'Y') then
+                if (calcparm(9,ist)) then
+
+                  if (verb >= 3) then
+                    print *, ' ttest at location C IF....'
+                    print *, '     xinp_fixlat = ', xinp_fixlat
+                    print *, '     xinp_fixlon = ', xinp_fixlon, ' (0-360E) xinp_fixlon= ', mod(xinp_fixlon,360.0)
+                  endif
+
+                else
+                  if (verb >= 3) then
+                    print *, ' ttest at location C ELSE....'
+                    print *, '     xinp_fixlat = ', xinp_fixlat
+                    print *, '     xinp_fixlon = ', xinp_fixlon, ' (0-360E) xinp_fixlon = ', mod(xinp_fixlon,360.0)
                   endif
                 endif
+              endif
 
-                if (xinp_fixlat > -99.0 .and. xinp_fixlon > -990.0) then
-                  if (verb >= 3) then
-                    print *, ' ttest at location D'
-                  endif
+              if (xinp_fixlat > -99.0 .and. xinp_fixlon > -990.0) then
+                if (verb >= 3) then
+                  print *, ' ttest at location D'
+                endif
 
-                  call fix_latlon_to_ij (imax, jmax, dx, dy, slp, 'min', valid_pt, xinp_fixlon,    &
-                       & xinp_fixlat, xval(9), ifix, jfix, gridpoint_maxmin, 'tracker', 'gptmslp', &
-                       & glatmax, glatmin, glonmax, glonmin, trkrinfo, ifilret)
+                call fix_latlon_to_ij (imax, jmax, dx, dy, slp, 'min', valid_pt, xinp_fixlon,    &
+                     & xinp_fixlat, xval(9), ifix, jfix, gridpoint_maxmin, 'tracker', 'gptmslp', &
+                     & glatmax, glatmin, glonmax, glonmin, trkrinfo, ifilret)
 
-                  if (verb >= 3) then
-                    print *, ' ttest at location E, ifilret = ', ifilret, ' gridpoint_maxmin = ', gridpoint_maxmin
-                  endif
-                  if (ifilret == 0) then
-                    gridprs(ist,ifh) = gridpoint_maxmin
-                  else
+                if (verb >= 3) then
+                  print *, ' ttest at location E, ifilret = ', ifilret, ' gridpoint_maxmin = ', gridpoint_maxmin
+                endif
+                if (ifilret == 0) then
+                  gridprs(ist,ifh) = gridpoint_maxmin
+                else
                     ! Search went out of regional grid bounds....
                     fixlon (ist,ifh) = -999.0
                     fixlat (ist,ifh) = -999.0
                     stormswitch(ist) = 2
-                    cycle stormloop
+                  cycle ! stormloop
+                endif
+              endif
+
+              print *, ' test at location F'
+              if (isiret1 == 0 .and. isastorm(1) == 'Y' .and. trkrinfo%type == 'tracker') then
+
+                if (trkrinfo%gridtype == 'regional' .and. inp%nesttyp == 'fixed') then
+                  if (verb .ge. 3) then
+                    print *, ' '
+                    print *, 'Before call to probe_for_boundary,'
+                    print *, 'ifix = ', ifix,' jfix = ', jfix
+                    print *, 'longitude = ', xinp_fixlon, 'E   (', 360-xinp_fixlon, &
+                             'W)  (0-360E) xinp_fixlon = ', mod(xinp_fixlon,360.0)
+                    print *, 'latitude = ', xinp_fixlat
+                    print *, 'mean mslp value (xval(9)) = ', xval(9)
+                  endif
+
+                  call probe_for_boundary (imax, jmax, dx, dy, ist, 'slp', slp, valid_pt, xinp_fixlon, &
+                       & xinp_fixlat, trkrinfo, close_to_boundary, gm_wrap_flag, ipfbret)
+
+                  if (verb .ge. 3) then
+                    print *, 'close_to_boundary = ', close_to_boundary
                   endif
                 endif
 
-                print *, ' test at location F'
+                if (trkrinfo%want_oci .or. close_to_boundary == 'y') then
 
-                if (isiret1 == 0 .and. isastorm(1) == 'Y' .and. trkrinfo%type == 'tracker') then
-                  close_to_boundary = 'n'
+                  if (verb .ge. 3) then
+                    print *, ' '
+                    print *, 'Before call to check_closed_contour, '
+                    print *, 'ifix      = ', ifix, ' jfix = ', jfix
+                    print *, 'longitude = ', xinp_fixlon, 'E   (', 360-xinp_fixlon, &
+                             'W)  (0-360E) xinp_fixlon= ', mod(xinp_fixlon,360.0)
+                    print *, 'latitude = ', xinp_fixlat
+                    print *, 'mean mslp value (xval(9)) = ', xval(9)
+                  endif
 
-                  if (trkrinfo%gridtype == 'regional' .and. inp%nesttyp == 'fixed') then
+                  if (contour_info%numcont == 0) then
+                      contour_info%numcont = maxconts
+                  endif
+
+                  if (xval(9) < 1100.0) then ! CAITLYN - repeating code?
+                  elseif (xval(9) > 80000.0) then
+                  else
                     if (verb .ge. 3) then
                       print *, ' '
-                      print *, 'Before call to probe_for_boundary,'
-                      print *, 'ifix = ', ifix,' jfix = ', jfix
-                      print *, 'longitude = ', xinp_fixlon, 'E   (', 360-xinp_fixlon, &
-                               'W)  (0-360E) xinp_fixlon = ', mod(xinp_fixlon,360.0)
-                      print *, 'latitude = ', xinp_fixlat
-                      print *, 'mean mslp value (xval(9)) = ', xval(9)
+                      print *, 'ERROR: Something wrong in subroutine'
+                      print *, '       tracker.  The mslp value'
+                      print *, '       (xval(9)) is not in range.'
+                      print *, '       before call to'
+                      print *, '       check_closed_contour.'
+                      print *, '       xval(9) = ', xval(9)
+                      print *, '       EXITING....'
+                      print *, ' '
+                    endif
+                    stop 95
+                  endif
+
+                  if (trkrinfo%want_oci) then
+                    if (trkrinfo%contint < roci_prs_contint_thresh) then
+                        hold_old_contint = trkrinfo%contint
+                        trkrinfo%contint = roci_prs_contint_thresh
+                      if (verb .ge. 3) then
+                        print *, ' '
+                        print *, 'Before calling routine to diagnose'
+                        print *, 'the ROCI for a tracker run, the '
+                        print *, 'requested contour interval is being'
+                        print *, 'adjusted up (coarser) to avoid'
+                        print *, 'having the contour check routine'
+                        print *, 'break and return an invalid value.'
+                        print *, 'User-requested contint value (Pa) = ', hold_old_contint
+                        print *, 'Modified contint value (Pa) = ', trkrinfo%contint
+                      endif
                     endif
 
-                    call probe_for_boundary (imax, jmax, dx, dy, ist, 'slp', slp, valid_pt, xinp_fixlon, &
-                         & xinp_fixlat, trkrinfo, close_to_boundary, gm_wrap_flag, ipfbret)
+                    call check_closed_contour (imax, jmax, ifix, jfix, slp, valid_pt, masked_outc, &
+                         & ccflag, 'min', trkrinfo, 999, contour_info, get_last_isobar_flag,       &
+                         & plastbar, rlastbar, dum1, dum2, dum3, icccret)
 
                     if (verb .ge. 3) then
-                      print *, 'close_to_boundary = ', close_to_boundary
+                      print *, ' '
+                      print *, 'After call to check_closed_contour '
+                      print *, 'to determine ROCI.'
+                      print *, 'Contour interval threshold used = ', trkrinfo%contint
+                      print *, 'ifix = ', ifix,' jfix = ', jfix
+                      print *, 'longitude = ', xinp_fixlon,'E (', 360-mod(xinp_fixlon,360.0),  &
+                               'W) (0-360E) xinp_fixlon = ', mod(xinp_fixlon,360.0)
+                      print *, 'latitude = ',                     xinp_fixlat
+                      print *, 'mean mslp value (xval(9)) = ',    xval(9)
+                      print *, 'gridpoint mslp value = ',         slp(ifix,jfix)
+                      print *, 'ccflag = ',                       ccflag
+                      print *, 'prs of last closed isobar = ',    plastbar
+                      print *, 'radius of last closed isobar = ', rlastbar, ' nm'
+                      print *, ' '
+                    endif
+
+                    if (verb .ge. 3) then
+                      print *, ' '
+                      print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
+                      print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
+                      write (6,432) ifhours(ifh), ifclockmins(ifh)
+                      write (6,221) xinp_fixlat
+                      write (6,223) 360.0-xinp_fixlon, xinp_fixlon, mod(xinp_fixlon,360.0)
                     endif
                   endif
 
-                  if (trkrinfo%want_oci .or. close_to_boundary == 'y') then
+                  if (close_to_boundary == 'y') then
+
+                    call check_closed_contour (imax, jmax, ifix, jfix, slp, valid_pt, masked_outc,    &
+                         & ccflag, 'min', gb_check_trkrinfo, 999, contour_info, get_last_isobar_flag, &
+                         & plastbar, rlastbar, dum1, dum2, dum3, icccret)
 
                     if (verb .ge. 3) then
                       print *, ' '
-                      print *, 'Before call to check_closed_contour, '
-                      print *, 'ifix      = ', ifix, ' jfix = ', jfix
-                      print *, 'longitude = ', xinp_fixlon, 'E   (', 360-xinp_fixlon, &
-                               'W)  (0-360E) xinp_fixlon= ', mod(xinp_fixlon,360.0)
-                      print *, 'latitude = ', xinp_fixlat
+                      print *, 'After call to check_closed_contour '
+                      print *, 'for the fixed grid boundary check.'
+                      print *, 'Contour interval threshold used = ', gb_check_trkrinfo%contint
+                      print *, 'ifix = ', ifix,' jfix = ', jfix
+                      print *, 'longitude = ', xinp_fixlon,'E (', 360-mod(xinp_fixlon,360.0), &
+                               'W)  (0-360) longitude = ',     mod(xinp_fixlon,360.0)
+                      print *, 'latitude = ',                  xinp_fixlat
                       print *, 'mean mslp value (xval(9)) = ', xval(9)
+                      print *, 'gridpoint mslp value = ',      slp(ifix,jfix)
+                      print *, 'ccflag = ',                    ccflag
+                      print *, ' '
                     endif
 
-                    if (contour_info%numcont == 0) then
-                      contour_info%numcont = maxconts
-                    endif
-
-                    ! Note that the MSLP contour interval for ROCI (if
-                    ! the user requests it) will always be 4 mb, because
-                    ! that is what is used observationally and by
-                    ! forecasters.  In this next IF statement, we are
-                    ! just making sure that the units of our ROCI 
-                    ! threshold that we are setting match the units in
-                    ! the input data....
-
-                    if (xval(9) < 1100.0) then
-                      ! Pressure units are in mb...
-                      roci_prs_contint_thresh = 4.0
-                    elseif (xval(9) > 80000.0) then
-                      ! Pressure units are in Pa...
-                      roci_prs_contint_thresh = 400.0
-                    else
-                      if (verb .ge. 3) then
-                        print *, ' '
-                        print *, 'ERROR: Something wrong in subroutine'
-                        print *, '       tracker.  The mslp value'
-                        print *, '       (xval(9)) is not in range.'
-                        print *, '       before call to'
-                        print *, '       check_closed_contour.'
-                        print *, '       xval(9) = ', xval(9)
-                        print *, '       EXITING....'
-                        print *, ' '
-                      endif
-                      stop 95
-                    endif
-
-                    ! In the event that we have the case where both the
-                    ! user requests the ROCI and it's a fixed regional
-                    ! grid where the storm is close to a boundary and we
-                    ! need to check for a closed contour, then we have 
-                    ! to call  check_closed_contour two separate times,
-                    ! because the contour intervals used may be 
-                    ! different, depending on what the user specified in
-                    ! the input namelist.
-
-                    if (trkrinfo%want_oci) then
-                      if (trkrinfo%contint < roci_prs_contint_thresh) then
-                        hold_old_contint = trkrinfo%contint
-                        trkrinfo%contint = roci_prs_contint_thresh
-                        if ( verb .ge. 3 ) then
-                          print *, ' '
-                          print *, 'Before calling routine to diagnose'
-                          print *, 'the ROCI for a tracker run, the '
-                          print *, 'requested contour interval is being'
-                          print *, 'adjusted up (coarser) to avoid'
-                          print *, 'having the contour check routine'
-                          print *, 'break and return an invalid value.'
-                          print *, 'User-requested contint value (Pa) = ', hold_old_contint
-                          print *, 'Modified contint value (Pa) = ', trkrinfo%contint
+                    if (ccflag == 'y') then
+                      if (close_to_boundary == 'y' .and. abs(xinp_fixlat) > 25.0) then
+                        if (verb .ge. 3) then
+                          print *, '+++ Fixed grid boundary: MSLP GOOD  ifh = ', ifh, '  tau = ', ifhours(ifh)
                         endif
                       endif
+                    else
+                      if (close_to_boundary == 'y' .and. abs(xinp_fixlat) > 25.0) then
+                        if (verb .ge. 3) then
+                          print *, '!!! closed_mslp_ctr_flag2 FAIL'
+                          print *, '!!! Fixed grid boundary alert: MSLP  ifh = ', ifh, '  tau = ', ifhours(ifh)
+                        endif
+                      endif
+                    endif
 
-                      masked_outc = .false.  ! Note that we are within
-                              ! an IF statement for type=tracker, so
-                              ! with this statement, we are *not* 
-                              ! accidentally resetting this important
-                              ! masked_outc flag to false for anything
-                              ! that would be genesis-related.
-                      get_last_isobar_flag = 'y'
-                      dum1 = 0
-                      dum2 = 0
-                      dum3 = 0
-                      call check_closed_contour (imax, jmax, ifix, jfix, slp, valid_pt, masked_outc, &
-                           & ccflag, 'min', trkrinfo, 999, contour_info, get_last_isobar_flag,       &
-                           & plastbar, rlastbar, dum1, dum2, dum3, icccret)
+                    if (close_to_boundary == 'y' .and. ifh > 1 .and. abs(xinp_fixlat) > 25.0) then
+                      if (closed_mslp_ctr_flag2(ist,ifh) == 'n' .and. closed_mslp_ctr_flag2(ist,ifh-1) == 'n') then
+                        if (verb .ge. 0) then
+                          print *, ' '
+                          print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
+                          print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
+                          write (6,432) ifhours(ifh), ifclockmins(ifh)
+                          print *, '!!! Fixed grid boundary STOPPAGE'
+                          print *, '!!!         for MSLP            '
+                          print *, '!!! This storm is close to the'
+                          print *, '!!! edge of a fixed regional grid,'
+                          print *, '!!! and the closed contour'
+                          print *, '!!! checking has failed for two'
+                          print *, '!!! consecutive lead times.'
+                          print *, '!!!      ifh   = ', ifh
+                          print *, '!!! and  ifh-1 = ', ifh-1
+                          print *, '!!! TRACKING WILL STOP FOR'
+                          print *, '!!! THIS STORM'
+                        cycle ! stormloop
+                      endif
+                    endif
+                  endif
+                endif
+              endif
+
+              if (isastorm(1) == 'Y' .and. isiret1 == 0 .and. (trkrinfo%type == 'midlat' .or. &
+                 & trkrinfo%type == 'tcgen')) then
+
+                if (verb .ge. 3) then
+                  print *, ' '
+                  print *, 'Before call to check_closed_contour, '
+                  print *, 'ifix = ', ifix,' jfix = ', jfix
+                  print *, 'longitude = ', xinp_fixlon, 'E (', 360-xinp_fixlon, &
+                           'W)  (0-360) longitude = ', mod(xinp_fixlon,360.0)
+                  print *, 'latitude = ', xinp_fixlat
+                  print *, 'mean mslp value (xval(9))= ', xval(9)
+                endif
+
+                if (contour_info%numcont == 0) then
+                    contour_info%numcont = maxconts
+                endif
+
+                  get_last_isobar_flag = 'y'
+                  dum1 = 0
+                  dum2 = 0
+                  dum3 = 0
+
+                call check_closed_contour (imax, jmax, ifix, jfix, slp, valid_pt, masked_outc, ccflag, &
+                     & 'min', trkrinfo, 999, contour_info, get_last_isobar_flag, plastbar, rlastbar,   &
+                     & dum1, dum2, dum3, icccret)
+
+                if (verb .ge. 3) then
+                  print *, ' '
+                  print *, 'After call to check_closed_contour, and'
+                  print *, 'after locating center of storm for a'
+                  print *, 'midlat or tcgen case,'
+                  print *, 'ifix = ', ifix,' jfix = ', jfix
+                  print *, 'longitude = ',xinp_fixlon,'E (', 360-xinp_fixlon,  &
+                           'W)  (0-360) longitude = ', mod(xinp_fixlon, 360.0)
+                  print *, 'latitude = ',                     xinp_fixlat
+                  print *, 'mean mslp value (xval(9)) = ',    xval(9)
+                  print *, 'gridpoint mslp value = ',         slp(ifix,jfix)
+                  print *, 'ccflag = ',                       ccflag
+                  print *, 'prs of last closed isobar = ',    plastbar
+                  print *, 'radius of last closed isobar = ', rlastbar,' nm'
+                  print *, ' '
+                endif
+
+                if (ccflag == 'y') then
+                else
+                  if (ifh > 1) then
+                      if (closed_mslp_ctr_flag(ist,iccfh) == 'y') then
+                      endif
+
+                    if (cc_time_sum_tot > 0.0) then
+                    else
+                    endif
+                    if (cc_time_pct >= 0.50) then
 
                       if (verb .ge. 3) then
                         print *, ' '
-                        print *, 'After call to check_closed_contour '
-                        print *, 'to determine ROCI.'
-                        print *, 'Contour interval threshold used = ', trkrinfo%contint
-                        print *, 'ifix = ', ifix,' jfix = ', jfix
-                        print *, 'longitude = ', xinp_fixlon,'E (', 360-mod(xinp_fixlon,360.0),  &
-                                 'W) (0-360E) xinp_fixlon = ', mod(xinp_fixlon,360.0)
-                        print *, 'latitude = ',                     xinp_fixlat
-                        print *, 'mean mslp value (xval(9)) = ',    xval(9)
-                        print *, 'gridpoint mslp value = ',         slp(ifix,jfix)
-                        print *, 'ccflag = ',                       ccflag
-                        print *, 'prs of last closed isobar = ',    plastbar
-                        print *, 'radius of last closed isobar = ', rlastbar, ' nm'
+                        print *, '++ NOTE ON CLOSED CONTOUR CHECK: The'
+                        print *, '   ccflag returned for this hour was'
+                        print *, '   NO, but a check of recent ccflags'
+                        print *, '   indicates that more than 50% of '
+                        print *, '   the ccflags over the last 24h are'
+                        print *, '   YES, so we will continue.'
+                        print *, '   cc_time_pct = ', cc_time_pct
                         print *, ' '
                       endif
+
+                    else
+                        ccflag = 'n'
+
+                      if (verb .ge. 3) then
+                        print *, ' '
+                        print *, '!! NOTE ON CLOSED CONTOUR CHECK: The'
+                        print *, '!! ccflag returned for this hour was'
+                        print *, '   NO, and a check of recent ccflags'
+                        print *, '   indicates that less than 50% of '
+                        print *, '   the ccflags over the last 24h are'
+                        print *, '   YES, so we will stop tracking.'
+                        print *, '   cc_time_pct= ', cc_time_pct
+                      endif
+                    endif
+                  endif
+                endif
+
+                if (ccflag == 'y') then
+                    isastorm(2) = 'Y'
+                else if (ccflag == 'n') then
+                    isastorm(2) = 'N'
+                endif
+
+                if (verb .ge. 3) then
+                  print *, ' '
+                  print *, '*---------------------------------------*'
+                  print *, '* After check_closed_contour...         *'
+                  print *, '*---------------------------------------*'
+                  print *, ' '
+                endif
+
+
+              else if (isastorm(1) /= 'Y' .and. calcparm(3,ist) .and. (trkrinfo%type == 'midlat' .or. &
+                       trkrinfo%type == 'tcgen')) then
+                if (verb .ge. 3) then
+                  print *, ' '
+                  print *, 'Calling mask_based_on_wind_circ at ', ifcsthour
+                endif
+
+                call mask_based_on_wind_circ (imax, jmax, dx, dy, 850, valid_pt, masked_outc, &
+                     & trkrinfo, clon(ist,ifh,3), clat(ist,ifh,3), inp%modtyp, ifh, gm_wrap_flag, imbowret)
+              endif
+
+              if (trkrinfo%type == 'tcgen' .or. trkrinfo%type == 'tracker') then
+
+                if (calcparm(3,ist)) then
+                  if (verb .ge. 3) then
+                    print *, ' '
+                    print *, 'Checking 850 mb Vt speed using 850 mb '
+                    print *, 'wind circulation fix: '
+                    print *, ' 850 mb wcirc fix lon         = ', clon(ist,ifh,3)
+                    print *, ' 850 mb wcirc fix lat         = ', clat(ist,ifh,3)
+                    print *, ' (0-360) 850 mb wcirc fix lon = ', mod(clon(ist,ifh,3),360.0)
+                    print *, ' Multi-parm fix lon           = ', fixlon(ist,ifh)
+                    print *, ' Multi-parm fix lat           = ', fixlat(ist,ifh)
+                    print *, ' (0-360) Multi-parm fix lon   = ', mod(fixlon(ist,ifh),360.0)
+                    print *, ' '
+                  endif
+
+                  call is_it_a_storm (imax, jmax, dx, dy, 'v850', ist, valid_pt, clon(ist,ifh,3), &
+                       & clat(ist,ifh,3), xval(3), trkrinfo, isastorm(3), ifh, isiret3)
+
+                else
+
+                  if (trkrinfo%use_backup_850_vt_check == 'y' .or. trkrinfo%use_backup_850_vt_check == 'Y') then
+                    if (readflag(3) .and. readflag(4)) then
+                      if (verb .ge. 3) then
+                        print *, ' '
+                        print *, '!!! NOTE: 850 mb wcirc fix not '
+                        print *, 'available.  We are instead '
+                        print *, 'checking 850 mb Vt speed using '
+                        print *, 'multi-parm fix position: '
+                        print *, ' Multi-parm fix lon         = ', fixlon(ist,ifh)
+                        print *, ' Multi-parm fix lat         = ', fixlat(ist,ifh)
+                        print *, ' (0-360) Multi-parm fix lon = ', mod(fixlon(ist,ifh),360.0)
+                        print *, ' '
+                      endif
+
+                      call is_it_a_storm (imax, jmax, dx, dy, 'v850', ist, valid_pt, fixlon(ist,ifh), &
+                           & fixlat(ist,ifh), 0.00, trkrinfo, isastorm(3), ifh, isiret3)
+                    endif
+                  endif
+                endif
+
+                if (calcparm(3,ist) .or. (had_to_try_backup_850_vt_check == 'y' .and. isiret3 == 0) ) then
+                  if (trkrinfo%type == 'tcgen') then
+                    if (isastorm(3) == 'Y') then
+                      if (ifh > 1) then
+                          if (vt850_flag(ist,iccfh) == 'y') then
+                          endif
+
+                        if (cc_time_sum_tot > 0.0) then
+                        else
+                        endif
+                        if (cc_time_pct >= 0.75) then
+                            
+                          if (verb .ge. 3) then
+                            print *, ' '
+                            print *, '+++ NOTE ON Vt_850 CHECK: The '
+                            print *, '    isastorm flag returned for '
+                            print *, '    this hour was NO, but a'
+                            print *, '    check of recent vt850_flags'
+                            print *, '    indicates that more than 75%'
+                            print *, '    of the vt850_flags over the'
+                            print *, '    last 24h are YES, so we will'
+                            print *, '    continue.'
+                            print *, '    cc_time_pct = ', cc_time_pct
+                            print *, ' '
+                          endif
+
+                        else
+                            isastorm(3) = 'N'
+
+                          if (verb .ge. 3) then
+                            print *, ' '
+                            print *, '!!! NOTE ON Vt_850 CHECK: The '
+                            print *, '!!! isastorm flag returned for '
+                            print *, '    this hour was NO, and a'
+                            print *, '    check of recent vt850_flags '
+                            print *, '    indicates that less than 75%'
+                            print *, '    of the vt850_flags over the'
+                            print *, '    last 24h are YES, so we will'
+                            print *, '    stop tracking.'
+                            print *, '    cc_time_pct = ', cc_time_pct
+                          endif
+                        endif
+                      endif
+                    endif
+                  endif
+                endif
+
+                if (isiret3 == 0 .and. isastorm(3) == 'Y' .and. trkrinfo%type == 'tracker') then
+
+                  if (alcparm(3,ist)) then
+                  else
+                  endif
+
+                    close_to_boundary = 'n'
+
+                  if (trkrinfo%gridtype == 'regional' .and. inp%nesttyp == 'fixed') then
+
+                    call probe_for_boundary (imax, jmax, dx, dy, ist, 'v850', v(1,1,1),     &
+                         & valid_pt, xinp_fixlon, xinp_fixlat, trkrinfo, close_to_boundary, &
+                         & gm_wrap_flag, ipfbret)
+
+                    print *, 'At pt isi B, close_to_boundary = ', close_to_boundary
+                    if (close_to_boundary == 'y' .and. (calcparm(3,ist) .or. (readflag(3) .and. readflag(4)))) then
+
+                      call check_quadrant_wind_circ (imax, jmax, dx, dy, ist, ifh, xinp_fixlon, xinp_fixlat, &
+                           & valid_pt, vt_quad, trkrinfo, quad_wind_circ_check, gm_wrap_flag, icqwret)
 
                       if (verb .ge. 3) then
                         print *, ' '
@@ -1844,634 +1785,192 @@ c             flag will have a value of 'U', for "undetermined".
                         print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
                         write (6,432) ifhours(ifh), ifclockmins(ifh)
                         write (6,221) xinp_fixlat
-                        write (6,223) 360.0-xinp_fixlon, xinp_fixlon, mod(xinp_fixlon,360.0)
+                        write (6,223) 360.0-mod(xinp_fixlon,360.0), xinp_fixlon, mod(xinp_fixlon,360.0)
+  221                   format (' !!! Boundary check xinp_fixlat is ', f7.2)
+  223                   format (' !!! Boundary check xinp_fixlon is ', f7.2, &
+                                'W   (', f7.2, 'E)  (0-360E) xinp_fixlon = ', f7.2)
                       endif
 
-                    endif
-
-                    if (close_to_boundary == 'y') then
-
-                      gb_check_trkrinfo = trkrinfo ! set equal to values
-                                                   ! from trkrinfo...
-                      gb_check_trkrinfo%contint = 
-     &                                  contint_grid_bound_check  
-                                   ! ...except use the grid bound check
-                                   ! contour inteval specified by 
-                                   ! the user in the namelist.
-
-                      masked_outc = .false.  ! Note that we are within
-                              ! an IF statement for type=tracker, so
-                              ! with this statement, we are *not* 
-                              ! accidentally resetting this important
-                              ! masked_outc flag to false for anything
-                              ! that would be genesis-related.
-                      get_last_isobar_flag = 'n' 
-                      dum1 = 0
-                      dum2 = 0
-                      dum3 = 0
-
-                      call check_closed_contour (imax, jmax, ifix, jfix, slp, valid_pt, masked_outc,    &
-                           & ccflag, 'min', gb_check_trkrinfo, 999, contour_info, get_last_isobar_flag, &
-                           & plastbar, rlastbar, dum1, dum2, dum3, icccret)
-
-                      if (verb .ge. 3) then
-                        print *, ' '
-                        print *, 'After call to check_closed_contour '
-                        print *, 'for the fixed grid boundary check.'
-                        print *, 'Contour interval threshold used = ', gb_check_trkrinfo%contint
-                        print *, 'ifix = ', ifix,' jfix = ', jfix
-                        print *, 'longitude = ', xinp_fixlon,'E (', 360-mod(xinp_fixlon,360.0), &
-                                 'W)  (0-360) longitude = ',     mod(xinp_fixlon,360.0)
-                        print *, 'latitude = ',                  xinp_fixlat
-                        print *, 'mean mslp value (xval(9)) = ', xval(9)
-                        print *, 'gridpoint mslp value = ',      slp(ifix,jfix)
-                        print *, 'ccflag = ',                    ccflag
-                        print *, ' '
-                      endif
-
-                      if (ccflag == 'y') then
-                        if (close_to_boundary == 'y' .and. abs(xinp_fixlat) > 25.0) then
-                          if ( verb .ge. 3 ) then
-                            print *, '+++ Fixed grid boundary: MSLP GOOD  ifh = ', ifh, '  tau = ', ifhours(ifh)
-                          endif
-                        endif
-                        if (close_to_boundary == 'y' .and. abs(xinp_fixlat) > 25.0) then
-                          ! since it's a 'y'.
-                          closed_mslp_ctr_flag2(ist,ifh) = 'n'
-                          if ( verb .ge. 3 ) then
-                            print *, '!!! closed_mslp_ctr_flag2 FAIL'
-                            print *, '!!! Fixed grid boundary alert: MSLP  ifh = ', ifh, '  tau = ', ifhours(ifh)
-                          endif
-                        endif
-                      endif
-
-                      if (close_to_boundary == 'y' .and. ifh > 1 .and. abs(xinp_fixlat) > 25.0) then
-                        ! The only way that close_to_boundary is set to
-                        ! y is if, above, the grid was detected as being
-                        ! a fixed regional grid *AND* the call to
-                        ! probe_for_boundary came back as 'y'.
-                        if (closed_mslp_ctr_flag2(ist,ifh) == 'n' .and. closed_mslp_ctr_flag2(ist,ifh-1) == 'n') then
-                          if (verb .ge. 0) then
-                            print *, ' '
-                            print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
-                            print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
-                            write (6,432) ifhours(ifh), ifclockmins(ifh)
-                            print *, '!!! Fixed grid boundary STOPPAGE'
-                            print *, '!!!         for MSLP            '
-                            print *, '!!! This storm is close to the'
-                            print *, '!!! edge of a fixed regional grid,'
-                            print *, '!!! and the closed contour'
-                            print *, '!!! checking has failed for two'
-                            print *, '!!! consecutive lead times.'
-                            print *, '!!!      ifh   = ', ifh
-                            print *, '!!! and  ifh-1 = ', ifh-1
-                            print *, '!!! TRACKING WILL STOP FOR'
-                            print *, '!!! THIS STORM'
-                          endif
-                          fixlon (ist,ifh) = -999.0
-                          fixlat (ist,ifh) = -999.0
-                          stormswitch(ist) = 2
-                          cycle stormloop
-                        endif
-                      endif
-
-                    endif
-  
-                  endif
-
-                endif
-
-                if (isastorm(1) == 'Y' .and. isiret1 == 0 .and. (trkrinfo%type == 'midlat' .or. &
-                   & trkrinfo%type == 'tcgen')) then
-
-                  if (verb .ge. 3) then
-                    print *, ' '
-                    print *, 'Before call to check_closed_contour, '
-                    print *, 'ifix = ', ifix,' jfix = ', jfix
-                    print *, 'longitude = ', xinp_fixlon, 'E (', 360-xinp_fixlon, &
-                             'W)  (0-360) longitude = ', mod(xinp_fixlon,360.0)
-                    print *, 'latitude = ', xinp_fixlat
-                    print *, 'mean mslp value (xval(9))= ', xval(9)
-                  endif
-
-                  if (contour_info%numcont == 0) then
-                    contour_info%numcont = maxconts
-                  endif
-
-                  get_last_isobar_flag = 'y'
-                  dum1 = 0
-                  dum2 = 0
-                  dum3 = 0
-
-                  call check_closed_contour (imax, jmax, ifix, jfix, slp, valid_pt, masked_outc, ccflag, &
-                       & 'min', trkrinfo, 999, contour_info, get_last_isobar_flag, plastbar, rlastbar,   &
-                       & dum1, dum2, dum3, icccret)
-
-                  if (verb .ge. 3) then
-                    print *, ' '
-                    print *, 'After call to check_closed_contour, and'
-                    print *, 'after locating center of storm for a'
-                    print *, 'midlat or tcgen case,'
-                    print *, 'ifix = ', ifix,' jfix = ', jfix
-                    print *, 'longitude = ',xinp_fixlon,'E (', 360-xinp_fixlon,  &
-                             'W)  (0-360) longitude = ', mod(xinp_fixlon, 360.0)
-                    print *, 'latitude = ',                     xinp_fixlat
-                    print *, 'mean mslp value (xval(9)) = ',    xval(9)
-                    print *, 'gridpoint mslp value = ',         slp(ifix,jfix)
-                    print *, 'ccflag = ',                       ccflag
-                    print *, 'prs of last closed isobar = ',    plastbar
-                    print *, 'radius of last closed isobar = ', rlastbar,' nm'
-                    print *, ' '
-                  endif
-
-                  ! This next bit of code adds a second layer of closed
-                  ! contour checking.  This is to decrease the 
-                  ! occurrence of interrupted midlat and tcgen tracks,
-                  ! which usually happens when the closed contour 
-                  ! criterion is not met for one time period.  So in 
-                  ! this next code, we check to see if the ccflag was 
-                  ! 'y' for at least half the time over the last 24h.  
-                  ! For time periods shorter than 24h (e.g., the storm 
-                  ! was just detected at 144h and we are now at 156h),
-                  ! the threshold is still that for at least half of 
-                  ! the time the system has been detected as a storm,
-                  ! it must have a ccflag value of 'y'.
-
-                  if (ccflag == 'y') then
-                    closed_mslp_ctr_flag(ist,ifh) = 'y'
-                  else
-                    closed_mslp_ctr_flag(ist,ifh) = 'n'
-                    if (ifh > 1) then
-                      iccfh = ifh
-                      cc_time_sum_tot = 0.0
-                      cc_time_sum_yes = 0.0
-                      do while (iccfh > 1 .and. 
-     &                     closed_mslp_ctr_flag(ist,iccfh) /= 'u' .and.
-     &                     cc_time_sum_tot < 24.0)
-                        xinterval_fhr = fhreal(iccfh) - fhreal(iccfh-1)
-                        cc_time_sum_tot = cc_time_sum_tot 
-     &                                  + xinterval_fhr
-                        if (closed_mslp_ctr_flag(ist,iccfh) == 'y') then
-                          cc_time_sum_yes = cc_time_sum_yes 
-     &                                    + xinterval_fhr
-                        endif
-                        iccfh = iccfh - 1
-                      enddo
-                      if (cc_time_sum_tot > 0.0) then
-                        cc_time_pct = cc_time_sum_yes / cc_time_sum_tot
-                      else
-                        cc_time_pct = 0.0
-                      endif
-                      if (cc_time_pct >= 0.50) then
-                        ccflag = 'y'
-
+                      if (quad_wind_circ_check == 'pass') then
                         if (verb .ge. 3) then
-                          print *, ' '
-                          print *, '++ NOTE ON CLOSED CONTOUR CHECK: The'
-                          print *, '   ccflag returned for this hour was'
-                          print *, '   NO, but a check of recent ccflags'
-                          print *, '   indicates that more than 50% of '
-                          print *, '   the ccflags over the last 24h are'
-                          print *, '   YES, so we will continue.'
-                          print *, '   cc_time_pct = ', cc_time_pct
-                          print *, ' '
+                          print *, '+++ Fixed grid boundary: v850 GOOD ifh = ', ifh, '  tau = ', ifhours(ifh)
                         endif
-
+                        continue
                       else
-                        ccflag = 'n'
-
-                        if (verb .ge. 3) then
-                          print *, ' '
-                          print *, '!! NOTE ON CLOSED CONTOUR CHECK: The'
-                          print *, '!! ccflag returned for this hour was'
-                          print *, '   NO, and a check of recent ccflags'
-                          print *, '   indicates that less than 50% of '
-                          print *, '   the ccflags over the last 24h are'
-                          print *, '   YES, so we will stop tracking.'
-                          print *, '   cc_time_pct= ', cc_time_pct
+                        if ( verb .ge. 3 ) then
+                          print *, '!!! quad_wind_circ_flag FAIL'
+                          print *, '!! Fixed grid boundary alert: v850  ifh = ', ifh, '  tau = ', ifhours(ifh)
                         endif
-
-                      endif
-                    endif
-                  endif
-
-                  if (ccflag == 'y') then
-                    isastorm(2) = 'Y'
-                  else if (ccflag == 'n') then
-                    isastorm(2) = 'N'
-                  endif
-
-                  if (verb .ge. 3) then
-                    print *, ' '
-                    print *, '*---------------------------------------*'
-                    print *, '* After check_closed_contour...         *'
-                    print *, '*---------------------------------------*'
-                    print *, ' '
-                  endif
-
-
-                else if (isastorm(1) /= 'Y' .and. calcparm(3,ist) .and. (trkrinfo%type == 'midlat' .or. &
-                        & trkrinfo%type == 'tcgen')) then
-
-                  if (verb .ge. 3) then
-                    print *, ' '
-                    print *, 'Calling mask_based_on_wind_circ at ', ifcsthour
-                  endif
-
-                  call mask_based_on_wind_circ (imax, jmax, dx, dy, 850, valid_pt, masked_outc, &
-                       & trkrinfo, clon(ist,ifh,3), clat(ist,ifh,3), inp%modtyp, ifh, gm_wrap_flag, imbowret)
-
-                endif
-
-                if (trkrinfo%type == 'tcgen' .or. trkrinfo%type == 'tracker') then
-                  had_to_try_backup_850_vt_check = 'n'
-
-                  if (calcparm(3,ist)) then
-
-                    if (verb .ge. 3) then
-                      print *, ' '
-                      print *, 'Checking 850 mb Vt speed using 850 mb '
-                      print *, 'wind circulation fix: '
-                      print *, ' 850 mb wcirc fix lon         = ', clon(ist,ifh,3)
-                      print *, ' 850 mb wcirc fix lat         = ', clat(ist,ifh,3)
-                      print *, ' (0-360) 850 mb wcirc fix lon = ', mod(clon(ist,ifh,3),360.0)
-                      print *, ' Multi-parm fix lon           = ', fixlon(ist,ifh)
-                      print *, ' Multi-parm fix lat           = ', fixlat(ist,ifh)
-                      print *, ' (0-360) Multi-parm fix lon   = ', mod(fixlon(ist,ifh),360.0)
-                      print *, ' '
-                    endif
-
-                    call is_it_a_storm (imax, jmax, dx, dy, 'v850', ist, valid_pt, clon(ist,ifh,3), &
-                         & clat(ist,ifh,3), xval(3), trkrinfo, isastorm(3), ifh, isiret3)
-
-                  else
-
-                    had_to_try_backup_850_vt_check = 'y'
-                    isiret3 = -99
-
-                    if (trkrinfo%use_backup_850_vt_check == 'y' .or. trkrinfo%use_backup_850_vt_check == 'Y') then
-                      if (readflag(3) .and. readflag(4)) then
-
-                        if (verb .ge. 3) then
-                          print *, ' '
-                          print *, '!!! NOTE: 850 mb wcirc fix not '
-                          print *, 'available.  We are instead '
-                          print *, 'checking 850 mb Vt speed using '
-                          print *, 'multi-parm fix position: '
-                          print *, ' Multi-parm fix lon         = ', fixlon(ist,ifh)
-                          print *, ' Multi-parm fix lat         = ', fixlat(ist,ifh)
-                          print *, ' (0-360) Multi-parm fix lon = ', mod(fixlon(ist,ifh),360.0)
-                          print *, ' '
-                        endif
-
-                        call is_it_a_storm (imax, jmax, dx, dy, 'v850', ist, valid_pt, fixlon(ist,ifh), &
-                             & fixlat(ist,ifh), 0.00, trkrinfo, isastorm(3), ifh, isiret3)
-
-                      endif
-  
-                    endif
-
-                  endif
-
-                  if (calcparm(3,ist) .or. (had_to_try_backup_850_vt_check == 'y' .and. isiret3 == 0) ) then
-                    if (trkrinfo%type == 'tcgen') then
-                      ! This next bit of code adds a second layer of 850
-                      ! mb Vt magnitude checking.  This is to decrease 
-                      ! the occurrence of interrupted tcgen tracks, 
-                      ! which occasionally happens for weak storms when
-                      ! this criterion is not met for one time period. 
-                      ! So in this next code, we check to see if the 
-                      ! vt850_flag was 'y' for at least 75% of the time
-                      ! over the last 24h.  For time periods shorter 
-                      ! than 24h (e.g., the storm was just detected at 
-                      ! 144h and we are now at 156h), the threshold is 
-                      ! still that for at least 75% of the time the 
-                      ! system has been detected as a storm, it must 
-                      ! have a vt850_flag value of 'y'.
-
-                      if (isastorm(3) == 'Y') then
-                        vt850_flag(ist,ifh) = 'y'
-                      else
-                        vt850_flag(ist,ifh) = 'n'
                         if (ifh > 1) then
-                          iccfh = ifh
-                          cc_time_sum_tot = 0.0
-                          cc_time_sum_yes = 0.0
-                          do while (iccfh > 1 .and. 
-     &                         vt850_flag(ist,iccfh) /= 'u' .and.
-     &                         cc_time_sum_tot < 24.0)
-                            xinterval_fhr = fhreal(iccfh) - 
-     &                                      fhreal(iccfh-1)
-                            cc_time_sum_tot = cc_time_sum_tot 
-     &                                      + xinterval_fhr
-                            if (vt850_flag(ist,iccfh) == 'y') then
-                              cc_time_sum_yes = cc_time_sum_yes 
-     &                                        + xinterval_fhr
-                            endif
-                            iccfh = iccfh - 1
-                          enddo
-                          if (cc_time_sum_tot > 0.0) then
-                            cc_time_pct = cc_time_sum_yes / 
-     &                                    cc_time_sum_tot
-                          else
-                            cc_time_pct = 0.0
-                          endif
-                          if (cc_time_pct >= 0.75) then
-                            isastorm(3) = 'Y'
-
-                            if (verb .ge. 3) then
+                          if (quad_wind_circ_flag(ist,ifh) == 'n' .and. quad_wind_circ_flag(ist,ifh-1) == 'n') then
+                            if (verb .ge. 0) then
                               print *, ' '
-                              print *, '+++ NOTE ON Vt_850 CHECK: The '
-                              print *, '    isastorm flag returned for '
-                              print *, '    this hour was NO, but a'
-                              print *, '    check of recent vt850_flags'
-                              print *, '    indicates that more than 75%'
-                              print *, '    of the vt850_flags over the'
-                              print *, '    last 24h are YES, so we will'
-                              print *, '    continue.'
-                              print *, '    cc_time_pct = ', cc_time_pct
-                              print *, ' '
+                              print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
+                              print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
+                              write (6,432) ifhours(ifh), ifclockmins(ifh)
+                              print *, '!!!     Fixed grid boundary'
+                              print *, '!!!      STOPPAGE for v850'
+                              print *, '!!! This storm is close to the'
+                              print *, '!!! edge of a fixed regional'
+                              print *, '!!! grid, and the closed'
+                              print *, '!!! contour checking has'
+                              print *, '!!! failed for two consecutive'
+                              print *, '!!! lead times, '
+                              print *, '!!! ifh = ', ifh, ' and ifh-1 = ', ifh-1
+                              print *, '!!! TRACKING WILL STOP FOR'
+                              print *, '!!! THIS STORM'
                             endif
-
-                          else
-                            isastorm(3) = 'N'
-
-                            if (verb .ge. 3) then
-                              print *, ' '
-                              print *, '!!! NOTE ON Vt_850 CHECK: The '
-                              print *, '!!! isastorm flag returned for '
-                              print *, '    this hour was NO, and a'
-                              print *, '    check of recent vt850_flags '
-                              print *, '    indicates that less than 75%'
-                              print *, '    of the vt850_flags over the'
-                              print *, '    last 24h are YES, so we will'
-                              print *, '    stop tracking.'
-                              print *, '    cc_time_pct = ', cc_time_pct
-                            endif
-
-                          endif
-                        endif
-                      endif
-
-                    endif
-                  endif
-
-                  if (isiret3 == 0 .and. isastorm(3) == 'Y' .and. trkrinfo%type == 'tracker') then
-
-                    ! If the fix center for 850 mb wind circulation was
-                    ! okay and able to be used, then use the  tracker-
-                    ! -derived 850 mb wind circulation center
-                    ! for the close-to-boundary closed circulation
-                    ! check.  Otherwise, use the mean fix position for
-                    ! this hour, but only if u850 and v850 have been
-                    ! read in.
-
-                    if (calcparm(3,ist)) then
-                      xinp_fixlat = clat(ist,ifh,3)
-                      xinp_fixlon = clon(ist,ifh,3)
-                    else
-                      xinp_fixlat = fixlat(ist,ifh)
-                      xinp_fixlon = fixlon(ist,ifh)
-                    endif
-
-                    close_to_boundary = 'n'
-
-                    if (trkrinfo%gridtype == 'regional' .and. inp%nesttyp == 'fixed') then
-
-                      call probe_for_boundary (imax, jmax, dx, dy, ist, 'v850', v(1,1,1),     &
-                           & valid_pt, xinp_fixlon, xinp_fixlat, trkrinfo, close_to_boundary, &
-                           & gm_wrap_flag, ipfbret)
-
-                      print *, 'At pt isi B, close_to_boundary = ', close_to_boundary
-                      if (close_to_boundary == 'y' .and. (calcparm(3,ist) .or. (readflag(3) .and. readflag(4)))) then
-
-                        call check_quadrant_wind_circ (imax, jmax, dx, dy, ist, ifh, xinp_fixlon, xinp_fixlat, &
-                             & valid_pt, vt_quad, trkrinfo, quad_wind_circ_check, gm_wrap_flag, icqwret)
-
-                        if (verb .ge. 3) then
-                          print *, ' '
-                          print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
-                          print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
-                          write (6,432) ifhours(ifh), ifclockmins(ifh)
-                          write (6,221) xinp_fixlat
-                          write (6,223) 360.0-mod(xinp_fixlon,360.0), xinp_fixlon, mod(xinp_fixlon,360.0)
-  221                     format (' !!! Boundary check xinp_fixlat is ', f7.2)
-  223                     format (' !!! Boundary check xinp_fixlon is ', f7.2, &
-                                  'W   (', f7.2, 'E)  (0-360E) xinp_fixlon = ', f7.2)
-                        endif
-
-                        if (quad_wind_circ_check == 'pass') then
-                          quad_wind_circ_flag(ist,ifh) = 'y'
-                          if (verb .ge. 3) then
-                            print *, '+++ Fixed grid boundary: v850 GOOD ifh = ', ifh, '  tau = ', ifhours(ifh)
-                          endif
-                          continue
-                        else
-                          quad_wind_circ_flag(ist,ifh) = 'n'
-                          if ( verb .ge. 3 ) then
-                            print *, '!!! quad_wind_circ_flag FAIL'
-                            print *, '!! Fixed grid boundary alert: v850  ifh = ', ifh, '  tau = ', ifhours(ifh)
-                          endif
-                          if (ifh > 1) then
-                            if (quad_wind_circ_flag(ist,ifh) == 'n' .and. quad_wind_circ_flag(ist,ifh-1) == 'n') then
-                              if (verb .ge. 0) then
-                                print *, ' '
-                                print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
-                                print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
-                                write (6,432) ifhours(ifh), ifclockmins(ifh)
-                                print *, '!!!     Fixed grid boundary'
-                                print *, '!!!      STOPPAGE for v850'
-                                print *, '!!! This storm is close to the'
-                                print *, '!!! edge of a fixed regional'
-                                print *, '!!! grid, and the closed'
-                                print *, '!!! contour checking has'
-                                print *, '!!! failed for two consecutive'
-                                print *, '!!! lead times, '
-                                print *, '!!! ifh = ', ifh, ' and ifh-1 = ', ifh-1
-                                print *, '!!! TRACKING WILL STOP FOR'
-                                print *, '!!! THIS STORM'
-                              endif
-                              fixlon (ist,ifh) = -999.0
-                              fixlat (ist,ifh) = -999.0
-                              stormswitch(ist) = 2
-                              cycle stormloop
-                            endif
+                              
+                            cycle ! stormloop
                           endif
                         endif
                       endif
                     endif
-
                   endif
-
                 endif
+              endif
 
-                if (readflag(10) .and. readflag(11)) then
+              if (readflag(10) .and. readflag(11)) then
 
-                  low_level_wind_circ_flag = 'n'
-                  call check_for_closed_wind_circulation (imax,jmax
-     &                   ,ifix,jfix,dx,dy,valid_pt,trkrinfo,ifh
-     &                   ,low_level_wind_circ_flag,gm_wrap_flag
-     &                   ,vtquadmax,'forward',iccwcret)
+                call check_for_closed_wind_circulation (imax, jmax, ifix, jfix, dx, dy, valid_pt, &
+                     & trkrinfo, ifh, low_level_wind_circ_flag, gm_wrap_flag, vtquadmax, 'forward', iccwcret)
 
-                  call check_for_closed_wind_circulation (imax, jmax, ifix, jfix, dx, dy, valid_pt, &
-                       & trkrinfo, ifh, low_level_wind_circ_flag, gm_wrap_flag, vtquadmax, 'forward', iccwcret)
-
-                  if (iccwcret == 0) then
+                if (iccwcret == 0) then
                     int_vtq_ne = nint(10.0 * vtquadmax(1) * 1.9427)
                     int_vtq_se = nint(10.0 * vtquadmax(2) * 1.9427)
                     int_vtq_sw = nint(10.0 * vtquadmax(3) * 1.9427)
                     int_vtq_nw = nint(10.0 * vtquadmax(4) * 1.9427)
-                    print *, ' ' ! CAITLYN - does this have a purpose?
+                  print *, ' ' ! CAITLYN - does this have a purpose?
 
-                    if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
-                      write (6,234), atcfymdh, adjustr(atcfname), ifhours(ifh), &
-                                     int_vtq_ne, int_vtq_se, int_vtq_sw, int_vtq_nw
-                    endif
-  234               format (1x, 'tcvq_forward ', i10.10, ', ', 1x, a4, ', ', 1x, i3, 4(', ', i7), 1x)
+                  if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
+                    write (6,234), atcfymdh, adjustr(atcfname), ifhours(ifh), &
+                                   int_vtq_ne, int_vtq_se, int_vtq_sw, int_vtq_nw
                   endif
+  234             format (1x, 'tcvq_forward ', i10.10, ', ', 1x, a4, ', ', 1x, i3, 4(', ', i7), 1x)
+                endif
+              endif
 
+            else
+              if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
+                if (verb .ge. 3) then
+                  print *, ' '
+                  print *, '!!! For a midlat or tcgen case, a fix '
+                  print *, '!!! could not be made for mslp, '
+                  print *, '!!! therefore we will stop tracking '
+                  print *, '!!! for this storm.'
                 endif
 
               else
-
-                if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
-                  isastorm(1) = 'N'
-                  if (verb .ge. 3) then
-                    print *, ' '
-                    print *, '!!! For a midlat or tcgen case, a fix '
-                    print *, '!!! could not be made for mslp, '
-                    print *, '!!! therefore we will stop tracking '
-                    print *, '!!! for this storm.'
-                  endif
-
-                else
                   isastorm(1) = 'N'
                   isastorm(3) = 'N'
 
-                  if (verb .ge. 3) then
-                    print *, ' '
-                    print *, '!!! For a TC tracker case, a fix could'
-                    print *, '!!! not be made using any tracked parms,'
-                    print *, '!!! therefore we will stop tracking for'
-                    print *, '!!! this storm.'
-                  endif
-                endif
-
-                if (verb .ge. 3) then
-                  print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
-                  print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
-                  write (6,432) ifhours(ifh), ifclockmins(ifh)
-                endif
-
-                fixlon (ist,ifh) = -999.0
-                fixlat (ist,ifh) = -999.0
-                stormswitch(ist) = 2
-                cycle stormloop
-
-              endif
-
-              if (isiret1 /= 0 .or. isiret2 /= 0 .or. isiret3 /= 0) then
-                if (verb .ge. 1) then
-                  print *, ' '
-                  print *, '!!! ERROR: One of the calls to '
-                  print *, '!!! is_it_a_storm produced an error.'
-                  print *, '!!! Chances are this is from a call to '
-                  print *, '!!! get_ij_bounds, meaning we are too close'
-                  print *, '!!! to a regional grid boundary to do this '
-                  print *, '!!! analysis.  Processing will continue....'
-                  print *, '!!! isiret1 = ', isiret1, ' isiret2 = ', isiret2
-                  print *, '!!! isiret3 = ', isiret3
-                endif
-              endif
-
-              if (isastorm(1) == 'N' .or. isastorm(2) == 'N' .or. isastorm(3) == 'N') then
-
                 if (verb .ge. 3) then
                   print *, ' '
-                  print *, '!!! At least one of the isastorm flags from'
-                  print *, '!!! subroutine  is_it_a_storm is "N", so '
-                  print *, '!!! either we were unable to find a good '
-                  print *, '!!! mslp gradient and/or a valid 850 mb '
-                  print *, '!!! circulation for the storm at this time,'
-                  print *, '!!! or, for the cases of midlat or tcgen '
-                  print *, '!!! tracking, a closed mslp contour could '
-                  print *, '!!! not be found, thus we will stop tracking'
+                  print *, '!!! For a TC tracker case, a fix could'
+                  print *, '!!! not be made using any tracked parms,'
+                  print *, '!!! therefore we will stop tracking for'
                   print *, '!!! this storm.'
-                  print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
-                  print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
-                  write (6,432) ifhours(ifh), ifclockmins(ifh)
-                  print *, '!!! mslp gradient flag  = ', isastorm(1)
-                  print *, '!!! closed contour flag = ', isastorm(2)
-                  print *, '!!! 850 mb winds flag   = ', isastorm(3)
-                  print *, ' '
                 endif
+              endif
+
+              if (verb .ge. 3) then
+                print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
+                print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
+                write (6,432) ifhours(ifh), ifclockmins(ifh)
+              endif
+
+              cycle ! stormloop
+            endif
+
+            if (isiret1 /= 0 .or. isiret2 /= 0 .or. isiret3 /= 0) then
+              if (verb .ge. 1) then
+                print *, ' '
+                print *, '!!! ERROR: One of the calls to '
+                print *, '!!! is_it_a_storm produced an error.'
+                print *, '!!! Chances are this is from a call to '
+                print *, '!!! get_ij_bounds, meaning we are too close'
+                print *, '!!! to a regional grid boundary to do this '
+                print *, '!!! analysis.  Processing will continue....'
+                print *, '!!! isiret1 = ', isiret1, ' isiret2 = ', isiret2
+                print *, '!!! isiret3 = ', isiret3
+              endif
+            endif
+
+            if (isastorm(1) == 'N' .or. isastorm(2) == 'N' .or. isastorm(3) == 'N') then
+
+              if (verb .ge. 3) then
+                print *, ' '
+                print *, '!!! At least one of the isastorm flags from'
+                print *, '!!! subroutine  is_it_a_storm is "N", so '
+                print *, '!!! either we were unable to find a good '
+                print *, '!!! mslp gradient and/or a valid 850 mb '
+                print *, '!!! circulation for the storm at this time,'
+                print *, '!!! or, for the cases of midlat or tcgen '
+                print *, '!!! tracking, a closed mslp contour could '
+                print *, '!!! not be found, thus we will stop tracking'
+                print *, '!!! this storm.'
+                print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
+                print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
+                write (6,432) ifhours(ifh), ifclockmins(ifh)
+                print *, '!!! mslp gradient flag  = ', isastorm(1)
+                print *, '!!! closed contour flag = ', isastorm(2)
+                print *, '!!! 850 mb winds flag   = ', isastorm(3)
+                print *, ' '
+              endif
 
                 fixlon (ist,ifh) = -999.0
                 fixlat (ist,ifh) = -999.0
                 stormswitch(ist) = 2
-              endif
+            endif
 
               ! Now do another check for the  tracker and tcgen cases.
-              if (trkrinfo%type == 'tracker' .or. trkrinfo%type == 'tcgen') then
-                if (isastorm(1) == 'Y' .and. isastorm(3) == 'Y' .and. calcparm(1,ist) .and. stormswitch(ist) == 1) then
+            if (trkrinfo%type == 'tracker' .or. trkrinfo%type == 'tcgen') then
+              if (isastorm(1) == 'Y' .and. isastorm(3) == 'Y' .and. calcparm(1,ist) .and. stormswitch(ist) == 1) then
 
-                  call calcdist (clon(ist,ifh,9), clat(ist,ifh,9), clon(ist,ifh,1), &
-                       & clat(ist,ifh,1), dist, degrees)
+                call calcdist (clon(ist,ifh,9), clat(ist,ifh,9), clon(ist,ifh,1), &
+                     & clat(ist,ifh,1), dist, degrees)
 
-                  if (dist > trkrinfo%max_mslp_850) then
-                    if (verb .ge. 3) then
-                      print *, ' '
-                      print *, '!!! In routine  tracker, the dist betw'
-                      print *, '!!! the mslp center & the 850 zeta '
-                      print *, '!!! center is too great, thus we will'
-                      print *, '!!! stop tracking this storm.'
-                      print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
-                      print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
-                      write (6,432) ifhours(ifh), ifclockmins(ifh)
-                      print *, '!!! Max dist allowed (km) = ', trkrinfo%max_mslp_850
-                      print *, '!!! Actual distance  (km) = ', dist
-                      print *, ' '
-                    endif
+                if (dist > trkrinfo%max_mslp_850) then
+                  if (verb .ge. 3) then
+                    print *, ' '
+                    print *, '!!! In routine  tracker, the dist betw'
+                    print *, '!!! the mslp center & the 850 zeta '
+                    print *, '!!! center is too great, thus we will'
+                    print *, '!!! stop tracking this storm.'
+                    print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
+                    print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
+                    write (6,432) ifhours(ifh), ifclockmins(ifh)
+                    print *, '!!! Max dist allowed (km) = ', trkrinfo%max_mslp_850
+                    print *, '!!! Actual distance  (km) = ', dist
+                    print *, ' '
+                  endif
 
                     fixlon (ist,ifh) = -999.0
                     fixlat (ist,ifh) = -999.0
                     stormswitch(ist) = 2
-                  else
+                else
 
-                    if (verb .ge. 3) then
-                      print *, ' '
-                      print *, 'Actual distance between the parm centers'
-                      print *, 'for 850 zeta and mslp is ', dist, ' (km)'
-                      print *, 'Max dist allowed (km) = ', trkrinfo%max_mslp_850
-                    endif
-
+                  if (verb .ge. 3) then
+                    print *, ' '
+                    print *, 'Actual distance between the parm centers'
+                    print *, 'for 850 zeta and mslp is ', dist, ' (km)'
+                    print *, 'Max dist allowed (km) = ', trkrinfo%max_mslp_850
                   endif
                 endif
               endif
+            endif
 
-              ! Do one final check.  Check the new fix position and 
-              ! the old fix position and calculate the speed that the
-              ! storm would have had to travel to get to this point.
-              ! If that speed exceeds a certain threshold (~60 kt), 
-              ! assume you're tracking the wrong thing and quit.
-              ! Obviously, only do this for times > 00h.  The check
-              ! in the if statement to see if the previous hour's 
-              ! lats and lons were > -999 is for the midlat and 
-              ! tcgen cases -- remember, they can have genesis at
-              ! any hour of the forecast, in which case the previous
-              ! forecast hour's lat & lon would be -999.
+            if (ifh > 1 .and. stormswitch(ist) == 1) then
+              if (fixlon(ist,ifh-1) > -999.0 .and. fixlat(ist,ifh-1) > -999.0) then
 
-              if (ifh > 1 .and. stormswitch(ist) == 1) then
-                if (fixlon(ist,ifh-1) > -999.0 .and. fixlat(ist,ifh-1) > -999.0) then
-
-                  if (trkrinfo%type == 'midlat') then
+                if (trkrinfo%type == 'midlat') then
                     xmaxspeed = maxspeed_ml
-                  else
+                else
                     xmaxspeed = maxspeed_tc
-                  endif
+                endif
 
-                  call calcdist (fixlon(ist,ifh-1), fixlat(ist,ifh-1), fixlon(ist,ifh), &
-                       & fixlat(ist,ifh), dist, degrees)
+                call calcdist (fixlon(ist,ifh-1), fixlat(ist,ifh-1), fixlon(ist,ifh), &
+                     & fixlat(ist,ifh), dist, degrees)
 
                   ! convert distance from km to nm and get speed.
 
@@ -2479,808 +1978,562 @@ c             flag will have a value of 'U', for "undetermined".
                   xinterval_fhr = fhreal(ifh) - fhreal(ifh-1)
                   xknots = distnm / xinterval_fhr
 
-                  if (xknots > xmaxspeed) then
-                    if (verb .ge. 0) then
-                      print *, ' '
-                      print *, '!!! In routine  tracker, calculated spd'
-                      print *, '!!! of the storm from the last position'
-                      print *, '!!! to the current position is too high,'
-                      print *, '!!! so we will stop tracking this storm'
-                      print *, '!!! (For fear that we are not actually '
-                      print *, '!!! tracking our storm, but have instead'
-                      print *, '!!! locked onto some other feature....)'
-                      print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
-                      print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
-                      write (6,432) ifhours(ifh), ifclockmins(ifh)
-                      print *, '!!! Max speed allowed (kt) = ', xmaxspeed
-                      print *, '!!! Actual speed      (kt) = ', xknots
-                      print *, ' '
-                    endif
+                if (xknots > xmaxspeed) then
+                  if (verb .ge. 0) then
+                    print *, ' '
+                    print *, '!!! In routine  tracker, calculated spd'
+                    print *, '!!! of the storm from the last position'
+                    print *, '!!! to the current position is too high,'
+                    print *, '!!! so we will stop tracking this storm'
+                    print *, '!!! (For fear that we are not actually '
+                    print *, '!!! tracking our storm, but have instead'
+                    print *, '!!! locked onto some other feature....)'
+                    print *, '!!! Storm ID = ', storm(ist)%tcv_storm_id
+                    print *, '!!! Storm    = ', storm(ist)%tcv_storm_name
+                    write (6,432) ifhours(ifh), ifclockmins(ifh)
+                    print *, '!!! Max speed allowed (kt) = ', xmaxspeed
+                    print *, '!!! Actual speed      (kt) = ', xknots
+                    print *, ' '
+                  endif
 
                     fixlon (ist,ifh) = -999.0
                     fixlat (ist,ifh) = -999.0
                     stormswitch(ist) = 2
-                  else
+                else
 
-                    if ( verb .ge. 3 ) then
-                      print *, ' '
-                      print *, 'The average speed that the storm moved'
-                      print *, 'at since the previous forecast time is', xknots, ' knots.'
-                    endif
-
+                  if (verb .ge. 3) then
+                    print *, ' '
+                    print *, 'The average speed that the storm moved'
+                    print *, 'at since the previous forecast time is', xknots, ' knots.'
                   endif
-
                 endif
-
               endif
- 
+            endif
+          endif
+
+          if (readflag(10) .and. readflag(11) .and. ifret == 0 .and. stormswitch(ist) == 1) then
+            call get_max_wind (fixlon(ist,ifh), fixlat(ist,ifh), imax, jmax, dx, dy, valid_pt, &
+                 & levsfc, xmaxwind(ist,ifh), trkrinfo, rmax, igmwret)
+
+            if (igmwret /= 0) then
+              if (verb .ge. 0) then
+                print *, ' '
+                print *, '!!! Return code from get_max_wind is /= 0. '
+                print *, '!!! rcc = igmwret = ', igmwret
+                print *, '!!! Also, this is a moveable, regional grid'
+                print *, '!!! and the grid did not change from last'
+                print *, '!!! lead time to current one, so what has'
+                print *, '!!! likely happened is that the storm has '
+                print *, '!!! moved close to the edge of the nested '
+                print *, '!!! grid domain, but the nested grid itself'
+                print *, '!!! had stopped moving, probably because it'
+                print *, '!!! dropped or lost the storm.'
+                print *, '!!! '
+                print *, '!!! TRACKING WILL STOP FOR THIS STORM'
+                print *, '!!! '
+              endif
+
+              cycle ! stormloop
             endif
 
-            ! ----------------------------------------------------------
-            ! 
-            !                DIAGNOSE MAX WIND
-            ! 
-            ! Now get the maximum near-surface wind speed near the storm
-            ! center (get_max_wind).  Also, call  getradii to get the 
-            ! radii in each storm quadrant of gale-force, storm-force 
-            ! and hurricane force winds.
-            ! 
-            !----------------------------------------------------------- 
-
-            if (readflag(10) .and. readflag(11) .and. ifret == 0 .and. stormswitch(ist) == 1) then
-              call get_max_wind (fixlon(ist,ifh), fixlat(ist,ifh), imax, jmax, dx, dy, valid_pt, &
-                   & levsfc, xmaxwind(ist,ifh), trkrinfo, rmax, igmwret)
-
-              if (igmwret /= 0) then
-                if (verb .ge. 0) then
-                  print *, ' '
-                  print *, '!!! Return code from get_max_wind is /= 0. '
-                  print *, '!!! rcc = igmwret = ', igmwret
-                  print *, '!!! Also, this is a moveable, regional grid'
-                  print *, '!!! and the grid did not change from last'
-                  print *, '!!! lead time to current one, so what has'
-                  print *, '!!! likely happened is that the storm has '
-                  print *, '!!! moved close to the edge of the nested '
-                  print *, '!!! grid domain, but the nested grid itself'
-                  print *, '!!! had stopped moving, probably because it'
-                  print *, '!!! dropped or lost the storm.'
-                  print *, '!!! '
-                  print *, '!!! TRACKING WILL STOP FOR THIS STORM'
-                  print *, '!!! '
-                endif
-
-                stormswitch(ist) = 2
-                cycle stormloop
-              endif
-
-              ! --------------------------------------------------------
-              ! 
-              !           DIAGNOSE AXISYMMETRIC RMW
-              ! 
-              ! --------------------------------------------------------
-
-              call get_axisymet_rmw (fixlon(ist,ifh), fixlat(ist,ifh), imax, jmax, dx, dy, valid_pt, &
-                   & trkrinfo, axisymet_rmw_dist, axisymet_rmw_val, gm_wrap_flag, igarret)
+            call get_axisymet_rmw (fixlon(ist,ifh), fixlat(ist,ifh), imax, jmax, dx, dy, valid_pt, &
+                 & trkrinfo, axisymet_rmw_dist, axisymet_rmw_val, gm_wrap_flag, igarret)
 
               ileadtime = nint(fhreal(ifh) * 100.0)
               ifcsthour = ileadtime / 100
 
-              !-------------------------------------------------------
-              !
-              !         DIAGNOSE WIND RADII: R34, R50, R64
-              !
-              ! For the radii, we encountered a problem with radmax
-              ! being too small.  It was set at 650 km.  Hurricane
-              ! Sandy exceeded this in the models, so the values
-              ! returned from getradii were close to the default
-              ! radmax value of 650 km (350 nm), instead of higher.
-              ! To fix it, we now use an iterative technique, where
-              ! we start with radmax as a small value (500 km).  If
-              ! getradii returns a value for R34 in a quadrant that
-              ! does not exceed 0.97*radmax, then that value is ok.
-              ! If it does exceed 0.97*radmax, then we bump up radmax
-              ! by 50 km and call  getradii again, looking to diagnose
-              ! radii only in those quadrants where the
-              ! need_to_expand_r34 flag = 'n'.  BTW... note the 
-              ! initial IF statement... we will only go into this 
-              ! routine if the max wind just diagnosed for this lead
-              ! time is at least 34 kts (17.5 m/s).
-              !
-              !-------------------------------------------------------
-
-              if (xmaxwind(ist,ifh) >= 17.5) then
-
-                vradius = 0
-                first_time_thru_getradii = .true.
-                r34_check_okay = 'n'
-                do ivr = 1,4
-                  need_to_expand_r34(ivr) = 'y'
-                enddo
-c                radmax = 500.0  ! Initial radmax, in km.  For subsequent
-                radmax = 370.0  ! Initial radmax, in km.  For subsequent
-                                ! iterations that may be needed, radmax
-                                ! gets redefined in sub getradii_2 and
-                                ! bumped up by 50 km each iteration.
-                n_r34_iter = 0
-                ix_radii_beg = 1
-                ix_radii_end = -999
-                pctile_quad_bin_wind = -999.0
-                fp_pctile_quad_bin_wind = -999.0
+            if (xmaxwind(ist,ifh) >= 17.5) then
 
                 igrct = 1
 
+              if (verb .ge. 3) then
+                write (6,242) ifcsthour, igrct, xmaxwind(ist,ifh), date_time(5), date_time(6), date_time(7)
+ 242            format (1x, 'TIMING: b4 getrad_iter_loop, fhr = ', i5,' igrct = ', i2,' Vmax (m/s) = ', &
+                        f8.3, '   ', i2.2, ':', i2.2, ':', i2.2)
+              endif
+
+                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
                 if (verb .ge. 3) then
-                  write (6,242) ifcsthour, igrct, xmaxwind(ist,ifh), date_time(5), date_time(6), date_time(7)
- 242              format (1x, 'TIMING: b4 getrad_iter_loop, fhr = ', i5,' igrct = ', i2,' Vmax (m/s) = ', &
-                          f8.3, '   ', i2.2, ':', i2.2, ':', i2.2)
+                  write (6,244) ifcsthour, igrct, date_time(5), date_time(6), date_time(7)
+ 244              format (1x, 'TIMING: before call  getradii, fhr = ', i5, ' igrct = ', i2, '   ', i2.2, ':', &
+                          i2.2, ':', i2.2)
                 endif
-
-                  call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                  if (verb .ge. 3) then
-                    write (6,244) ifcsthour, igrct, date_time(5), date_time(6), date_time(7)
- 244                format (1x, 'TIMING: before call  getradii, fhr = ', i5, ' igrct = ', i2, '   ', i2.2, ':', &
-                            i2.2, ':', i2.2)
-                  endif
-
-c                 ccall getradii (fixlon(ist,ifh),fixlat(ist,ifh),imax
-c     &           c          ,jmax,dx,dy,valid_pt,storm(ist)%tcv_storm_id
-c     &           c          ,ifcsthour,xmaxwind(ist,ifh),vradius
-c     &           c          ,trkrinfo,need_to_expand_r34,radmax
-c     &           c          ,first_time_thru_getradii,igrct,igrret)
 
                   n_r34_iter = n_r34_iter + 1
 
-                  call getradii_2 (fixlon(ist,ifh), fixlat(ist,ifh), imax, jmax, dx, dy, valid_pt,        &
-                       & storm(ist)%tcv_storm_id, ifh, ifcsthour, xmaxwind(ist,ifh), vradius, trkrinfo,   &
-                       & need_to_expand_r34, num_r34_bins, pctile_quad_bin_wind, fp_pctile_quad_bin_wind, &
-                       & radmax, axisymet_rmw_dist, ix_radii_beg, ix_radii_end, n_r34_iter, ist,          &
-                       & first_time_thru_getradii, igrct, gm_wrap_flag, igrret)
+                call getradii_2 (fixlon(ist,ifh), fixlat(ist,ifh), imax, jmax, dx, dy, valid_pt,        &
+                     & storm(ist)%tcv_storm_id, ifh, ifcsthour, xmaxwind(ist,ifh), vradius, trkrinfo,   &
+                     & need_to_expand_r34, num_r34_bins, pctile_quad_bin_wind, fp_pctile_quad_bin_wind, &
+                     & radmax, axisymet_rmw_dist, ix_radii_beg, ix_radii_end, n_r34_iter, ist,          &
+                     & first_time_thru_getradii, igrct, gm_wrap_flag, igrret)
 
-                  if (igrret /= 0) then
-                    if (verb >= 0) then
-                      print *, ' '
-                      print *, '!!! ERROR: Return code from getradii_2 = ', igrret
-                      print *, '!!! Searching for radii will not be '
-                      print *, '!!! completed for this lead time and'
-                      print *, '!!! all radii values will be set to '
-                      print *, '!!! missing.'
-                      print *, ' '
-                    endif
-                    exit getrad_iter_loop
+                if (igrret /= 0) then
+                  if (verb >= 0) then
+                    print *, ' '
+                    print *, '!!! ERROR: Return code from getradii_2 = ', igrret
+                    print *, '!!! Searching for radii will not be '
+                    print *, '!!! completed for this lead time and'
+                    print *, '!!! all radii values will be set to '
+                    print *, '!!! missing.'
+                    print *, ' '
                   endif
+                  exit ! getrad_iter_loop
+                endif
 
                   ix_radii_beg = ix_radii_end
 
-                  call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                  if ( verb .ge. 3 ) then
-                    write (6,245) ifcsthour, igrct, date_time(5), date_time(6), date_time(7)
- 245                format (1x, 'TIMING: after call  getradii, fhr = ', i5, ' igrct = ', i2, '   ', i2.2, ':', &
-                            i2.2, ':', i2.2)
-                  endif
-
-                  first_time_thru_getradii = .false.
-                  igrct = igrct + 1
-                  r34_dist_thresh = 0.97 * radmax
-                  r34_good_ct = 0
-                  do ivr = 1,4
-                    vradius_km = float(vradius(1,ivr)) / 0.5396
-                    if (vradius_km < r34_dist_thresh) then
-                      r34_good_ct = r34_good_ct + 1
-                      need_to_expand_r34(ivr) = 'n'
-                    endif
-                  enddo
-                  if (r34_good_ct == 4) then
-                    r34_check_okay = 'y'
-                  endif
-c                 c---   radmax = radmax + 50.0
-
-                enddo getrad_iter_loop
-
-                if (verb .ge. 3) then
-                  write (6,246) ifcsthour, igrct, xmaxwind(ist,ifh), date_time(5), date_time(6), date_time(7)
- 246              format (1x, 'TIMING: after getrad_iter_loop, fhr = ', i5, ' igrct = ', i2, ' Vmax (m/s) = ',  &
-                          f8.3, '   ', i2.2, ':', i2.2, ':', i2.2)
+                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+                if ( verb .ge. 3 ) then
+                  write (6,245) ifcsthour, igrct, date_time(5), date_time(6), date_time(7)
+ 245              format (1x, 'TIMING: after call  getradii, fhr = ', i5, ' igrct = ', i2, '   ', i2.2, ':', &
+                          i2.2, ':', i2.2)
                 endif
 
-              endif
-
-            endif
-
-            !--------------------------------------------------------
-            ! 
-            !       COMPUTE CYCLONE PHASE SPACE PARAMETERS
-            ! 
-            ! If the user has requested so, then call a routine to 
-            ! determine the type of cyclone, using Bob Hart's 
-            ! cyclone phase space (CPS) algorithms.
-            !
-            !--------------------------------------------------------
-
-            if (phaseflag == 'y' .and. stormswitch(ist) == 1) then
+                  if (vradius_km < r34_dist_thresh) then
+                  endif
+                if (r34_good_ct == 4) then
+                  r34_check_okay = 'y'
+                endif
 
               if (verb .ge. 3) then
-                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                write (6,248) date_time(5), date_time(6), date_time(7)
- 248            format (1x, 'TIMING: Before get_phase ... ', i2.2, ':', i2.2, ':', i2.2)
-              endif
-
-              wcore_flag = 'u'   ! 'u' = undetermined
-              call get_phase (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo, fixlon, fixlat,valid_pt, &
-                   & maxstorm, cps_vals, wcore_flag, igpret)
-              if (verb .ge. 3) then
-                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                write (6,250) date_time(5), date_time(6), date_time(7)
- 250            format (1x, 'TIMING: After get_phase ... ', i2.2, ':', i2.2, ':', i2.2)
-              endif
-
-            endif
-
-            !--------------------------------------------------------
-            ! 
-            !       COMPUTE SURFACE WIND STRUCTURE DIAGNOSTICS
-            ! 
-            ! If the user has requested so, then call a series of 
-            ! routines to calculate various surface wind structure
-            ! diagnostics and output them in a modified ATCF format
-            ! that is output to a different unit number from the 
-            ! standard ATCF output.
-            !
-            !--------------------------------------------------------
-
-            if (structflag == 'y') then
-              if (verb .ge. 3) then
-                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                write (6,252) date_time(5), date_time(6), date_time(7)
- 252            format (1x, 'TIMING: Before structure ... ', i2.2, ':', i2.2, ':', i2.2)
+                write (6,246) ifcsthour, igrct, xmaxwind(ist,ifh), date_time(5), date_time(6), date_time(7)
+ 246            format (1x, 'TIMING: after getrad_iter_loop, fhr = ', i5, ' igrct = ', i2, ' Vmax (m/s) = ',  &
+                        f8.3, '   ', i2.2, ':', i2.2, ':', i2.2)
               endif
             endif
+          endif
 
-            if (structflag == 'y' .or. ikeflag == 'y') then
-              call get_sfc_center (fixlon(ist,ifh), fixlat(ist,ifh), clon, clat, ist, ifh, calcparm, &
-                   & xsfclon, xsfclat, maxstorm, igscret)
-            endif
-
-            if (structflag == 'y' .and. stormswitch(ist) == 1) then
-              call get_wind_structure (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, &
-                   & xsfclat, valid_pt, er_wind, sr_wind, er_vr, sr_vr, er_vt, sr_vt, maxstorm,    &
-                   & trkrinfo, gm_wrap_flag, igwsret)
-              if (igwsret == 0) then
-                call output_wind_structure (fixlon(ist,ifh), fixlat(ist,ifh), xsfclon, xsfclat,    &
-                     & inp, ist, ifcsthour, xmaxwind(ist,ifh), gridprs(ist,ifh), er_wind, sr_wind, &
-                     & er_vr, sr_vr, er_vt, sr_vt, maxstorm, iowsret)
-              endif
-            endif
-
-            if (structflag == 'y' .and. stormswitch(ist) == 1) then
-              call get_fract_wind_cov (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, &
-                   & xsfclat, valid_pt, calcparm, wfract_cov, pdf_ct_bin, pdf_ct_tot, maxstorm,    &
-                   & trkrinfo, igfwret)
-              if (igfwret == 0) then
-                call output_fract_wind (fixlon(ist,ifh), fixlat(ist,ifh), xsfclon, xsfclat, inp, ist,   &
-                     & ifcsthour, xmaxwind(ist,ifh), gridprs(ist,ifh), wfract_cov, 'earth', pdf_ct_bin, &
-                     & pdf_ct_tot, maxstorm, iofwret)
-              endif
-            endif
-
-            if (ikeflag == 'y' .and. stormswitch(ist) == 1) then
-              call get_ike_stats (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, xsfclat, &
-                   & valid_pt, calcparm, ike, sdp, wdp, maxstorm, trkrinfo, igisret)
-              if (igisret == 0) then
-                call output_ike (fixlon(ist,ifh), fixlat(ist,ifh), xsfclon, xsfclat, inp, ist,  ifcsthour, &
-                     & xmaxwind(ist,ifh), gridprs(ist,ifh), ike, sdp, wdp, maxstorm, ioiret)
-              endif
-            endif
-
-            if (structflag == 'y') then
-              if (verb .ge. 3) then
-                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                write (6,254) date_time(5), date_time(6), date_time(7)
- 254            format (1x, 'TIMING: After structure ... ', i2.2, ':', i2.2, ':', i2.2)
-              endif
-            endif
-
-            !--------------------------------------------------------
-            ! 
-            !       COMPUTE 200-850 mb VERTICAL SHEAR
-            ! 
-            ! If the user has requested so, then call a routine to 
-            ! compute the 200-850 mb vertical shear.
-            !
-            !--------------------------------------------------------
-
-            if ((shearflag == 'y' .or. shearflag == 'Y') .and. stormswitch(ist) == 1) then
-
-              if (verb .ge. 3) then
-                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                write (6,256) date_time(5), date_time(6), date_time(7)
- 256            format (1x, 'TIMING: Before shear ... ', i2.2, ':', i2.2, ':', i2.2)
-              endif
-
-              call get_shear (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, calcparm, &
-                   & maxstorm, trkrinfo, clon, clat, shear, gm_wrap_flag, igsret)
-
-              if (verb .ge. 3) then
-                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                write (6,258) date_time(5), date_time(6), date_time(7)
- 258            format (1x, 'TIMING: After shear ... ', i2.2, ':', i2.2, ':', i2.2)
-              endif
-
-            endif
-
-
-            !--------------------------------------------------------
-            ! 
-            !       COMPUTE AREA-AVERAGED SST
-            ! 
-            ! If the user has requested so, then call a routine to 
-            ! compute the area-averaged SST in the vicinity of the
-            ! tracker-diagnosed center fix.
-            !
-            !--------------------------------------------------------
-
-            if ((sstflag == 'y' .or. sstflag == 'Y') .and. stormswitch(ist) == 1) then
-              call get_sst (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag, &
-                   & maxstorm, trkrinfo, sst_smooth, igsstret)
-            endif
-
-            !--------------------------------------------------------
-            ! 
-            !       COMPUTE GENESIS DIAGNOSTICS
-            ! 
-            ! If the user has requested so, then call a routine to 
-            ! compute a variety of genesis-related diagnostics.
-            !
-            !--------------------------------------------------------
-
-            if ((genflag == 'y' .or. genflag == 'Y') .and. stormswitch(ist) == 1) then
-
-              if (verb .ge. 3) then
-                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                write (6,260) date_time(5), date_time(6), date_time(7)
- 260            format (1x, 'TIMING: Before gen diag ... ', i2.2, ':', i2.2, ':', i2.2)
-              endif
-
-              call get_gen_diags (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag,         &
-                   & readgenflag, calcparm, maxstorm, trkrinfo, clon, clat, divg, moist_divg, rh_800_600_smooth, &
-                   & rh_1000_925_smooth, omega500_smooth, already_computed_domain_wide_rh, iggdret)
-
-              if (verb .ge. 3) then
-                call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-                write (6,262) date_time(5), date_time(6), date_time(7)
- 262            format (1x, 'TIMING: After gen diag ... ', i2.2, ':', i2.2, ':', i2.2)
-              endif
-
-            endif
+          if (phaseflag == 'y' .and. stormswitch(ist) == 1) then
 
             if (verb .ge. 3) then
-              print *, ' '
-              print *, 'After call to fixcenter, fix positions at '
-              write (6,442) ifhours(ifh), ifclockmins(ifh)
- 442          format (1x, 'forecast hour = ', i4, ':', i2.2, ' follow:')
-              print *, ' '
+              call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+              write (6,248) date_time(5), date_time(6), date_time(7)
+ 248          format (1x, 'TIMING: Before get_phase ... ', i2.2, ':', i2.2, ':', i2.2)
             endif
 
-            if (ifret == 0 .and. stormswitch(ist) == 1) then
-              if (verb .ge. 3) then
-                write (6,73) storm(ist)%tcv_storm_id, ifhours(ifh), ifclockmins(ifh), fixlon(ist,ifh), &
-                             360.0-fixlon(ist,ifh), fixlat(ist,ifh), int((xmaxwind(ist,ifh)*1.9427) + 0.5)
-                print *, ' '
-              endif
+            call get_phase (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo, fixlon, fixlat,valid_pt, &
+                 & maxstorm, cps_vals, wcore_flag, igpret)
+            if (verb .ge. 3) then
+              call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+              write (6,250) date_time(5), date_time(6), date_time(7)
+ 250          format (1x, 'TIMING: After get_phase ... ', i2.2, ':', i2.2, ':', i2.2)
+            endif
+          endif
+
+          if (structflag == 'y') then
+            if (verb .ge. 3) then
+              call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+              write (6,252) date_time(5), date_time(6), date_time(7)
+ 252          format (1x, 'TIMING: Before structure ... ', i2.2, ':', i2.2, ':', i2.2)
+            endif
+          endif
+
+          if (structflag == 'y' .or. ikeflag == 'y') then
+            call get_sfc_center (fixlon(ist,ifh), fixlat(ist,ifh), clon, clat, ist, ifh, calcparm, &
+                 & xsfclon, xsfclat, maxstorm, igscret)
+          endif
+
+          if (structflag == 'y' .and. stormswitch(ist) == 1) then
+            call get_wind_structure (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, &
+                 & xsfclat, valid_pt, er_wind, sr_wind, er_vr, sr_vr, er_vt, sr_vt, maxstorm,    &
+                 & trkrinfo, gm_wrap_flag, igwsret)
+            if (igwsret == 0) then
+              call output_wind_structure (fixlon(ist,ifh), fixlat(ist,ifh), xsfclon, xsfclat,    &
+                   & inp, ist, ifcsthour, xmaxwind(ist,ifh), gridprs(ist,ifh), er_wind, sr_wind, &
+                   & er_vr, sr_vr, er_vt, sr_vt, maxstorm, iowsret)
+            endif
+          endif
+
+          if (structflag == 'y' .and. stormswitch(ist) == 1) then
+            call get_fract_wind_cov (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, &
+                 & xsfclat, valid_pt, calcparm, wfract_cov, pdf_ct_bin, pdf_ct_tot, maxstorm,    &
+                 & trkrinfo, igfwret)
+            if (igfwret == 0) then
+              call output_fract_wind (fixlon(ist,ifh), fixlat(ist,ifh), xsfclon, xsfclat, inp, ist,   &
+                   & ifcsthour, xmaxwind(ist,ifh), gridprs(ist,ifh), wfract_cov, 'earth', pdf_ct_bin, &
+                   & pdf_ct_tot, maxstorm, iofwret)
+            endif
+          endif
+
+          if (ikeflag == 'y' .and. stormswitch(ist) == 1) then
+            call get_ike_stats (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, xsfclat, &
+                 & valid_pt, calcparm, ike, sdp, wdp, maxstorm, trkrinfo, igisret)
+            if (igisret == 0) then
+              call output_ike (fixlon(ist,ifh), fixlat(ist,ifh), xsfclon, xsfclat, inp, ist,  ifcsthour, &
+                   & xmaxwind(ist,ifh), gridprs(ist,ifh), ike, sdp, wdp, maxstorm, ioiret)
+            endif
+          endif
+
+          if (structflag == 'y') then
+            if (verb .ge. 3) then
+              call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+              write (6,254) date_time(5), date_time(6), date_time(7)
+ 254          format (1x, 'TIMING: After structure ... ', i2.2, ':', i2.2, ':', i2.2)
+            endif
+          endif
+
+          if ((shearflag == 'y' .or. shearflag == 'Y') .and. stormswitch(ist) == 1) then
+
+            if (verb .ge. 3) then
+              call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+              write (6,256) date_time(5), date_time(6), date_time(7)
+ 256          format (1x, 'TIMING: Before shear ... ', i2.2, ':', i2.2, ':', i2.2)
+            endif
+            call get_shear (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, calcparm, &
+                 & maxstorm, trkrinfo, clon, clat, shear, gm_wrap_flag, igsret)
+
+            if (verb .ge. 3) then
+              call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+              write (6,258) date_time(5), date_time(6), date_time(7)
+ 258          format (1x, 'TIMING: After shear ... ', i2.2, ':', i2.2, ':', i2.2)
+            endif
+          endif
+
+          if ((sstflag == 'y' .or. sstflag == 'Y') .and. stormswitch(ist) == 1) then
+            call get_sst (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag, &
+                 & maxstorm, trkrinfo, sst_smooth, igsstret)
+          endif
+
+          if ((genflag == 'y' .or. genflag == 'Y') .and. stormswitch(ist) == 1) then
+
+            if (verb .ge. 3) then
+              call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+              write (6,260) date_time(5), date_time(6), date_time(7)
+ 260          format (1x, 'TIMING: Before gen diag ... ', i2.2, ':', i2.2, ':', i2.2)
+            endif
+
+            call get_gen_diags (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag,         &
+                 & readgenflag, calcparm, maxstorm, trkrinfo, clon, clat, divg, moist_divg, rh_800_600_smooth, &
+                 & rh_1000_925_smooth, omega500_smooth, already_computed_domain_wide_rh, iggdret)
+
+            if (verb .ge. 3) then
+              call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
+              write (6,262) date_time(5), date_time(6), date_time(7)
+ 262          format (1x, 'TIMING: After gen diag ... ', i2.2, ':', i2.2, ':', i2.2)
+            endif
+          endif
+
+          if (verb .ge. 3) then
+            print *, ' '
+            print *, 'After call to fixcenter, fix positions at '
+            write (6,442) ifhours(ifh), ifclockmins(ifh)
+ 442        format (1x, 'forecast hour = ', i4, ':', i2.2, ' follow:')
+            print *, ' '
+          endif
+
+          if (ifret == 0 .and. stormswitch(ist) == 1) then
+            if (verb .ge. 3) then
+              write (6,73) storm(ist)%tcv_storm_id, ifhours(ifh), ifclockmins(ifh), fixlon(ist,ifh), &
+                           360.0-fixlon(ist,ifh), fixlat(ist,ifh), int((xmaxwind(ist,ifh)*1.9427) + 0.5)
+              print *, ' '
+            endif
 
               ! Only call output routines every atcffreq/100 hours....
 
               ileadtime = nint(fhreal(ifh) * 100.0)
               leadtime_check = mod(ileadtime,atcffreq)
 
-              if (leadtime_check == 0) then
-
-                ! Get the storm motion vector and the speed of 
-                ! motion so that we can output this in the 
-                ! atcfunix file.
-
-                if (ifh < ifhmax) then
-                  call get_next_ges (fixlon, fixlat, ist, ifh, imax, jmax, dx, dy, inp%model, valid_pt, &
-                       & readflag, maxstorm, istmspd, istmdir, 'vitals', trkrinfo, gm_wrap_flag, ignret)
-                else
-                  istmdir = -999
-                  istmspd = -999
-                  ignret  = 0
-                endif
-
-                if (verb .ge. 3) then
-                  write (6,617) istmspd, istmdir, ignret
- 617              format (1x, '+++ RPT_STORM_MOTION: istmspd = ', i5, ' kts(*10)  istmdir = ', i5, ' rcc = ', i3)
-                endif
-
-                ! Call a routine to find the mean & max relative
-                ! vorticity at the mean fix positions of the storm at
-                ! 850 & 700.  These will be written out to the
-                ! "atcf_gen" and "atcfunix_ext" files.
-
-                imeanzeta = -99
-                igridzeta = -99
-                call get_zeta_values (fixlon, fixlat, imax, jmax, dx, dy, trkrinfo, imeanzeta, igridzeta, &
-                     & readflag, valid_pt, ist, ifh, maxstorm, inp, igzvret)
-
-                call output_atcfunix (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifcsthour, xmaxwind(ist,ifh), &
-                     & gridprs(ist,ifh), vradius, maxstorm, trkrinfo, plastbar, rlastbar, rmax, cps_vals,       &
-                     & wcore_flag, istmspd, istmdir, shear(ist,ifh,1), shear(ist,ifh,2), sst_smooth,            &
-                     & axisymet_rmw_dist, axisymet_rmw_val, ioaxret)
-
-                call output_aext (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifcsthour, xmaxwind(ist,ifh), &
-                     & gridprs(ist,ifh), vradius, maxstorm, trkrinfo, plastbar, rlastbar, rmax, cps_vals,   &
-                     & wcore_flag, istmspd, istmdir, shear(ist,ifh,1), shear(ist,ifh,2), sst_smooth,        &
-                     & axisymet_rmw_dist, axisymet_rmw_val, divg, moist_divg, rh_800_600_smooth,            &
-                     & rh_1000_925_smooth, omega500_smooth, imeanzeta, igridzeta, ioaxret)
-
-                if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
-                  call output_atcf_gen (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifcsthour,          &
-                       & xmaxwind(ist,ifh), gridprs(ist,ifh), vradius, maxstorm, trkrinfo, istmspd,     &
-                       & istmdir, plastbar, rlastbar, rmax, cps_vals, wcore_flag, imeanzeta, igridzeta, &
-                       & shear(ist,ifh,1), shear(ist,ifh,2), divg, moist_divg, rh_800_600_smooth,       &
-                       & rh_1000_925_smooth, omega500_smooth, sst_smooth, axisymet_rmw_dist,            &
-                       & axisymet_rmw_val, ioaxret)
-                endif
-
-                call output_atcf_parms (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, ifcsthour,  &
-                     & xmaxwind(ist,ifh), gridprs(ist,ifh), maxstorm, trkrinfo, clon, clat, calcparm &
-                     & xval, ioapret)
-
-                if (inp%model == 12 .and. ifcsthour == 0) then
-                  ! Write vitals for GFS ens control analysis
-                  call output_tcvitals (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, iovret)
-                endif
-              endif
-
-              call output_hfip (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, xmaxwind(ist,ifh)
-                   & gridprs(ist,ifh), vradius, rmax, ioaxret)
-            else
-              if (verb .ge. 3) then
-                write (6,452) 'fixpos ', storm(ist)%tcv_storm_id, ' fhr = ', ifhours(ifh), ifclockmins(ifh), &
-                              ' Fix not made for this forecast hour'
- 452            format (1x, a7, 1x, a4, a6, i4, ':', i2.2, a36)
-
-                print *, ' '
-                print *, '!!! RETURN CODE from fixcenter not equal to 0,'
-                print *, '!!! or output from is_it_a_storm indicated the'
-                print *, '!!! system found was not our storm, or the '
-                print *, '!!! speed calculated indicated we may have '
-                print *, '!!! locked onto a different center, thus a fix'
-                print *, '!!! was not made for this storm at this '
-                print *, '!!! forecast hour.'
-                print *, '!!! mslp gradient check           = ', isastorm(1)
-                print *, '!!! mslp closed contour check     = ', isastorm(2)
-                print *, '!!! 850 mb winds check            = ', isastorm(3)
-                print *, '!!! fixcenter return code = ifret = ', ifret
-                print *, ' '
-              endif
-
-              if (ifh == 1) then
-                vradius = 0
-                ileadtime = nint(fhreal(ifh) * 100.0)
-                ifcsthour = ileadtime / 100
-                print *, 'ctx inp%model = ', inp%model
-                if (inp%model == 1 .or. inp%model == 8 .or. inp%model == 22) then
-
-                  ! For the vt=00h lead time, if the  tracker failed to 
-                  ! locate a position, we are going to write out an
-                  ! atcfunix record that contains the position, 
-                  ! intensity, mslp and 34-kt wind radii from TC Vitals
-                  ! for this storm and initial time.  Only do this for 
-                  ! the GFS or GDAS runs of the  tracker.
-
-                  tcv_max_wind_ms = float(storm(ist)%tcv_vmax)
-                  tcv_mslp_pa = float(storm(ist)%tcv_pcen) * 100.0
-
-                  ! Convert tcvitals NE 34-kt wind radius from km to nm
-                  r34_from_tcv = float(storm(ist)%tcv_r15ne)
-                  if (r34_from_tcv > 0.0) then
-                    vradius(1,1) = int( ((r34_from_tcv*0.5396) 
-     &                             / 5.0) + 0.5) * 5
-                  else
-                    vradius(1,1) = 0
-                  endif
-
-                  ! Convert tcvitals SE 34-kt wind radius from km to nm
-                  r34_from_tcv = float(storm(ist)%tcv_r15se)
-                  if (r34_from_tcv > 0.0) then
-                    vradius(1,2) = int( ((r34_from_tcv*0.5396)
-     &                             / 5.0) + 0.5) * 5
-                  else    
-                    vradius(1,2) = 0
-                  endif
-
-                  ! Convert tcvitals SW 34-kt wind radius from km to nm
-                  r34_from_tcv = float(storm(ist)%tcv_r15sw)
-                  if (r34_from_tcv > 0.0) then
-                    vradius(1,3) = int( ((r34_from_tcv*0.5396)
-     &                             / 5.0) + 0.5) * 5
-                  else    
-                    vradius(1,3) = 0
-                  endif
-
-                  ! Convert tcvitals NW 34-kt wind radius from km to nm
-                  r34_from_tcv = float(storm(ist)%tcv_r15nw)
-                  if (r34_from_tcv > 0.0) then
-                    vradius(1,4) = int( ((r34_from_tcv*0.5396)
-     &                             / 5.0) + 0.5) * 5
-                  else    
-                    vradius(1,4) = 0
-                  endif
-
-                  ! Convert tcvitals roci from km to nm
-  
-                  if (storm(ist)%tcv_penvrad > 0) then
-                    roci_from_tcv = float(storm(ist)%tcv_penvrad)
-                    rlastbar = roci_from_tcv * 0.5396
-                  else
-                    rlastbar = -99.0
-                  endif
-                  
-                  ! Convert tcvitals pressure at roci from km to nm
-  
-                  if (storm(ist)%tcv_penv > 0) then
-                    proci_from_tcv = float(storm(ist)%tcv_penv)
-                    plastbar = proci_from_tcv * 100.0
-                  else
-                    plastbar = -99.0
-                  endif
-
-                  ! Get integer values for istmspd and istmdir by 
-                  ! using the values from tcvitals for this storm.
-
-                  istmdir = storm(ist)%tcv_stdir
-                  istmspd = storm(ist)%tcv_stspd
-
-                  write (6,291) storm(ist)%tcv_storm_id, storm(ist)%tcv_storm_name, atcfymdh
-  291             format (1x, 'NOTE: TCVITALS_USED_FOR_ATCF_F00 ', ' Storm ID: ', a4, ' Storm name: ', a9, ' YMDH: ', i10)
-
-                  call output_atcfunix (slonfg(ist,ifh), slatfg(ist,ifh), inp, ist, ifcsthour, tcv_max_wind_ms, &
-                       & tcv_mslp_pa, vradius, maxstorm, trkrinfo, plastbar, rlastbar, x99_rmax, cps_vals,      &
-                       & wcore_flag, istmspd, istmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,    &
-                       & x999_axirmw_val, ioaxret)
-
-                  imeanzeta = -99
-                  igridzeta = -99
-                  call output_aext (slonfg(ist,ifh), slatfg(ist,ifh), inp, ist, ifcsthour, tcv_max_wind_ms,  &
-                       & tcv_mslp_pa, vradius, maxstorm, trkrinfo, plastbar, rlastbar, x99_rmax,cps_vals,    &
-                       & wcore_flag, istmspd, istmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist, &
-                       & x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800, x999_rh1000_925,       &
-                       & x999_omega500, imeanzeta, igridzeta, ioaxret)
-
-                else
-
-                  ! unable to find the storm....
-                  call output_atcfunix (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp, &
-                       & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag,  &
-                       & i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,   &
-                       & x999_axirmw_val, ioaxret)
-
-                  imeanzeta = -99
-                  igridzeta = -99
-                  call output_aext (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp,    &
-                       & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag, &
-                       & i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,  &
-                       & x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800, x999_rh1000_925,    &
-                       & x999_omega500, imeanzeta, igridzeta, ioaxret)
-                endif
-
-                imeanzeta = -99
-                igridzeta = -99
-                if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
-                  call output_atcf_gen (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp,    &
-                       & vradius, maxstorm, trkrinfo, i999_stmspd, i999_stmdir, x99_pbar, x99_rbar, x99_rmax, &
-                       & cps_vals, c_undef_wcflag, imeanzeta, igridzeta, x999_shrmag, x999_shrdir, x999_divg, &
-                       & x999_moist_divg, x999_rh600_800, x999_rh1000_925, x999_omega500, x999_sst,           &
-                       & x999_axirmw_dist, x999_axirmw_val, ioaxret)
-                endif
-                call output_hfip (x999_lon, x999_lat, inp, ist, ifh, xzero_vmax,
-                     & xzero_minslp, vradius, x99_rmax, ioaxret)
-
-                if (trkrinfo%type == 'tracker') then
-                  ! Update 11/11: For a 'tracker' run, i.e., one in 
-                  ! which we know that there is an observed storm in
-                  ! the area, we will assume that there was some type
-                  ! of problem in the initialization that prevented 
-                  ! the storm from being found.  In this case, even 
-                  ! though we have written out zeroes for the 00h
-                  ! time, we want to at least try tracking again at
-                  ! the next lead time.  Requested by HWRF folks....
-                  if (verb .ge. 3) then
-                    print *, ' '
-                    print *, '++ NOTE: Even though a fix could not be'
-                    print *, '   made for this storm at 00h, we will '
-                    print *, '   use the storm heading info from tc'
-                    print *, '   vitals to create a guess for the next'
-                    print *, '   lead time and attempt to track again'
-                    print *, '   at that time.'
-                    print *, '   ifh = ', ifh, ' ist = ', ist
-                    write (6,301) storm(ist)%tcv_storm_id, storm(ist)%tcv_storm_name
- 301                format (1x, '  storm_id = ', a4, ' storm_name = ', a9)
-                  endif
-
-                  call advect_tcvitals_from_hour0 (slonfg, slatfg, maxstorm, ist, ifh, trkrinfo, iatret)
-
-                  if (ignret /= 0) then
-                    fixlon (ist,ifh) = -999.0
-                    fixlat (ist,ifh) = -999.0
-                    stormswitch(ist) = 2
-                    cycle stormloop
-                  endif
-                  stormswitch(ist) = 1
-                endif
-
-              endif
-              cycle stormloop
-            endif
-
-
-c           Now get first guess for next forecast time's position.
-c           But first, if this is the first time level (ifh=1) and 
-c           the user has requested that storm vitals be  output (this
-c           is usually only done for model analyses in order to get 
-c           an analysis position from one time to the next), we will
-c           write out a storm vitals record for this time level.  
-c           Note that we have already gotten the next guess position
-c           info just above for the case of the repeated analysis 
-c           data, so we'll just output the genesis vitals record.
-
-            if (ifh <= ifhmax) then
-              if (ifh == 1 .and. trkrinfo%out_vit == 'y') then
-                call output_gen_vitals (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, istmspd, istmdir, iovret)
-              endif
+            if (leadtime_check == 0) then
               if (ifh < ifhmax) then
-                call get_next_ges (fixlon, fixlat, ist, ifh, imax, jmax, dx, dy, inp%model,valid_pt, &
-                     & readflag, maxstorm, istmspd, istmdir, 'tracker', trkrinfo, gm_wrap_flag, ignret)
-                if (ignret /= 0) then
-                  if (verb .ge. 3) then
-                    print *, ' '
-                    print *, '!!! ERROR: Problem getting first guess '
-                    print *, '!!! position for next lead time.  Return'
-                    print *, '!!! code from call to get_next_ges = '
-                    print *, '!!! ignret     = ', ignret
-                    print *, '!!! Storm name = ', storm(ist)%tcv_storm_name
-                    print *, '!!! Storm ID   = ', storm(ist)%tcv_storm_id
-                    print *, '!!! TRACKING WILL STOP FOR THIS STORM.'
-                  endif
-                  fixlon (ist,ifh) = -999.0
-                  fixlat (ist,ifh) = -999.0
-                  stormswitch(ist) = 2
-                  cycle stormloop
-                endif
+                call get_next_ges (fixlon, fixlat, ist, ifh, imax, jmax, dx, dy, inp%model, valid_pt, &
+                     & readflag, maxstorm, istmspd, istmdir, 'vitals', trkrinfo, gm_wrap_flag, ignret)
               else
-                istmdir = -999
-                istmspd = -999
+              endif
+
+              if (verb .ge. 3) then
+                write (6,617) istmspd, istmdir, ignret
+ 617            format (1x, '+++ RPT_STORM_MOTION: istmspd = ', i5, ' kts(*10)  istmdir = ', i5, ' rcc = ', i3)
+              endif
+
+              call get_zeta_values (fixlon, fixlat, imax, jmax, dx, dy, trkrinfo, imeanzeta, igridzeta, &
+                   & readflag, valid_pt, ist, ifh, maxstorm, inp, igzvret)
+
+              call output_atcfunix (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifcsthour, xmaxwind(ist,ifh), &
+                   & gridprs(ist,ifh), vradius, maxstorm, trkrinfo, plastbar, rlastbar, rmax, cps_vals,       &
+                   & wcore_flag, istmspd, istmdir, shear(ist,ifh,1), shear(ist,ifh,2), sst_smooth,            &
+                   & axisymet_rmw_dist, axisymet_rmw_val, ioaxret)
+
+              call output_aext (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifcsthour, xmaxwind(ist,ifh), &
+                   & gridprs(ist,ifh), vradius, maxstorm, trkrinfo, plastbar, rlastbar, rmax, cps_vals,   &
+                   & wcore_flag, istmspd, istmdir, shear(ist,ifh,1), shear(ist,ifh,2), sst_smooth,        &
+                   & axisymet_rmw_dist, axisymet_rmw_val, divg, moist_divg, rh_800_600_smooth,            &
+                   & rh_1000_925_smooth, omega500_smooth, imeanzeta, igridzeta, ioaxret)
+
+              if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
+                call output_atcf_gen (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifcsthour,          &
+                     & xmaxwind(ist,ifh), gridprs(ist,ifh), vradius, maxstorm, trkrinfo, istmspd,     &
+                     & istmdir, plastbar, rlastbar, rmax, cps_vals, wcore_flag, imeanzeta, igridzeta, &
+                     & shear(ist,ifh,1), shear(ist,ifh,2), divg, moist_divg, rh_800_600_smooth,       &
+                     & rh_1000_925_smooth, omega500_smooth, sst_smooth, axisymet_rmw_dist,            &
+                     & axisymet_rmw_val, ioaxret)
+              endif
+
+              call output_atcf_parms (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, ifcsthour,  &
+                   & xmaxwind(ist,ifh), gridprs(ist,ifh), maxstorm, trkrinfo, clon, clat, calcparm &
+                   & xval, ioapret)
+
+              if (inp%model == 12 .and. ifcsthour == 0) then
+                  ! Write vitals for GFS ens control analysis
+                call output_tcvitals (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, iovret)
               endif
             endif
- 
-          case (2)
-            fixlon (ist,ifh) = -999.0
-            fixlat (ist,ifh) = -999.0
 
+            call output_hfip (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, xmaxwind(ist,ifh)
+                 & gridprs(ist,ifh), vradius, rmax, ioaxret)
+          else
             if (verb .ge. 3) then
+              write (6,452) 'fixpos ', storm(ist)%tcv_storm_id, ' fhr = ', ifhours(ifh), ifclockmins(ifh), &
+                            ' Fix not made for this forecast hour'
+ 452          format (1x, a7, 1x, a4, a6, i4, ':', i2.2, a36)
+
               print *, ' '
-              print *, '!!! Case 2 in tracker for stormswitch'
-              print *, '!!! Storm name = ', storm(ist)%tcv_storm_name
-              print *, '!!! Storm ID   = ', storm(ist)%tcv_storm_id
+              print *, '!!! RETURN CODE from fixcenter not equal to 0,'
+              print *, '!!! or output from is_it_a_storm indicated the'
+              print *, '!!! system found was not our storm, or the '
+              print *, '!!! speed calculated indicated we may have '
+              print *, '!!! locked onto a different center, thus a fix'
+              print *, '!!! was not made for this storm at this '
+              print *, '!!! forecast hour.'
+              print *, '!!! mslp gradient check           = ', isastorm(1)
+              print *, '!!! mslp closed contour check     = ', isastorm(2)
+              print *, '!!! 850 mb winds check            = ', isastorm(3)
+              print *, '!!! fixcenter return code = ifret = ', ifret
+              print *, ' '
             endif
 
             if (ifh == 1) then
-              vradius = 0
-              ileadtime = nint(fhreal(ifh) * 100.0)
-              ifcsthour = ileadtime / 100
-              call output_atcfunix (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp, &
-                   & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag,  &
-                   & i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,   &
-                   & x999_axirmw_val, ioaxret)
-              imeanzeta = -99
-              igridzeta = -99
-              call output_aext (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp, vradius, &
-                   & maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag, i999_stmspd,   &
-                   & i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist, x999_axirmw_val,    &                  ,x999_divg,x999_moist_divg
-                   & x999_rh600_800, x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
+              print *, 'ctx inp%model = ', inp%model
+              if (inp%model == 1 .or. inp%model == 8 .or. inp%model == 22) then
+
+                if (r34_from_tcv > 0.0) then
+                endif
+                else
+
+                if (r34_from_tcv > 0.0) then
+                else
+                endif
+
+                if (r34_from_tcv > 0.0) then
+                else
+                endif
+
+                if (storm(ist)%tcv_penvrad > 0) then
+                else
+                endif
+
+                if (storm(ist)%tcv_penv > 0) then
+                else
+                endif
+
+
+                write (6,291) storm(ist)%tcv_storm_id, storm(ist)%tcv_storm_name, atcfymdh
+  291           format (1x, 'NOTE: TCVITALS_USED_FOR_ATCF_F00 ', ' Storm ID: ', a4, ' Storm name: ', a9, ' YMDH: ', i10)
+
+                call output_atcfunix (slonfg(ist,ifh), slatfg(ist,ifh), inp, ist, ifcsthour, tcv_max_wind_ms, &
+                     & tcv_mslp_pa, vradius, maxstorm, trkrinfo, plastbar, rlastbar, x99_rmax, cps_vals,      &
+                     & wcore_flag, istmspd, istmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,    &
+                     & x999_axirmw_val, ioaxret)
+
+                  imeanzeta = -99
+                  igridzeta = -99
+                call output_aext (slonfg(ist,ifh), slatfg(ist,ifh), inp, ist, ifcsthour, tcv_max_wind_ms,  &
+                     & tcv_mslp_pa, vradius, maxstorm, trkrinfo, plastbar, rlastbar, x99_rmax,cps_vals,    &
+                     & wcore_flag, istmspd, istmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist, &
+                     & x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800, x999_rh1000_925,       &
+                     & x999_omega500, imeanzeta, igridzeta, ioaxret)
+
+              else
+                call output_atcfunix (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp, &
+                     & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag,  &
+                     & i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,   &
+                     & x999_axirmw_val, ioaxret)
+
+                  imeanzeta = -99
+                  igridzeta = -99
+                call output_aext (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp,    &
+                     & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag, &
+                     & i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,  &
+                     & x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800, x999_rh1000_925,    &
+                     & x999_omega500, imeanzeta, igridzeta, ioaxret)
+              endif
+
+                imeanzeta = -99
+                igridzeta = -99
               if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
-                call output_atcf_gen (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax ,xzero_minslp,    &
+                call output_atcf_gen (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp,    &
                      & vradius, maxstorm, trkrinfo, i999_stmspd, i999_stmdir, x99_pbar, x99_rbar, x99_rmax, &
                      & cps_vals, c_undef_wcflag, imeanzeta, igridzeta, x999_shrmag, x999_shrdir, x999_divg, &
                      & x999_moist_divg, x999_rh600_800, x999_rh1000_925, x999_omega500, x999_sst,           &
                      & x999_axirmw_dist, x999_axirmw_val, ioaxret)
               endif
-              call output_hfip (x999_lon, x999_lat, inp, ist, ifh, xzero_vmax, &
+              call output_hfip (x999_lon, x999_lat, inp, ist, ifh, xzero_vmax,
                    & xzero_minslp, vradius, x99_rmax, ioaxret)
+
+              if (trkrinfo%type == 'tracker') then
+                if (verb .ge. 3) then
+                  print *, ' '
+                  print *, '++ NOTE: Even though a fix could not be'
+                  print *, '   made for this storm at 00h, we will '
+                  print *, '   use the storm heading info from tc'
+                  print *, '   vitals to create a guess for the next'
+                  print *, '   lead time and attempt to track again'
+                  print *, '   at that time.'
+                  print *, '   ifh = ', ifh, ' ist = ', ist
+                  write (6,301) storm(ist)%tcv_storm_id, storm(ist)%tcv_storm_name
+ 301              format (1x, '  storm_id = ', a4, ' storm_name = ', a9)
+                endif
+
+                call advect_tcvitals_from_hour0 (slonfg, slatfg, maxstorm, ist, ifh, trkrinfo, iatret)
+
+                if (ignret /= 0) then
+                    fixlon (ist,ifh) = -999.0
+                    fixlat (ist,ifh) = -999.0
+                    stormswitch(ist) = 2
+                  cycle ! stormloop
+                endif
+                  stormswitch(ist) = 1
+              endif
+
             endif
+            cycle ! stormloop
+          endif
+          
+          if (ifh <= ifhmax) then
+            if (ifh == 1 .and. trkrinfo%out_vit == 'y') then
+              call output_gen_vitals (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, istmspd, istmdir, iovret)
+            endif
+            if (ifh < ifhmax) then
+              call get_next_ges (fixlon, fixlat, ist, ifh, imax, jmax, dx, dy, inp%model,valid_pt, &
+                   & readflag, maxstorm, istmspd, istmdir, 'tracker', trkrinfo, gm_wrap_flag, ignret)
+              if (ignret /= 0) then
+                if (verb .ge. 3) then
+                  print *, ' '
+                  print *, '!!! ERROR: Problem getting first guess '
+                  print *, '!!! position for next lead time.  Return'
+                  print *, '!!! code from call to get_next_ges = '
+                  print *, '!!! ignret     = ', ignret
+                  print *, '!!! Storm name = ', storm(ist)%tcv_storm_name
+                  print *, '!!! Storm ID   = ', storm(ist)%tcv_storm_id
+                  print *, '!!! TRACKING WILL STOP FOR THIS STORM.'
+                cycle ! stormloop
+              endif
+            else
+            endif
+          endif
 
-          case (3)
-          continue
 
-c            print *,' '
-c            print *,'!!! Case 3 in tracker for stormswitch'
-c            print *,'!!! Storm name = ',storm(ist)%tcv_storm_name
-c            print *,'!!! Storm ID = ',storm(ist)%tcv_storm_id
+          if (verb .ge. 3) then
+            print *, ' '
+            print *, '!!! Case 2 in tracker for stormswitch'
+            print *, '!!! Storm name = ', storm(ist)%tcv_storm_name
+            print *, '!!! Storm ID   = ', storm(ist)%tcv_storm_id
+          endif
 
-          end select
- 
-        enddo stormloop
+          if (ifh == 1) then
+              vradius = 0
+              ileadtime = nint(fhreal(ifh) * 100.0)
+              ifcsthour = ileadtime / 100
+            call output_atcfunix (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp, &
+                 & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag,  &
+                 & i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,   &
+                 & x999_axirmw_val, ioaxret)
+              imeanzeta = -99
+              igridzeta = -99
+            call output_aext (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp, vradius, &
+                 & maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag, i999_stmspd,   &
+                 & i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist, x999_axirmw_val,    &                  ,x999_divg,x999_moist_divg
+                 & x999_rh600_800, x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
+            if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
+              call output_atcf_gen (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax ,xzero_minslp,    &
+                   & vradius, maxstorm, trkrinfo, i999_stmspd, i999_stmdir, x99_pbar, x99_rbar, x99_rmax, &
+                   & cps_vals, c_undef_wcflag, imeanzeta, igridzeta, x999_shrmag, x999_shrdir, x999_divg, &
+                   & x999_moist_divg, x999_rh600_800, x999_rh1000_925, x999_omega500, x999_sst,           &
+                   & x999_axirmw_dist, x999_axirmw_val, ioaxret)
+            endif
+            call output_hfip (x999_lon, x999_lat, inp, ist, ifh, xzero_vmax, &
+                 & xzero_minslp, vradius, x99_rmax, ioaxret)
+          endif
 
-        if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
+        continue
+
+      if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
           ileadtime = nint(fhreal(ifh) * 100.0)
           leadtime_check = mod(ileadtime,atcffreq)
-          if (leadtime_check == 0) then
+        if (leadtime_check == 0) then
             ifcsthour = ileadtime / 100
-          endif
-          if (trkrinfo%inp_data_type == 'grib') then
-            call output_tracker_mask (masked_outc, valid_pt, ifh, ifcsthour, imax, jmax, iotmret)
-          endif
         endif
-
-        if (use_per_fcst_command == 'y') then
-           call argreplace(pfc_final, pfc_cmd_len, '%[FHOUR]', ifhours(ifh))
-           call argreplace(pfc_final, pfc_cmd_len, '%[FMIN]', iftotalmins(ifh))
-
-           if (verb .ge. 2) then
-              print *, ' '
-              print *, '!!! Running per-fcst command'
-              print *, '!!! Unparsed = ', trim(per_fcst_command)
-              print *, '!!! Parsed   = ', trim(pfc_final)
-           endif
-           call run_command(trim(pfc_final), pfcret)
-           if (pfcret /=0 .and. verb .ge. 1) then
-              print *, ' '
-              print *, '!!! Non-zero exit status from per-fcst command'
-              print *, '!!! Command     = ', trim(pfc_final)
-              print *, '!!! Exit status = ', pfcret
-              print *, '!!! Continuing anyway...'
-           elseif (pfcret == 0 .and. verb .ge. 2) then
-              print *, ' '
-              print *, '!!! Per-fcst command returned success status (0)'
-           endif
+        if (trkrinfo%inp_data_type == 'grib') then
+          call output_tracker_mask (masked_outc, valid_pt, ifh, ifcsthour, imax, jmax, iotmret)
         endif
+      endif
+
+      if (use_per_fcst_command == 'y') then
+        call argreplace(pfc_final, pfc_cmd_len, '%[FHOUR]', ifhours(ifh))
+        call argreplace(pfc_final, pfc_cmd_len, '%[FMIN]', iftotalmins(ifh))
+
+        if (verb .ge. 2) then
+          print *, ' '
+          print *, '!!! Running per-fcst command'
+          print *, '!!! Unparsed = ', trim(per_fcst_command)
+          print *, '!!! Parsed   = ', trim(pfc_final)
+        endif
+        call run_command(trim(pfc_final), pfcret)
+        if (pfcret /=0 .and. verb .ge. 1) then
+          print *, ' '
+          print *, '!!! Non-zero exit status from per-fcst command'
+          print *, '!!! Command     = ', trim(pfc_final)
+          print *, '!!! Exit status = ', pfcret
+          print *, '!!! Continuing anyway...'
+        elseif (pfcret == 0 .and. verb .ge. 2) then
+          print *, ' '
+          print *, '!!! Per-fcst command returned success status (0)'
+        endif
+      endif
 
         ifh = ifh + 1
-        if (ifh > ifhmax) exit ifhloop
+      if (ifh > ifhmax) exit ! ifhloop
 
-        if (inp%file_seq == 'multi') then
-          call baclose(lugb, igcret)
-          call baclose(lugi, iicret)
-          if (verb .ge. 3) then
-            print *, 'baclose return code for unit ', lugb, ' = igcret = ', igcret
-            print *, 'baclose return code for unit ', lugi, ' = iicret = ', iicret
-          endif
+      if (inp%file_seq == 'multi') then
+        call baclose(lugb, igcret)
+        call baclose(lugi, iicret)
+        if (verb .ge. 3) then
+          print *, 'baclose return code for unit ', lugb, ' = igcret = ', igcret
+          print *, 'baclose return code for unit ', lugi, ' = iicret = ', iicret
         endif
+      endif
 
-      enddo ifhloop
-      call output_all (fixlon, fixlat, inp, maxstorm, ifhmax, ioaret)
-      call output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax, ioaret)
+    call output_all (fixlon, fixlat, inp, maxstorm, ifhmax, ioaret)
+    call output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax, ioaret)
 
-  73  format ('fixpos  ', a4, '  fhr = ', i4, ':', i2.2, '   Fix position =  ', f7.2, 'E  (', f6.2, &
+  73 format ('fixpos  ', a4, '  fhr = ', i4, ':', i2.2, '   Fix position =  ', f7.2, 'E  (', f6.2, &
               'W)', 2x, f7.2, '   Max Wind = ', i3, ' kts')
 
-      if (allocated(prstemp))                 deallocate (prstemp)
-      if (allocated(prsindex))                deallocate (prsindex)
-      if (allocated(iwork))                   deallocate(iwork)
-      if (allocated(zeta))                    deallocate (zeta)
-      if (allocated(u))                       deallocate (u)
-      if (allocated(v))                       deallocate (v)
-      if (allocated(hgt))                     deallocate (hgt)
-      if (allocated(slp))                     deallocate (slp)
-      if (allocated(tmean))                   deallocate (tmean)
-      if (allocated(thick))                   deallocate (thick)
-      if (allocated(lsmask))                  deallocate (lsmask)
-      if (allocated(sst))                     deallocate (sst)
-      if (allocated(q850))                    deallocate (q850)
-      if (allocated(rh))                      deallocate (rh)
-      if (allocated(spfh))                    deallocate (spfh)
-      if (allocated(temperature))             deallocate (temperature)
-      if (allocated(omega500))                deallocate (omega500)
-      if (allocated(masked_out))              deallocate (masked_out)
-      if (allocated(masked_outc))             deallocate (masked_outc)
-      if (allocated(cpshgt))                  deallocate (cpshgt)
-      if (allocated(vt850_flag))              deallocate (vt850_flag)
-      if (allocated(closed_mslp_ctr_flag))    deallocate (closed_mslp_ctr_flag)
-      if (allocated(closed_mslp_ctr_flag2))   deallocate (closed_mslp_ctr_flag2)
-      if (allocated(quad_wind_circ_flag))     deallocate (quad_wind_circ_flag)
-      if (allocated(netcdf_file_time_values)) deallocate (netcdf_file_time_values)
-      if (allocated(nctotalmins))             deallocate (nctotalmins)
+    if (allocated(prstemp))                 deallocate (prstemp)
+    if (allocated(prsindex))                deallocate (prsindex)
+    if (allocated(iwork))                   deallocate(iwork)
+    if (allocated(zeta))                    deallocate (zeta)
+    if (allocated(u))                       deallocate (u)
+    if (allocated(v))                       deallocate (v)
+    if (allocated(hgt))                     deallocate (hgt)
+    if (allocated(slp))                     deallocate (slp)
+    if (allocated(tmean))                   deallocate (tmean)
+    if (allocated(thick))                   deallocate (thick)
+    if (allocated(lsmask))                  deallocate (lsmask)
+    if (allocated(sst))                     deallocate (sst)
+    if (allocated(q850))                    deallocate (q850)
+    if (allocated(rh))                      deallocate (rh)
+    if (allocated(spfh))                    deallocate (spfh)
+    if (allocated(temperature))             deallocate (temperature)
+    if (allocated(omega500))                deallocate (omega500)
+    if (allocated(masked_out))              deallocate (masked_out)
+    if (allocated(masked_outc))             deallocate (masked_outc)
+    if (allocated(cpshgt))                  deallocate (cpshgt)
+    if (allocated(vt850_flag))              deallocate (vt850_flag)
+    if (allocated(closed_mslp_ctr_flag))    deallocate (closed_mslp_ctr_flag)
+    if (allocated(closed_mslp_ctr_flag2))   deallocate (closed_mslp_ctr_flag2)
+    if (allocated(quad_wind_circ_flag))     deallocate (quad_wind_circ_flag)
+    if (allocated(netcdf_file_time_values)) deallocate (netcdf_file_time_values)
+    if (allocated(nctotalmins))             deallocate (nctotalmins)
 
       if (allocated(lsmask))                  deallocate (lsmask)
       if (allocated(sst))                     deallocate (sst)
