@@ -10,8 +10,8 @@
   use trig_vals;  use atcf;    use trkrparms;     use verbose_output
   use netcdf_parms
 
-      implicit none
-c
+  implicit none
+
   logical(1)         :: file_open
   integer            :: date_time(8)
   character(len=10)  :: big_ben(3)
@@ -119,6 +119,8 @@ c
     use waitfor_parms; use module_waitfor; use netcdf_parms;  use phase
     use shear_diags;   use genesis_diags;  use sst_diags;     use atcf;
     use read_parms;    use radii;          use trig_vals;     use tracking_parm_prefs;
+
+    implicit none
 
     type (datecard)    :: inp
     type (trackstuff)  :: trkrinfo,gb_check_trkrinfo
@@ -2672,7 +2674,7 @@ c       If not enough tracked parms were read in, exit the program....
   !****************************************************************************
   subroutine argreplace(arg, n, name, val)
 
-      implicit none
+    implicit none
 
     integer,                 intent(in)    :: n
     character, dimension(n), intent(inout) :: arg
@@ -2735,7 +2737,7 @@ c       If not enough tracked parms were read in, exit the program....
   subroutine open_grib_files (inp, lugb, lugi, gfilename, ifilename, lout, iret)
     use inparms ; use verbose_output
 
-      implicit none
+    implicit none
 
     type (datecard)    :: inp
 
@@ -2902,8 +2904,8 @@ c
     use trig_vals; use tracked_parms; use atcf;          use trkrparms
     use verbose_output
 
-      implicit none
-c
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     real             :: vt, vtavg, vr, parmlat, parmlon, parmval, dist
@@ -3211,6 +3213,8 @@ c
 
     use def_vitals; use trkrparms; use grid_bounds; use verbose_output
 
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     character(len=*)   :: cparm, gm_wrap_flag
@@ -3292,6 +3296,8 @@ c
 
     use inparms;    use phase;     use set_max_parms; use tracked_parms
     use def_vitals; use trkrparms; use grid_bounds;   use verbose_output
+
+    implicit none
 
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
@@ -3438,7 +3444,7 @@ c
     use grid_bounds; use tracked_parms; use def_vitals;    use trkrparms
     use verbose_output
 
-      implicit none
+    implicit none
 
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
@@ -3704,7 +3710,7 @@ c
     use grid_bounds; use tracked_parms; use def_vitals;    use trkrparms
     use verbose_output
 
-      implicit none
+    implicit none
 
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
@@ -3924,7 +3930,7 @@ c     ------------------------------------------------------------------
   subroutine calccorr(xdat, ydat, numpts, R2, slope)
     use verbose_output
 
-      implicit none
+    implicit none
 
     real    :: xdat(numpts), ydat(numpts)
     real    :: xdiff(numpts), ydiff(numpts)
@@ -4002,8 +4008,8 @@ c     ------------------------------------------------------------------
   !****************************************************************************
   subroutine getmean(xarr, inum, zmean)
 
-      implicit none
-      
+    implicit none
+
     real    :: xarr(inum)
     real    :: xsum, zmean
     integer :: i, inum
@@ -4029,8 +4035,8 @@ c     ------------------------------------------------------------------
   !****************************************************************************
   subroutine getdiff(xarr, inum, zmean, zdiff)
 
-      implicit none
-      
+    implicit none
+
     real    :: xarr(inum), zdiff(inum)
     real    :: zmean
     integer :: i, inum
@@ -4056,6 +4062,9 @@ c
   !*
   !****************************************************************************
   subroutine getslope(xarr, yarr, inum, slope)
+
+    implicit none
+
     real    :: xarr(inum), yarr(inum)
     real    :: slope, sumxy, sumx2
     integer :: i, inum
@@ -4114,6 +4123,8 @@ c     OUTPUT:
   !****************************************************************************
   subroutine getyestim(xarr, slope, yint, inum, yestim)
 
+    implicit none
+
     real    :: xarr(inum), yestim(inum)
     real    :: slope, yint
     integer :: i, inum
@@ -4139,6 +4150,8 @@ c     OUTPUT:
   !****************************************************************************
   subroutine getresid(yarr, yestim, inum, yresid)
 
+    implicit none
+
     real    :: yarr(inum), yestim(inum), yresid(inum)
     integer :: i, inum
 
@@ -4163,7 +4176,7 @@ c     OUTPUT:
   subroutine getcorr(yresid, ydiff, inum, R2)
     use verbose_output
 
-      implicit none
+    implicit none
 
     real    :: yresid(inum), ydiff(inum)
     real    :: R2, sumyresid, sumydiff
@@ -4239,7 +4252,7 @@ c
     use tracked_parms; use gen_vitals;  use def_vitals; use inparms
     use phase ;        use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo,wcore_trkrinfo
     type (cint_stuff) :: wcore_contour_info
@@ -4408,6 +4421,8 @@ c     ------------------------------------------------------------
 
     use set_max_parms; use verbose_output
 
+    implicit none
+
     integer    :: ist, ifh, ipct, igscret, maxstorm
     real       :: clon(maxstorm,maxtime,maxtp)
     real       :: clat(maxstorm,maxtime,maxtp)
@@ -4506,6 +4521,8 @@ c     ------------------------------------------------------------
                                       & vt_quad, trkrinfo, quad_wind_circ_check, gm_wrap_flag, icqwret)
 
     use set_max_parms; use tracked_parms; use trig_vals; use trkrparms; use verbose_output
+
+    implicit none
 
     type (trackstuff)  :: trkrinfo
 
@@ -4668,7 +4685,7 @@ c-----------------------------------------------------------------------
     use inparms;    use phase;     use set_max_parms; use tracked_parms
     use def_vitals; use trig_vals; use trkrparms;     use verbose_output
 
-      implicit none
+    implicit none
 
     type (datecard)    :: inp
     type (trackstuff)  :: trkrinfo
@@ -4907,6 +4924,8 @@ c     -----------------------------------------------------------------
 
     use inparms;    use phase;     use set_max_parms; use tracked_parms; use trkrparms
     use def_vitals; use trig_vals; use grid_bounds;   use level_parms;   use verbose_output
+
+    implicit none
 
     type (datecard)    :: inp
     type (trackstuff)  :: trkrinfo
@@ -5282,6 +5301,8 @@ c     -----------------------------------------------------------------
     use def_vitals; use trig_vals; use grid_bounds;   use level_parms
     use trkrparms;  use verbose_output
 
+    implicit none
+
     type (datecard)    :: inp
     type (trackstuff)  :: trkrinfo
 
@@ -5576,6 +5597,8 @@ c     -----------------------------------------------------------------
 
     use grid_bounds; use tracked_parms; use trig_vals; use def_vitals; use verbose_output
     use level_parms; use trkrparms;     use inparms;   use set_max_parms
+
+    implicit none
 
     type (trackstuff)  :: trkrinfo
     type (datecard)    :: inp
@@ -5896,6 +5919,8 @@ c      shear(ist,ifh,2) = shear_dir_from
     use tracked_parms; use trkrparms;     use def_vitals
     use inparms;       use set_max_parms; use read_parms
 
+    implicit none
+
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
 
@@ -5975,6 +6000,8 @@ c      shear(ist,ifh,2) = shear_dir_from
 
     use grid_bounds; use tracked_parms; use trig_vals; use read_parms;    use def_vitals;
     use level_parms; use trkrparms;     use inparms;   use set_max_parms; use verbose_output;
+
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
@@ -6112,7 +6139,7 @@ c
     use level_parms;    use trkrparms;     use inparms;
     use verbose_output; use def_vitals;    use read_parms
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
@@ -6199,7 +6226,7 @@ c-----------------------------------------------------------------------
 c
     use trig_vals
 
-      implicit none
+    implicit none
 
     character(len=*) :: gm_wrap_flag
     real, parameter  :: rad_earth_nm = 3440.170  ! radius of earth
@@ -6289,6 +6316,8 @@ cstr      print *,'xlattz = datan2(z,r)/dtr = ',xlattz
                               & cparm, xintrp_val, valid_pt, bimct, ifh, ibiret)
 
     use grid_bounds; use tracked_parms; use level_parms; use trkrparms; use verbose_output
+
+    implicit none
 
     type (trackstuff) :: trkrinfo
 
@@ -6509,6 +6538,9 @@ c     ----------------------------------------------------------------
   subroutine sort_storms_by_pressure (gridprs, ifh, maxstorm, sortindex, issret)
 
     use set_max_parms; use verbose_output
+
+    implicit none
+
     real, allocatable      :: iwork(:)
     real                   :: gridprs(maxstorm,maxtime)
     integer                :: ifh, maxstorm
@@ -6591,7 +6623,7 @@ c     ----------------------------------------------------------------
   subroutine getvrvt (centlon, centlat, xlon, xlat, udat, vdat, vr, vt, ifh, igvtret)
     use trig_vals; use verbose_output
 
-      implicit none
+    implicit none
 
     real    :: centlon, centlat, xlon, xlat, udat, vdat, vr, vt, degrees, tmpxlon
     real    :: angle, xlondiff, xlatdiff, opp_dist, hyp_dist, sin_value
@@ -6801,6 +6833,8 @@ c     ----------------------------------------------------------------
 
     use def_vitals; use inparms; use set_max_parms; use atcf;         use verbose_output
     use trkrparms;  use phase;   use shear_diags;   use genesis_diags
+
+    implicit none
 
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
@@ -7140,6 +7174,9 @@ c     need to mod it to get it in a 0-360 framework.
 
     use def_vitals; use inparms; use set_max_parms; use atcf;          use verbose_output
     use trkrparms;  use phase;   use shear_diags;   use genesis_diags; use level_parms
+
+    implicit none
+
     type (datecard)   ::inp
     type (trackstuff) :: trkrinfo
 
@@ -7557,6 +7594,8 @@ c     need to mod it to get it in a 0-360 framework.
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use tracked_parms
 
+    implicit none
+
     type (datecard)  :: inp
 
     real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
@@ -7655,6 +7694,7 @@ c          print *,'   ---> ifh= ',ifh
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use tracked_parms
 
+    implicit none
 
     type (datecard)  :: inp
 
@@ -7839,6 +7879,9 @@ c          print *,'   ---> ifh= ',ifh
 
     use def_vitals;    use inparms; use set_max_parms; use atcf
     use tracked_parms; use verbose_output
+
+    implicit none
+
     type (datecard) :: inp
 
     real, intent(in) :: outlon, outlat
@@ -8027,6 +8070,8 @@ c          print *,'   ---> ifh= ',ifh
                                & pdf_ct_tot, maxstorm, iofwret)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
+
+    implicit none
 
     type (datecard)    :: inp
 
@@ -8239,6 +8284,9 @@ c     --------------------------------------------------
                                    & sr_vt, maxstorm, iofwret)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
+
+    implicit none
+
     type (datecard)    :: inp
 
     real, intent(in)   :: outlon,outlat
@@ -8472,6 +8520,9 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
                         & xminmslp, ike, sdp, wdp, maxstorm, ioiret)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
+
+    implicit none
+
     type (datecard)    :: inp
 
     integer, parameter :: numdist = 14, numquad = 4, numbin = 5, numthresh = 3
@@ -8602,6 +8653,9 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
                           & paramb, vtl_slope, vtu_slope, ioiret)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
+
+    implicit none
+
     type (datecard)  :: inp
 
     real, intent(in) :: outlon, outlat
@@ -8765,6 +8819,9 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
     use def_vitals;     use inparms;     use set_max_parms; use atcf
     use trkrparms;      use gen_vitals;  use level_parms
     use verbose_output; use shear_diags; use genesis_diags
+
+    implicit none
+
     type (gencard)    :: gstm
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
@@ -9114,6 +9171,9 @@ c     identifier at the beginning of the modified atcfunix record.
 
     use def_vitals; use inparms;    use set_max_parms; use atcf
     use trkrparms;  use gen_vitals; use verbose_output
+
+    implicit none
+
     type (gencard)    :: gstm
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
@@ -9284,6 +9344,8 @@ c     identifier at the beginning of the modified atcfunix record.
 
     use def_vitals; use inparms; use set_max_parms; use verbose_output
 
+    implicit none
+
     type (tcvcard)  :: stm
     type (datecard) :: inp
     real            :: xlon, xlat
@@ -9380,7 +9442,7 @@ c     need to mod it to get it in a 0-360 framework.
 
     use def_vitals; use gen_vitals; use inparms; use set_max_parms; use verbose_output
 
-      implicit none
+    implicit none
 
     type (gencard)  :: gstm
     type (datecard) :: inp
@@ -9462,8 +9524,8 @@ c     identifier at the beginning of the vitals record.
   !****************************************************************************
   subroutine output_tracker_mask (masked_outc, lb, ifh, ifcsthour, imax, jmax, iotmret)
 
-      implicit none
-c
+    implicit none
+
     integer    :: ifh, imax, jmax, iotmret, kf, igoret, iix, jjx, ipret
     integer    :: ifcsthour
     integer    :: kpds(200), kgds(200)
@@ -9659,7 +9721,7 @@ c
     use radii;         use def_vitals;  use set_max_parms; use grid_bounds; use gen_vitals
     use tracked_parms; use level_parms; use trig_vals;     use trkrparms;   use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
     integer           :: icutmax, istmspd, istmdir, bskip, ileadtime, ifcsthour
@@ -10512,6 +10574,9 @@ c     ------------------------------------------------------------------
 
     use grid_bounds; use tracked_parms;  use trig_vals;
     use trkrparms;   use verbose_output; use level_parms
+
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     logical(1)            :: valid_pt(imax,jmax)
@@ -11221,6 +11286,9 @@ c     appropriate quadinfo array location for that quadrant.
 
     use grid_bounds; use tracked_parms; use trig_vals;  use level_parms
     use trkrparms;   use structure;     use def_vitals; use verbose_output
+
+    implicit none
+
     type (trackstuff)  :: trkrinfo
 
     logical(1)         :: valid_pt(imax,jmax)
@@ -11754,7 +11822,7 @@ c     &         ,mean_radii_vt_4quad_sum
 
     use grid_bounds; use tracked_parms; use trig_vals; use trkrparms; use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
 
@@ -12060,6 +12128,7 @@ c
 
     use grid_bounds; use tracked_parms; use trig_vals; use trkrparms; use verbose_output
 
+    implicit none
 
     type (trackstuff)  :: trkrinfo
 
@@ -12324,6 +12393,7 @@ c
     use error_parms; use set_max_parms; use inparms;        use def_vitals
     use gen_vitals;  use tracked_parms; use verbose_output; use atcf;
 
+    implicit none
 
     type (datecard)  :: inp
 
@@ -12707,6 +12777,9 @@ c       later on in subroutine  wtavrg.
   subroutine avgcalc (xdat, kmax, valid, xavg, iaret)
 
     use verbose_output
+
+    implicit none
+
     real       :: xdat(kmax)
     logical(1) :: valid(kmax)
 
@@ -12740,6 +12813,9 @@ c       later on in subroutine  wtavrg.
   subroutine wtavrg (xdat, wt, kmax, xwtavg, iwtret)
 
     use verbose_output
+
+    implicit none
+
     real :: xdat(kmax), wt(kmax)
 
     do i = 1, kmax
@@ -12768,6 +12844,9 @@ c       later on in subroutine  wtavrg.
   subroutine wtavrg_lon (xlon, wt, kmax, xwtavg, iwtret)
 
     use verbose_output
+
+    implicit none
+
     real     :: xlon(kmax), wt(kmax)
     integer  :: gt345_ct, lt15_ct
       iwtret = 0
@@ -12807,6 +12886,8 @@ c       later on in subroutine  wtavrg.
   subroutine stdevcalc (xdat, kmax, valid, xavg, stdx, isret)
 
     use verbose_output
+
+    implicit none
 
     real       :: xdat(kmax)
     logical(1) :: valid(kmax)
@@ -12873,6 +12954,8 @@ c       later on in subroutine  wtavrg.
 
     use radii;       use grid_bounds; use tracked_parms; use trig_vals
     use level_parms; use trkrparms;   use verbose_output
+
+    implicit none
 
     type (trackstuff)  :: trkrinfo
 
@@ -13369,6 +13452,9 @@ c        xmax_circ_diff_mean = -9999.0
 
     use radii;       use grid_bounds; use tracked_parms; use trig_vals
     use level_parms; use trkrparms;   use verbose_output
+
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     real, allocatable       :: uold(:,:), vold(:,:), unew(:,:), vnew(:,:)
@@ -13777,6 +13863,7 @@ c        xmax_circ_diff_mean = -9999.0
 
     use set_max_parms; use level_parms; use error_parms; use verbose_output
 
+    implicit none
 
     logical(1) :: calcparm(maxtp,maxstorm)
     real       :: clon(maxstorm,maxtime,maxtp)
@@ -13863,6 +13950,9 @@ c     position twice.
   !*
   !****************************************************************************
   subroutine calc_vmag (xu, xv, imx, jmx, wspeed, icvret)
+
+    implicit none
+
     real    :: xu(imx,jmx), xv(imx,jmx), wspeed(imx,jmx)
 
     do i = 1, imx
@@ -13909,6 +13999,9 @@ c     position twice.
   !*
   !****************************************************************************
   subroutine bilin_int_even (imxold, jmxold, xold, imxnew, jmxnew, xnew, ibiret)
+
+    implicit none
+
     real  :: xold(imxold,jmxold), xnew(imxnew,jmxnew)
     do i = 1, imxold
       do j = 1, jmxold
@@ -13944,6 +14037,9 @@ c     position twice.
   !*
   !****************************************************************************
   subroutine lin_int (ioldmax, inewmax, xold, xnew, iliret)
+
+    implicit none
+
     real    :: xold(ioldmax), xnew(inewmax)
     do i = 1, ioldmax
     enddo
@@ -13962,6 +14058,9 @@ c     position twice.
   !*
   !****************************************************************************
   subroutine lin_int_lon (ioldmax, inewmax, xold, xnew, iliret)
+
+    implicit none
+
     real  :: xold(ioldmax), xnew(inewmax)
     do i = 1, ioldmax
     enddo
@@ -13988,6 +14087,7 @@ c     position twice.
     use tracked_parms; use radii;       use trig_vals;   use set_max_parms; use verbose_output
     use trkrparms;     use level_parms; use grid_bounds; use inparms;
 
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
@@ -14215,8 +14315,8 @@ c     position twice.
     use radii;     use grid_bounds; use set_max_parms; use level_parms
     use trig_vals; use trkrparms;   use verbose_output
 
-      implicit none
-c
+    implicit none
+
     type (trackstuff)  :: trkrinfo
 
     character(len=*)   :: maxmin, cparm, cmodel_type
@@ -14773,6 +14873,8 @@ c
 
     use trkrparms; use verbose_output
 
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     real              :: fxy(iimax,jjmax), rlon(iimax), rlat(jjmax)
@@ -14880,6 +14982,7 @@ c
 
     use trkrparms; use verbose_output; use tracked_parms
 
+    implicit none
 
     type (trackstuff) :: trkrinfo
 
@@ -15059,6 +15162,8 @@ c
   subroutine get_ij_bounds (npts, nhalf, ri, imax, jmax, dx, dy, rglatmax, rglatmin, rglonmax, rglonmin, &
                            & geslon, geslat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
     use trig_vals; use trkrparms; use verbose_output
+
+    implicit none
 
     type (trackstuff) :: trkrinfo
     real              :: tmpangle
@@ -15244,7 +15349,7 @@ c     Roughly fix geslon to the grid point just EASTward of geslon.
 
     use def_vitals; use grid_bounds; use set_max_parms; use trkrparms ; use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
     real              :: guesslon, guesslat
@@ -15334,7 +15439,7 @@ c     Roughly fix geslon to the grid point just EASTward of geslon.
       
     use trig_vals
 
-      implicit none
+    implicit none
 
     integer, parameter  :: dp = selected_real_kind(12, 60)
     real                :: rlonb, rlatb, rlonc, rlatc, xdist, degrees
@@ -15372,7 +15477,7 @@ c
 
     use tracked_parms; use trig_vals; use grid_bounds
 
-      implicit none
+    implicit none
 
     integer :: i, j, imax, jmax, level
     real    :: dy, coriolis, rlat
@@ -15410,7 +15515,7 @@ c
 
     use gfilename_info; use tracked_parms; use atcf; use verbose_output
 
-      implicit none
+    implicit none
 
     character(len=*)  :: gfilename, ifilename
     character(len=5)  :: cfmin
@@ -15576,7 +15681,9 @@ c     the starting date and the lead time in minutes.
 
     use tracked_parms;  use level_parms; use inparms;  use read_parms; use phase
     use verbose_output; use params;      use grib_mod; use trkrparms;  use genesis_diags
-     
+
+    implicit none
+
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
     type (gribfield)  :: gfld
@@ -16991,6 +17098,8 @@ c                (24) HWRF Basin-scale
     use netcdf_parms;  use verbose_output; use read_parms; use trkrparms
       
 
+    implicit none
+
     type (trackstuff)  :: trkrinfo
     type (netcdfstuff) :: netcdfinfo
 
@@ -17517,6 +17626,8 @@ c                (24) HWRF Basin-scale
   !****************************************************************************
   subroutine get_ncdim1 (ncid, var1_name, nmax)
 
+    implicit none
+
       include "netcdf.inc"
 
     integer,                        intent(in)  :: ncid
@@ -17546,7 +17657,7 @@ c
 
     use verbose_output
 
-      implicit         none
+    implicit none
 
       include "netcdf.inc"
 
@@ -17632,7 +17743,7 @@ c
 
     use verbose_output
 
-      implicit         none
+    implicit none
 
       include "netcdf.inc"
 
@@ -17662,7 +17773,7 @@ c
 
     use verbose_output
 
-      implicit         none
+    implicit none
 
       include "netcdf.inc"
 
@@ -17697,6 +17808,9 @@ c
   subroutine get_netcdf_real_type (ncid, var3_name, xtype, ignrret)
 
     use tracked_parms; use verbose_output; use netcdf_parms
+
+    implicit none
+
 
     integer,                        intent(in) :: ncid
     character(len=*), dimension(*), intent(in) :: var3_name
@@ -17765,6 +17879,8 @@ c
   subroutine get_var3_tlev_real4 (ncid, var3_name, imax, jmax, ncix, var3, igvret)
 
     use tracked_parms; use verbose_output; use netcdf_parms
+
+    implicit none
 
       include "netcdf.inc"
 
@@ -17837,6 +17953,8 @@ c
 
     use tracked_parms; use verbose_output; use netcdf_parms
 
+    implicit none
+
       include "netcdf.inc"
 
     integer,                        intent(in)  :: ncid, ncix
@@ -17885,7 +18003,7 @@ c
   !****************************************************************************
   subroutine handle_netcdf_err (status)
 
-      implicit         none
+    implicit none
 
       include          "netcdf.inc"
 
@@ -17914,6 +18032,9 @@ c
   !*
   !****************************************************************************
   subroutine bitmapchk (n, ld, d, dmin, dmax)
+
+    implicit none
+
     logical(1) :: ld
     dimension  :: ld(n), d(n) !CAITLYN - i have never seen this data type before
 
@@ -17957,6 +18078,9 @@ c
   !*
   !****************************************************************************
   subroutine conv1d2d_logic (imax, jmax, lb1d, lb2d, need_to_flip_lats)
+
+    implicit none
+
     logical(1) :: lb1d(imax*jmax), lb2d(imax,jmax)
     logical(1) :: need_to_flip_lats
     integer    :: ilat, ilatix, ilon, imax, jmax
@@ -18020,7 +18144,7 @@ c
 
     use verbose_output
 
-      implicit none
+    implicit none
 
     logical(1) :: lb2d(imax,jmax)
     logical(1) :: need_to_flip_lats
@@ -18099,9 +18223,9 @@ c-----------------------------------------------------------------------
   !*
   !****************************************************************************
   subroutine conv1d2d_real (imax, jmax, dat1d, dat2d, need_to_flip_lats)
-c     OUTPUT:
-c     dat2d    2-d real array of data
-c
+
+    implicit none
+
     logical(1) :: need_to_flip_lats
     real       :: dat1d(imax*jmax), dat2d(imax,jmax)
 
@@ -18155,6 +18279,9 @@ c
   !*
   !****************************************************************************
   subroutine conv1d2d_real_netcdf (imax, jmax, dat1d, dat2d, need_to_flip_lats)
+
+    implicit none
+
     logical(1) :: need_to_flip_lats
     real       :: dat1d(imax*jmax)
     real       :: dat2d(imax,jmax)
@@ -18188,7 +18315,7 @@ c
     use verbose_output;      use waitfor_parms;  use netcdf_parms
     use tracking_parm_prefs; use shear_diags;    use genesis_diags
 
-      implicit none
+    implicit none
 
     type (datecard)    :: inp
     type (trackstuff)  :: trkrinfo
@@ -18684,6 +18811,9 @@ c     Set namelist default values:
   subroutine read_fhours (ifhmax)
 
     use tracked_parms; use verbose_output
+
+    implicit none
+
     integer, parameter :: iunit_fh = 15
     integer            :: itmphrs(750), itmpmins(750), input_mins(750), itmpltix(750)
     integer            :: ifhmax, inphr, inpmin, ict, i, ifa, ifma, icma, ira, inpltix, ila
@@ -18810,7 +18940,7 @@ c
 
     use def_vitals; use set_max_parms; use trkrparms; use verbose_output
 
-      implicit none
+    implicit none
 
     type (tcvcard)    :: tmpstorm(maxstorm_tc)
     type (trackstuff) :: trkrinfo
@@ -19107,7 +19237,7 @@ c------
 
     use def_vitals; use set_max_parms; use trkrparms; use gen_vitals; use verbose_output
 
-      implicit none
+    implicit none
 
     type (gencard)    :: tmpstorm(maxstorm_mg)
     type (trackstuff) :: trkrinfo
@@ -19236,6 +19366,8 @@ c     Update the total number of vitals that have been read in
 
     use grid_bounds;    use trkrparms; use tracked_parms; use inparms
     use verbose_output; use params;    use grib_mod
+
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
@@ -19782,6 +19914,9 @@ c     Update the total number of vitals that have been read in
                                 & need_to_flip_lons, inp, netcdfinfo, iggret)
 
     use grid_bounds; use trkrparms; use inparms; use verbose_output; use netcdf_parms
+
+    implicit none
+
     type (trackstuff)  :: trkrinfo
     type (netcdfstuff) :: netcdfinfo
     type (datecard)    :: inp
@@ -20022,9 +20157,7 @@ c
 
     use netcdf_parms; use tracked_parms; use verbose_output
 
-      implicit none
-c
-      type (netcdfstuff) netcdfinfo
+    implicit none
 
     type (netcdfstuff) :: netcdfinfo
 
@@ -20246,6 +20379,9 @@ c
                                & grid_minlat, grid_maxlon, grid_minlon, trkrinfo, icvpret)
 
     use trkrparms
+
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     integer          :: imax, jmax, ifix, jfix
@@ -20365,6 +20501,9 @@ c
                               & grid_maxlon, grid_minlon, trkrinfo, ifilret)
 
     use grid_bounds; use trkrparms; use verbose_output
+
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     integer           :: imax, jmax, istart, iend, jstart, jend, ifix, jfix
@@ -20552,7 +20691,7 @@ c     Now look for the max or min value....
 
     use tracked_parms; use trig_vals; use grid_bounds; use verbose_output; use level_parms
 
-      implicit none
+    implicit none
 
     dimension  :: cosfac(jmax), tanfac(jmax) !CAITLYN - i still have never seen this data type
     real       :: tmpzeta(imax,jmax)
@@ -20677,7 +20816,7 @@ c         zeta(i,j,z)= -999.
 
     use trig_vals; use grid_bounds; use verbose_output; use level_parms; use tracked_parms
 
-      implicit none
+    implicit none
 
     real, parameter   :: xsmalldiff = 0.0
     dimension         :: cosfac(jmax),tanfac(jmax)
@@ -20821,6 +20960,8 @@ c         div(i,j)= -999.
 
     use def_vitals;    use grid_bounds; use trig_vals
     use tracked_parms; use trkrparms;   use verbose_output
+
+    implicit none
 
     type (trackstuff) :: trkrinfo
 
@@ -21015,7 +21156,7 @@ c     Abstract of subroutine  get_next_ges for further details.
     use def_vitals; use grid_bounds; use trig_vals;     use tracked_parms; 
     use read_parms; use trkrparms;   use genesis_diags; use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
     
@@ -21106,6 +21247,7 @@ c     Abstract of subroutine  get_next_ges for further details.
 
     use def_vitals; use grid_bounds; use trig_vals; use tracked_parms; use read_parms; use trkrparms
 
+    implicit none
 
     type (trackstuff) :: trkrinfo
     real, parameter   :: rd_over_rv = 0.622
@@ -21213,6 +21355,8 @@ c     Abstract of subroutine  get_next_ges for further details.
 
     use def_vitals; use grid_bounds; use trig_vals; use tracked_parms; use trkrparms
 
+    implicit none
+
     type (trackstuff)    :: trkrinfo
     
     integer, allocatable :: point_ct(:,:)
@@ -21287,6 +21431,9 @@ c     Abstract of subroutine  get_next_ges for further details.
   subroutine thickness_calc (imax, jmax, vp)
 
     use tracked_parms; use verbose_output
+
+    implicit none
+
     integer    :: i, j, layer, upper, lower, imax, jmax
     logical(1) :: vp(imax,jmax)
 
@@ -21359,6 +21506,8 @@ c     Abstract of subroutine  get_next_ges for further details.
 
     use trkrparms; use grid_bounds;   use set_max_parms; use def_vitals
     use contours;  use tracked_parms; use verbose_output
+
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (cint_stuff) :: contour_info
@@ -21760,6 +21909,7 @@ c     &               / dx) + 0.5)
     use trkrparms;   use set_max_parms; use contours;      use verbose_output; use radii
     use grid_bounds; use tracked_parms; use genesis_diags; use trig_vals;      use atcf
 
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (cint_stuff) :: contour_info
@@ -22392,7 +22542,7 @@ c-----
 
     use set_max_parms; use trkrparms; use grid_bounds; use verbose_output; use level_parms
 
-      implicit none
+    implicit none
 
     type (trackstuff)  :: trkrinfo
 
@@ -22613,6 +22763,7 @@ c-----
 
     use grid_bounds; use tracked_parms; use trig_vals; use trkrparms; use verbose_output
 
+    implicit none
 
     type (trackstuff)   :: trkrinfo
 
@@ -22802,6 +22953,7 @@ c
 
     use set_max_parms; use trkrparms; use grid_bounds; use verbose_output; use level_parms
 
+    implicit none
 
     type (trackstuff)  :: trkrinfo
 
@@ -23174,6 +23326,7 @@ c
 
     use set_max_parms; use trkrparms; use contours; use grid_bounds; use verbose_output
 
+    implicit none
 
     type (trackstuff)    :: trkrinfo
     type (cint_stuff)    :: contour_info
@@ -23723,6 +23876,8 @@ c
 
     use grid_bounds; use tracked_parms; use trkrparms; use verbose_output
 
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     integer            :: date_time(8)
@@ -23842,7 +23997,7 @@ c     following loop).
 
     use trkrparms; use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
     integer           :: i, j, imax, jmax, iplus1, jplus1, iminus1, jminus1, igicwret
@@ -23966,6 +24121,9 @@ c     following loop).
   !*
   !****************************************************************************
   subroutine qsort(x, ind, n)
+
+    implicit none
+
     integer, parameter   :: dp = SELECTED_REAL_KIND(12, 60)
     real(dp), intent(in) :: x(n)
     integer, intent(out) :: ind(n)
