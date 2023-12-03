@@ -883,11 +883,7 @@ c       If not enough tracked parms were read in, exit the program....
           endif
         endif
 
-         xval = 0.0     ! initialize entire xval array to 0
-         isastorm = 'U' ! re-initialize flag for each time, each storm
- 
-         select case (stormswitch(ist))
-
+        select case (stormswitch(ist))
           case (1)
 
             vradius = 0
@@ -2441,6 +2437,7 @@ c       If not enough tracked parms were read in, exit the program....
             endif
           endif
 
+        case (2) !CAITLYN - these select cases are soo spread out, is there a way to reduce?
 
           if (verb .ge. 3) then
             print *, ' '
@@ -2474,7 +2471,9 @@ c       If not enough tracked parms were read in, exit the program....
                  & xzero_minslp, vradius, x99_rmax, ioaxret)
           endif
 
+        case (3)
         continue
+        end select
       enddo ! stormloop
 
       if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
@@ -6434,13 +6433,13 @@ c     ----------------------------------------------------------------
       return
     endif
 
-      select case (level)
-        case (850);  nlev = nlev850  ! check module level_parms for
-        case (700);  nlev = nlev700  ! the values of these....
-        case (500);  nlev = nlev500
-        case (200);  nlev = nlev200
-        case (1020); nlev = levsfc
-      end select
+    select case (level)
+      case (850);  nlev = nlev850  ! check module level_parms for the values of these
+      case (700);  nlev = nlev700
+      case (500);  nlev = nlev500
+      case (200);  nlev = nlev200
+      case (1020); nlev = levsfc
+    end select
 
     if (cparm == 'u') then
 
@@ -6899,21 +6898,21 @@ c     need to mod it to get it in a 0-360 framework.
       print *, 'in output_atcfunix, tcv_storm_id(3:3) = ', storm(ist)%tcv_storm_id(3:3)
     endif
 
-      select case (storm(ist)%tcv_storm_id(3:3))
-        case ('L','l');  basinid = 'AL'
-        case ('E','e');  basinid = 'EP'
-        case ('C','c');  basinid = 'CP'
-        case ('W','w');  basinid = 'WP'
-        case ('O','o');  basinid = 'SC'
-        case ('T','t');  basinid = 'EC'
-        case ('U','u');  basinid = 'AU'
-        case ('P','p');  basinid = 'SP'
-        case ('S','s');  basinid = 'SI'
-        case ('B','b');  basinid = 'BB'
-        case ('A','a');  basinid = 'AA'
-        case ('Q','q');  basinid = 'SL'
-        case default;    basinid = 'HC'
-      end select
+    select case (storm(ist)%tcv_storm_id(3:3))
+      case ('L','l');  basinid = 'AL'
+      case ('E','e');  basinid = 'EP'
+      case ('C','c');  basinid = 'CP'
+      case ('W','w');  basinid = 'WP'
+      case ('O','o');  basinid = 'SC'
+      case ('T','t');  basinid = 'EC'
+      case ('U','u');  basinid = 'AU'
+      case ('P','p');  basinid = 'SP'
+      case ('S','s');  basinid = 'SI'
+      case ('B','b');  basinid = 'BB'
+      case ('A','a');  basinid = 'AA'
+      case ('Q','q');  basinid = 'SL'
+      case default;    basinid = 'HC'
+    end select
 
     if (atcfname(1:2) == 'SP') then
     else
@@ -7218,21 +7217,21 @@ c     need to mod it to get it in a 0-360 framework.
       print *, 'in output_aext, tcv_storm_id(3:3) = ', storm(ist)%tcv_storm_id(3:3)
     endif
 
-      select case (storm(ist)%tcv_storm_id(3:3))
-        case ('L','l');  basinid = 'AL'
-        case ('E','e');  basinid = 'EP'
-        case ('C','c');  basinid = 'CP'
-        case ('W','w');  basinid = 'WP'
-        case ('O','o');  basinid = 'SC'
-        case ('T','t');  basinid = 'EC'
-        case ('U','u');  basinid = 'AU'
-        case ('P','p');  basinid = 'SP'
-        case ('S','s');  basinid = 'SI'
-        case ('B','b');  basinid = 'BB'
-        case ('A','a');  basinid = 'AA'
-        case ('Q','q');  basinid = 'SL'
-        case default;    basinid = 'HC'
-      end select
+    select case (storm(ist)%tcv_storm_id(3:3))
+      case ('L','l');  basinid = 'AL'
+      case ('E','e');  basinid = 'EP'
+      case ('C','c');  basinid = 'CP'
+      case ('W','w');  basinid = 'WP'
+      case ('O','o');  basinid = 'SC'
+      case ('T','t');  basinid = 'EC'
+      case ('U','u');  basinid = 'AU'
+      case ('P','p');  basinid = 'SP'
+      case ('S','s');  basinid = 'SI'
+      case ('B','b');  basinid = 'BB'
+      case ('A','a');  basinid = 'AA'
+      case ('Q','q');  basinid = 'SL'
+      case default;    basinid = 'HC'
+    end select
 
     if (atcfname(1:2) == 'SP') then
     else
@@ -7595,29 +7594,40 @@ c          print *,'   ---> ifh= ',ifh
 
       print *, 'before select case, atcfname = '
 
+      select case (atcfname(1:3))
+        case ('SEC','SEN','SEP','SKC','SKN','SKP','SRC','SRN','SRP')
           write (61,81) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlat(1), intlon(1),    &
                         intlat(5), intlon(5), intlat(9), intlon(9), intlat(13), intlon(13), intlat(17), &
                         intlon(17), intlat(21), intlon(21), 0, 0, storm(ist)%tcv_storm_id
 
+        case ('AVN','NGM','ETA','GFD','AP0','AN0','AP1','AN1','AC0','AMM','CMC','HWR')
           write (61,81) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlat(1), intlon(1), &
                         intlat(3), intlon(3), intlat(5), intlon(5), intlat(7), intlon(7), intlat(9), &
                         intlon(9), intlat(11), intlon(11), intlat(13), intlon(13), storm(ist)%tcv_storm_id
 
+        case ('MRF','UKX','NGX','EP0','EP1','EP2','EN0','EN1','EN2','CP0','CN0','CC0','EC0','EMX')
+          ! MRF, UKMET, NAVGEM, ECMWF Ensemble
           write (61,81) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlat(1), intlon(1), &
                         intlat(2), intlon(2), intlat(3), intlon(3), intlat(4), intlon(4), intlat(5), &
                         intlon(5), intlat(6), intlon(6), intlat(7), intlon(7), storm(ist)%tcv_storm_id
 
+        case ('GDA','HDA') ! GDAS, HDAS
           write (61,81) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlat(1), intlon(1),  &
                         intlat(2), intlon(2), intlat(3), intlon(3), intlat(4), intlon(4), 0, 0, 0, 0, &
                         0, 0, storm(ist)%tcv_storm_id
 
+        case ('WP0','WP1','WN0','WN1','XP0','XP1','XN0','XN1','YP0','YP1','YN0','YN1','ZP0','ZP1','ZN0','ZN1')
+          ! Ensemble RELOCATION ONLY
           write (61,81) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlat(1), intlon(1), &
                         intlat(2), intlon(2), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, storm(ist)%tcv_storm_id
+        case default
+
         print *, ' '
         print *, '!!! Model name is not identified: ', atcfname
         write (61,81) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlat(1), intlon(1),  &
                       intlat(2), intlon(2), intlat(3), intlon(3), intlat(4), intlon(4), 0, 0, 0, 0, &
                       0, 0, storm(ist)%tcv_storm_id
+      end select
     enddo ! stormloop
 
 81  format (i2, a4, 4i2.2, 14i4, 1x, a3)
@@ -7676,32 +7686,34 @@ c          print *,'   ---> ifh= ',ifh
       enddo ! ifhloop
 
         basinid = '    '
-        select case (storm(ist)%tcv_storm_id(3:3))
-          case ('L','l');  basinid(1:2) = 'AL'
-          case ('E','e');  basinid(1:2) = 'EP'
-          case ('C','c');  basinid(1:2) = 'CP'
-          case ('W','w');  basinid(1:2) = 'WP'
-          case ('O','o');  basinid(1:2) = 'SC'
-          case ('T','t');  basinid(1:2) = 'EC'
-          case ('U','u');  basinid(1:2) = 'AU'
-          case ('P','p');  basinid(1:2) = 'SP'
-          case ('S','s');  basinid(1:2) = 'SI'
-          case ('B','b');  basinid(1:2) = 'BB'
-          case ('A','a');  basinid(1:2) = 'AA'
-          case ('Q','q');  basinid(1:2) = 'SL'
-          case default;    basinid(1:2) = '**'
-        end select
+      select case (storm(ist)%tcv_storm_id(3:3))
+        case ('L','l');  basinid(1:2) = 'AL'
+        case ('E','e');  basinid(1:2) = 'EP'
+        case ('C','c');  basinid(1:2) = 'CP'
+        case ('W','w');  basinid(1:2) = 'WP'
+        case ('O','o');  basinid(1:2) = 'SC'
+        case ('T','t');  basinid(1:2) = 'EC'
+        case ('U','u');  basinid(1:2) = 'AU'
+        case ('P','p');  basinid(1:2) = 'SP'
+        case ('S','s');  basinid(1:2) = 'SI'
+        case ('B','b');  basinid(1:2) = 'BB'
+        case ('A','a');  basinid(1:2) = 'AA'
+        case ('Q','q');  basinid(1:2) = 'SL'
+        case default;    basinid(1:2) = '**'
+      end select
         basinid(3:4) = storm(ist)%tcv_storm_id(1:2)
 
 
-        select case (atcfname(1:3))
+      select case (atcfname(1:3))
 
+        case ('SEC','SEN','SEP','SKC','SKN','SKP','SRC','SRN','SRP')
           write (62,82) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlat(5), intlon(5),              &
                         intlat(9), intlon(9), intlat(13), intlon(13), intlat(17), intlon(17), 0, 0,               &
                         int((xmaxwind(ist,5)*conv_ms_knots) + 0.5), int((xmaxwind(ist,9)*conv_ms_knots) + 0.5),   &
                         int((xmaxwind(ist,13)*conv_ms_knots) + 0.5), int((xmaxwind(ist,17)*conv_ms_knots) + 0.5), &
                         0, basinid, inp%byy
 
+        case ('AVN','NGM','ETA','GFD','AP0','AN0','AP1','AN1','AC0','AMM','CMC','HWR')
           write (62,82) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlat(3), intlon(3),             &
                         intlat(5), intlon(5), intlat(7), intlon(7), intlat(9), intlon(9), intlat(13),            &
                         intlon(13), int((xmaxwind(ist,3)*conv_ms_knots) + 0.5),                                  &
@@ -7709,6 +7721,8 @@ c          print *,'   ---> ifh= ',ifh
                         int((xmaxwind(ist,9)*conv_ms_knots) + 0.5), int((xmaxwind(ist,13)*conv_ms_knots) + 0.5), &
                         basinid, inp%byy
 
+        case ('MRF','UKX','NGX','EP0','EP1','EP2','EN0','EN1','EN2','CP0','CN0','CC0','EC0','EMX')
+          ! MRF, UKMET, NAVGEM, ECMWF Ensemble, ECMWF hi-res
           write (62,82) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlat(2), intlon(2),            &
                         intlat(3), intlon(3), intlat(4), intlon(4), intlat(5), intlon(5), intlat(7),            &
                         intlon(7), int((xmaxwind(ist,2)*conv_ms_knots) + 0.5),                                  &
@@ -7716,16 +7730,20 @@ c          print *,'   ---> ifh= ',ifh
                         int((xmaxwind(ist,5)*conv_ms_knots) + 0.5), int((xmaxwind(ist,7)*conv_ms_knots) + 0.5), &
                         basinid, inp%byy
 
+        case ('GDA','HDA')        ! GDAS, HDAS
           write (62,82) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlon(1), intlat(1),            &
                         intlat(2), intlon(2), intlat(3), intlon(3), intlat(4), intlon(4), 0, 0,                 &
                         int((xmaxwind(ist,2)*conv_ms_knots) + 0.5), int((xmaxwind(ist,3)*conv_ms_knots) + 0.5), &
                         int((xmaxwind(ist,4)*conv_ms_knots) + 0.5), 0, 0, basinid, inp%byy
 
+        case ('WP0','WP1','WN0','WN1','XP0','XP1','XN0','XN1','YP0','YP1','YN0','YN1','ZP0','ZP1','ZN0','ZN1')
+          ! Ensemble RELOCATION ONLY
           write (62,82) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlon(1), intlat(1),            &
                         intlat(2), intlon(2), 0, 0, 0, 0, 0, 0,                                                 &
                         int((xmaxwind(ist,2)*conv_ms_knots) + 0.5), int((xmaxwind(ist,3)*conv_ms_knots) + 0.5), &
                         int((xmaxwind(ist,4)*conv_ms_knots) + 0.5), 0, 0, basinid,inp%byy
 
+        case default
         print *, ' '
         write (62,82) atcfnum, atcfname, inp%byy, inp%bmm, inp%bdd, inp%bhh, intlat(3), intlon(3), intlat(5), &
                       intlon(5), intlat(7), intlon(7), intlat(9), intlon(9), intlat(13), intlon(13),          &
@@ -7733,6 +7751,7 @@ c          print *,'   ---> ifh= ',ifh
                       int((xmaxwind(ist,7)*conv_ms_knots) + 0.5), int((xmaxwind(ist,9)*conv_ms_knots) + 0.5), &
                       int((xmaxwind(ist,13)*conv_ms_knots) + 0.5), basinid, inp%byy
 
+      end select
     enddo ! stormloop
 
 82  format (i2, a4, 4i2.2, 10i4, 5i3, 1x, a4, i2.2)
@@ -7867,21 +7886,21 @@ c          print *,'   ---> ifh= ',ifh
       endif
     endif
 
-      select case (storm(ist)%tcv_storm_id(3:3))
-        case ('L','l');  basinid = 'AL'
-        case ('E','e');  basinid = 'EP'
-        case ('C','c');  basinid = 'CP'
-        case ('W','w');  basinid = 'WP'
-        case ('O','o');  basinid = 'SC'
-        case ('T','t');  basinid = 'EC'
-        case ('U','u');  basinid = 'AU'
-        case ('P','p');  basinid = 'SP'
-        case ('S','s');  basinid = 'SI'
-        case ('B','b');  basinid = 'BB'
-        case ('A','a');  basinid = 'AA'
-        case ('Q','q');  basinid = 'SL'
-        case default;    basinid = '**'
-      end select
+    select case (storm(ist)%tcv_storm_id(3:3))
+      case ('L','l');  basinid = 'AL'
+      case ('E','e');  basinid = 'EP'
+      case ('C','c');  basinid = 'CP'
+      case ('W','w');  basinid = 'WP'
+      case ('O','o');  basinid = 'SC'
+      case ('T','t');  basinid = 'EC'
+      case ('U','u');  basinid = 'AU'
+      case ('P','p');  basinid = 'SP'
+      case ('S','s');  basinid = 'SI'
+      case ('B','b');  basinid = 'BB'
+      case ('A','a');  basinid = 'AA'
+      case ('Q','q');  basinid = 'SL'
+      case default;    basinid = '**'
+    end select
 
     if (atcfname(1:2) == 'SP') then
     else
@@ -8046,21 +8065,21 @@ c          print *,'   ---> ifh= ',ifh
       endif
     endif
 
-      select case (storm(ist)%tcv_storm_id(3:3))
-        case ('L','l');  basinid = 'AL'
-        case ('E','e');  basinid = 'EP'
-        case ('C','c');  basinid = 'CP'
-        case ('W','w');  basinid = 'WP'
-        case ('O','o');  basinid = 'SC'
-        case ('T','t');  basinid = 'EC'
-        case ('U','u');  basinid = 'AU'
-        case ('P','p');  basinid = 'SP'
-        case ('S','s');  basinid = 'SI'
-        case ('B','b');  basinid = 'BB'
-        case ('A','a');  basinid = 'AA'
-        case ('Q','q');  basinid = 'SL'
-        case default;    basinid = '**'
-      end select
+    select case (storm(ist)%tcv_storm_id(3:3))
+      case ('L','l');  basinid = 'AL'
+      case ('E','e');  basinid = 'EP'
+      case ('C','c');  basinid = 'CP'
+      case ('W','w');  basinid = 'WP'
+      case ('O','o');  basinid = 'SC'
+      case ('T','t');  basinid = 'EC'
+      case ('U','u');  basinid = 'AU'
+      case ('P','p');  basinid = 'SP'
+      case ('S','s');  basinid = 'SI'
+      case ('B','b');  basinid = 'BB'
+      case ('A','a');  basinid = 'AA'
+      case ('Q','q');  basinid = 'SL'
+      case default;    basinid = '**'
+    end select
 
     if (atcfname(1:2) == 'SP') then
     else
@@ -8264,21 +8283,21 @@ c     --------------------------------------------------
       endif
     endif
 
-      select case (storm(ist)%tcv_storm_id(3:3))
-        case ('L','l');  basinid = 'AL'
-        case ('E','e');  basinid = 'EP'
-        case ('C','c');  basinid = 'CP'
-        case ('W','w');  basinid = 'WP'
-        case ('O','o');  basinid = 'SC'
-        case ('T','t');  basinid = 'EC'
-        case ('U','u');  basinid = 'AU'
-        case ('P','p');  basinid = 'SP'
-        case ('S','s');  basinid = 'SI'
-        case ('B','b');  basinid = 'BB'
-        case ('A','a');  basinid = 'AA'
-        case ('Q','q');  basinid = 'SL'
-        case default;    basinid = '**'
-      end select
+    select case (storm(ist)%tcv_storm_id(3:3))
+      case ('L','l');  basinid = 'AL'
+      case ('E','e');  basinid = 'EP'
+      case ('C','c');  basinid = 'CP'
+      case ('W','w');  basinid = 'WP'
+      case ('O','o');  basinid = 'SC'
+      case ('T','t');  basinid = 'EC'
+      case ('U','u');  basinid = 'AU'
+      case ('P','p');  basinid = 'SP'
+      case ('S','s');  basinid = 'SI'
+      case ('B','b');  basinid = 'BB'
+      case ('A','a');  basinid = 'AA'
+      case ('Q','q');  basinid = 'SL'
+      case default;    basinid = '**'
+    end select
 
     if (atcfname(1:2) == 'SP') then
     else
@@ -8486,21 +8505,21 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
       endif
     endif
 
-      select case (storm(ist)%tcv_storm_id(3:3))
-        case ('L','l');  basinid = 'AL'
-        case ('E','e');  basinid = 'EP'
-        case ('C','c');  basinid = 'CP'
-        case ('W','w');  basinid = 'WP'
-        case ('O','o');  basinid = 'SC'
-        case ('T','t');  basinid = 'EC'
-        case ('U','u');  basinid = 'AU'
-        case ('P','p');  basinid = 'SP'
-        case ('S','s');  basinid = 'SI'
-        case ('B','b');  basinid = 'BB'
-        case ('A','a');  basinid = 'AA'
-        case ('Q','q');  basinid = 'SL'
-        case default;    basinid = '**'
-      end select
+    select case (storm(ist)%tcv_storm_id(3:3))
+      case ('L','l');  basinid = 'AL'
+      case ('E','e');  basinid = 'EP'
+      case ('C','c');  basinid = 'CP'
+      case ('W','w');  basinid = 'WP'
+      case ('O','o');  basinid = 'SC'
+      case ('T','t');  basinid = 'EC'
+      case ('U','u');  basinid = 'AU'
+      case ('P','p');  basinid = 'SP'
+      case ('S','s');  basinid = 'SI'
+      case ('B','b');  basinid = 'BB'
+      case ('A','a');  basinid = 'AA'
+      case ('Q','q');  basinid = 'SL'
+      case default;    basinid = '**'
+    end select
 
     if (atcfname(1:2) == 'SP') then
     else
@@ -8613,21 +8632,21 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
       endif
     endif
 
-      select case (storm(ist)%tcv_storm_id(3:3))
-        case ('L','l');  basinid = 'AL'
-        case ('E','e');  basinid = 'EP'
-        case ('C','c');  basinid = 'CP'
-        case ('W','w');  basinid = 'WP'
-        case ('O','o');  basinid = 'SC'
-        case ('T','t');  basinid = 'EC'
-        case ('U','u');  basinid = 'AU'
-        case ('P','p');  basinid = 'SP'
-        case ('S','s');  basinid = 'SI'
-        case ('B','b');  basinid = 'BB'
-        case ('A','a');  basinid = 'AA'
-        case ('Q','q');  basinid = 'SL'
-        case default;    basinid = '**'
-      end select
+    select case (storm(ist)%tcv_storm_id(3:3))
+      case ('L','l');  basinid = 'AL'
+      case ('E','e');  basinid = 'EP'
+      case ('C','c');  basinid = 'CP'
+      case ('W','w');  basinid = 'WP'
+      case ('O','o');  basinid = 'SC'
+      case ('T','t');  basinid = 'EC'
+      case ('U','u');  basinid = 'AU'
+      case ('P','p');  basinid = 'SP'
+      case ('S','s');  basinid = 'SI'
+      case ('B','b');  basinid = 'BB'
+      case ('A','a');  basinid = 'AA'
+      case ('Q','q');  basinid = 'SL'
+      case default;    basinid = '**'
+    end select
 
     if (atcfname(1:2) == 'SP') then
     else
@@ -8959,21 +8978,21 @@ c     identifier at the beginning of the modified atcfunix record.
         isst         = -99
     endif
 
-      select case (storm(ist)%tcv_storm_id(3:3))
-        case ('L','l');  basinid = 'AL'
-        case ('E','e');  basinid = 'EP'
-        case ('C','c');  basinid = 'CP'
-        case ('W','w');  basinid = 'WP'
-        case ('O','o');  basinid = 'SC'
-        case ('T','t');  basinid = 'EC'
-        case ('U','u');  basinid = 'AU'
-        case ('P','p');  basinid = 'SP'
-        case ('S','s');  basinid = 'SI'
-        case ('B','b');  basinid = 'BB'
-        case ('A','a');  basinid = 'AA'
-        case ('Q','q');  basinid = 'SL'
-        case default;    basinid = 'HC'
-      end select
+    select case (storm(ist)%tcv_storm_id(3:3))
+      case ('L','l');  basinid = 'AL'
+      case ('E','e');  basinid = 'EP'
+      case ('C','c');  basinid = 'CP'
+      case ('W','w');  basinid = 'WP'
+      case ('O','o');  basinid = 'SC'
+      case ('T','t');  basinid = 'EC'
+      case ('U','u');  basinid = 'AU'
+      case ('P','p');  basinid = 'SP'
+      case ('S','s');  basinid = 'SI'
+      case ('B','b');  basinid = 'BB'
+      case ('A','a');  basinid = 'AA'
+      case ('Q','q');  basinid = 'SL'
+      case default;    basinid = 'HC'
+    end select
 
     if (atcfname(1:2) == 'SP') then
     else
@@ -9180,21 +9199,21 @@ c     identifier at the beginning of the modified atcfunix record.
     else  !CAITLYN - there are some reapeated comments, work on that
     endif
 
-      select case (storm(ist)%tcv_storm_id(3:3))
-        case ('L','l');  basinid = 'AL'
-        case ('E','e');  basinid = 'EP'
-        case ('C','c');  basinid = 'CP'
-        case ('W','w');  basinid = 'WP'
-        case ('O','o');  basinid = 'SC'
-        case ('T','t');  basinid = 'EC'
-        case ('U','u');  basinid = 'AU'
-        case ('P','p');  basinid = 'SP'
-        case ('S','s');  basinid = 'SI'
-        case ('B','b');  basinid = 'BB'
-        case ('A','a');  basinid = 'AA'
-        case ('Q','q');  basinid = 'SL'
-        case default;    basinid = 'HC'
-      end select
+    select case (storm(ist)%tcv_storm_id(3:3))
+      case ('L','l');  basinid = 'AL'
+      case ('E','e');  basinid = 'EP'
+      case ('C','c');  basinid = 'CP'
+      case ('W','w');  basinid = 'WP'
+      case ('O','o');  basinid = 'SC'
+      case ('T','t');  basinid = 'EC'
+      case ('U','u');  basinid = 'AU'
+      case ('P','p');  basinid = 'SP'
+      case ('S','s');  basinid = 'SI'
+      case ('B','b');  basinid = 'BB'
+      case ('A','a');  basinid = 'AA'
+      case ('Q','q');  basinid = 'SL'
+      case default;    basinid = 'HC'
+    end select
 
     if (atcfname(1:2) == 'SP') then
     else
@@ -9923,6 +9942,11 @@ c     subroutine for further details.
     do while (icut <= icutmax .and. in_grid == 'n')  ! radmaxloop
 
       do n = 1, nlevg ! levelloop
+        select case (n)
+          case (1); ix1 = 3;  ix2 = 4    ! For 850 mb readflags
+          case (2); ix1 = 5;  ix2 = 6    ! For 700 mb readflags
+          case (3); ix1 = 12; ix2 = 13   ! For 500 mb readflags
+        end select
 
         if (readflag(ix1) .and. readflag(ix2)) then
 
@@ -12059,12 +12083,12 @@ c
 
     do while (got_good_armw == 'n' .and. rdist_ix < 5) ! rdistloop
 
-        select case (rdist_ix)
-          case (1); rdist = rdist1
-          case (2); rdist = rdist2
-          case (3); rdist = rdist3
-          case (4); rdist = rdist4
-        end select
+      select case (rdist_ix)
+        case (1); rdist = rdist1
+        case (2); rdist = rdist2
+        case (3); rdist = rdist3
+        case (4); rdist = rdist4
+      end select
 
       do idist = 1, numdist ! radiusloop
 
@@ -12919,13 +12943,13 @@ c       later on in subroutine  wtavrg.
     if (dell > 0.50) then
     endif
 
-      select case (level)
-        case (850);  nlev = nlev850  ! check module level_parms for
-        case (700);  nlev = nlev700  ! the values of these....
-        case (500);  nlev = nlev500
-        case (200);  nlev = nlev200
-        case (1020); nlev = levsfc
-      end select
+    select case (level)
+      case (850);  nlev = nlev850  ! check module level_parms for the values of these
+      case (700);  nlev = nlev700  
+      case (500);  nlev = nlev500
+      case (200);  nlev = nlev200
+      case (1020); nlev = levsfc
+    end select
 
     print *, ' in get_wind_circulation, nlev = ', nlev
 
@@ -13439,13 +13463,13 @@ c        xmax_circ_diff_mean = -9999.0
       print *, '               ilonfix = ', ilonfix, ' jlatfix = ', jlatfix
     endif
 
-      select case (level)
-        case (850);  nlev = nlev850  ! check module level_parms for
-        case (700);  nlev = nlev700  ! the values of these....
-        case (500);  nlev = nlev500
-        case (200);  nlev = nlev200
-        case (1020); nlev = levsfc
-      end select
+    select case (level)
+      case (850);  nlev = nlev850  ! check module level_parms for the values of these
+      case (700);  nlev = nlev700  
+      case (500);  nlev = nlev500
+      case (200);  nlev = nlev200
+      case (1020); nlev = levsfc
+    end select
 
     if ((dx+dy)/2.0 > 1.2) then
     else if ((dx+dy)/2.0 > 0.50 .and. (dx+dy)/2.0 <= 1.2) then
@@ -14051,10 +14075,10 @@ c     position twice.
 
     do n = 1, 2 ! report_zeta_loop
 
-        select case (n)
-          case (1); ilev=850; csmooth_var='zeta850'   ! For 850 mb
-          case (2); ilev=700; csmooth_var='zeta700'   ! For 700 mb
-        end select
+      select case (n)
+        case (1); ilev = 850; csmooth_var = 'zeta850'   ! For 850 mb
+        case (2); ilev = 700; csmooth_var = 'zeta700'   ! For 700 mb
+      end select
 
       if (zeta(ilonfix,jlatfix,n) > -9990.0) then
 
@@ -15932,11 +15956,14 @@ c                (24) HWRF Basin-scale
                   gfld%idsect(8), gfld%idsect(9), pdt_4p0_vtime, gfld%ngrdpts, firstval, lastval, dmin, dmax
           endif
 
+          select case (chparm(ip))
+            case ('absv')
               if (jpdt(12) == 85000) then
                 call conv1d2d_real (imax, jmax, f, zeta(1,1,1), need_to_flip_lats)
               else
                 call conv1d2d_real (imax, jmax, f, zeta(1,1,2), need_to_flip_lats)
               endif
+            case ('ugrid')
               if (jpdt(12) == 85000) then
                 call conv1d2d_real (imax, jmax, f, u(1,1,nlev850), need_to_flip_lats)
               else if (jpdt(12) == 70000) then
@@ -15946,8 +15973,10 @@ c                (24) HWRF Basin-scale
               else if (jpdt(12) == 20000) then
                 call conv1d2d_real (imax, jmax, f, u(1,1,nlev200), need_to_flip_lats)
               else
+                ! Near-surface data
                 call conv1d2d_real (imax, jmax, f, u(1,1,levsfc), need_to_flip_lats)
               endif
+            case ('vgrid')
               if (jpdt(12) == 85000) then
                 call conv1d2d_real (imax, jmax, f, v(1,1,nlev850), need_to_flip_lats)
               else if (jpdt(12) == 70000) then
@@ -15957,8 +15986,10 @@ c                (24) HWRF Basin-scale
               else if (jpdt(12) == 20000) then
                 call conv1d2d_real (imax, jmax, f, v(1,1,nlev200), need_to_flip_lats)
               else
+                ! Near-surface data
                 call conv1d2d_real (imax, jmax, f, v(1,1,levsfc), need_to_flip_lats)
               endif
+            case ('gphgt')
               if (jpdt(12) == 85000) then
                 call conv1d2d_real (imax, jmax, f, hgt(1,1,1), need_to_flip_lats)
               else if (jpdt(12) == 70000) then
@@ -15968,14 +15999,20 @@ c                (24) HWRF Basin-scale
               else if (jpdt(12) == 20000) then
                 call conv1d2d_real (imax, jmax, f, hgt(1,1,4), need_to_flip_lats)
               endif
+            case ('mslp')
               call conv1d2d_real (imax, jmax, f, slp, need_to_flip_lats)
+            case ('temp')
               call conv1d2d_real (imax, jmax, f, tmean, need_to_flip_lats)
+            case ('lmask')
               call conv1d2d_real (imax, jmax, f, lsmask, need_to_flip_lats)
+            case ('sst')
               call conv1d2d_real (imax, jmax, f, sst(1,1), need_to_flip_lats)
+            case default
 
             if (verb .ge. 1) then
               print *, '!!! ERROR: BAD CHPARM IN GETDATA = ', chparm(ip)
             endif
+          end select
 
         else
           if (verb .ge. 3) then
@@ -16385,6 +16422,8 @@ c                (24) HWRF Basin-scale
                      lastval, dmin, dmax
             endif
 
+            select case (ch_genparm(ip))
+              case ('spfh')
                 if (jpdt(12) == 85000) then
                   call conv1d2d_real (imax, jmax, f, q850(1,1), need_to_flip_lats)
                 else if (jpdt(12) == 100000) then
@@ -16402,6 +16441,7 @@ c                (24) HWRF Basin-scale
                 else if (jpdt(12) == 60000) then
                   call conv1d2d_real (imax, jmax, f, spfh(1,1,7), need_to_flip_lats)
                 endif
+              case ('relh')
                 if (jpdt(12) == 100000) then
                   call conv1d2d_real (imax, jmax, f, rh(1,1,1), need_to_flip_lats)
                 else if (jpdt(12) == 92500) then
@@ -16417,6 +16457,7 @@ c                (24) HWRF Basin-scale
                 else if (jpdt(12) == 60000) then
                   call conv1d2d_real (imax, jmax, f, rh(1,1,7), need_to_flip_lats)
                 endif
+              case ('temp')
                 if (jpdt(12) == 100000) then
                   call conv1d2d_real (imax, jmax, f, temperature(1,1,1), need_to_flip_lats)
                 else if (jpdt(12) == 92500) then
@@ -16432,9 +16473,13 @@ c                (24) HWRF Basin-scale
                 else if (jpdt(12) == 60000) then
                   call conv1d2d_real (imax, jmax, f, temperature(1,1,7), need_to_flip_lats)
                 endif
+              case ('omega500')
                 call conv1d2d_real (imax, jmax, f, omega500(1,1), need_to_flip_lats)
+              case default
                 if (verb .ge. 1) then
                   print *, '!!! ERROR: BAD CH_GENPARM IN GETDATA = ', ch_genparm(ip)
+                endif
+            end select
           endif
           call gf_free (gfld)
         enddo ! grib2_gen_parm_loop
@@ -16522,11 +16567,14 @@ c                (24) HWRF Basin-scale
             call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
           endif
 
+          select case (chparm(ip))
+            case ('absv')
               if (jpds(7) == 850) then
                 call conv1d2d_real (imax, jmax, f, zeta(1,1,1), need_to_flip_lats)
               else
                 call conv1d2d_real (imax, jmax, f, zeta(1,1,2), need_to_flip_lats)
               endif
+            case ('ugrid')
               if (jpds(7) == 850) then
                 call conv1d2d_real (imax, jmax, f, u(1,1,nlev850), need_to_flip_lats)
               else if (jpds(7) == 700) then
@@ -16536,8 +16584,10 @@ c                (24) HWRF Basin-scale
               else if (jpds(7) == 200) then
                 call conv1d2d_real (imax, jmax, f, u(1,1,nlev200), need_to_flip_lats)
               else
+                ! Near-surface data
                 call conv1d2d_real (imax, jmax, f, u(1,1,levsfc), need_to_flip_lats)
               endif
+            case ('vgrid')
               if (jpds(7) == 850) then
                 call conv1d2d_real (imax, jmax, f, v(1,1,nlev850), need_to_flip_lats)
               else if (jpds(7) == 700) then
@@ -16547,8 +16597,10 @@ c                (24) HWRF Basin-scale
               else if (jpds(7) == 200) then
                 call conv1d2d_real (imax, jmax, f, v(1,1,nlev200), need_to_flip_lats)
               else
+                ! Near-surface data
                 call conv1d2d_real (imax, jmax, f, v(1,1,levsfc), need_to_flip_lats)
               endif
+            case ('gphgt')
               if (jpds(7) == 850) then
                 call conv1d2d_real (imax, jmax, f, hgt(1,1,1), need_to_flip_lats)
               else if (jpds(7) == 700) then
@@ -16558,16 +16610,21 @@ c                (24) HWRF Basin-scale
               else if (jpds(7) == 200) then
                 call conv1d2d_real (imax, jmax, f, hgt(1,1,4), need_to_flip_lats)
               endif
+            case ('mslp')
               call conv1d2d_real (imax, jmax, f, slp, need_to_flip_lats)
+            case ('temp')
               call conv1d2d_real (imax, jmax, f, tmean, need_to_flip_lats)
+            case ('lmask')
               call conv1d2d_real (imax, jmax, f, lsmask, need_to_flip_lats)
+            case ('sst')
               call conv1d2d_real (imax, jmax, f, sst(1,1), need_to_flip_lats)
+            case default
 
             if (verb .ge. 1) then
               print *, '!!! ERROR: BAD CHPARM IN GETDATA = ', chparm(ip)
             endif
 
-            end select
+          end select
 
         else
           if (verb .ge. 3) then
@@ -16759,6 +16816,8 @@ c                (24) HWRF Basin-scale
               print '(i4,2x,8i5,i8,2g12.4)', k, (kpds(i),i=5,11), kpds(14), kf, dmin, dmax
             endif
 
+            select case (ch_genparm(ip))
+              case ('spfh')
                 if (jpds(7) == 850) then
                   call conv1d2d_real (imax, jmax, f, q850(1,1), need_to_flip_lats)
                 else if (jpds(7) == 1000) then
@@ -16776,6 +16835,7 @@ c                (24) HWRF Basin-scale
                 else if (jpds(7) == 600) then
                   call conv1d2d_real (imax, jmax, f, spfh(1,1,7), need_to_flip_lats)
                 endif
+              case ('relh')
                 if (jpds(7) == 1000) then
                   call conv1d2d_real (imax, jmax, f, rh(1,1,1), need_to_flip_lats)
                 else if (jpds(7) == 925) then
@@ -16791,6 +16851,7 @@ c                (24) HWRF Basin-scale
                 else if (jpds(7) == 600) then
                   call conv1d2d_real (imax, jmax, f, rh(1,1,7), need_to_flip_lats)
                 endif
+              case ('temp')
                 if (jpds(7) == 1000) then
                   call conv1d2d_real (imax, jmax, f, temperature(1,1,1), need_to_flip_lats)
                 else if (jpds(7) == 925) then
@@ -16806,11 +16867,14 @@ c                (24) HWRF Basin-scale
                 else if (jpds(7) == 600) then
                   call conv1d2d_real (imax, jmax, f, temperature(1,1,7), need_to_flip_lats)
                 endif
+              case ('omega500')
                 call conv1d2d_real (imax, jmax, f, omega500(1,1), need_to_flip_lats)
+              case default
 
                 if (verb .ge. 1) then
                   print *, '!!! ERROR: BAD CH_GENPARM IN GETDATA = ', ch_genparm(ip)
                 endif
+            end select
 
           else
             if (verb .ge. 3) then
@@ -21056,11 +21120,24 @@ c     Abstract of subroutine  get_next_ges for further details.
     integer           :: z, x999ct, rhgt100ct
     real              :: dx, dy, penv, es, qs, xminrh, xmaxrh
     logical(1)        :: valid_pt(imax,jmax), readgenflag(nreadgenparms)
+
+    select case (ip)
+      case (2); z = 1; qix = 9;  tix = 16; penv = 100.0;
+      case (3); z = 2; qix = 10; tix = 17; penv = 92.5;
+      case (4); z = 3; qix = 11; tix = 18; penv = 80.0;
+      case (5); z = 4; qix = 12; tix = 19; penv = 75.0;
+      case (6); z = 5; qix = 13; tix = 20; penv = 70.0;
+      case (7); z = 6; qix = 14; tix = 21; penv = 65.0;
+      case (8); z = 7; qix = 15; tix = 22; penv = 60.0;
+      case default
+
       print *, ' '
       print *, 'ERROR in subroutine  compute_rh_from_q.  The index'
       print *, '  ip that indicates the vertical level needs to be'
       print *, '  in the range of 2-8 is out of range. Here, ip = ', ip
       stop 95
+    end select
+
     print *, ' '
     print *, 'top of compute_rh_from_q, z = ', z
     print *, '  qix = ', qix, '  readgenflag(qix) = ', readgenflag(qix)
@@ -21214,6 +21291,12 @@ c     Abstract of subroutine  get_next_ges for further details.
     logical(1) :: vp(imax,jmax)
 
     do layer = 1, 3
+      select case (layer)
+        case (1); upper = 3; lower = 1;
+        case (2); upper = 4; lower = 3;
+        case (3); upper = 4; lower = 1;
+      end select
+
       do j = 1, jmax
         do i = 1, imax
           if (vp(i,j)) then
@@ -22737,13 +22820,13 @@ c
 
       imbowret = 0
 
-      select case (level)
-        case (850);  nlev = nlev850  ! check module level_parms for
-        case (700);  nlev = nlev700  ! the values of these....
-        case (500);  nlev = nlev500
-        case (200);  nlev = nlev200
-        case (1020); nlev = levsfc
-      end select
+    select case (level)
+      case (850);  nlev = nlev850  ! check module level_parms for the values of these
+      case (700);  nlev = nlev700
+      case (500);  nlev = nlev500
+      case (200);  nlev = nlev200
+      case (1020); nlev = levsfc
+    end select
 
     if (cmodel_type == 'regional') then
         grid_buffer = 0.30
@@ -22852,12 +22935,12 @@ c
 
     do i = 1, 4  ! bearloop
 
-        select case (i)
-          case (1); xbear =   0.0;
-          case (2); xbear =  90.0;
-          case (3); xbear = 180.0;
-          case (4); xbear = 270.0;
-        end select
+      select case (i)
+        case (1); xbear =   0.0;
+        case (2); xbear =  90.0;
+        case (3); xbear = 180.0;
+        case (4); xbear = 270.0;
+      end select
 
       call distbear (ctlat, ctlon, xmax_rdist_reached, xbear, targlat, targlon, gm_wrap_flag)
 
@@ -23386,17 +23469,17 @@ c
 
           do ir = 1, 9  ! individual_ring_loop
 
-              select case (ir)
-                case (1); irx=ixm1; jrx=jcenx;!     2       3       4 
-                case (2); irx=ixm1; jrx=jxm1; !                      
-                case (3); irx=icenx;jrx=jxm1; !                     
-                case (4); irx=ixp1; jrx=jxm1; !     1 (icenx,jcenx) 5
-                case (5); irx=ixp1; jrx=jcenx;!                     
-                case (6); irx=ixp1; jrx=jxp1; !                     
-                case (7); irx=icenx;jrx=jxp1; !     8       7       6
-                case (8); irx=ixm1; jrx=jxp1; !                     
-                case (9); irx=icenx; jrx=jcenx; ! = center pt of ring
-              end select
+            select case (ir)
+              case (1); irx = ixm1;  jrx = jcenx;  !     2       3       4
+              case (2); irx = ixm1;  jrx = jxm1;   !
+              case (3); irx = icenx; jrx = jxm1;   !
+              case (4); irx = ixp1;  jrx = jxm1;   !     1 (icenx,jcenx) 5
+              case (5); irx = ixp1;  jrx = jcenx;  !
+              case (6); irx = ixp1;  jrx = jxp1;   !
+              case (7); irx = icenx; jrx = jxp1;   !     8       7       6
+              case (8); irx = ixm1;  jrx = jxp1;   !
+              case (9); irx = icenx; jrx = jcenx; ! = center pt of ring
+            end select
 
             if (.not. valid_pt(irx,jrx)) then
               if (verb .ge. 3) then
