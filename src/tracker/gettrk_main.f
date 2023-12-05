@@ -109,11 +109,11 @@
   iicret = 0
   iocret = 0
 
-  if (file_open) call baclose(lugb, igcret)
+  if (file_open) call baclose (lugb, igcret)
 
-  if (file_open) call baclose(lugi, iicret)
+  if (file_open) call baclose (lugi, iicret)
 
-  if (file_open) call baclose(lout, iocret)
+  if (file_open) call baclose (lout, iocret)
 
   if (verb .ge. 3) then
     print *, 'baclose: igcret = ', igcret, ' iicret = ', iicret
@@ -343,9 +343,9 @@
 
         if (use_waitfor == 'y') then
 
-          call waitfor(trim(gfilename), waitfor_gfile_status,       &
-                      & wait_min_age, wait_min_size, wait_max_wait, &
-                      & wait_sleeptime)
+          call waitfor (trim(gfilename), waitfor_gfile_status,       &
+                       & wait_min_age, wait_min_size, wait_max_wait, &
+                       & wait_sleeptime)
 
           if (waitfor_gfile_status /= 0) then
             print *, ' '
@@ -358,7 +358,7 @@
 
           wait_max_ifile_wait = 180
           wait_min_size = 500
-          call waitfor(trim(ifilename), waitfor_ifile_status, wait_min_age, wait_min_size, wait_max_ifile_wait, wait_sleeptime)
+          call waitfor (trim(ifilename), waitfor_ifile_status, wait_min_age, wait_min_size, wait_max_ifile_wait, wait_sleeptime)
 
           if (waitfor_ifile_status /= 0) then
             print *, ' '
@@ -839,7 +839,7 @@ c       If not enough tracked parms were read in, exit the program....
       endif
 
       if (readflag(7) .and. readflag(15) .and. readflag(16)) then
-          if (user_wants_to_track_thick500850 == 'n' .or. user_wants_to_track_thick500850 == 'N') then
+        call thickness_calc (imax, jmax, valid_pt)
       
         do jj = 1, maxstorm
 
@@ -2716,8 +2716,8 @@ c       If not enough tracked parms were read in, exit the program....
 
       if (use_per_fcst_command == 'y') then
         pfc_final = per_fcst_command
-        call argreplace(pfc_final, pfc_cmd_len, '%[FHOUR]', ifhours(ifh))
-        call argreplace(pfc_final, pfc_cmd_len, '%[FMIN]', iftotalmins(ifh))
+        call argreplace (pfc_final, pfc_cmd_len, '%[FHOUR]', ifhours(ifh))
+        call argreplace (pfc_final, pfc_cmd_len, '%[FMIN]', iftotalmins(ifh))
 
         if (verb .ge. 2) then
           print *, ' '
@@ -2725,8 +2725,9 @@ c       If not enough tracked parms were read in, exit the program....
           print *, '!!! Unparsed = ', trim(per_fcst_command)
           print *, '!!! Parsed   = ', trim(pfc_final)
         endif
-        call run_command(trim(pfc_final), pfcret)
-        if (pfcret /=0 .and. verb .ge. 1) then
+
+        call run_command (trim(pfc_final), pfcret)
+
           print *, ' '
           print *, '!!! Non-zero exit status from per-fcst command'
           print *, '!!! Command     = ', trim(pfc_final)
@@ -2743,8 +2744,8 @@ c       If not enough tracked parms were read in, exit the program....
       if (ifh > ifhmax) exit ! ifhloop
 
       if (inp%file_seq == 'multi') then
-        call baclose(lugb, igcret)
-        call baclose(lugi, iicret)
+        call baclose (lugb, igcret)
+        call baclose (lugi, iicret)
         if (verb .ge. 3) then
           print *, 'baclose return code for unit ', lugb, ' = igcret = ', igcret
           print *, 'baclose return code for unit ', lugi, ' = iicret = ', iicret
@@ -3267,7 +3268,7 @@ c
           endif
         endif
 
-        call calcdist(parmlon, parmlat, glon(i), glat(j), dist, degrees)
+        call calcdist (parmlon, parmlat, glon(i), glat(j), dist, degrees)
 
         if (dist > radinf .or. dist == 0.0) cycle
           if (defined_pt(i,j)) then
@@ -3697,7 +3698,7 @@ c
     if (ifh == 1) then
       st_heading = real(storm(ist)%tcv_stdir)
     else
-      call calcdist(fixlon(ist,ifh), fixlat(ist,ifh), fixlon(ist,ifh-1), fixlat(ist,ifh-1), xdist, degrees)
+      call calcdist (fixlon(ist,ifh), fixlat(ist,ifh), fixlon(ist,ifh-1), fixlat(ist,ifh-1), xdist, degrees)
 
       rlonc = (360.0 - fixlon(ist, ifh)) * dtr
       rlatc = fixlat(ist, ifh) * dtr
@@ -3815,7 +3816,7 @@ c
         endif
       endif
 
-      call calcdist(fixlon(ist,ifh), fixlat(ist,ifh), glon(ip), glat(j), xdist, degrees)
+      call calcdist (fixlon(ist,ifh), fixlat(ist,ifh), glon(ip), glat(j), xdist, degrees)
 
       if (xdist > ricps) cycle ! iloop
       if (valid_pt(ip,j)) then
@@ -3981,8 +3982,8 @@ c
 
     npts = ceiling(ricps / (dtk * (dx+dy) / 2.0))
 
-    call get_ij_bounds(npts, 0, ricps, imax, jmax, dx, dy, glatmax, glatmin, glonmax, &
-         & glonmin, fixlon(ist,ifh), fixlat(ist,ifh), trkrinfo, ilonfix, jlatfix,     &
+    call get_ij_bounds (npts, 0, ricps, imax, jmax, dx, dy, glatmax, glatmin, glonmax, &
+         & glonmin, fixlon(ist,ifh), fixlat(ist,ifh), trkrinfo, ilonfix, jlatfix,      &
          & ibeg, jbeg, iend, jend, igiret)
 
     if (igiret /= 0) then
@@ -4114,7 +4115,7 @@ c
         dzdlnp(k) = dz(k) / dlnp(k)
       enddo
 
-      call calccorr(lnp(2), zdiff(2), 6, R2, vth_slope)
+      call calccorr (lnp(2), zdiff(2), 6, R2, vth_slope)
 
       if (verb .ge. 3) then
         print *, ' '
@@ -4185,13 +4186,17 @@ c
     call getmean(xdat, numpts, xmean)
     call getmean(ydat, numpts, ymean)
 
-    call getdiff(xdat, numpts, xmean, xdiff)
-    call getdiff(ydat, numpts, ymean, ydiff)
+    call getmean (xdat, numpts, xmean)
+    call getmean (ydat, numpts, ymean)
 
+    call getdiff (xdat, numpts, xmean, xdiff)
+    call getdiff (ydat, numpts, ymean, ydiff)
+
+    call getslope (xdiff, ydiff, numpts, slope)
     yint = ymean - slope * xmean
 
-    call getyestim(xdat, slope, yint, numpts, yestim)
-    call getresid(ydat, yestim, numpts, yresid)
+    call getyestim (xdat, slope, yint, numpts, yestim)
+    call getresid (ydat, yestim, numpts, yresid)
 
     if (verb .ge. 3) then
       print *, ' '
@@ -4200,7 +4205,7 @@ c
       print *, ' *--------------------------------------------------* '
     endif
 
-    call getcorr(yresid, ydiff, numpts, R2)
+    call getcorr (yresid, ydiff, numpts, R2)
 
     if (verb .ge. 3) then
       print *, '   i     ydat     xdat       ydiff    xdiff        e',   &
@@ -4994,7 +4999,7 @@ c     -----------------------------------------------------------------
 
     else
 
-      call calcdist(fixlon(ist,ifh), fixlat(ist,ifh), fixlon(ist,ifh-1), fixlat(ist,ifh-1), xdist, degrees)
+      call calcdist (fixlon(ist,ifh), fixlat(ist,ifh), fixlon(ist,ifh-1), fixlat(ist,ifh-1), xdist, degrees)
 
       rlonc = (360.0 - fixlon(ist, ifh)) * dtr
       rlatc = fixlat(ist, ifh) * dtr
@@ -5507,6 +5512,9 @@ c     -----------------------------------------------------------------
             enddo ! njloop
 
             else  ! case for a grid whose resolution so no further interpolation
+
+            call calcdist (glon(ii), glat(j), xsfclon, xsfclat, xdist, degrees)
+
             if (xdist <= 350.0) then
               ipdfbin = min((int(vmagkts / 10.0) + 1), 16)
               pdf_ct_bin(ipdfbin) = pdf_ct_bin(ipdfbin) + 1
@@ -7078,7 +7086,8 @@ c     ----------------------------------------------------------------
     real    :: cos_value, adj_dist, tmpangle, sin_angle, cos_angle
     real    :: uvrcomp, vvrcomp, uvtcomp, vvtcomp, tmpcentlon
     integer :: igvtret, ifh
-    call calcdist(centlon, centlat, xlon, xlat, hyp_dist, degrees)
+
+    call calcdist (centlon, centlat, xlon, xlat, hyp_dist, degrees)
 
     tmpxlon    = xlon
     tmpcentlon = centlon
@@ -7163,6 +7172,7 @@ c     ----------------------------------------------------------------
       endif
 
       sin_angle = asin(sin_value) / dtr
+      call calcdist (tmpcentlon, centlat, tmpxlon, centlat, adj_dist, degrees)
       cos_value = adj_dist / hyp_dist
 
       if (cos_value > 1.0) then
@@ -14240,7 +14250,7 @@ c       later on in subroutine  wtavrg.
           cycle   ! iloop1
         endif
 
-        call calcdist(rlont, rlatt, temp_guesslon, uvgeslat, dist, degrees)
+        call calcdist (rlont, rlatt, temp_guesslon, uvgeslat, dist, degrees)
         if (dist .gt. rads) cycle   ! iloop1
 
         vt_mean = 0.0
@@ -14468,7 +14478,7 @@ c       later on in subroutine  wtavrg.
             cycle   ! iloop2
           endif
 
-          call calcdist(rlont, rlatt, temp_guesslon, uvgeslat, dist, degrees)
+          call calcdist (rlont, rlatt, temp_guesslon, uvgeslat, dist, degrees)
           if (dist .gt. rads) cycle   ! iloop2
 
           vt_mean = 0.0
@@ -15790,7 +15800,7 @@ c       later on in subroutine  wtavrg.
           cycle   ! iloop
         endif
 
-        call calcdist(rlont, rlatt, temp_guesslon, guesslat, dist, degrees)
+        call calcdist (rlont, rlatt, temp_guesslon, guesslat, dist, degrees)
         if (dist .gt. rads) cycle ! iloop
 
         if (cparm == 'vmag') then
@@ -15871,7 +15881,7 @@ c       later on in subroutine  wtavrg.
 
         ibct = ibct + 1
 
-        call barnes(rlont, rlatt, rlonv, rlatv, imax, jmax, ibeg, jbeg, iend, jend, fxy, valid_pt, &
+        call barnes (rlont, rlatt, rlonv, rlatv, imax, jmax, ibeg, jbeg, iend, jend, fxy, valid_pt, &
              & bskip1, re, ri, ftemp, icount, 'tracker', trkrinfo, iret)
 
         ibarnes_loopct = ibarnes_loopct + icount
@@ -16060,7 +16070,7 @@ c       later on in subroutine  wtavrg.
           endif
 
           ibct = ibct + 1
-          call barnes(rlont, rlatt, rlonv, rlatv, imax, jmax, ibeg, jbeg, iend, jend, fxy, valid_pt, &
+          call barnes (rlont, rlatt, rlonv, rlatv, imax, jmax, ibeg, jbeg, iend, jend, fxy, valid_pt, &
                & iskip, re, ri, ftemp, icount, 'tracker' ,trkrinfo, iret)
 
           ibarnes_loopct = ibarnes_loopct + icount
@@ -16233,7 +16243,7 @@ c       later on in subroutine  wtavrg.
         endif
 
         icount = icount + 1
-        call calcdist(flon, flat, rlon(i), rlat(j), dist, degrees)
+        call calcdist (flon, flat, rlon(i), rlat(j), dist, degrees)
         if (dist .gt. ri) cycle
 
         if (defined_pt(i,j)) then
@@ -16363,7 +16373,7 @@ c       later on in subroutine  wtavrg.
         endif
 
         icount = icount + 1
-        call calcdist(flon, flat, rlon(i), rlat(j), dist, degrees)
+        call calcdist (flon, flat, rlon(i), rlat(j), dist, degrees)
         if (dist .gt. ri) cycle
 
         if (defined_pt(i,j)) then
@@ -17290,7 +17300,7 @@ c     the starting date and the lead time in minutes.
  531      format (//, 1x, 'TIMING: before getgb2-1', i2.2, ':', i2.2, ':', i2.2)
         endif
           
-        call getgb2(lugb, lugi, jskp, jdisc, jids, jpdtn, jpdt, jgdtn, jgdt, unpack, krec, gfld, iret)
+        call getgb2 (lugb, lugi, jskp, jdisc, jids, jpdtn, jpdt, jgdtn, jgdt, unpack, krec, gfld, iret)
 
         if (enable_timing /= 0) then
           call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
@@ -17357,7 +17367,7 @@ c     the starting date and the lead time in minutes.
           enddo
 
           readflag(ip) = .true.
-          call bitmapchk(kf, lb, f, dmin, dmax)
+          call bitmapchk (kf, lb, f, dmin, dmax)
 
           if (lbrdflag .eq. 'n') then
             call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
@@ -17544,7 +17554,7 @@ c     the starting date and the lead time in minutes.
  731          format (//, 1x, 'TIMING: before getgb2-phase', i2.2, ':', i2.2, ':', i2.2)
             endif
 
-            call getgb2(lugb, lugi, jskp, jdisc, jids, jpdtn, jpdt, jgdtn, jgdt, unpack, krec, gfld, iret)
+            call getgb2 (lugb, lugi, jskp, jdisc, jids, jpdtn, jpdt, jgdtn, jgdt, unpack, krec, gfld, iret)
 
             if (enable_timing /= 0) then
               call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
@@ -17611,7 +17621,7 @@ c     the starting date and the lead time in minutes.
                 endif
               enddo
 
-              call bitmapchk(kf, lb, f, dmin, dmax)
+              call bitmapchk (kf, lb, f, dmin, dmax)
 
               if (lbrdflag .eq. 'n') then
                 call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
@@ -17783,7 +17793,7 @@ c     the starting date and the lead time in minutes.
             write (6,731) date_time(5), date_time(6), date_time(7)
           endif
 
-          call getgb2(lugb, lugi, jskp, jdisc, jids, jpdtn, jpdt, jgdtn, jgdt, unpack, krec, gfld, iret)
+          call getgb2 (lugb, lugi, jskp, jdisc, jids, jpdtn, jpdt, jgdtn, jgdt, unpack, krec, gfld, iret)
 
           if (enable_timing /= 0) then
             call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
@@ -17850,7 +17860,7 @@ c     the starting date and the lead time in minutes.
             enddo
 
             readgenflag(ip) = .true.
-            call bitmapchk(kf, lb, f, dmin, dmax)
+            call bitmapchk (kf, lb, f, dmin, dmax)
 
             if (lbrdflag .eq. 'n') then
               call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
@@ -18053,7 +18063,7 @@ c     the starting date and the lead time in minutes.
           endif
 
           readflag(ip) = .true.
-          call bitmapchk(kf, lb, f, dmin, dmax)
+          call bitmapchk (kf, lb, f, dmin, dmax)
 
           if (verb .ge. 3) then
             if (inp%lt_units == 'minutes') then
@@ -18193,7 +18203,7 @@ c     the starting date and the lead time in minutes.
 
             if (iret == 0) then
 
-              call bitmapchk(kf, lb, f, dmin, dmax)
+              call bitmapchk (kf, lb, f, dmin, dmax)
 
               if (verb .ge. 3) then
                 if (inp%lt_units == 'minutes') then
@@ -18323,7 +18333,7 @@ c     the starting date and the lead time in minutes.
           if (iret == 0) then
 
             readgenflag(ip) = .true.
-            call bitmapchk(kf, lb, f, dmin, dmax)
+            call bitmapchk (kf, lb, f, dmin, dmax)
 
             if (verb .ge. 3) then
               if (inp%lt_units == 'minutes') then
@@ -19109,10 +19119,10 @@ c     the starting date and the lead time in minutes.
     integer                                     :: status, var1id
 
     status = nf_inq_dimid(ncid, var1_name, var1id)
-    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
     status = nf_inq_dimlen(ncid, var1id, nmax)
-    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    if (status .ne. nf_noerr) call handle_netcdf_err( status)
 
     end subroutine get_ncdim1
 c
@@ -19147,10 +19157,10 @@ c
     if (allocated(readvar8)) deallocate (readvar8)
     status = nf_inq_varid(ncid, var1_name, var1id)
     
-    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    if (status .ne. nf_noerr) call handle_netcdf_err (status)
     status = nf_inq_vartype(ncid, var1id, xtype)
 
-    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    if (status .ne. nf_noerr) call handle_netcdf_err (status)
     if (xtype == 5) then
       if (ira /= 0) then
         if (verb .ge. 1) then
@@ -19189,14 +19199,14 @@ c
     if (xtype == 5) then
         ! Read data into a 4-byte real array
       status = nf_get_var_real(ncid, var1id, var1)
-      if (status .ne. nf_noerr) call handle_netcdf_err(status)
+      if (status .ne. nf_noerr) call handle_netcdf_err (status)
       do i = 1, nmax
         var1(i) = readvar4(i)
       enddo
     elseif (xtype == 6) then
         ! Read data into an 8-byte double real array
       status = nf_get_var_double(ncid,var1id,var1)
-      if (status .ne. nf_noerr) call handle_netcdf_err(status)
+      if (status .ne. nf_noerr) call handle_netcdf_err (status)
       do i = 1, nmax
         var1(i) = readvar8(i)
       enddo
@@ -19230,11 +19240,11 @@ c
     integer                                     :: status, var1id
 
     status = nf_inq_varid(ncid, var1_name, var1id)
-    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
       ! Read data into a 4-byte real array
     status = nf_get_var_real(ncid, var1id, readvar4)
-    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
   end subroutine get_var1_one_dim4
 c
@@ -19261,10 +19271,10 @@ c
     integer                                     :: status, var1id
 
     status = nf_inq_varid(ncid, var1_name, var1id)
-    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
     status = nf_get_var_real(ncid, var1id, readvar8)
-    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
   end subroutine get_var1_one_dim8
   !****************************************************************************
@@ -19310,7 +19320,7 @@ c
     endif
 
     status = nf_inq_vartype(ncid, var3id, xtype)
-    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
     if (xtype == 5 .or. xtype == 6) then
       continue
@@ -19398,7 +19408,7 @@ c
     endif
 
     status = nf_get_vara_real(ncid, var3id, istart, ilength, var3)
-    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
   end subroutine get_var3_tlev_real4
   !****************************************************************************
@@ -19473,7 +19483,7 @@ c
     endif
 
     status = nf_get_vara_real(ncid, var3id, istart, ilength, var3)
-    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
   end subroutine get_var3_tlev_double
 c
@@ -21066,7 +21076,7 @@ c------
         print *, 'before getgb2 call, lugb = ', lugb, ' lugi = ', lugi
       endif
 
-      call getgb2(lugb, lugi, jskp, jdisc, jids, jpdtn, jpdt, jgdtn, jgdt, unpack, krec, gfld, iret)
+      call getgb2 (lugb, lugi, jskp, jdisc, jids, jpdtn, jpdt, jgdtn, jgdt, unpack, krec, gfld, iret)
 
       if (iret .ne. 0) then
         print *, ' '
@@ -21280,7 +21290,7 @@ c------
       print *, 'before ggi getgb jpds(14) = ', jpds(14)
       print *, 'before ggi getgb jgds(1)  = ', jgds(1)
 
-      call getgb(lugb, lugi, jf, j, jpds, jgds, kf, k, igetpds, igetgds, lb, f, iret)
+      call getgb (lugb, lugi, jf, j, jpds, jgds, kf, k, igetpds, igetgds, lb, f, iret)
 
       if (iret .ne. 0) then
         if (verb .ge. 1) then
@@ -21577,8 +21587,8 @@ c------
 
     iggret = 0
 
-    call get_ncdim1(ncfile_id, netcdfinfo%lon_name, imax)
-    call get_ncdim1(ncfile_id, netcdfinfo%lat_name, jmax)
+    call get_ncdim1 (ncfile_id, netcdfinfo%lon_name, imax)
+    call get_ncdim1 (ncfile_id, netcdfinfo%lat_name, jmax)
 
     if (allocated(tmplon)) deallocate (tmplon)
     if (allocated(tmplat)) deallocate (tmplat)
@@ -21832,7 +21842,7 @@ c
     print *, 'netcdfinfo%time_name = ', netcdfinfo%time_name
     print *, 'ncfile_tmax          = ',          ncfile_tmax
 
-    call get_ncdim1(ncfile_id, netcdfinfo%time_name, ncfile_tmax)
+    call get_ncdim1 (ncfile_id, netcdfinfo%time_name, ncfile_tmax)
 
     if (verb .ge. 1) then
       print *, 'in getgridinfo_netcdf, ncfile_id    = ',   ncfile_id
