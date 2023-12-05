@@ -3963,6 +3963,8 @@ c
     integer          :: kbeg, kend, maxstorm, ip
     logical(1)       :: valid_pt(imax,jmax)
 
+    data xlolevs /900.0 ,850.0, 800.0, 750.0, 700.0, 650.0, 600.0/
+    data xhilevs /600.0, 550.0, 500.0, 450.0, 400.0, 350.0, 300.0/
 
     ricps = 500.0
     plev  = 0.0
@@ -4783,7 +4785,7 @@ c     OUTPUT:
     real               :: vr, vt, vr_sum, vt_sum, degrees, hemisphere, hem_adj_vt_quad
     logical(1)         :: valid_pt(imax,jmax)
 
-      data rdist/50.,100.,150.,200.,250./
+    data rdist /50.0, 100.0, 150.0, 200.0, 250.0/
 
     icqwret = 0
     vt_quad = -999.0
@@ -4964,9 +4966,9 @@ c-----------------------------------------------------------------------
     real               :: temp_bear, xdist, xsfclon, xsfclat, wmag, wmag_sum
     real               :: vr, vt, vr_sum, vt_sum
     logical(1)         :: valid_pt(imax,jmax)
-c
-      data rdist/10.,25.,50.,75.,100.,125.,150.,200.,250.,300.,350.
-     &          ,400.,450.,500./
+
+    data rdist /10.0, 25.0, 50.0, 75.0, 100.0, 125.0, 150.0, &
+                200.0, 250.0, 300.0, 350.0, 400.0, 450.0, 500.0/
 
     igwsret = 0
 
@@ -5987,6 +5989,9 @@ c     -----------------------------------------------------------------
     real               :: ushear, vshear, shear_dir_point_to, shear_dir_from, shear_mag
     logical(1)         :: calcparm(maxtp,maxstorm), valid_pt(imax,jmax)
 
+    data rdist /50.0, 75.0, 100.0, 125.0, 150.0, 175.0, 200.0,   &
+                225.0, 250.0, 275.0, 300.0, 325.0, 350.0, 375.0, &
+                400.0, 425.0, 450.0, 475.0, 500.0/
 
     u_cart        = 0.0
     v_cart        = 0.0
@@ -10444,6 +10449,8 @@ c
 
     ileadtime = nint(fhreal(ifh) * 100.0)
     ifcsthour = ileadtime / 100
+    data barneswt /0.50/, extrapwt /0.50/
+
 
     dtkm = dtk * 1000.0
     dt   = (fhreal(ifh+1) - fhreal(ifh)) * 3600.0
@@ -13066,6 +13073,30 @@ c     subroutine for further details.
     character(len=1)   :: got_good_armw, perform_rising_dvdr
     character(len=*)   :: gm_wrap_flag
 
+    data rdist1 /  3.0,   6.0,  9.0,  12.0,  15.0,  18.0,  21.0,  24.0,  27.0,  30.0, &
+                  33.0,  36.0, 39.0,  42.0,  45.0,  48.0,  51.0,  54.0,  57.0,  60.0, &
+                  63.0,  66.0, 69.0,  72.0,  75.0,  78.0,  81.0,  84.0,  87.0,  90.0, &
+                  93.0,  96.0, 99.0, 102.0, 105.0, 108.0, 111.0, 114.0, 117.0, 120.0, &
+                 123.0, 126.0/
+
+    data rdist2 / 75.0,  78.0,  81.0,  84.0,  87.0,  90.0,  93.0,  96.0,  99.0, 102.0, &
+                 105.0, 108.0, 111.0, 114.0, 117.0, 120.0, 123.0, 126.0, 129.0, 132.0, &
+                 135.0, 138.0, 141.0, 144.0, 147.0, 150.0, 153.0, 156.0, 159.0, 162.0, &
+                 165.0, 168.0, 171.0, 174.0, 177.0, 180.0, 183.0, 186.0, 189.0, 192.0, &
+                 195.0, 198.0/
+
+    data rdist3 / 150.0, 153.0, 156.0, 159.0, 162.0, 165.0, 168.0, 171.0, 174.0, 177.0, &
+                  180.0, 183.0, 186.0, 189.0, 192.0, 195.0, 198.0, 201.0, 204.0, 207.0, &
+                  210.0, 213.0, 216.0, 219.0, 222.0, 225.0, 228.0, 231.0, 234.0, 237.0, &
+                  240.0, 243.0, 246.0, 249.0, 252.0, 255.0, 258.0, 261.0, 264.0, 267.0, &
+                  270.0, 273.0/
+
+    data rdist4 / 225.0, 228.0, 231.0, 234.0, 237.0, 240.0, 243.0, 246.0, 249.0, 252.0, &
+                  255.0, 258.0, 261.0, 264.0, 267.0, 270.0, 273.0, 276.0, 279.0, 282.0, &
+                  285.0, 288.0, 291.0, 294.0, 297.0, 300.0, 303.0, 306.0, 309.0, 312.0, &
+                  315.0, 318.0, 321.0, 324.0, 327.0, 330.0, 333.0, 336.0, 339.0, 342.0, &
+                  345.0, 348.0/
+
     got_good_armw     = 'n'
     rdist_ix          = 1
     axisymet_rmw_dist = -999.0
@@ -13366,6 +13397,14 @@ c     subroutine for further details.
     integer          :: ifret, isret, kprm, iwtret1, iwtret2, iaret
     logical(1)       :: calcparm(maxtp,maxstorm), use4next(maxtp)
     character(len=8) :: charparm(maxtp), charmaxmin(maxtp)
+
+    data charparm /'zeta 850', 'zeta 700', 'circ 850', 'NOT USED',             &
+                   'circ 700', 'NOT USED', ' gph 850', ' gph 700', '    MSLP', &
+                   'circ sfc', 'zeta sfc', ' thk 5-8', ' thk 2-5', ' thk 2-8'/
+
+    data charmaxmin /'  Max   ', '  Max   ', '  Min   ', 'NOT USED',             &
+                     '  Min   ', 'NOT USED', '  Min   ', '  Min   ', '  Min   ', &
+                     '  Min   ', '  Max   ', '  Max   ', '  Max   ', '  Max   '/
 
     ifret = 0
     if (ifh == 1) then
@@ -17080,57 +17119,47 @@ c     the starting date and the lead time in minutes.
     lbrdflag = 'n'
     enable_timing = trkrinfo%enable_timing
 
+    data igparm           /41, 41, 33, 34, 33, 34, 7, 7, 2, 33, 34, 33, 34, 11, 7, 7, 81, 33, 34, 11/
+    data iglevtyp         /100, 100, 100, 100, 100, 100, 100, 100, 102, 0, 0, 100, 100, 100, 100, 100, 1, 100, 100, 1/
+    data iglev            /850, 700, 850, 850, 700, 700, 850, 700, 0, 0, 0, 500, 500, 401, 500, 200, 0, 200, 200, 0/
+    data chparm           /'absv',  'absv',  'ugrid', 'vgrid', 'ugrid', 'vgrid', &
+                           'gphgt', 'gphgt', 'mslp',  'ugrid', 'vgrid', 'ugrid', &
+                           'vgrid', 'temp',  'gphgt', 'gphgt', 'lmask',          &
+                           'ugrid', 'vgrid', 'sst'/
 
-      data genparm   /51,7*52,7*51,7*11,39/
-      data genlevtyp /23*100/
-      data genlev    /850,1000,925,800,750,700
-     &                   ,650,600,1000,925,800,750
-     &                   ,700,650,600,1000,925,800
-     &                   ,750,700,650,600,500/
+    data genparm          /51, 7 * 52, 7 * 51, 7 * 11, 39/
+    data genlevtyp        /23 * 100/
+    data genlev           /850, 1000, 925, 800, 750, 700, 650, 600, 1000, 925, 800, 750, 700, 650,  &
+                           600, 1000, 925, 800, 750, 700, 650, 600, 500/
 
-      data ch_genparm /'spfh','relh','relh','relh','relh','relh'
-     &                ,'relh','relh','spfh','spfh','spfh','spfh'
-     &                ,'spfh','spfh','spfh','temp','temp','temp'
-     &                ,'temp','temp','temp','temp','omega500'/
+    data ch_genparm       /'spfh', 'relh', 'relh', 'relh', 'relh', 'relh', &
+                           'relh', 'relh', 'spfh', 'spfh', 'spfh', 'spfh', &
+                           'spfh', 'spfh', 'spfh', 'temp', 'temp', 'temp', &
+                           'temp', 'temp', 'temp', 'temp', 'omega500'/
 
-      data cpsgparm     /13*7/
-      data ec_cpsgparm  /13*156/
-      data cpsglevtyp /13*100/
-      data cpsglev    /900,850,800,750,700,650,600,550,500,450,400
-     &                ,350,300/
-      data ec_igparm   /999,999,131,132,131,132,156,156,151,165,166
-     &                 ,131,132,130,156,156,999,131,132,130/
-      data ec_iglevtyp /100,100,100,100,100,100,100,100,1,0,0,100,100
-     &                 ,100,100,100,999,100,100,0/
-      data ec_iglev    /850,700,850,850,700,700,850,700,0,0,0,500,500
-     &                 ,401,500,200,999,200,200,0/
-
-      data ec_genparm   /23*999/
-      data ec_genlevtyp /23*999/
-      data ec_genlev    /23*999/
-
-      data ig2_parm_cat /  2,  2,  2,  2,  2,  2,  3,  3,  3,  2,  2
-     &                  ,  2,  2,  0,  3,  3,  0,  2,  2,  0/
-      data ig2_parm_num / 10, 10,  2,  3,  2,  3,  5,  5,  1,  2,  3
-     &                  ,  2,  3,  0,  5,  5,  0,  2,  3,  0/
-      data ig2_lev_typ  /100,100,100,100,100,100,100,100,101,103,103
-     &                  ,100,100,100,100,100,  1,100,100,  1/
-      data ig2_lev_val  /850,700,850,850,700,700,850,700,  0, 10, 10
-     &                  ,500,500,401,500,200,  0,200,200,  0/
-      data cpsig2_parm_cat /13*3/
-      data cpsig2_parm_num /13*5/
-      data cpsig2_lev_typ  /13*100/
-      data cpsig2_lev_val  /900,850,800,750,700,650,600,550,500,450,400
-     &                     ,350,300/
-      data gensig2_parm_cat /15*1,7*0,2/
-      data gensig2_parm_num /0,1,1,1,1,1,1,1
-     &                          ,0,0,0,0,0,0,0
-     &                          ,0,0,0,0,0,0,0,8/
-      data gensig2_lev_typ /23*100/
-      data gensig2_lev_val /850,1000,925,800,750,700
-     &                           ,650,600,1000,925,800,750
-     &                           ,700,650,600,1000,925,800
-     &                           ,750,700,650,600,500/
+    data cpsgparm         /13 * 7/
+    data ec_cpsgparm      /13 * 156/
+    data cpsglevtyp       /13 * 100/
+    data cpsglev          /900, 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300/
+    data ec_igparm        /999, 999, 131, 132, 131, 132, 156, 156, 151, 165, 166, 131, 132, 130, 156, 156, 999, 131, 132, 130/
+    data ec_iglevtyp      /100, 100, 100, 100, 100, 100, 100, 100, 1, 0, 0, 100, 100, 100, 100, 100, 999, 100, 100, 0/
+    data ec_iglev         /850, 700, 850, 850, 700, 700, 850, 700, 0, 0, 0, 500, 500, 401, 500, 200, 999, 200, 200, 0/
+    data ec_genparm       /23 * 999/
+    data ec_genlevtyp     /23 * 999/
+    data ec_genlev        /23 * 999/
+    data ig2_parm_cat     /2, 2, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0, 3, 3, 0, 2, 2, 0/
+    data ig2_parm_num     /10, 10, 2, 3  2, 3, 5, 5, 1, 2, 3, 2, 3, 0, 5, 5, 0, 2, 3, 0/
+    data ig2_lev_typ      /100, 100, 100, 100, 100, 100, 100, 100, 101, 103, 103, 100, 100, 100, 100, 100, 1, 100, 100, 1/
+    data ig2_lev_val      /850, 700, 850, 850, 700, 700, 850, 700, 0, 10, 10, 500, 500, 401, 500, 200, 0, 200, 200, 0/
+    data cpsig2_parm_cat  /13 * 3/
+    data cpsig2_parm_num  /13 * 5/
+    data cpsig2_lev_typ   /13 * 100/
+    data cpsig2_lev_val   /900, 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300/
+    data gensig2_parm_cat /15 * 1, 7 * 0, 2/
+    data gensig2_parm_num /0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8/
+    data gensig2_lev_typ  /23 * 100/
+    data gensig2_lev_val  /850, 1000, 925, 800, 750, 700, 650, 600, 1000, 925, 800, 750, 700, 650, 600, &
+                           1000, 925, 800, 750, 700, 650, 600, 500/
 
     readgenflag = .false.
 
@@ -19798,6 +19827,25 @@ c
     type (netcdfstuff) :: netcdfinfo
     logical(1)         :: namelist_file_exists
     integer            :: ifh, lunml
+
+    namelist /datein_nml/       inp
+    namelist /atcfinfo_nml/     atcfnum, atcfname, atcfymdh, atcffreq
+    namelist /trackerinfo_nml/  trkrinfo
+    namelist /phaseinfo_nml/    phaseflag, phasescheme, wcore_depth
+    namelist /structinfo_nml/   structflag, ikeflag, radii_pctile, radii_free_pass_pctile, radii_width_thresh
+    namelist /fnameinfo_nml/    gmodname, rundescr, atcfdescr
+    namelist /cintinfo_nml/     contint_grid_bound_check
+    namelist /verbose_nml/      verb, verb_g2
+    namelist /waitinfo_nml/     use_waitfor, wait_min_age, wait_min_size, wait_max_wait, wait_sleeptime, &
+                                use_per_fcst_command, per_fcst_command
+    namelist /netcdflist_nml/   netcdfinfo
+    namelist /parmpreflist_nml/ user_wants_to_track_zeta850, user_wants_to_track_zeta700, user_wants_to_track_wcirc850, &
+                                user_wants_to_track_wcirc700, user_wants_to_track_gph850, user_wants_to_track_gph700,   &
+                                user_wants_to_track_mslp, user_wants_to_track_wcircsfc, user_wants_to_track_zetasfc,    &
+                                user_wants_to_track_thick500850, user_wants_to_track_thick200500, user_wants_to_track_thick200850
+    namelist /sheardiaginfo_nml/ shearflag
+    namelist /sstdiaginfo_nml/   sstflag
+    namelist /gendiaginfo_nml/   genflag, gen_read_rh_fields, need_to_compute_rh_from_q, smoothe_mslp_for_gen_scan
 
     use_per_fcst_command   = 't'
     per_fcst_command       = ' '
@@ -24409,6 +24457,7 @@ c-----
     real               :: xnext_radially_inward_mslpval
     logical(1)         :: valid_pt(imax,jmax)
 
+    data rdist /10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 50.0, 60.0, 75.0, 100.0/
 
     ilevint = 1020
     bimct   = 0
@@ -24670,8 +24719,8 @@ c-----
     character(len=*)    :: gm_wrap_flag
     character(len=*)    :: tracker_application
     logical(1)          :: valid_pt(imax,jmax)
-c
-      data rdist/75.,125.,175./  ! Distances in km
+
+    data rdist /75.0, 125.0, 175.0/  ! distances in km
 
     vt_exceed_17kts_ct     = 0
     quad_pass_flag         = 'n'
