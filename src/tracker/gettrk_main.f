@@ -109,10 +109,13 @@
   iicret = 0
   iocret = 0
 
+  inquire (unit = lugb, opened = file_open)
   if (file_open) call baclose (lugb, igcret)
 
+  inquire (unit = lugi, opened = file_open)
   if (file_open) call baclose (lugi, iicret)
 
+  inquire (unit = lout, opened = file_open)
   if (file_open) call baclose (lout, iocret)
 
   if (verb .ge. 3) then
@@ -269,11 +272,19 @@
     enable_timing = trkrinfo%enable_timing
     icmcf         = 0
     ivt8f         = 0
+
+    allocate (closed_mslp_ctr_flag(maxstorm, ifhmax),  stat = icmcf)
+    allocate (closed_mslp_ctr_flag2(maxstorm, ifhmax), stat = icmc2f)
+    allocate (quad_wind_circ_flag(maxstorm, ifhmax),   stat = iqwcf)
+    allocate (vt850_flag(maxstorm, ifhmax),            stat = ivt8f)
     closed_mslp_ctr_flag  = 'u'
     closed_mslp_ctr_flag2 = 'u'
     quad_wind_circ_flag   = 'u'
     vt850_flag            = 'u'
 
+    allocate (prsindex(maxstorm), stat = iisa)
+    allocate (prstemp(maxstorm),  stat = iva)
+    allocate (iwork(maxstorm),    stat = iwa)
 
     if (iisa /= 0 .or. iva /= 0 .or. iwa /= 0 .or. icmcf /= 0 .or. ivt8f /= 0 .or. icmc2f /= 0 .or. iqwcf /= 0) then
       if (verb .ge. 1) then
@@ -387,6 +398,7 @@
           print *, 'TEST b4 getgridinfo, unit lugb = ', lugb, ' is CLOSED'
         endif
 
+        inquire (unit = lugi, opened = file_open)
         if (file_open) then
           print *, 'TEST b4 getgridinfo, unit lugi = ', lugi, ' is OPEN'
         else
@@ -524,19 +536,17 @@
       if (allocated(masked_out))  deallocate (masked_out)
       if (allocated(masked_outc)) deallocate (masked_outc)
 
-        ! Allocate all of the allocatable arrays....
-      
-        allocate (valid_pt(imax,jmax),stat=ivpa)
-        allocate (zeta(imax,jmax,nlevzeta),stat=iza)
-        allocate (u(imax,jmax,nlevs),stat=iua)
-        allocate (v(imax,jmax,nlevs),stat=iva)
-        allocate (hgt(imax,jmax,nlevhgt),stat=iha)
-        allocate (slp(imax,jmax),stat=isa)
-        allocate (tmean(imax,jmax),stat=ita)
-        allocate (thick(imax,jmax,nlevthick),stat=itha)
-        allocate (lsmask(imax,jmax),stat=ilma)
-        allocate (masked_out(imax,jmax),stat=imoa)
-        allocate (masked_outc(imax,jmax),stat=imoca)
+      allocate (valid_pt(imax, jmax),         stat = ivpa)
+      allocate (zeta(imax, jmax, nlevzeta),   stat = iza)
+      allocate (u(imax, jmax, nlevs),         stat = iua)
+      allocate (v(imax, jmax, nlevs),         stat = iva)
+      allocate (hgt(imax, jmax, nlevhgt),     stat = iha)
+      allocate (slp(imax, jmax),              stat = isa)
+      allocate (tmean(imax, jmax),            stat = ita)
+      allocate (thick(imax, jmax, nlevthick), stat = itha)
+      allocate (lsmask(imax, jmax),           stat = ilma)
+      allocate (masked_out(imax, jmax),       stat = imoa)
+      allocate (masked_outc(imax, jmax),      stat = imoca)
 
       issta   = 0
       iq850a  = 0
@@ -546,10 +556,15 @@
       iomegaa = 0
 
       if (sstflag == 'y' .or. sstflag == 'Y') then
-          allocate (sst(imax,jmax),stat=issta)
+        allocate (sst(imax, jmax), stat = issta)
       endif
 
       if (genflag == 'y') then
+        allocate (q850(imax, jmax),                   stat = iq850a)
+        allocate (rh(imax, jmax, nlevmoist),          stat = irha)
+        allocate (spfh(imax, jmax, nlevmoist),        stat = ispfha)
+        allocate (temperature(imax, jmax, nlevmoist), stat = itempa)
+        allocate (omega500(imax, jmax),               stat = iomegaa)
       endif
 
       ita   = 0
@@ -557,6 +572,7 @@
       if (phaseflag == 'y') then
         if (phasescheme == 'cps' .or. phasescheme == 'both') then
           if (allocated(cpshgt)) deallocate (cpshgt)
+          allocate (cpshgt(imax, jmax, nreadcpsparms), stat = icpsa)
         endif
       endif
 
@@ -3012,7 +3028,7 @@ c       If not enough tracked parms were read in, exit the program....
 
       call baopenr (lugb, gopen_g_file, igoret)
       call baopenr (lugi, gopen_i_file, iioret)
-        inquire (unit=lout, opened=output_file_open)
+      inquire (unit = lout, opened = output_file_open)
       if (output_file_open) then
         iooret = 0
       else
@@ -3022,24 +3038,28 @@ c       If not enough tracked parms were read in, exit the program....
       endif
     endif
 
+    inquire (unit = lugb, opened = file_open)
     if (file_open) then
       print *, 'TEST open_grib_files, unit lugb = ', lugb, ' is OPEN'
     else
       print *, 'TEST open_grib_files, unit lugb = ', lugb, ' is CLOSED'
     endif
 
+    inquire (unit = lugi, opened = file_open)
     if (file_open) then
       print *, 'TEST open_grib_files, unit lugi = ', lugi, ' is OPEN'
     else
       print *, 'TEST open_grib_files, unit lugi = ', lugi, ' is CLOSED'
     endif
 
+    inquire (file = gopen_g_file, opened = file_open4)
     if (file_open4) then
       print *, 'TEST gname  open_grib_files, gfile = ', gopen_g_file, ' is OPEN'
     else
       print *, 'TEST gname  open_grib_files, gfile = ', gopen_g_file, ' is CLOSED'
     endif
 
+    inquire (file = gopen_i_file, opened = file_open5)
     if (file_open5) then
       print *, 'TEST iname  open_grib_files, ifile = ', gopen_i_file, ' is OPEN'
     else
@@ -6590,6 +6610,8 @@ c
 
     logical(1)        :: calcparm(maxtp,maxstorm), valid_pt(imax,jmax)
     if (allocated(divg_850)) deallocate(divg_850)
+    allocate (divg_850(imax ,jmax), stat = idvgf)
+
     if (idvgf /= 0) then
       print *, ' '
       print *, '!!! ERROR in sub get_divg allocating divg_850 array,'
@@ -7000,6 +7022,9 @@ c     ----------------------------------------------------------------
     integer                :: sortindex(maxstorm)
     integer, parameter     :: dp = selected_real_kind(12, 60)
     real(dp), allocatable  :: prstemp(:)
+
+    allocate (prstemp(maxstorm), stat = iva)
+    allocate (iwork(maxstorm),   stat = iwa)
     if (iva /= 0 .or. iwa /= 0) then
 
       if (verb .ge. 1) then
@@ -7047,6 +7072,8 @@ c     ----------------------------------------------------------------
         sortindex(ist) = ist
       enddo
     endif
+
+    deallocate (prstemp); deallocate (iwork)
 
   end subroutine sort_storms_by_pressure
   !****************************************************************************
@@ -11632,7 +11659,7 @@ c     subroutine for further details.
       print *, 'in getradii, numalloc = ', numalloc, ' radmax = ', radmax
     endif
 
-    if (allocated(quadinfo)) deallocate (quadinfo, stat=iqa)
+    allocate (quadinfo(4, numalloc, 2), stat = iqa)
 
     if (iqa /= 0) then
 
@@ -11828,9 +11855,9 @@ c     subroutine for further details.
       if (allocated(isortix)) deallocate (isortix)
       if (allocated(dtemp))   deallocate (dtemp)
       if (allocated(iwork))   deallocate (iwork)
-        allocate (isortix(quadct(k)),stat=iisa)
-        allocate (dtemp(quadct(k)),stat=idta)
-        allocate (iwork(quadct(k)),stat=iwa)
+      allocate (isortix(quadct(k)), stat = iisa)
+      allocate (dtemp(quadct(k)),   stat = idta)
+      allocate (iwork(quadct(k)),   stat = iwa)
 
       if (iisa /= 0 .or. idta /= 0 .or. iwa /= 0) then
         if (verb .ge. 1) then
@@ -14789,6 +14816,10 @@ c       later on in subroutine  wtavrg.
       enddo
     enddo
 
+    allocate (uold(imxold, jmxold), stat = iuo)
+    allocate (vold(imxold, jmxold), stat = ivo)
+    allocate (rlonold(imxold),      stat = iloo)
+    allocate (rlatold(jmxold),      stat = ilao)
 
     if (iuo /= 0 .or. ivo /= 0 .or. iloo /= 0 .or. ilao /= 0) goto 970
     do intnum = 1, numinterp
@@ -14836,6 +14867,13 @@ c       later on in subroutine  wtavrg.
         enddo
 
       else
+        deallocate (uold);    deallocate (vold)
+        deallocate (rlonold); deallocate (rlatold)
+        allocate (uold(imxnew, jmxnew), stat = iuo)
+        allocate (vold(imxnew, jmxnew), stat = ivo)
+        allocate (rlonold(imxnew),      stat = iloo)
+        allocate (rlatold(jmxnew),      stat = ilao)
+
         if (iuo /= 0 .or. ivo /= 0 .or. iloo /= 0 .or. ilao /= 0) goto 970
         gotlat = 'n'
         do i = 1, imxnew
@@ -14852,12 +14890,18 @@ c       later on in subroutine  wtavrg.
 
         imxold = imxnew
         jmxold = jmxnew
+        deallocate (unew);    deallocate (vnew)
+        deallocate (rlonnew); deallocate (rlatnew)
       endif
 
       dell   = 0.5 * dell
       imxnew = 2 * imxold - 1
       jmxnew = 2 * jmxold - 1
 
+      allocate (unew(imxnew, jmxnew), stat = iuo)
+      allocate (vnew(imxnew, jmxnew), stat = ivo)
+      allocate (rlonnew(imxnew),      stat = iloo)
+      allocate (rlatnew(jmxnew),      stat = ilao)
 
       if (iuo /= 0 .or. ivo /= 0 .or. iloo /= 0 .or. ilao /= 0) goto 971
       call bilin_int_even (imxold, jmxold, uold, imxnew, jmxnew, unew, ibiret)
@@ -14886,8 +14930,8 @@ c       later on in subroutine  wtavrg.
       endif
     enddo
 
-      deallocate (uold); deallocate (vold)
-      deallocate (rlonold); deallocate(rlatold)
+    deallocate (uold);    deallocate (vold)
+    deallocate (rlonold); deallocate(rlatold)
 
     if (numinterp == 0) then
 
@@ -14920,6 +14964,10 @@ c       later on in subroutine  wtavrg.
 
       imxnew = iend - ibeg + 1
       jmxnew = jend - jbeg + 1
+      allocate (unew(imxnew, jmxnew), stat = iuo)
+      allocate (vnew(imxnew, jmxnew), stat = ivo)
+      allocate (rlonnew(imxnew),      stat = iloo)
+      allocate (rlatnew(jmxnew),      stat = ilao)
       if (iuo /= 0 .or. ivo /= 0 .or. iloo /= 0 .or. ilao /= 0) goto 971
       gotlat = 'n'
 
@@ -14956,11 +15004,11 @@ c       later on in subroutine  wtavrg.
       print *, 'grid_maxlon = ', grid_maxlon, ' grid_minlon = ', grid_minlon
     endif
 
-      allocate (vmag(imxnew,jmxnew),stat=ivm)
-      allocate (lbi(imxnew,jmxnew),stat=ilb)
+    allocate (vmag(imxnew, jmxnew), stat = ivm)
+    allocate (lbi(imxnew, jmxnew),  stat = ilb)
     if (ivm /= 0 .or. ilb /= 0) goto 972
     call calc_vmag (unew, vnew, imxnew, jmxnew, vmag, icvret)
-      deallocate (unew); deallocate (vnew)
+    deallocate (unew); deallocate (vnew)
 
     lbi = .true.
 
@@ -14973,6 +15021,9 @@ c       later on in subroutine  wtavrg.
 
     call find_maxmin (imxnew, jmxnew, dell, dell, 'vmag', vmag, 'min', ist, uvgeslon, uvgeslat, rlonnew, rlatnew, lbi, &
          & trkrinfo, cflag, ctlon, ctlat, xval, grid_maxlat, grid_minlat, grid_maxlon, grid_minlon, 'global', ifmret)
+    deallocate (vmag);    deallocate (lbi)
+    deallocate (rlonnew); deallocate (rlatnew)
+
     if (ifmret == 0) then
       goto 995
     else
@@ -17217,8 +17268,8 @@ c     the starting date and the lead time in minutes.
 
     if (allocated(f))  deallocate(f)
     if (allocated(lb)) deallocate(lb)
-      allocate (f(imax*jmax),stat=ifa)
-      allocate (lb(imax*jmax),stat=ila)
+    allocate (f(imax * jmax),   stat = ifa)
+    allocate (lb(imax * jmax), stat = ila)
     if (ifa /= 0 .or. ila /= 0) then
       print *, ' '
       print *, '!!! ERROR in getdata allocating f or lb array.'
@@ -17230,6 +17281,15 @@ c     the starting date and the lead time in minutes.
     if (trkrinfo%gribver == 2) then
 
       do ip = 1, nreadparms ! grib2_standard_parm_read_loop
+        gfld%idsect     => NULL()
+        gfld%local      => NULL()
+        gfld%list_opt   => NULL()
+        gfld%igdtmpl    => NULL()
+        gfld%ipdtmpl    => NULL()
+        gfld%coord_list => NULL()
+        gfld%idrtmpl    => NULL()
+        gfld%bmap       => NULL()
+        gfld%fld        => NULL()
 
         if (ip == 17) then
           jdisc = 2
@@ -17274,6 +17334,7 @@ c     the starting date and the lead time in minutes.
           print *, 'before getgb2 call, value of unpack = ', unpack
         endif
 
+        inquire (unit = lugb, opened = file_open)
         if (file_open) then
           if (verb .ge. 3) then
             print *, 'TEST b4 getgb2 getdata, unit lugb = ', lugb, ' is OPEN'
@@ -17284,6 +17345,7 @@ c     the starting date and the lead time in minutes.
           endif
         endif
 
+        inquire (unit = lugi, opened = file_open)
         if (file_open) then
           if (verb .ge. 3) then
             print *, 'TEST b4 getgb2 getdata, unit lugi = ', lugi, ' is OPEN'
@@ -17505,6 +17567,15 @@ c     the starting date and the lead time in minutes.
       if (phaseflag == 'y') then
         if (phasescheme == 'cps' .or. phasescheme == 'both') then
           do ip = 1, nreadcpsparms  ! grib2_cps_parm_lev_loop
+            gfld%idsect     => NULL()
+            gfld%local      => NULL()
+            gfld%list_opt   => NULL()
+            gfld%igdtmpl    => NULL()
+            gfld%ipdtmpl    => NULL()
+            gfld%coord_list => NULL()
+            gfld%idrtmpl    => NULL()
+            gfld%bmap       => NULL()
+            gfld%fld        => NULL()
 
             jdisc = 0
             jids  = -9999
@@ -17740,15 +17811,15 @@ c     the starting date and the lead time in minutes.
             endif
           endif
 
-            gfld%idsect => NULL()
-            gfld%local => NULL()
-            gfld%list_opt => NULL()
-            gfld%igdtmpl => NULL()
-            gfld%ipdtmpl => NULL()
-            gfld%coord_list => NULL()
-            gfld%idrtmpl => NULL()
-            gfld%bmap => NULL()
-            gfld%fld => NULL()
+          gfld%idsect     => NULL()
+          gfld%local      => NULL()
+          gfld%list_opt   => NULL()
+          gfld%igdtmpl    => NULL()
+          gfld%ipdtmpl    => NULL()
+          gfld%coord_list => NULL()
+          gfld%idrtmpl    => NULL()
+          gfld%bmap       => NULL()
+          gfld%fld        => NULL()
 
           jdisc = 0 ! discipline = 0 for all genesis variables we are currently using in the tracker
           jids  = -9999
@@ -18419,6 +18490,9 @@ c     the starting date and the lead time in minutes.
       endif
     endif
 
+    deallocate (f)
+    deallocate (lb)
+
   end subroutine getdata_grib
   !****************************************************************************
   !*
@@ -18575,6 +18649,7 @@ c     the starting date and the lead time in minutes.
     endif
 
     if (allocated(f)) deallocate(f)
+    allocate (f(imax * jmax), stat = ifa)
     if (ifa /= 0) then
       print *, ' '
       print *, '!!! ERROR in getdata_netcdf allocating f data array.'
@@ -19162,6 +19237,7 @@ c
 
     if (status .ne. nf_noerr) call handle_netcdf_err (status)
     if (xtype == 5) then
+      allocate (readvar4(nmax), stat = ira)
       if (ira /= 0) then
         if (verb .ge. 1) then
           print *, ' '
@@ -19173,6 +19249,7 @@ c
         STOP 91
       endif
     elseif (xtype == 6) then
+      allocate (readvar8(nmax), stat = ira)
       if (ira /= 0) then
         if (verb .ge. 1) then
           print *, ' '
@@ -19864,6 +19941,7 @@ c
     trkrinfo%want_oci      = .false.
     trkrinfo%gribver       = 1   ! set to GRIB1 as default, can be set to something else in the namelist input
 
+    inquire (file = "namelist.gettrk", exist = namelist_file_exists)
 
     if (namelist_file_exists) then
       if (verb .ge. 3) then
@@ -19872,7 +19950,7 @@ c
         print *, 'Namelist file will be opened with unit = lunml = ', lunml
       endif
 
-        open (unit=lunml,file="namelist.gettrk",status='old',err=787)
+      open (unit = lunml, file = "namelist.gettrk", status = 'old', err = 787)
 
       if (verb .ge. 3) then
         print *, ' '
@@ -19892,42 +19970,42 @@ c
       return
     endif
 
-      read (lunml,NML=datein,END=801)
+    read (lunml, nml = datein, END = 801)
 801 continue
-      read (lunml,NML=atcfinfo,END=807)
+    read (lunml, nml = atcfinfo, END = 807)
 807 continue
     print *, 'just before trackerinfo read namelist'
-      read (lunml,NML=trackerinfo,END=809)
+    read (lunml, nml = trackerinfo, END = 809)
 809 continue
     print *, 'just after trackerinfo read namelist'
-      read (lunml,NML=phaseinfo,END=811)
+    read (lunml, nml = phaseinfo, end = 811)
 811 continue
-      read (lunml,NML=structinfo,END=815)
+    read (lunml, nml = structinfo, end = 815)
 815 continue
-      read (lunml,NML=fnameinfo,END=817)
+    read (lunml, nml = fnameinfo, end = 817)
 817 continue
-      read (lunml,NML=cintinfo,END=831)
+    read (lunml, nml = cintinfo, end = 831)
 831 continue
-      read (lunml,NML=waitinfo,END=821)
+    read (lunml, nml = waitinfo, end = 821)
 821 continue
-      read (lunml,NML=netcdflist,END=823)
+    read (lunml, nml = netcdflist, end = 823)
 823 continue
-      read (lunml,NML=parmpreflist,END=825)
+    read (lunml, nml = parmpreflist, end = 825)
 825 continue
-      read (lunml,NML=verbose,END=819,ERR=833)
+    read (lunml, nml = verbose, end = 819, err = 833)
 819 continue
-      goto 837
+    goto 837
 833 continue
-      verb = 1
+    verb = 1
 837 continue
-      read (lunml,NML=sheardiaginfo,END=839)
+    read (lunml, nml = sheardiaginfo, end = 839)
 839 continue
-      read (lunml,NML=sstdiaginfo,END=840)
+    read (lunml, nml = sstdiaginfo, end = 840)
 840 continue
-      read (lunml,NML=gendiaginfo,END=841)
+    read (lunml, nml = gendiaginfo, end = 841)
 841 continue
 
-      close (lunml)
+    close (lunml)
 
     print *, 'in read_nlists, verb = ', verb
 
@@ -20373,7 +20451,7 @@ c
         print *, 'Top of while loop in read_fhours'
       endif
 
-        read (iunit_fh,85,end=130) inpltix,inpmin
+      read (iunit_fh, 85, end = 130) inpltix, inpmin
       write (6,85) inpltix, inpmin
 
       if (inpmin >= 0 .and. inpmin < 150000) then
@@ -20403,6 +20481,12 @@ c
     ifhmax = ict
 
 85  format (i4, 1x, i5)
+
+    allocate (ifhours(ifhmax),     stat = ifa)
+    allocate (iftotalmins(ifhmax), stat = ifma)
+    allocate (ifclockmins(ifhmax), stat = icma)
+    allocate (fhreal(ifhmax),      stat = ira)
+    allocate (ltix(ifhmax),        stat = ila)
 
     if (ifa /= 0 .or. ifma /= 0 .or. icma /= 0 .or. ira /= 0 .or. ila /= 0) then
       if (verb .ge. 1) then
@@ -20501,7 +20585,7 @@ c------
       ! Check to see if the TC Vitals file exists.  If so, then open it
       ! using the unit specified in lucard.
 
-      inquire (file="tcvit_rsmc_storms.txt",exist=vit_file_exists)
+    inquire (file = "tcvit_rsmc_storms.txt", exist = vit_file_exists)
 
     if (vit_file_exists) then
       if (verb .ge. 3) then
@@ -20509,6 +20593,7 @@ c------
         print *, '+++ TC Vitals file for existing, RSMC-numbered storms exists and will be opened with unit = '
         print *, 'lucard = ', lucard
       endif
+      open (unit = lucard, file = "tcvit_rsmc_storms.txt", status = 'old', err = 887)
       if (verb .ge. 3) then
         print *, ' '
         print *, '+++ TC vitals file tcvit_rsmc_storms.txt has '
@@ -20557,7 +20642,7 @@ c------
 
     if (vit_file_exists) then
       do while (.true. .and. ii <= maxstorm_tc)
-          read (lucard,21,END=801,ERR=891) tmpstorm(ii)
+        read (lucard, 21, end = 801, err = 891) tmpstorm(ii)
         ii = ii + 1
         enddo
 21    format (a4, 1x, a3, 1x, a9, 1x, i8, 1x, i4, 1x, i3, a1, 1x, i4, a1, 1x, i3, 1x, i3, 3(1x, i4), 1x, i2, 1x, i3, &
@@ -20577,6 +20662,11 @@ c------
 
       maxstorm = maxstorm_mg
 
+      allocate (stormswitch(maxstorm),     stat = isa)
+      allocate (storm(maxstorm),           stat = issa)
+      allocate (slonfg(maxstorm, maxtime), stat = ioa)
+      allocate (slatfg(maxstorm, maxtime), stat = iaa)
+      allocate (stcvtype(maxstorm),        stat = ita)
 
       if (isa /= 0 .or. ioa /= 0 .or. iaa /= 0 .or. issa /= 0 .or. ita /= 0) then
         if (verb .ge. 1) then
@@ -20648,6 +20738,12 @@ c------
         iret = 99
         return
       endif
+
+      allocate (stormswitch(maxstorm),     stat = isa)
+      allocate (storm(maxstorm),           stat = issa)
+      allocate (slonfg(maxstorm, maxtime), stat = ioa)
+      allocate (slatfg(maxstorm, maxtime), stat = iaa)
+      allocate (stcvtype(maxstorm),        stat = ita)
 
       if (isa /= 0 .or. ioa /= 0 .or. iaa /= 0 .or. issa /= 0 .or. ita /= 0) then
         if (verb .ge. 1) then
@@ -20830,13 +20926,14 @@ c------
       ! Check to see if the genesis TC Vitals file exists.  If so, then
       ! open it using the unit specified in lgvcard.
 
-      inquire (file="tcvit_genesis_storms.txt",exist=vit_file_exists)
+    inquire (file = "tcvit_genesis_storms.txt", exist = vit_file_exists)
 
     if (vit_file_exists) then
       if (verb .ge. 3) then
         print *, ' '
         print *, '+++ TC Vitals file for genesis storms exists and will be opened with unit = lgvcard = ', lgvcard
       endif
+      open (unit = lgvcard, file = "tcvit_genesis_storms.txt", status = 'old', err = 887)
       if (verb .ge. 3) then
         print *, ' '
         print *, '+++ TC vitals file tcvit_genesis_storms.txt has '
@@ -20848,6 +20945,7 @@ c------
 
     if (vit_file_exists) then
       do while (.true. .and. ii <= maxstorm_mg)
+        read (lgvcard, 24, end = 801, err = 891) tmpstorm(ii)
         ii = ii + 1
       enddo
 24    format (i10, 2x, i3, 1x, i3, a1, 1x, i4, a1, 1x, a3, 1x, i8, 1x, i4, 1x, i3, a1, 1x, i4, a1, 1x, &
@@ -20856,6 +20954,7 @@ c------
     endif
 
     num_mod_vit = ii - numtcv - 1
+    allocate (gstorm(maxstorm_mg), stat = iga)
 
     if (iga /= 0) then
       if (verb .ge. 1) then
@@ -21019,7 +21118,7 @@ c------
 
     gm_wrap_flag = 'none'
 
-      allocate (lb(jf),stat=ila); allocate (f(jf),stat=ifa)
+    allocate (lb(jf), stat = ila); allocate (f(jf), stat = ifa)
     if (ila /= 0 .or. ifa /= 0) then
       if (verb .ge. 1) then
         print *, ' '
@@ -21032,21 +21131,15 @@ c------
 
     if (trkrinfo%gribver == 2) then
 
-        ! Search for a record from a GRIB2 file
-
-        !
-        ! ---  Initialize Variables ---
-        !
-
-        gfld%idsect => NULL()
-        gfld%local => NULL()
-        gfld%list_opt => NULL()
-        gfld%igdtmpl => NULL()
-        gfld%ipdtmpl => NULL()
-        gfld%coord_list => NULL()
-        gfld%idrtmpl => NULL()
-        gfld%bmap => NULL()
-        gfld%fld => NULL()
+      gfld%idsect     => NULL()
+      gfld%local      => NULL()
+      gfld%list_opt   => NULL()
+      gfld%igdtmpl    => NULL()
+      gfld%ipdtmpl    => NULL()
+      gfld%coord_list => NULL()
+      gfld%idrtmpl    => NULL()
+      gfld%bmap       => NULL()
+      gfld%fld        => NULL()
 
       jdisc = 0                 ! meteorological products
       jids  = -9999
@@ -21452,6 +21545,8 @@ c------
     if (allocated(glat)) deallocate(glat)
     if (allocated(glon)) deallocate(glon)
 
+    allocate (glat(jmax), stat = ija)
+    allocate (glon(imax), stat = iia)
 
     if (ija /= 0 .or. iia /= 0) then
 
@@ -21592,6 +21687,9 @@ c------
 
     if (allocated(tmplon)) deallocate (tmplon)
     if (allocated(tmplat)) deallocate (tmplat)
+    allocate (tmplon(imax), stat = iia)
+    allocate (tmplat(jmax), stat = ija)
+
     if (iia /= 0 .or. ija /= 0) then
       print *, ' '
       print *, '!!! ERROR in sub getgridinfo_netcdf allocating arrays.'
@@ -21604,11 +21702,11 @@ c------
     if (allocated(temp_tmplon8)) deallocate (temp_tmplon8)
     if (allocated(temp_tmplat4)) deallocate (temp_tmplat4)
     if (allocated(temp_tmplat8)) deallocate (temp_tmplat8)
-      allocate (temp_tmplon4(imax),stat=ii4a)
-      allocate (temp_tmplon8(imax),stat=ii8a)
-      allocate (temp_tmplat4(jmax),stat=ij4a)
-      allocate (temp_tmplat8(jmax),stat=ij8a)
-      if (ii4a /= 0 .or. ii8a /= 0 .or. 
+    allocate (temp_tmplon4(imax), stat = ii4a)
+    allocate (temp_tmplon8(imax), stat = ii8a)
+    allocate (temp_tmplat4(jmax), stat = ij4a)
+    allocate (temp_tmplat8(jmax), stat = ij8a)
+
     if (ii4a /= 0 .or. ii8a /= 0 .or. ij4a /= 0 .or. ij8a /= 0) then
       print *, ' '
       print *, '!!! ERROR in sub getgridinfo_netcdf allocating'
@@ -21693,6 +21791,8 @@ c------
 
     if (allocated(glon)) deallocate (glon)
     if (allocated(glat)) deallocate (glat)
+    allocate (glat(jmax), stat = ija)
+    allocate (glon(imax), stat = iia)
 
     if (ija /= 0 .or. iia /= 0) then
       print *, ' '
@@ -21850,18 +21950,18 @@ c
     endif
 
     if (allocated(netcdf_file_time_values)) then
-        deallocate (netcdf_file_time_values)
+      deallocate (netcdf_file_time_values)
     endif
 
     if (allocated(temp_nc_time_vals_r4)) then
-        deallocate (temp_nc_time_vals_r4)
+      deallocate (temp_nc_time_vals_r4)
     endif
 
     if (allocated(temp_nc_time_vals_r8)) then
-        deallocate (temp_nc_time_vals_r8)
+      deallocate (temp_nc_time_vals_r8)
     endif
 
-      allocate (netcdf_file_time_values(ncfile_tmax),stat=infta)
+    allocate (netcdf_file_time_values(ncfile_tmax), stat = infta)
     if (infta /= 0) then
       print *, ' '
       print *, '!!! ERROR in sub read_netcdf_hours allocating'
@@ -21870,7 +21970,7 @@ c
       return
     endif
 
-      allocate (temp_nc_time_vals_r4(ncfile_tmax),stat=infta)
+    allocate (temp_nc_time_vals_r4(ncfile_tmax), stat = infta)
     if (infta /= 0) then
       print *, ' '
       print *, '!!! ERROR in sub read_netcdf_hours allocating'
@@ -21879,7 +21979,7 @@ c
       return
     endif
 
-      allocate (temp_nc_time_vals_r8(ncfile_tmax),stat=infta)
+    allocate (temp_nc_time_vals_r8(ncfile_tmax), stat = infta)
     if (infta /= 0) then
       print *, ' '
       print *, '!!! ERROR in sub read_netcdf_hours allocating'
@@ -21905,17 +22005,18 @@ c
     endif
 
     if (allocated(temp_nc_time_vals_r4)) then
-        deallocate (temp_nc_time_vals_r4)
+      deallocate (temp_nc_time_vals_r4)
     endif
 
     if (allocated(temp_nc_time_vals_r8)) then
+      deallocate (temp_nc_time_vals_r8)
     endif
 
     if (allocated(nctotalmins)) then
-        deallocate (nctotalmins)
+      deallocate (nctotalmins)
     endif
 
-      allocate (nctotalmins(ncfile_tmax),stat=infta)
+    allocate (nctotalmins(ncfile_tmax), stat = infta)
     if (infta /= 0) then
       print *, ' '
       print *, '!!! ERROR in sub read_netcdf_hours allocating '
@@ -22572,7 +22673,7 @@ c
     logical(1)        :: vp(imax,jmax)
 c
     if (allocated(div)) deallocate (div)
-      allocate (div(imax,jmax),stat=ida)
+    allocate (div(imax,jmax), stat = ida)
     if (ida /= 0) then
       print *, ' '
       print *, '!!! ERROR in sub divcal allocating '
@@ -22954,7 +23055,7 @@ c     Abstract of subroutine  get_next_ges for further details.
     logical(1)        :: valid_pt(imax,jmax), readgenflag(nreadgenparms)
 
     if (allocated(mean_rh)) deallocate (mean_rh)
-      allocate (mean_rh(imax,jmax),stat=imrhf)
+    allocate (mean_rh(imax,jmax), stat = imrhf)
     if (imrhf /= 0) then
       print *, ' '
       print *, '!!! ERROR in get_rh_at_center allocating mean_rh'
@@ -23176,6 +23277,7 @@ c     Abstract of subroutine  get_next_ges for further details.
     character(len=*)     :: clevstr, cvar
 
     if (allocated(point_ct)) deallocate(point_ct)
+    allocate (point_ct(imax, jmax), stat = ipc)
     if (ipc /= 0) then
       print *, ' '
       print *, '!!! ERROR in calc_multi_layer_mean allocating'
@@ -23227,6 +23329,9 @@ c     Abstract of subroutine  get_next_ges for further details.
 
       enddo ! iloop2
     enddo ! jloop2
+
+
+    deallocate (point_ct)
 
   !*
   !*  The array indices for the 3 different thickness layers are
@@ -23793,6 +23898,12 @@ c-----
       stop 98
     endif
 
+    allocate (prstemp(maxstorm),        stat = isia)
+    allocate (sortindex(maxstorm),      stat = ipa)
+    allocate (ipos(maxstorm),           stat = iia)
+    allocate (jpos(maxstorm),           stat = ija)
+    allocate (slp_array(imax, jmax),    stat = isaa)
+    allocate (slp_valid_pt(imax, jmax), stat = isla)
 
     if (isia /= 0 .or. ipa /= 0 .or. iia /= 0 .or. ija /= 0 .or. isaa /= 0 .or. isla /= 0) then
       print *, ' '
@@ -23908,8 +24019,8 @@ c-----
         stop 98
       endif
 
-        allocate (mslp_smoothe(imax,jmax),stat=imsa)
-        allocate (valid_smoothe(imax,jmax),stat=ivsa)
+      allocate (mslp_smoothe(imax, jmax),  stat = imsa)
+      allocate (valid_smoothe(imax, jmax), stat = ivsa)
 
       if (imsa /= 0 .or. ivsa /= 0) then
         print *, ' '
@@ -24388,12 +24499,12 @@ c-----
       print *, '   of candidate pts shown in candidate_ct.)'
     endif
 
-      deallocate (sortindex)
-      deallocate (prstemp)
-      deallocate (ipos)
-      deallocate (jpos)
-      deallocate (slp_array)
-      deallocate (slp_valid_pt)
+    deallocate (sortindex)
+    deallocate (prstemp)
+    deallocate (ipos)
+    deallocate (jpos)
+    deallocate (slp_array)
+    deallocate (slp_valid_pt)
 
     if (allocated(mslp_smoothe))  deallocate (mslp_smoothe)
     if (allocated(valid_smoothe)) deallocate (valid_smoothe)
@@ -25371,17 +25482,17 @@ c-----
     if (allocated(temp_mask_i_loc))  deallocate (temp_mask_i_loc)
     if (allocated(temp_mask_j_loc))  deallocate (temp_mask_j_loc)
 
-      allocate (search_next_j(imax*jmax),stat=isnj)
-      allocate (next_contour_i(imax*jmax),stat=inci)
-      allocate (next_contour_j(imax*jmax),stat=incj)
-      allocate (beyond_contour_i((imax*jmax)/2),stat=ibci)
-      allocate (beyond_contour_j((imax*jmax)/2),stat=ibcj)
-      allocate (hold_mask_i_loc(imax*jmax),stat=ihmi)
-      allocate (hold_mask_j_loc(imax*jmax),stat=ihmj)
-      allocate (temp_mask_i_loc(imax*jmax),stat=itmi)
-      allocate (temp_mask_j_loc(imax*jmax),stat=itmj)
-      if (isni /= 0 .or. isnj /= 0 .or. inci /= 0 .or. incj /= 0 .or.
-    
+    allocate (search_next_i (imax * jmax),         stat = isni)
+    allocate (search_next_j (imax * jmax),         stat = isnj)
+    allocate (next_contour_i(imax * jmax),         stat = inci)
+    allocate (next_contour_j(imax * jmax),         stat = incj)
+    allocate (beyond_contour_i((imax * jmax) / 2), stat = ibci)
+    allocate (beyond_contour_j((imax * jmax) / 2), stat = ibcj)
+    allocate (hold_mask_i_loc(imax * jmax),        stat = ihmi)
+    allocate (hold_mask_j_loc(imax * jmax),        stat = ihmj)
+    allocate (temp_mask_i_loc(imax * jmax),        stat = itmi)
+    allocate (temp_mask_j_loc(imax * jmax),        stat = itmj)
+
     if (isni /= 0 .or. isnj /= 0 .or. inci /= 0 .or. incj /= 0 .or. ibci /= 0 .or. ibcj /= 0 .or. &
         ihmi /= 0 .or. ihmj /= 0 .or. itmi /= 0 .or. itmj /= 0) then
 
@@ -25583,7 +25694,9 @@ c-----
         if (allocated(ringposi)) deallocate (ringposi)
         if (allocated(ringposj)) deallocate (ringposj)
 
-        
+        allocate (ringposi(ringct), stat = iria)
+        allocate (ringposj(ringct), stat = irja)
+
         if (iria /= 0 .or. irja /= 0) then
           if (verb .ge. 1) then
             print *, ' '
@@ -25638,15 +25751,15 @@ c-----
               masked_out(im, jm) = .true.
             enddo
 
-              deallocate (ringposi); deallocate (ringposj)
-              deallocate (search_next_i); deallocate (search_next_j)
-              deallocate (next_contour_i); deallocate (next_contour_j)
-              deallocate (beyond_contour_i) 
-              deallocate (beyond_contour_j)
-              deallocate (hold_mask_i_loc) 
-              deallocate (hold_mask_j_loc)
-              deallocate (temp_mask_i_loc) 
-              deallocate (temp_mask_j_loc)
+            deallocate (ringposi);       deallocate (ringposj)
+            deallocate (search_next_i);  deallocate (search_next_j)
+            deallocate (next_contour_i); deallocate (next_contour_j)
+            deallocate (beyond_contour_i)
+            deallocate (beyond_contour_j)
+            deallocate (hold_mask_i_loc)
+            deallocate (hold_mask_j_loc)
+            deallocate (temp_mask_i_loc)
+            deallocate (temp_mask_j_loc)
             icccret = 0
             return
           endif
@@ -25687,15 +25800,15 @@ c-----
                 masked_out(im, jm) = .true.
               enddo
 
-                deallocate (ringposi); deallocate (ringposj)
-                deallocate (search_next_i); deallocate (search_next_j)
-                deallocate (next_contour_i); deallocate (next_contour_j)
-                deallocate (beyond_contour_i)
-                deallocate (beyond_contour_j)
-                deallocate (hold_mask_i_loc)
-                deallocate (hold_mask_j_loc)
-                deallocate (temp_mask_i_loc)
-                deallocate (temp_mask_j_loc)
+              deallocate (ringposi);       deallocate (ringposj)
+              deallocate (search_next_i);  deallocate (search_next_j)
+              deallocate (next_contour_i); deallocate (next_contour_j)
+              deallocate (beyond_contour_i)
+              deallocate (beyond_contour_j)
+              deallocate (hold_mask_i_loc)
+              deallocate (hold_mask_j_loc)
+              deallocate (temp_mask_i_loc)
+              deallocate (temp_mask_j_loc)
               icccret = 0
               return
             endif
@@ -25731,6 +25844,15 @@ c-----
                 masked_out(im, jm) = .true.
               enddo
 
+              deallocate (ringposi);       deallocate (ringposj)
+              deallocate (search_next_i);  deallocate (search_next_j)
+              deallocate (next_contour_i); deallocate (next_contour_j)
+              deallocate (beyond_contour_i)
+              deallocate (beyond_contour_j)
+              deallocate (hold_mask_i_loc)
+              deallocate (hold_mask_j_loc)
+              deallocate (temp_mask_i_loc)
+              deallocate (temp_mask_j_loc)
               icccret = 0
               return
             endif
@@ -25784,6 +25906,15 @@ c-----
                 masked_out(im, jm) = .true.
               enddo
 
+              deallocate (ringposi);       deallocate (ringposj)
+              deallocate (search_next_i);  deallocate (search_next_j)
+              deallocate (next_contour_i); deallocate (next_contour_j)
+              deallocate (beyond_contour_i)
+              deallocate (beyond_contour_j)
+              deallocate (hold_mask_i_loc)
+              deallocate (hold_mask_j_loc)
+              deallocate (temp_mask_i_loc)
+              deallocate (temp_mask_j_loc)
               icccret = 0
               return
             endif
