@@ -4025,6 +4025,13 @@ end program trakmain
             else
 
               if (verb .ge. 1) then
+                print *, ' '
+                print *, '!!! ERROR: In get_cps_vth, the '
+                print *, '!!!  user-requested eastern search boundary'
+                print *, '!!!  is beyond the eastern bounds of '
+                print *, '!!!  this regional grid.  '
+                print *, '!!!  Thermal wind parm will not be computed.'
+                print *, '!!!  Subroutine location A....'
                 print *, '!!!         '
                 print *, '!!!   imax of regional grid    = ', imax
                 print *, '!!!   User-requested eastern i = ', i
@@ -4732,7 +4739,7 @@ end program trakmain
       print *, '+++   sfc_wcirc:       lon:  ', clon(ist,ifh,10),          '   lat: ', clat(ist,ifh,10),  &
                '     (0-360) sfc_wcirc lon = ',mod(clon(ist,ifh,10),360.0)
       print *, '+++   sfc_vorticity:   lon:  ', clon(ist,ifh,11),          '   lat: ', clat(ist,ifh,11),  &
-               ' (0-360) sfc_vorticity lon=  ', mod(clon(ist,ifh,11),360.)
+               ' (0-360) sfc_vorticity lon=  ', mod(clon(ist,ifh,11),360.0)
       print *, '+++   multi-parm mean: lon:  ', xmeanlon, '   lat: ', xmeanlat, ' (0-360) xmeanlon = ', mod(xmeanlon,360.0)
       print *, '+++   sfc-only mean:   lon:  ', xsfclon,  '   lat: ', xsfclat,  ' (0-360) xsfclon  = ', mod(xsfclon,360.0)
     endif
@@ -6065,10 +6072,10 @@ end program trakmain
     print *, ' '
     print *, 'At top of get_shear, raw values for lat/lon follow: '
     print *, '             ist = ', ist, ' ifh = ', ifh
-    print *, ' clon(ist,ifh,3) = ', clon(ist,ifh,3)
-    print *, ' clat(ist,ifh,3) = ', clat(ist,ifh,3)
-    print *, ' fixlon(ist,ifh) = ', fixlon(ist,ifh)
-    print *, ' fixlat(ist,ifh) = ', fixlat(ist,ifh)
+    print *, ' clon(ist,ifh,3) = ', clon(ist, ifh, 3)
+    print *, ' clat(ist,ifh,3) = ', clat(ist, ifh, 3)
+    print *, ' fixlon(ist,ifh) = ', fixlon(ist, ifh)
+    print *, ' fixlat(ist,ifh) = ', fixlat(ist, ifh)
     print *, '         xcenlon = ', xcenlon
     print *, '         xcenlat = ', xcenlat
 
@@ -6076,7 +6083,7 @@ end program trakmain
       print *, ' '
       print *, 'xxshear'
       print *, 'In get_shear A,         xcenlon = ', xcenlon, ' xcenlat = ', xcenlat
-      print *, 'In get_shear B, (0-360) xcenlon = ', mod(xcenlon,360.0)
+      print *, 'In get_shear B, (0-360) xcenlon = ', mod(xcenlon, 360.0)
 
       if (verb .ge. 3) then
         print *, ' '
@@ -6164,9 +6171,9 @@ end program trakmain
 
         if (verb >= 1) then
           print *, ' '
-          print '(8x,2(a9,i4),a15,f7.2,2(a22,f7.2))', '  level = ', level, '  idist = ', idist,          &
-                ' rdist(idist) = ',        rdist(idist), ' vt_mean(idist,ilev) = ', vt_mean(idist,ilev), &
-                ' vr_mean(idist,ilev) = ', vr_mean(idist,ilev)
+          print '(8x,2(a9,i4),a15,f7.2,2(a22,f7.2))', '  level = ', level, '  idist = ', idist,           &
+                ' rdist(idist) = ',        rdist(idist), ' vt_mean(idist,ilev) = ', vt_mean(idist, ilev), &
+                ' vr_mean(idist,ilev) = ', vr_mean(idist, ilev)
         endif
       enddo ! radiusloop1
     enddo  ! levelloop1
@@ -6358,8 +6365,8 @@ end program trakmain
       print *, ' '
       print *, 'At end of get_shear: '
       print '(2x,a8,i4,a6,i4,a31,f8.2)', '   ist = ', ist, ' ifh = ', ifh, &
-            ' shear(ist,ifh,1) = shear_mag = ', shear(ist,ifh,1)
-      print '(2x,22x,a40,f8.2)', ' shear(ist,ifh,2) = shear_dir_point_to = ', shear(ist,ifh,2)
+            ' shear(ist,ifh,1) = shear_mag = ', shear(ist, ifh, 1)
+      print '(2x,22x,a40,f8.2)', ' shear(ist,ifh,2) = shear_dir_point_to = ', shear(ist, ifh, 2)
     endif
 
     return
@@ -10331,7 +10338,7 @@ end program trakmain
 
     if (ifh == 1) then
       call baopenw (77, "fort.77", igoret)
-        print *,'baopenw: igoret= ',igoret
+      print *, 'baopenw: igoret = ', igoret
 
       if (igoret /= 0) then
         print *, ' '
@@ -23675,6 +23682,8 @@ c     subroutine for further details.
       enddo ! iloop2
     enddo ! jloop2
 
+    print *, ' '
+    print *, 'xxmeanstat: lev = ', clevstr, ' xmaxrh = ', xmaxrh, ' xminrh = ', xminrh
 
     deallocate (point_ct)
 
