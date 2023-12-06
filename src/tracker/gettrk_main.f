@@ -124,7 +124,8 @@
   endif
 
   stop
-  end ! CAITLYN - i dont think this needs to be here
+
+
   subroutine tracker (inp, maxstorm, numtcv, ifhmax, trkrinfo, ncfile, &
                      & ncfile_id, nc_lsmask_file, nc_lsmask_file_id,   &
                      & netcdfinfo, ncfile_has_hour0, ncfile_tmax,  itret)
@@ -240,6 +241,8 @@
     real              :: x999_axirmw_dist, x999_axirmw_val, x999_divg
     real              :: x999_moist_divg, x999_rh600_800, x999_rh1000_925
     real              :: x999_omega500, x999_imzeta, x999_igzeta
+
+    ! Define a bunch of missing values for variables to be sent to subroutines that write output
     x999_lon         = -999.0
     x999_lat         = -999.0
     izero_fhr        =    0
@@ -277,6 +280,8 @@
     allocate (closed_mslp_ctr_flag2(maxstorm, ifhmax), stat = icmc2f)
     allocate (quad_wind_circ_flag(maxstorm, ifhmax),   stat = iqwcf)
     allocate (vt850_flag(maxstorm, ifhmax),            stat = ivt8f)
+    ! Initialize flags to 'u', not 'n'.  That way, when we are evaluating its value back over recent past hours,
+    ! we can distinguish a "no" value from an initialized value of 'u' for which a storm hadn't yet been detected.
     closed_mslp_ctr_flag  = 'u'
     closed_mslp_ctr_flag2 = 'u'
     quad_wind_circ_flag   = 'u'
@@ -315,6 +320,8 @@
       fixlat  =    -999.0
 
       if (inp%file_seq == 'multi') then
+      ! Each tau will have a separate file, starting with unit  number 200 (GRIB data) and 5200 (GRIB index file) and
+      ! incrementing upwards from there for each tau.
         if (trkrinfo%gribver == 1) then
           lugb = 200
           lugi = 600  ! w3lib on Jet cannot handle unit #'s >999
@@ -333,7 +340,6 @@
         print *, 'top of tracker, ifh = ', ifh, ' ifhmax = ', ifhmax
       endif
 
-      !--------------------------------------------------------------
       ! ifhloop - Forecast hour loop
       do while (ifh <= ifhmax) ! ifhloop
 
@@ -353,7 +359,7 @@
         call get_grib_file_name (ifh, gfilename, ifilename)
 
         if (use_waitfor == 'y') then
-
+        ! first check for existence of grib file
           call waitfor (trim(gfilename), waitfor_gfile_status,       &
                        & wait_min_age, wait_min_size, wait_max_wait, &
                        & wait_sleeptime)
@@ -367,6 +373,9 @@
             stop 91
           endif
 
+          ! Now check for existence of index file.  Use a separate max_wait time -- a much shorter one -- since once the
+          ! grib file is there, the index file should appear within a matter of seconds.  Also, the index file is much
+          ! smaller, so set the wait_min_size accordingly.
           wait_max_ifile_wait = 180
           wait_min_size = 500
           call waitfor (trim(ifilename), waitfor_ifile_status, wait_min_age, wait_min_size, wait_max_ifile_wait, wait_sleeptime)
@@ -489,7 +498,7 @@
       endif
 
       if (iggret == 0) then
-        if ( verb .ge. 1 ) then
+        if (verb .ge. 1) then
           print *, 'TEST after getgridinfo in sub tracker, iggret = ', iggret
         endif
       else
@@ -502,6 +511,8 @@
       if (inp%modtyp == 'regional' .and. inp%nesttyp == 'moveable') then
         if (glatmax == prev_latmax .and. glatmin == prev_latmin .and. &
             glonmax == prev_lonmax .and. glonmin == prev_lonmin) then
+            ! The moveable, nested regional grid has not moved since the last lead time.  This could be an indication that the
+            ! model lost the storm and so the grid has not moved to stay with the cyclone center. Set a flag to indicate this.
           gridmove_status = 'stopped'
         else
           gridmove_status = 'moving'
@@ -517,6 +528,7 @@
 
       gotten_avg_value = 'n'
 
+      ! allocate the working data arrays
       if (allocated(valid_pt))    deallocate (valid_pt)
       if (allocated(zeta))        deallocate (zeta)
       if (allocated(u))           deallocate (u)
@@ -536,6 +548,7 @@
       if (allocated(masked_out))  deallocate (masked_out)
       if (allocated(masked_outc)) deallocate (masked_outc)
 
+      ! allocate all of the allocatable arrays
       allocate (valid_pt(imax, jmax),         stat = ivpa)
       allocate (zeta(imax, jmax, nlevzeta),   stat = iza)
       allocate (u(imax, jmax, nlevs),         stat = iua)
@@ -606,6 +619,7 @@
         print *, 'in beginning of tracker, imax = ', imax, ' jmax = ', jmax
       endif
 
+      ! initialize all readflags to NOT FOUND for this forecast time, then call subroutine to read data for this forecast time.
       zeta  = -9999.0
       u     = -9999.0
       hgt   = -9999.0
@@ -652,6 +666,7 @@
         if (readflag(irf)) idum = idum + 1
 
         if (irf > 2 .and. irf < 10) then
+          ! calcparm for parms > 9 is done further below.
           do jj = 1, maxstorm
             calcparm(irf, jj) = readflag(irf)
           enddo
@@ -665,7 +680,7 @@
         print *, 'parms for this fcst hour from the input grib file.'
       endif
 
-c       If not enough tracked parms were read in, exit the program....
+      ! if not enough tracked parms were read in, exit the program
 
       if (idum == 0) then
 
@@ -740,7 +755,7 @@ c       If not enough tracked parms were read in, exit the program....
           calcparm(9, jj) = .false.
         enddo
         endif
-          
+
       do ivort = 1, 2  ! vortloop
         if (ivort == 1) then
           if (user_wants_to_track_zeta850 == 'n' .or. user_wants_to_track_zeta850 == 'N') then
@@ -778,7 +793,6 @@ c       If not enough tracked parms were read in, exit the program....
               enddo
             endif
           else
-
             if (readflag(5) .and. readflag(6)) then
               call rvcal (imax, jmax, dx, dy, ivort, valid_pt)
               do jj = 1, maxstorm
@@ -789,11 +803,12 @@ c       If not enough tracked parms were read in, exit the program....
                 calcparm(2, jj) = .false.
               enddo
             endif
-
           endif
         endif
       enddo ! vortloop
 
+      !Check the flags that were read in from the namelist for determining which parameters the user wants to track.
+      !Here, check for user preferences for the wind circulation at 850 & 700
 
       if (readflag(3) .and. readflag(4)) then
         if (user_wants_to_track_wcirc850 == 'n' .or. user_wants_to_track_wcirc850 == 'N') then
@@ -827,6 +842,7 @@ c       If not enough tracked parms were read in, exit the program....
         enddo
       endif
 
+      ! compute the sfc vorticity if sfc_u and sfc_v have been read in
       if (readflag(10) .and. readflag(11)) then
         if (user_wants_to_track_wcircsfc == 'n' .or. user_wants_to_track_wcircsfc == 'N') then
           do jj = 1, maxstorm
@@ -843,6 +859,8 @@ c       If not enough tracked parms were read in, exit the program....
             calcparm(11 ,jj) = .false.
           enddo
         else
+          ! The 3 in the next call to rvcal is to indicate the 3rd
+          ! level for the zeta array, which is for the surface (or 10m) data.
           call rvcal (imax, jmax, dx, dy, 3, valid_pt)
           do jj = 1, maxstorm
             calcparm(11, jj) = .true.
@@ -856,6 +874,7 @@ c       If not enough tracked parms were read in, exit the program....
         enddo
       endif
 
+      ! Compute the  thicknesses for 200-850, 200-500 and 500-850 mb if the gp hgt fields have been read in for 200, 500 and 850.
       if (readflag(7) .and. readflag(15) .and. readflag(16)) then
         call thickness_calc (imax, jmax, valid_pt)
       
@@ -926,6 +945,7 @@ c       If not enough tracked parms were read in, exit the program....
       prevstormct = stormct
       tracking_previously_known_storms = .true.
 
+      ! stormloop starts here ! CAITLYN - this is the 2nd stormloop in this routine, maybe it should be labled differently?
       do sl_counter = 1, maxstorm ! stormloop
         divg               = -9999.0
         moist_divg         = -9999.0
@@ -1013,6 +1033,7 @@ c       If not enough tracked parms were read in, exit the program....
  420        format ('    | Gen ID (if available): ', i10.10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1, '_', a3)
           endif
 
+          ! make sure storm is within the grid boundaries
           if (ifh == 1) then
             if (gm_wrap_flag == 'none') then
               continue
@@ -1068,7 +1089,7 @@ c       If not enough tracked parms were read in, exit the program....
                   & calcparm(2,ist), clon(ist,ifh,2), clat(ist,ifh,2), xval(2), glatmax,   &
                   & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1088,7 +1109,7 @@ c       If not enough tracked parms were read in, exit the program....
                   & calcparm(7,ist), clon(ist,ifh,7), clat(ist,ifh,7), xval(7),       &
                   & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1108,7 +1129,7 @@ c       If not enough tracked parms were read in, exit the program....
                  & calcparm(8,ist), clon(ist,ifh,8), clat(ist,ifh,8), xval(8), glatmax, &
                  & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1128,7 +1149,7 @@ c       If not enough tracked parms were read in, exit the program....
                  & calcparm(9,ist), clon(ist,ifh,9), clat(ist,ifh,9), xval(9), glatmax, &
                  & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1169,7 +1190,7 @@ c       If not enough tracked parms were read in, exit the program....
                  & calcparm(12,ist), clon(ist,ifh,12), clat(ist,ifh,12), xval(12),   &
                  & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1339,6 +1360,7 @@ c       If not enough tracked parms were read in, exit the program....
                 print *, 'surface (10m) level'
               endif
 
+              ! NOTE: The 1020 in the call here is just a number/code to indicate to the subroutine to process sfc winds.
               if (enable_timing /= 0) then
                 call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
                 write (6,145) date_time(5), date_time(6), date_time(7)
@@ -1442,6 +1464,7 @@ c       If not enough tracked parms were read in, exit the program....
               print *, ' ttest, calcparm(9,ist) = ', calcparm(9,ist)
 
               if (calcparm(9,ist)) then
+                ! do a check of the mslp gradient
                 print *, ' Before call to is_it_a_storm for MSLP'
                 print *, '                clon(ist,ifh,9) = ', clon(ist,ifh,9)
                 print *, '       (0-360E clon(ist,ifh,9)) = ', mod(clon(ist,ifh,9),360.0)
@@ -1528,7 +1551,7 @@ c       If not enough tracked parms were read in, exit the program....
                 if (ifilret == 0) then
                   gridprs(ist,ifh) = gridpoint_maxmin
                 else
-                    ! Search went out of regional grid bounds....
+                  ! search went out of regional grid bounds
                   fixlon(ist, ifh)  = -999.0
                   fixlat(ist, ifh)  = -999.0
                   stormswitch(ist) = 2
@@ -1575,10 +1598,12 @@ c       If not enough tracked parms were read in, exit the program....
                     contour_info%numcont = maxconts
                   endif
 
+                  ! MSLP contour interval for ROCI (if the user requests it) will always be 4 mb
                   if (xval(9) < 1100.0) then ! CAITLYN - repeating code?
+                    ! pressure units are in mb
                     roci_prs_contint_thresh = 4.0
-                    roci_prs_contint_thresh = 400.0
                   elseif (xval(9) > 80000.0) then
+                    ! pressure units are in Pa
                     roci_prs_contint_thresh = 400.0
                   else
                     if (verb .ge. 3) then
@@ -1696,6 +1721,7 @@ c       If not enough tracked parms were read in, exit the program....
                     endif
 
                     if (close_to_boundary == 'y' .and. ifh > 1 .and. abs(xinp_fixlat) > 25.0) then
+                      ! CAITLYN - repeating code?
                       if (closed_mslp_ctr_flag2(ist,ifh) == 'n' .and. closed_mslp_ctr_flag2(ist,ifh-1) == 'n') then
                         if (verb .ge. 0) then
                           print *, ' '
@@ -1766,6 +1792,7 @@ c       If not enough tracked parms were read in, exit the program....
                   print *, ' '
                 endif
 
+                ! this next bit of code adds a second layer of closed contour checking
                 if (ccflag == 'y') then
                   closed_mslp_ctr_flag(ist, ifh) = 'y'
                 else
@@ -1847,6 +1874,7 @@ c       If not enough tracked parms were read in, exit the program....
                      & trkrinfo, clon(ist,ifh,3), clat(ist,ifh,3), inp%modtyp, ifh, gm_wrap_flag, imbowret)
               endif
 
+              ! for tropical cyclones, check the avg 850 mb tangential windspeed close to the storm center
               if (trkrinfo%type == 'tcgen' .or. trkrinfo%type == 'tracker') then
                 had_to_try_backup_850_vt_check = 'n'
 
@@ -2038,7 +2066,7 @@ c       If not enough tracked parms were read in, exit the program....
                      & trkrinfo, ifh, low_level_wind_circ_flag, gm_wrap_flag, vtquadmax, 'forward', iccwcret)
 
                 if (iccwcret == 0) then
-                  int_vtq_ne = nint(10.0 * vtquadmax(1) * 1.9427) ! CAITLYN - i think the 1.9427 is a parameter somewhere
+                  int_vtq_ne = nint(10.0 * vtquadmax(1) * 1.9427) ! CAITLYN - i think the 1.9427 is a variable/parameter somewhere
                   int_vtq_se = nint(10.0 * vtquadmax(2) * 1.9427)
                   int_vtq_sw = nint(10.0 * vtquadmax(3) * 1.9427)
                   int_vtq_nw = nint(10.0 * vtquadmax(4) * 1.9427)
@@ -2129,7 +2157,7 @@ c       If not enough tracked parms were read in, exit the program....
               stormswitch(ist)  = 2
             endif
 
-              ! Now do another check for the  tracker and tcgen cases.
+            ! now do another check for the tracker and tcgen cases
             if (trkrinfo%type == 'tracker' .or. trkrinfo%type == 'tcgen') then
               if (isastorm(1) == 'Y' .and. isastorm(3) == 'Y' .and. calcparm(1,ist) .and. stormswitch(ist) == 1) then
 
@@ -2178,6 +2206,7 @@ c       If not enough tracked parms were read in, exit the program....
                 call calcdist (fixlon(ist,ifh-1), fixlat(ist,ifh-1), fixlon(ist,ifh), &
                      & fixlat(ist,ifh), dist, degrees)
 
+                ! convert distance from km to nm and get speed
                 distnm = dist * 0.539638
                 xinterval_fhr = fhreal(ifh) - fhreal(ifh - 1)
                 xknots = distnm / xinterval_fhr
@@ -2247,6 +2276,7 @@ c       If not enough tracked parms were read in, exit the program....
             ileadtime = nint(fhreal(ifh) * 100.0)
             ifcsthour = ileadtime / 100
 
+            ! DIAGNOSE WIND RADII: R34, R50, R64
             if (xmaxwind(ist,ifh) >= 17.5) then
               vradius = 0
               first_time_thru_getradii = .true.
@@ -2457,10 +2487,12 @@ c       If not enough tracked parms were read in, exit the program....
               print *, ' '
             endif
 
+            ! only call output routines every atcffreq/100 hours
             ileadtime      = nint(fhreal(ifh) * 100.0)
             leadtime_check = mod(ileadtime, atcffreq)
 
             if (leadtime_check == 0) then
+              ! get the storm motion vector and the speed of motion so that we can output this in the atcfunix file
               if (ifh < ifhmax) then
                 call get_next_ges (fixlon, fixlat, ist, ifh, imax, jmax, dx, dy, inp%model, valid_pt, &
                      & readflag, maxstorm, istmspd, istmdir, 'vitals', trkrinfo, gm_wrap_flag, ignret)
@@ -2475,6 +2507,8 @@ c       If not enough tracked parms were read in, exit the program....
  617            format (1x, '+++ RPT_STORM_MOTION: istmspd = ', i5, ' kts(*10)  istmdir = ', i5, ' rcc = ', i3)
               endif
 
+              ! Call a routine to find the mean & max relative vorticity at the mean fix positions of the
+              ! storm at 850 & 700.  These will be written out to the "atcf_gen" and "atcfunix_ext" files.
               imeanzeta = -99
               igridzeta = -99
               call get_zeta_values (fixlon, fixlat, imax, jmax, dx, dy, trkrinfo, imeanzeta, igridzeta, &
@@ -2506,11 +2540,13 @@ c       If not enough tracked parms were read in, exit the program....
                    & xval, ioapret)
 
               if (inp%model == 12 .and. ifcsthour == 0) then
-                  ! Write vitals for GFS ens control analysis
+                ! write vitals for GFS ens control analysis
                 call output_tcvitals (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, iovret)
               endif
             endif
 
+            ! The exception here is for the call to the output_hfip routine, 
+            ! which will be called for every lead time that is processed
             call output_hfip (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, xmaxwind(ist,ifh)
                  & gridprs(ist,ifh), vradius, rmax, ioaxret)
           else
@@ -2543,17 +2579,21 @@ c       If not enough tracked parms were read in, exit the program....
                 tcv_max_wind_ms = real(storm(ist)%tcv_vmax)
                 tcv_mslp_pa     = real(storm(ist)%tcv_pcen) * 100.0
 
+                ! convert tcvitals NE 34-kt wind radius from km to nm
                 r34_from_tcv = real(storm(ist)%tcv_r15ne)
                 if (r34_from_tcv > 0.0) then
                   vradius(1, 1) = int(((r34_from_tcv * 0.5396) / 5.0) + 0.5) * 5
                   vradius(1,1) = int(((r34_from_tcv*0.5396) / 5.0) + 0.5) * 5
                   vradius(1, 1) = 0
                 endif
+
+                ! convert tcvitals SE 34-kt wind radius from km to nm
                 r34_from_tcv = real(storm(ist)%tcv_r15se)
                   vradius(1, 2) = int(((r34_from_tcv * 0.5396) / 5.0) + 0.5) * 5
                 else
                   vradius(1, 2) = 0
 
+                ! convert tcvitals SW 34-kt wind radius from km to nm
                 r34_from_tcv = real(storm(ist)%tcv_r15sw)
                 if (r34_from_tcv > 0.0) then
                   vradius(1, 3) = int(((r34_from_tcv * 0.5396) / 5.0) + 0.5) * 5
@@ -2561,6 +2601,7 @@ c       If not enough tracked parms were read in, exit the program....
                   vradius(1, 3) = 0
                 endif
 
+                ! convert tcvitals NW 34-kt wind radius from km to nm
                 r34_from_tcv = real(storm(ist)%tcv_r15nw)
                 if (r34_from_tcv > 0.0) then
                   vradius(1, 4) = int(((r34_from_tcv * 0.5396) / 5.0) + 0.5) * 5
@@ -2568,6 +2609,7 @@ c       If not enough tracked parms were read in, exit the program....
                   vradius(1, 4) = 0
                 endif
 
+                ! convert tcvitals roci from km to nm
                 if (storm(ist)%tcv_penvrad > 0) then
                   roci_from_tcv = real(storm(ist)%tcv_penvrad)
                   rlastbar = roci_from_tcv * 0.5396
@@ -2575,6 +2617,7 @@ c       If not enough tracked parms were read in, exit the program....
                   rlastbar = -99.0
                 endif
 
+                ! convert tcvitals pressure at roci from km to nm
                 if (storm(ist)%tcv_penv > 0) then
                   proci_from_tcv = real(storm(ist)%tcv_penv)
                   plastbar = proci_from_tcv * 100.0
@@ -2582,6 +2625,7 @@ c       If not enough tracked parms were read in, exit the program....
                   plastbar = -99.0
                 endif
 
+                ! get integer values for istmspd and istmdir by using the values from tcvitals for this storm.
                 istmdir = storm(ist)%tcv_stdir
                 istmspd = storm(ist)%tcv_stspd
 
@@ -2602,6 +2646,7 @@ c       If not enough tracked parms were read in, exit the program....
                      & x999_omega500, imeanzeta, igridzeta, ioaxret)
 
               else
+                ! For all other models, we print out missing data values at tau=00h if the  tracker was unable to find the storm
                 call output_atcfunix (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp, &
                      & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag,  &
                      & i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,   &
@@ -2656,7 +2701,8 @@ c       If not enough tracked parms were read in, exit the program....
             endif
             cycle ! stormloop
           endif
-          
+
+          ! get first guess for next forecast time's position
           if (ifh <= ifhmax) then
             if (ifh == 1 .and. trkrinfo%out_vit == 'y') then
               call output_gen_vitals (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, istmspd, istmdir, iovret)
@@ -2740,6 +2786,7 @@ c       If not enough tracked parms were read in, exit the program....
       endif
 
       if (use_per_fcst_command == 'y') then
+      ! user wants us to run a command per forecast time
         pfc_final = per_fcst_command
         call argreplace (pfc_final, pfc_cmd_len, '%[FHOUR]', ifhours(ifh))
         call argreplace (pfc_final, pfc_cmd_len, '%[FMIN]', iftotalmins(ifh))
@@ -2811,110 +2858,10 @@ c       If not enough tracked parms were read in, exit the program....
     if (allocated(netcdf_file_time_values)) deallocate (netcdf_file_time_values)
     if (allocated(nctotalmins))             deallocate (nctotalmins)
 
-      if (allocated(lsmask))                  deallocate (lsmask)
-      if (allocated(sst))                     deallocate (sst)
-      if (allocated(q850))                    deallocate (q850)
-      if (allocated(rh))                      deallocate (rh)
-      if (allocated(spfh))                    deallocate (spfh)
-      if (allocated(temperature))             deallocate (temperature)
-      if (allocated(omega500))                deallocate (omega500)
-      if (allocated(masked_out))              deallocate (masked_out)
-      if (allocated(masked_outc))             deallocate (masked_outc)
-      if (allocated(cpshgt))                  deallocate (cpshgt)
-      if (allocated(vt850_flag))              deallocate (vt850_flag)
-      if (allocated(closed_mslp_ctr_flag))    deallocate (closed_mslp_ctr_flag)
-      if (allocated(closed_mslp_ctr_flag2))   deallocate (closed_mslp_ctr_flag2)
-      if (allocated(quad_wind_circ_flag))     deallocate (quad_wind_circ_flag)
-      if (allocated(netcdf_file_time_values)) deallocate (netcdf_file_time_values)
-      if (allocated(nctotalmins))             deallocate (nctotalmins)
-
-      if (allocated(lsmask))                  deallocate (lsmask)
-      if (allocated(sst))                     deallocate (sst)
-      if (allocated(q850))                    deallocate (q850)
-      if (allocated(rh))                      deallocate (rh)
-      if (allocated(spfh))                    deallocate (spfh)
-      if (allocated(temperature))             deallocate (temperature)
-      if (allocated(omega500))                deallocate (omega500)
-      if (allocated(masked_out))              deallocate (masked_out)
-      if (allocated(masked_outc))             deallocate (masked_outc)
-      if (allocated(cpshgt))                  deallocate (cpshgt)
-      if (allocated(vt850_flag))              deallocate (vt850_flag)
-      if (allocated(closed_mslp_ctr_flag))    deallocate (closed_mslp_ctr_flag)
-      if (allocated(closed_mslp_ctr_flag2))   deallocate (closed_mslp_ctr_flag2)
-      if (allocated(quad_wind_circ_flag))     deallocate (quad_wind_circ_flag)
-      if (allocated(netcdf_file_time_values)) deallocate (netcdf_file_time_values)
-      if (allocated(nctotalmins))             deallocate (nctotalmins)
-
-      if (allocated(lsmask))                  deallocate (lsmask)
-      if (allocated(sst))                     deallocate (sst)
-      if (allocated(q850))                    deallocate (q850)
-      if (allocated(rh))                      deallocate (rh)
-      if (allocated(spfh))                    deallocate (spfh)
-
-      if (allocated(omega500))                deallocate (omega500)
-      if (allocated(masked_out))              deallocate (masked_out)
-      if (allocated(masked_outc))             deallocate (masked_outc)
-      if (allocated(cpshgt))                  deallocate (cpshgt)
-      if (allocated(vt850_flag))              deallocate (vt850_flag)
-      if (allocated(closed_mslp_ctr_flag))    deallocate (closed_mslp_ctr_flag)
-      if (allocated(closed_mslp_ctr_flag2))   deallocate (closed_mslp_ctr_flag2)
-      if (allocated(quad_wind_circ_flag))     deallocate (quad_wind_circ_flag)
-      if (allocated(netcdf_file_time_values)) deallocate (netcdf_file_time_values)
-      if (allocated(nctotalmins))             deallocate (nctotalmins)
-
-      if (allocated(lsmask))                  deallocate (lsmask)
-      if (allocated(sst))                     deallocate (sst)
-      if (allocated(q850))                    deallocate (q850)
-      if (allocated(rh))                      deallocate (rh)
-      if (allocated(spfh))                    deallocate (spfh)
-
-      if (allocated(omega500))                deallocate (omega500)
-      if (allocated(masked_out))              deallocate (masked_out)
-      if (allocated(masked_outc))             deallocate (masked_outc)
-      if (allocated(cpshgt))                  deallocate (cpshgt)
-      if (allocated(vt850_flag))              deallocate (vt850_flag)
-      if (allocated(closed_mslp_ctr_flag))    deallocate (closed_mslp_ctr_flag)
-      if (allocated(closed_mslp_ctr_flag2))   deallocate (closed_mslp_ctr_flag2)
-      if (allocated(quad_wind_circ_flag))     deallocate (quad_wind_circ_flag)
-      if (allocated(netcdf_file_time_values)) deallocate (netcdf_file_time_values)
-      if (allocated(nctotalmins))             deallocate (nctotalmins)
-
-      if (allocated(lsmask))                  deallocate (lsmask)
-      if (allocated(sst))                     deallocate (sst)
-      if (allocated(q850))                    deallocate (q850)
-      if (allocated(rh))                      deallocate (rh)
-      if (allocated(spfh))                    deallocate (spfh)
-
-      if (allocated(omega500))                deallocate (omega500)
-      if (allocated(masked_out))              deallocate (masked_out)
-      if (allocated(masked_outc))             deallocate (masked_outc)
-      if (allocated(cpshgt))                  deallocate (cpshgt)
-      if (allocated(vt850_flag))              deallocate (vt850_flag)
-      if (allocated(closed_mslp_ctr_flag))    deallocate (closed_mslp_ctr_flag)
-      if (allocated(closed_mslp_ctr_flag2))   deallocate (closed_mslp_ctr_flag2)
-      if (allocated(quad_wind_circ_flag))     deallocate (quad_wind_circ_flag)
-      if (allocated(netcdf_file_time_values)) deallocate (netcdf_file_time_values)
-      if (allocated(nctotalmins))             deallocate (nctotalmins)
-
-      if (allocated(lsmask))                  deallocate (lsmask)
-      if (allocated(sst))                     deallocate (sst)
-      if (allocated(q850))                    deallocate (q850)
-      if (allocated(rh))                      deallocate (rh)
-      if (allocated(spfh))                    deallocate (spfh)
-      if (allocated(temperature))  deallocate (temperature)
-      if (allocated(omega500))                deallocate (omega500)
-      if (allocated(masked_out))              deallocate (masked_out)
-      if (allocated(masked_outc))             deallocate (masked_outc)
-      if (allocated(cpshgt))                  deallocate (cpshgt)
-      if (allocated(vt850_flag))              deallocate (vt850_flag)
-      if (allocated(closed_mslp_ctr_flag))    deallocate (closed_mslp_ctr_flag)
-      if (allocated(closed_mslp_ctr_flag2))   deallocate (closed_mslp_ctr_flag2)
-      if (allocated(quad_wind_circ_flag))     deallocate (quad_wind_circ_flag)
-      if (allocated(netcdf_file_time_values)) deallocate (netcdf_file_time_values)
-      if (allocated(nctotalmins))             deallocate (nctotalmins)
+    
 
   end subroutine tracker
-  !****************************************************************************
+
   !*
   !*  ABSTRACT: This subroutine is used to generate the pre-forecast-command
   !*      It will edit the command (argument "arg") and replace string
@@ -2940,7 +2887,7 @@ c       If not enough tracked parms were read in, exit the program....
     found   = index(arg, name)
     namelen = len(name)
     i1      = found - 1        ! last char that is before name
-    i2      = found+namelen  ! index of last char in name
+    i2      = found+namelen    ! index of last char in name
 
     if(found == 0) return
 
@@ -2949,16 +2896,20 @@ c       If not enough tracked parms were read in, exit the program....
     if(found > 1 .and. i2 < n) then
       write(out,'(A,I0,A)') arg(1:i1), val, arg(i2:n)
     elseif (found > 1) then
+  !   special case: name is at end of string
       write(out,'(A,I0)') arg(1:i1), val
     elseif(i2 < n) then
+  !   special case: name is at beginning of string
       write(out,'(I0,A)') val, arg(i2:n)
     else
+  !   special case: name is the entirety of the string
       write(out,'(I0)') val
     endif
 
     arg = out
 
   end subroutine argreplace
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine must be called before any attempt is
@@ -2990,6 +2941,7 @@ c       If not enough tracked parms were read in, exit the program....
   !*
   !****************************************************************************
   subroutine open_grib_files (inp, lugb, lugi, gfilename, ifilename, lout, iret)
+
     use inparms ; use verbose_output
 
     implicit none
@@ -3096,7 +3048,7 @@ c       If not enough tracked parms were read in, exit the program....
 
       return
   end subroutine open_grib_files
-c
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine opens a netcdf file specified by the
@@ -3122,9 +3074,9 @@ c
 
       status = nf_open(filename, NF_NOWRITE, ncid)
       if (status .ne. nf_noerr) call handle_netcdf_err(status)
-
+      ! CAITLYN - where is nf_noerr declared?
   end subroutine open_ncfile
-c
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is called after the center of the storm
@@ -3160,8 +3112,7 @@ c
   !****************************************************************************
   subroutine is_it_a_storm (imax, jmax, dx, dy, cparm, ist, defined_pt, parmlon, parmlat, &
                            &, parmval, trkrinfo, stormcheck, ifh, isiret)
-c     isiret   Return code for this subroutine.
-c
+
     use radii;     use grid_bounds;   use set_max_parms; use level_parms
     use trig_vals; use tracked_parms; use atcf;          use trkrparms
     use verbose_output
@@ -3185,8 +3136,8 @@ c
     dell = (dx+dy) / 2.0
 
     if (dell < 1.24) then      ! GFS, MRF, NAM, NGM, NAVGEM, GDAS,
-                                 ! GFDL, NCEP Ensemble & Ensemble
-                                 ! Relocation, SREF Ensemble
+                               ! GFDL, NCEP Ensemble & Ensemble
+                               ! Relocation, SREF Ensemble
       ri = ritrk_most
       if (cparm == 'slp') then
         radinf = 300.0
@@ -3204,7 +3155,7 @@ c
       npts   = 1
     endif
 
-    pthresh = trkrinfo%mslpthresh    ! These are read in in subroutine  read_nlists
+    pthresh = trkrinfo%mslpthresh   ! these are read in in subroutine read_nlists
     vthresh = trkrinfo%v850thresh
 
     call get_ij_bounds (npts, 0, ri, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, &
@@ -3227,8 +3178,8 @@ c
       isiret = 92
     endif
 
-      ! We will want to speed things up for finer resolution grids.  
-      ! We can do this by skipping some of the points in the loop.
+    ! We will want to speed things up for finer resolution grids.
+    ! We can do this by skipping some of the points in the loop.
 
     if ((dx+dy)/2.0 > 0.20) then
       bskip = 1
@@ -3301,7 +3252,6 @@ c
 
         if (dist > radinf .or. dist == 0.0) cycle
           if (defined_pt(i,j)) then
-
             if (cparm == 'slp') then
               pgradient = (slp(i, j) - parmval) / dist
               if (pgradient > xmaxpgrad) xmaxpgrad = pgradient
@@ -3337,7 +3287,6 @@ c
               vtavg = vtavg  + vt
               ivt   = ivt + 1
             endif
-
           endif
         enddo !i-loop
       enddo   !j-loop
@@ -3358,7 +3307,6 @@ c
  95       format (1x, a34, f8.5)
           print *, ' '
         endif
-
       endif
 
       if (cparm == 'v850') then
@@ -3411,14 +3359,13 @@ c
               print *, '!!! Avg 850 tangential winds = ', vtavg, ' m/s'
               print *, ' '
             endif
-
           endif
         endif
-
       endif
-c
       return
+
   end subroutine is_it_a_storm
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  probes around a storm for either the
@@ -3505,6 +3452,8 @@ c
 
       if (gm_wrap_flag == 'maxplus360') then
         if ((pfixlon > 330.0 .and. pfixlon <= 360.0) .and. targlon < 25.0) then
+          ! targlon returned from distbear is just east of the
+          ! GM with a non-360-adjusted value.  Adjust it:
           targlon = targlon + 360.0
         endif
         if (pfixlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180)) then
@@ -3512,6 +3461,7 @@ c
         endif
       endif
 
+        ! these first couple checks are just gross checks looking for the grid boundary
         if (targlat >= (glatmax-4.0) .or. targlat <= (glatmin+4.0)) then
           close_to_boundary = 'y'
           return
@@ -3524,7 +3474,7 @@ c
 
         ! This last check analyzes a grid point for invalid data, which
         ! could happen for grids like HAFS-A, HAFS-B and T-SHiELD where
-        ! data from a different map projection are mapped onto a 
+        ! data from a different map projection are mapped onto a
         ! lat/lon grid, leaving invalid data around the edges.
 
         call check_valid_point (imax, jmax, dx, dy, fxy, maxmin, valid_pt, targlon, targlat, &
@@ -3541,7 +3491,9 @@ c
       enddo ! azimloop1
 
       return
+
     end subroutine probe_for_boundary
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is a driver subroutine for
@@ -3672,8 +3624,6 @@ c
              & valid_pt, maxstorm, wcore_flag, igvpret)
       endif
 
-
-      if ( verb .ge. 3 ) then
       if (verb .ge. 3) then
         write (6,633)
         write (6,635)
@@ -3683,10 +3633,10 @@ c
  635    format(1x, '#-------------------------------------------------#')
       endif
 
-c         
       return
+
   end subroutine get_phase
-c
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is part of the algorithm for determining
@@ -3735,6 +3685,7 @@ c
       d     = degrees * dtr
 
       if (d == 0.0) then
+        ! storm is stationary
         st_heading = 0.0
         cosarg = (sin(rlatc) - sin(rlatb) * cos(d)) / (sin(d) * cos(rlatb))
         if (cosarg > 1.0)  cosarg = 1
@@ -3775,7 +3726,8 @@ c
       return
     endif
 
-    if ((dx+dy)/2.0 > 0.20) then
+   !CAITLYN - repeating code
+    ! now loop through all of the points of the subdomain
       bskip = 1
     else if ((dx+dy)/2.0 > 0.10 .and. (dx+dy)/2.0 <= 0.20) then
       bskip = 2
@@ -3798,7 +3750,7 @@ c
       icount = icount + 1
       if (i > imax) then
         if (trkrinfo%gridtype == 'global') then
-          ip = i - imax   ! If wrapping past GM
+          ip = i - imax   ! if wrapping past GM
         else
 
           if (verb .ge. 1) then
@@ -3826,7 +3778,7 @@ c
 
       if (i < 1) then
         if (trkrinfo%gridtype == 'global') then
-          ip = i + imax   ! If wrapping past GM
+          ip = i + imax   ! if wrapping past GM
         else
 
           if (verb .ge. 1) then
@@ -3871,12 +3823,7 @@ c
         return
       endif
 
-          !----------------------------------------------------------
-          ! Calculate angle from storm center to point, in a 0-360
-          ! framework, clockwise positive.
-          !----------------------------------------------------------
-
-      rlonc = (360.0 - glon(ip)) * dtr
+      ! Calculate angle from storm center to point, in a 0-360 framework, clockwise positive
       rlatc = glat(j) * dtr
       rlonb = (360.0 - fixlon(ist, ifh)) * dtr
       rlatb = fixlat(ist, ifh) * dtr
@@ -3899,12 +3846,8 @@ c
 
           pt_dir = pt_dir_rad / dtr
 
-          !------------------------------------------------------------
           ! Based on the angle that the point is from the storm center,
-          ! determine if the point is to the left or the right of the
-          ! storm track.
-          !------------------------------------------------------------
-
+          ! determine if the point is to the left or the right of the storm track.
           if (st_heading >= 180.0) then
             if ((st_heading - pt_dir) > 0.0 .and. (st_heading - pt_dir) <= 180) then
               hemis = 2
@@ -3923,12 +3866,15 @@ c
             endif
           endif
 
+          ! Calculate the 600-900 mb thickness at this point and add
           ! the thickness value to the array for the correct "storm hemisphere"
           zthick = cpshgt(ip, j, 7) - cpshgt(ip, j, 1)
           zthicksum(hemis) = zthicksum(hemis) + zthick
         enddo ! i-loop
       enddo   ! j-loop
 
+     !Now calculate parameter B.  The hemval parameter = +1 for storms
+     !in the Northern Hemisphere and -1 for Southern Hemisphere storms.
 
       zthick_right_mean = zthicksum(1) / real(right_ct)
       zthick_left_mean  = zthicksum(2) / real(left_ct)
@@ -3954,10 +3900,9 @@ c
         print *, '  END of get_cps_paramb, paramb = ', paramb
       endif
 
-c         
       return
   end subroutine get_cps_paramb
-c
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is part of the algorithm for determining
@@ -4008,7 +3953,7 @@ c
       plev = xhilevs
     endif
 
-    npts = ceiling(ricps / (dtk * (dx+dy) / 2.0))
+    npts = ceiling(ricps / (dtk * (dx+dy) / 2.0)) !CAITLYN - repeated code? also does ceiling default ints or reals?
 
     call get_ij_bounds (npts, 0, ricps, imax, jmax, dx, dy, glatmax, glatmin, glonmax, &
          & glonmin, fixlon(ist,ifh), fixlat(ist,ifh), trkrinfo, ilonfix, jlatfix,      &
@@ -4027,8 +3972,8 @@ c
       return
     endif
 
-    else if ((dx+dy)/2.0 > 0.10 .and. (dx+dy)/2.0 <= 0.20) then
-    if ((dx+dy)/2.0 > 0.20) then
+    ! We will want to speed things up for finer resolution grids.
+    ! We can do this by skipping some of the points in the loop for the evaluation of parameter B.
       bskip = 1
     else if ((dx+dy)/2.0 > 0.10 .and. (dx+dy)/2.0 <= 0.20) then
       bskip = 2
@@ -4036,7 +3981,7 @@ c
       bskip = 3
     endif
 
-    bskip = 1    ! Don't do any skipping for now
+    bskip = 1  ! don't do any skipping for now
 
     zmax  = -9999999.0
     zmin  = 9999999.0
@@ -4046,8 +3991,10 @@ c
     do k = kbeg, kend ! levloop
 
       if (kbeg == 7) then
+        ! processing upper layers (600-300 mb)
         kix = k - 6
       else
+        ! processing lower layers (900-600 mb)
         kix = k
       endif
 
@@ -4172,7 +4119,6 @@ c
             write (6,34)
           endif
         endif
-
       enddo
 
   31  format (1x, '  +++ k = ', i2, ' press = ', f8.1, ' zmax = ', f7.2, ' zmin = ', f7.2, ' zdiff = ', f7.2)
@@ -4180,7 +4126,9 @@ c
   33  format (1x, '      dz = ', f10.2, ' dlnp = ', f13.6, '  dzdlnp = ', f12.3)
   34  format (1x, '      --- First level... no derivatives done...')
       return
+
   end subroutine get_cps_vth
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is the main driver for a series of
@@ -4203,6 +4151,7 @@ c
   !*
   !****************************************************************************
   subroutine calccorr(xdat, ydat, numpts, R2, slope)
+
     use verbose_output
 
     implicit none
@@ -4212,8 +4161,6 @@ c
     real    :: yestim(numpts), yresid(numpts)
     real    :: xmean, ymean, slope, yint, R2
     integer :: numpts, i
-    call getmean(xdat, numpts, xmean)
-    call getmean(ydat, numpts, ymean)
 
     call getmean (xdat, numpts, xmean)
     call getmean (ydat, numpts, ymean)
@@ -4262,8 +4209,9 @@ c
       endif
 
  40   format (2x, a27, f8.2, a3, f8.2, 'X')
-      write (6, '(1x,a17,f7.4,5x,a7,f7.4)') ' R2(r_squared) = ', R2, '   r = ', sqrt(R2)
+
       print *, ' '
+      write (6, '(1x,a17,f7.4,5x,a7,f7.4)') ' R2(r_squared) = ', R2, '   r = ', sqrt(R2)
       print *, ' '
       print *, ' *--------------------------------------------------* '
       print *, ' *  End of regression details                       * '
@@ -4300,7 +4248,9 @@ c
 
     zmean = xsum / real(max(inum, 1))
 
+
   end subroutine getmean
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is part of the correlation calculation,
@@ -4328,7 +4278,10 @@ c
     do i = 1, inum
       zdiff(i) = xarr(i) - zmean
     enddo
+
+
   end subroutine getdiff
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is part of the correlation calculation,
@@ -4363,26 +4316,9 @@ c
 
     slope = sumxy / sumx2
 
-      return
-      end
 
-c-------------------------------------------c
-c                                           c
-c-------------------------------------------c
-      subroutine getyestim(xarr,slope,yint,inum,yestim)
-c
-c     This subroutine is part of the correlation calculation,
-c     and it calculates all the predicted y-values using the
-c     regression equation that has been calculated.
-c
-c     INPUT:
-c      xarr   array of x data points
-c      slope  slope of the calculated regression line
-c      yint   y-intercept of the calculated regression line
-c      inum   number of input points
-c
-c     OUTPUT:
   end subroutine getslope
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is part of the correlation calculation,
@@ -4411,7 +4347,9 @@ c     OUTPUT:
       yestim(i) = yint + xarr(i) * slope
     enddo
 
+
   end subroutine getyestim
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is part of the correlation calculation,
@@ -4438,8 +4376,9 @@ c     OUTPUT:
       yresid(i) = yarr(i) - yestim(i)
     enddo
 
-    do i = 1, inum
+
   end subroutine getresid
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is part of the correlation calculation,
@@ -4455,6 +4394,7 @@ c     OUTPUT:
   !*
   !****************************************************************************
   subroutine getcorr(yresid, ydiff, inum, R2)
+
     use verbose_output
 
     implicit none
@@ -4489,7 +4429,9 @@ c     OUTPUT:
       R2 = 0.0
     endif
 
+
   end subroutine getcorr
+
   !****************************************************************************
   !*  ABSTRACT: This subroutine is part of the algorithm for determining
   !*      the structure, or phase, of a cyclone.  Here, we are only looking
@@ -4604,6 +4546,7 @@ c     OUTPUT:
 
       else
 
+        ! search went out of regional grid bounds
         if (verb .ge. 1) then
           print *, ' '
           print *, '!!! ERROR IN get_vtt_phase.  The call to  '
@@ -4663,8 +4606,9 @@ c     OUTPUT:
  115  format (1x,   '    wcore: ', a4, 1x, i10.10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1, '_', a3, 2x, i4, ':',  &
     endif
 
-              i2.2, '  wcore_flag = ', a1, 2x, ' Temp of last contour(K) = ', f7.2, 2x, 'Radius of last contour(km) = ', f8.2)
+
   end subroutine get_vtt_phase
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine computes a modified lat/lon fix position
@@ -4719,6 +4663,7 @@ c     OUTPUT:
     xlonsum = 0.0
     xlatsum = 0.0
 
+    ! do NOT include MSLP for the surface center at this time.
     if (calcparm(10,ist)) then
         ! Just use single weighting for the sfc wcirc fix
         ipct = ipct + 1
@@ -4727,7 +4672,7 @@ c     OUTPUT:
     endif
 
     if (calcparm(11,ist)) then
-        ! This is for the sfc vorticity center....
+      ! for the sfc vorticity center
       ipct    = ipct + 1
       xlonsum = xlonsum + clon(ist, ifh, 11)
       xlatsum = xlatsum + clat(ist, ifh, 11)
@@ -4769,6 +4714,7 @@ c     OUTPUT:
 
 
   end subroutine get_sfc_center
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine calculates the mean Vt separately for
@@ -4843,6 +4789,8 @@ c     OUTPUT:
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xclon > 330.0 .and. xclon <= 360.0) .and. targlon < 25.0) then
+              ! targlon returned from distbear is just east of the
+              ! GM with a non-360-adjusted value.  Adjust it:
               targlon = targlon + 360.0
             endif
 
@@ -4873,6 +4821,7 @@ c     OUTPUT:
         enddo ! qtr_azimloop1
 
         if (azimuth_ct > 0) then
+          ! compute quadrant-azimuthally-averaged winds at this distance
           wmag_mean      = wmag_sum / real(azimuth_ct)
           vt_quad(iquad) = vt_sum / real(azimuth_ct)
         else
@@ -4935,9 +4884,9 @@ c     OUTPUT:
     endif
 
       return
-      end
+
   end subroutine check_quadrant_wind_circ
-c-----------------------------------------------------------------------
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is a driver subroutine for
@@ -5017,16 +4966,6 @@ c-----------------------------------------------------------------------
     sr_vr   = 0.0
     sr_vt   = 0.0
 
-c     -----------------------------------------------------------------
-c     Now determine the angle that the storm took getting from the
-c     last position to the current one.  If this is the initial time,
-c     use the observed direction of motion from the TC Vitals.  This
-c     may not match up with the model storm's initial direction of
-c     motion, but it is all we have available to us in order to get
-c     a heading estimate for the initial time.  This storm heading
-c     information will be used for the storm-relative profiles.
-c     -----------------------------------------------------------------
-
     if (ifh == 1) then
       st_heading = real(storm(ist)%tcv_stdir)
 
@@ -5087,6 +5026,7 @@ c     -----------------------------------------------------------------
         vt_sum     = 0.0
         azimuth_ct = 0
 
+        ! in each quadrant, run through six points along an arc and evaluate the winds
         do iazim = 1, num_qtr_azim ! qtr_azimloop1
 
           bear = ((real(iquad - 1)) * 90.0) + ((real(iazim - 1)) * 15.0) + 7.5
@@ -5098,7 +5038,8 @@ c     -----------------------------------------------------------------
           call distbear (xsfclat, xsfclon, rdist(idist), bear, targlat, targlon, gm_wrap_flag)
 
           if (gm_wrap_flag == 'maxplus360') then
-            if ((xsfclon > 330.0 .and. xsfclon <= 360.0) .and. targlon < 25.o) then
+              ! targlon returned from distbear is just east of the
+              ! GM with a non-360-adjusted value.  Adjust it:
               targlon = targlon + 360.0
             endif
             if (xsfclon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180)) then
@@ -5113,8 +5054,7 @@ c     -----------------------------------------------------------------
             print '(19x,a8,f7.2,35x,a9,f7.2)', 'sfclon = ', 360.0-xsfclon,              ' targlon = ', 360.0-targlon
           endif
 
-            ! NOTE: The 1020 in the call here is just a number/code to
-            ! indicate to the subroutine to process sfc winds....
+          ! NOTE: The 1020 in the call here is just a number/code to indicate to the subroutine to process sfc winds
 
           call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, 1020, 'u', xintrp_u, &
                & valid_pt, bimct, -99, ibiret1)
@@ -5139,6 +5079,7 @@ c     -----------------------------------------------------------------
         enddo ! qtr_azimloop1
 
         if (azimuth_ct > 0) then
+          ! compute quadrant-azimuthally-averaged winds at this distance
           er_wind(iquad, idist) = wmag_sum / real(azimuth_ct)
           er_vr(iquad, idist)   =   vr_sum / real(azimuth_ct)
           er_vt(iquad, idist)   =   vt_sum / real(azimuth_ct)
@@ -5180,6 +5121,7 @@ c     -----------------------------------------------------------------
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xsfclon > 330.0 .and. xsfclon <= 360.0) .and. targlon < 25.0) then
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value. Adjust it:
               targlon = targlon + 360.0
             endif
             if (xsfclon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180)) then
@@ -5187,6 +5129,7 @@ c     -----------------------------------------------------------------
             endif
           endif
 
+          ! NOTE: The 1020 in the call here is just a number/code to indicate to the subroutine to process sfc winds
           call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, 1020, 'u', &
                & xintrp_u, valid_pt, bimct, -99, ibiret1)
 
@@ -5201,7 +5144,9 @@ c     -----------------------------------------------------------------
             vt_sum = vt_sum + vt
             azimuth_ct = azimuth_ct + 1
         enddo ! qtr_azimloop2
+
         if (azimuth_ct > 0) then
+          ! compute quadrant-azimuthally-averaged winds at this distance
           sr_wind(iquad, idist) = wmag_sum / real(azimuth_ct)
           sr_vr(iquad, idist)   =   vr_sum / real(azimuth_ct)
           sr_vt(iquad, idist)   =   vt_sum / real(azimuth_ct)
@@ -5227,6 +5172,7 @@ c     -----------------------------------------------------------------
 
 
   end subroutine get_wind_structure
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine determines the fractional areal coverage
@@ -5283,7 +5229,7 @@ c     -----------------------------------------------------------------
     character(len=2)   :: cthresh(3) = (/'34','50','64'/)
 
     igfwret = 0
-    conv_ms_knots = 1.9427
+    conv_ms_knots = 1.9427 ! CAITLYN - this should be a main program variable
     rads = 500.0
     ri   = 300.0
     dell = (dx+dy) / 2.0
@@ -5295,6 +5241,7 @@ c     -----------------------------------------------------------------
     sum_exceed_area       = 0.0
     sum_total_area        = 0.0
 
+    ! call get_ij_bounds in order to get the dimensions for a smaller subdomain of grid points to search over
     call get_ij_bounds (npts, 0, ri, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, xsfclon, &
          & xsfclat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
@@ -5383,7 +5330,7 @@ c     -----------------------------------------------------------------
       endif
     endif
 
-    if ((dx+dy)/2.0 >= 0.8) then !CAITLYN - reapeating code
+    ! CAITLYN - i think this could be its own subroutine
       numinterp = 4
     else if ((dx+dy)/2.0 < 0.8 .and. (dx+dy)/2.0 >= 0.4) then
       numinterp = 3
@@ -5454,13 +5401,13 @@ c     -----------------------------------------------------------------
         endif
 
         if (.not. valid_pt(ii,j)) then
-          cycle     ! iloop   ! Only an issue for regional grids
+          cycle ! iloop; only an issue for regional grids
         endif
 
         call calcdist (glon(ii), glat(j), xsfclon, xsfclat, xdist, degrees)
 
         if (xdist > (rads + (0.75 * ((dx+dy)/2.0) * dtk * cos(glat(j)*dtr)))) then
-          cycle   ! iloop
+          cycle ! iloop
 
         else
 
@@ -5468,7 +5415,7 @@ c     -----------------------------------------------------------------
           vmagkts = vmag * conv_ms_knots
 
           if (numinterp > 0) then
-            grdintincr = ((dx+dy) / 2.0) / 2**numinterp  ! "grid spacing" of interpolated grid
+            grdintincr = ((dx+dy) / 2.0) / 2**numinterp  ! "grid spacing" of interpolated grid !CAITLYN - should the exponent be a real?
             ngridint = (2**numinterp) / 2
             got_pdf = 'notyet'
 
@@ -5484,12 +5431,15 @@ c     -----------------------------------------------------------------
                   pdf_ct_bin(ipdfbin) = pdf_ct_bin(ipdfbin) + 1
                   pdf_ct_tot = pdf_ct_tot + 1
                   got_pdf = 'got_it'
+
                 if (xdist < 500.0) then
+                  ! compute area of this fraction of a grid box
                   xarea = (grdintincr * 111195.0) * (grdintincr * 111195.0 * cos(xintlat * dtr))
                   idistbin = int(xdist / 100.0) + 1
 
                   do ib = idistbin, numbin ! binloop
                     if (xintlon >= xsfclon .and. xintlat >= xsfclat) then
+                      ! NE quadrant
                       area_total_quad_bin(1, ib) = area_total_quad_bin(1, ib) + xarea
 
                         area_exceed_quad_bin(1, ib, 1) = area_exceed_quad_bin(1, ib, 1) + xarea
@@ -5501,6 +5451,7 @@ c     -----------------------------------------------------------------
                       endif
 
                     else if (xintlon >= xsfclon .and. xintlat < xsfclat) then
+                      ! SE quadrant
                       area_total_quad_bin(2, ib) = area_total_quad_bin(2, ib) + xarea
 
                       if (vmag > windthresh(1)) then
@@ -5514,6 +5465,7 @@ c     -----------------------------------------------------------------
                       endif
 
                     else if (xintlon < xsfclon .and. xintlat < xsfclat) then
+                      ! SW quadrant
                       area_total_quad_bin(3, ib) = area_total_quad_bin(3, ib) + xarea
 
                       if (vmag > windthresh(1)) then
@@ -5527,6 +5479,7 @@ c     -----------------------------------------------------------------
                       endif
 
                     else if (xintlon < xsfclon .and. xintlat >= xsfclat) then
+                      ! NW quadrant
                       area_total_quad_bin(4, ib) = area_total_quad_bin(4, ib) + xarea
 
                       if (vmag > windthresh(1)) then
@@ -5555,11 +5508,13 @@ c     -----------------------------------------------------------------
             endif
 
             if (xdist < 500.0) then
+              ! compute area of this grid box
               xarea = (dy * 111195.0) * (dx * 111195.0 * cos(glat(j) * dtr))
               idistbin = int(xdist / 100.0) + 1
 
               do ib = idistbin, numbin ! binloop2
                 if (glon(ii) >= xsfclon .and. glat(j) >= xsfclat) then
+                  ! NE quadrant
                   area_total_quad_bin(1, ib) = area_total_quad_bin(1, ib) + xarea
 
                   if (vmag > windthresh(1)) then
@@ -5573,6 +5528,7 @@ c     -----------------------------------------------------------------
                   endif
 
                 else if (glon(ii) >= xsfclon .and. glat(j) <  xsfclat) then
+                  ! SE quadrant
                   area_total_quad_bin(2, ib) = area_total_quad_bin(2, ib) + xarea
 
                   if (vmag > windthresh(1)) then
@@ -5586,6 +5542,7 @@ c     -----------------------------------------------------------------
                   endif
 
                 else if (glon(ii) < xsfclon .and. glat(j) < xsfclat) then
+                  ! SW quadrant
                   area_total_quad_bin(3, ib) = area_total_quad_bin(3, ib) + xarea
 
                   if (vmag > windthresh(1)) then
@@ -5599,6 +5556,7 @@ c     -----------------------------------------------------------------
                   endif
 
                 else if (glon(ii) < xsfclon .and. glat(j) >= xsfclat) then
+                  ! NW quadrant
                   area_total_quad_bin(4, ib) = area_total_quad_bin(4, ib) + xarea
 
                   if (vmag > windthresh(1)) then
@@ -5618,6 +5576,7 @@ c     -----------------------------------------------------------------
       enddo ! iloop
     enddo ! jloop
 
+    ! compute the fractional wind coverage for all different quadrants, bins and thresholds
 
     if (verb .ge. 0) then
       write (6,109) '                                 ',     &
@@ -5647,6 +5606,9 @@ c     -----------------------------------------------------------------
 109 format (1x, a33, a37, a16)
 117 format (5x, a2, 5x, a5, 7x, a2, 13x, f6.2, 10x, f16.1, 2x, f16.1)
 
+    ! compute the fractional wind coverage for all different bins and thresholds, but for the
+    ! entire "disc" of the storm, that is, summing all quadrants together.
+
     do it = 1, numthresh
       do ib = 1, numbin
         do iq = 1, numquad
@@ -5668,6 +5630,7 @@ c     -----------------------------------------------------------------
 
 
   end subroutine get_fract_wind_cov
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine computes the Integrated Kinetic Energy
@@ -5723,6 +5686,7 @@ c     -----------------------------------------------------------------
     dell = (dx+dy) / 2.0
     npts = rads / (dtk * dell)
 
+    ! call get_ij_bounds in order to get the dimensions for a smaller subdomain of grid points to search over.
     call get_ij_bounds (npts, 0, ri, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, xsfclon, &
          & xsfclat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
@@ -5864,7 +5828,7 @@ c     -----------------------------------------------------------------
         endif
 
         if (.not. valid_pt(ii,j)) then
-          cycle    ! Only an issue for regional grids
+          cycle  ! only an issue for regional grids
         endif
 
         call calcdist (glon(ii), glat(j), xsfclon, xsfclat, xdist, degrees)
@@ -5875,16 +5839,18 @@ c     -----------------------------------------------------------------
           vmag = sqrt(u(ii, j, levsfc)**2 + v(ii, j, levsfc)**2)
 
           if (vmag > 10.0) then
+            ! compute area then add gridpoint to IKE_10
             xarea = (dy * 111195.0) * (dx * 111195.0 * cos(glat(j) * dtr))
             ike(1) = ike(1) + (0.5 * (vmag**2) * xarea)
           endif
 
           if (vmag > 18.0) then
-              ! Add gridpoint to IKE_ts. Area already computed for 10
+            ! area already computed for 10; add gridpoint to IKE_ts.
             ike(2) = ike(2) + (0.5 * (vmag**2) * xarea)
           endif
 
           if (vmag > 33.0) then
+            ! area already computed for 10; add gridpoint to IKE_h.
             ike(3) = ike(3) + (0.5 * (vmag**2) * xarea)
           endif
         endif
@@ -5895,12 +5861,14 @@ c     -----------------------------------------------------------------
     ike(2) = ike(2) * 1.0E-12   ! convert from J to TJ
     ike(3) = ike(3) * 1.0E-12   ! convert from J to TJ
 
+    ! compute the storm surge damage potential (sdp)
     if (ike(2) >= 0.0) then
       sdp = 0.676 + (0.43 * sqrt(ike(2))) - (0.0176 * ((sqrt(ike(2)) - 6.5)**2) )
     else
       sdp = -99.0
     endif
 
+    ! print out the IKE and SDP statistics
     if (verb .ge. 3) then
       print *, ' IKE_10 (storm energy)   = ', ike(1)
       print *, ' IKE_TS (tropical storm) = ', ike(2)
@@ -5910,6 +5878,7 @@ c     -----------------------------------------------------------------
 
 
   end subroutine get_ike_stats
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine computes the 850-200 mb vertical wind
@@ -6050,16 +6019,6 @@ c     -----------------------------------------------------------------
     u_cart_sum_ct = 0
     v_cart_sum_ct = 0
 
-c     ------------------------------------------------------------------
-c     First, get the fix position to use for calculating the shear.  For
-c     now, the same position will be used for both 850 and 200 mb (we 
-c     may consider at some point using a separate center fix for 200 mb
-c     to account for vortex tilt).  But for now, we will first look to 
-c     use the center for the 850 mb wind circulation fix, but if that 
-c     fix could not be made for this current lead time, then we will use
-c     the mean fix position for this lead time.
-c     ------------------------------------------------------------------
-
     if (calcparm(3,ist)) then
       xcenlon = clon(ist, ifh, 3)
       xcenlat = clat(ist, ifh, 3)
@@ -6095,7 +6054,6 @@ c     ------------------------------------------------------------------
     endif
 
     do ilev = 1, 2 ! levelloop1
-    do ilev = 1, 2 ! levelloop1
 
       if (ilev == 1) then
         level = 850
@@ -6126,6 +6084,7 @@ c     ------------------------------------------------------------------
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xcenlon > 330.0 .and. xcenlon <= 360.0) .and. targlon < 25.0) then
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value.  Adjust it:
               targlon = targlon + 360.0
             endif
             if (xcenlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180)) then
@@ -6159,6 +6118,7 @@ c     ------------------------------------------------------------------
           endif
         enddo ! azimloop1
 
+        ! compute the azimuthally averaged Vt and Vr at this radius
         if (azimuth_ct > 0) then
           vt_mean(idist, ilev) = vt_azim_sum / real(azimuth_ct)
           vr_mean(idist, ilev) = vr_azim_sum / real(azimuth_ct)
@@ -6190,8 +6150,11 @@ c     ------------------------------------------------------------------
       do idist = numdist, 1, -1 ! inverse_radius_loop
 
         if (xcenlat >= 0.0) then
+          ! NHEM storm, cyclonic storm has Vt > 0.
           if (vt_mean(idist,ilev) >= 1.0) then
             if (idist == numdist) then
+              ! We found this at the max radius, so just set the
+              ! max_dist_index to this max radius and then exit the loop.
               max_dist_index(ilev) = numdist
               found_vt_ge_1_flag = 'y'
               exit  ! inverse_radius_loop
@@ -6202,8 +6165,11 @@ c     ------------------------------------------------------------------
             endif
           endif
         else
+          ! SHEM storm, cyclonic storm has Vt < 0.
           if (vt_mean(idist,ilev) <= -1.0) then
             if (idist == numdist) then
+              ! We found this at the max radius, so just set the
+              ! max_dist_index to this max radius and then exit the loop.
               max_dist_index(ilev) = numdist
               found_vt_ge_1_flag = 'y'
               exit  ! inverse_radius_loop
@@ -6222,11 +6188,22 @@ c     ------------------------------------------------------------------
 
       do idist = 1, numdist ! radiusloop2
         if (vt_mean(idist,ilev) > -998.0) then
+
+          ! We were able to compute a vt_mean at this radius.
           do iazim = 1, numazim ! azimloop2
             if (idist > max_dist_index(ilev) .or. max_dist_index(ilev) == -999) then
+              ! If we are either beyond the radius at which the
+              ! cyclonic mean Vt has dropped to less than 1 m/s, or
+              ! if we did not find a mean cyclonic Vt that exceeded
+              ! 1 m/s at any radius, just use the original Vt and
+              ! Vr as they are.
               vt_prime(iazim, idist, ilev) = vt(iazim, idist, ilev)
               vr_prime(iazim, idist, ilev) = vr(iazim, idist, ilev)
             elseif (idist <= max_dist_index(ilev)) then
+              ! We are still at a radius where our earlier analysis
+              ! above indicated the mean cyclonic Vt > 1 m/s, so we
+              ! should subtract out the azimuthally averaged mean Vt
+              ! and Vr.
               vt_prime(iazim, idist, ilev) = vt(iazim, idist, ilev) - vt_mean(idist, ilev)
               vr_prime(iazim, idist, ilev) = vr(iazim, idist, ilev) - vr_mean(idist, ilev)
             endif
@@ -6249,8 +6226,13 @@ c     ------------------------------------------------------------------
             u_from_vr(iazim, idist) = sin(bear * dtr) * vr_prime(iazim, idist, ilev)
             v_from_vt(iazim, idist) = sin(bear * dtr) * vt_prime(iazim, idist, ilev)
             v_from_vr(iazim, idist) = cos(bear * dtr) * vr_prime(iazim, idist, ilev)
+            ! Create the Cartesian u-component for this point by combining the u contribution
+            ! from the 2 separate cylindrical components.
             u_cart(iazim, idist, ilev) = u_from_vt(iazim, idist) + u_from_vr(iazim, idist)
+            ! Create the Cartesian v-component for this point by combining the v contribution
+            ! from the 2 separate cylindrical components.
             v_cart(iazim, idist, ilev) = v_from_vt(iazim, idist) + v_from_vr(iazim, idist)
+            ! Add to the sum arrays for the Cartesian u- and v-arrays for this level....
             u_cart_sum(ilev) = u_cart_sum(ilev) + u_cart(iazim, idist, ilev)
             u_cart_sum_ct(ilev) = u_cart_sum_ct(ilev) + 1
             v_cart_sum(ilev) = v_cart_sum(ilev) + v_cart(iazim, idist, ilev)
@@ -6260,6 +6242,9 @@ c     ------------------------------------------------------------------
       enddo ! radiusloop3
     enddo ! levelloop2
 
+    ! Compute the u- and v-components of the vertical wind shear.
+    ! Remember that vertical level 1 is 850 mb, and level 2 is 200 mb.
+    ! From these, compute the shear magnitude.
 
     if (u_cart_sum_ct(1) > 0 .and. v_cart_sum_ct(1) > 0 .and. u_cart_sum_ct(2) > 0 .and. v_cart_sum_ct(2) > 0) then
 
@@ -6286,12 +6271,10 @@ c     ------------------------------------------------------------------
 
     shear(ist, ifh, 1) = shear_mag
 
-c     -----------------------------------------------------------------
-c     Now compute the shear direction (i.e., the direction that the
-c     shear is coming from).  With the methods below, we will initially
-c     derive a direction that the shear is pointing to, so we will need
-c     to adjust by 180 degrees.
-c     -----------------------------------------------------------------
+    ! Now compute the shear direction (i.e., the direction that the
+    ! shear is coming from).  With the methods below, we will initially
+    ! derive a direction that the shear is pointing to, so we will need
+    ! to adjust by 180 degrees.
 
     if (ushear > -998.0 .and. vshear > -998.0) then
       if (ushear == 0.0 .and. vshear >= 0.0) then
@@ -6307,18 +6290,23 @@ c     -----------------------------------------------------------------
         shear_dir_point_to = 90.0
         shear_dir_from     = 270.0
       else
+        ! first get the local angle
         local_angle = atan2(abs(vshear), abs(ushear)) / dtr
 
         if (ushear > 0.0 .and. vshear > 0.0) then
+          ! NE quadrant
           shear_dir_point_to = 90.0 - local_angle
           shear_dir_from     = 180.0 + shear_dir_point_to
         elseif (ushear > 0.0 .and. vshear < 0.0) then
+          ! SE quadrant
           shear_dir_point_to = 90.0 + local_angle
           shear_dir_from     = 180.0 + shear_dir_point_to
         elseif (ushear < 0.0 .and. vshear < 0.0) then
+          ! SW quadrant
           shear_dir_point_to = 270.0 - local_angle
           shear_dir_from     = shear_dir_point_to - 180.0
         elseif (ushear < 0.0 .and. vshear > 0.0) then
+          ! NW quadrant
           shear_dir_point_to = 270.0 + local_angle
           shear_dir_from     = shear_dir_point_to - 180.0
         endif
@@ -6389,6 +6377,10 @@ c     -----------------------------------------------------------------
     logical(1) :: valid_pt(imax,jmax)
     logical(1) :: readflag(nreadparms)
 
+    ! Now get a smoothed, barnes-averaged value of SST at the center
+    ! point.  Only do this if we have *both* the  SST and the
+    ! land-sea mask, otherwise set to missing for this time.
+
     if (readflag(17) .and. readflag(20)) then
       re      = 125.0
       ri      = 250.0
@@ -6404,7 +6396,9 @@ c     -----------------------------------------------------------------
       sst_smooth = -9999.0
     endif
 
+
   end subroutine get_sst
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is the driver for calling various other
@@ -6536,11 +6530,9 @@ c     -----------------------------------------------------------------
       q850conv = -9999.0
     endif
 
-      !----------------------------------------------------------------
-      ! Now get a smoothed, barnes-averaged value of RH at the center
-      ! point.  We will do this for a level that averages 1000 & 925 mb,
-      ! and also for a level that averages 800,750,700,650 & 600 mb.
-      !----------------------------------------------------------------
+    ! Now get a smoothed, barnes-averaged value of RH at the center
+    ! point.  We will do this for a level that averages 1000 & 925 mb,
+    ! and also for a level that averages 800,750,700,650 & 600 mb.
 
     if (verb .ge. 3) then
       call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
@@ -6561,10 +6553,7 @@ c     -----------------------------------------------------------------
  130  format (1x, 'TIMING: gen_diag after get_rh ... ', i2.2, ':', i2.2, ':', i2.2)
     endif
 
-      !----------------------------------------------------------------
-      ! Now get a smoothed, barnes-averaged value of 500 mb omega at
-      ! the center point. 
-      !----------------------------------------------------------------
+    ! Now get a smoothed, barnes-averaged value of 500 mb omega at the center point
 
     if (readgenflag(23)) then
       if (verb .ge. 3) then
@@ -6593,9 +6582,11 @@ c     -----------------------------------------------------------------
       else
         omega500_smooth = -9999.0
       endif
-c
+
       return
+
   end subroutine get_gen_diags
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine calls two routines that will return the
@@ -6626,6 +6617,7 @@ c
     real              :: dx, dy, xcenlon, xcenlat, divg, xsmoothval, re, ri
 
     logical(1)        :: calcparm(maxtp,maxstorm), valid_pt(imax,jmax)
+
     if (allocated(divg_850)) deallocate(divg_850)
     allocate (divg_850(imax ,jmax), stat = idvgf)
 
@@ -6664,9 +6656,9 @@ c
     if (allocated(divg_850)) deallocate(divg_850)
 
       return
-      end
+
   end subroutine get_divg
-c-----------------------------------------------------------------------
+
   !****************************************************************************
   !*
   !*  ABSTRACT: Given an origin at latitude, longitude=xlato,xlono,
@@ -6698,7 +6690,7 @@ c-----------------------------------------------------------------------
   !*
   !****************************************************************************
   subroutine distbear (xlatin, xlonin, dist, bear, xlatt, xlont, gm_wrap_flag)
-c
+
     use trig_vals
 
     implicit none
@@ -6714,8 +6706,10 @@ c
     xlono = xlonin
 
     if (xlono > 180.0) then
+      ! longitude must be positive west
       xlono = 360.0 - xlono
     else
+      ! longitude must be negative east
       xlono = -1.0 * xlono
     endif
 
@@ -6748,12 +6742,15 @@ c
 
     xlontz = atan2(x, y) / dtr
 
+    ! return the target longitude back to the calling routine as a 0-360 positive east longitude
     xlont = mod(360.0 - xlontz, 360.0)
 
     return
     20 xlont = 0.0
 
+
   end subroutine distbear
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine performs a bilinear interpolation to get
@@ -6797,14 +6794,23 @@ c
     ibiret = 0
     tmp_targlon = targlon
 
+    ! convert the lat/lon values into i- and j-indices
+    ! find the j-indices for the points just to the north and the south of targlat
     if (targlat >= 0.0) then
+      ! For a northern hemisphere storm, jn is the j-index for the
+      ! point just to the *NORTH* (poleward) of targlat.
       jn = int((glatmax - targlat) / dy + 1.0)
       js = jn + 1
     else
+      ! For a southern hemisphere storm, js is the j-index for the
+      ! point just to the *SOUTH* (poleward) of targlat.
       js = ceiling((glatmax - targlat) / dy + 1.0)
       jn = js - 1
     endif
 
+    ! Check to make sure that points are not being requested beyond
+    ! the northern or southern boundaries of the grid.  This is most
+    ! likely to happen for a smaller, regional grid.
     if (jn > jmax .or. js > jmax) then
       if (verb .ge. 1 .and. bimct == 0) then
         print *, ' '
@@ -6835,18 +6841,12 @@ c
       return
     endif
 
+    ! find the i-indices for the points just to the east and the west of targlon
     ie = int((tmp_targlon - glonmin) / dx + 2.0)
     iw = ie - 1
 
     ie_hold = ie
     iw_hold = iw
-
-      ! Check for GM wrapping.  Check "ie" to see if it is between the 
-      ! most eastward gridpoint and the GM (i.e., on a 1-deg global
-      ! grid (360x181), it would be if targlon was between 359.0 (i=360)
-      ! and the GM (i=1, not i=361)).  Similarly then, if we adjust ie 
-      ! to then be 1, then we have a problem with iw, 
-      ! since iw = 1 - 1 = 0.
 
     if (ie > imax) then
       if (trkrinfo%gridtype == 'global') then
@@ -6887,31 +6887,6 @@ c
         return
       endif
     endif
-
-c      if (ifh == 24) then
-c        write (6,104) tmp_targlon,targlat
-c  104   format (1x,'bix: tmp_targlon= ',f11.6,'  targlat= ',f11.6)
-c        write (6,108) ie_hold,ie,iw_hold,iw
-c  108   format (1x,'bix: ie_hold= ',i5,'  ie= ',i5,'  iw_hold= '
-c     &         ,i5,'  iw= ',i5)
-c        write (6,112) glon(iw),glon(ie)
-c  112   format (1x,'bix: glon(iw)= ',f11.6,'  glon(ie)= ',f11.6)
-c      endif
-
-ctmwc      if ( verb .ge. 3 ) then
-ctmwc        print *,'  +++ Interpolating winds for cparm= ',cparm
-ctmwc        print '(6x,4(a4,i3))','jn= ',jn,' js= ',js,' iw= ',iw,' ie= ',ie
-ctmwc      endif
-
-c     ----------------------------------------------------------------
-c     Calculate the longitude (to) and latitude (ta) location ratios.
-c     Check for GM wrapping, as we can run into a problem here if 
-c     interpolating for points that are just west of the GM, since we
-c     would be interpolating using values of longitude just west of
-c     GM (say, glon(iw)=359.5) and the GM (glon(ie) = 0.0).  This 
-c     makes for an incorrect "to" ratio below, with 0-359.5 in the 
-c     denominator.  We have to account for this....
-c     ----------------------------------------------------------------
 
     if (glon(iw) > 300.0 .and. (glon(ie) < 10.0 .and. glon(ie) >= 0.0)) then
       eastlon = 360.0 + glon(ie)
@@ -6982,7 +6957,9 @@ c     ----------------------------------------------------------------
     z = 1.9427
     xintrp_val = (1.0-to) * (1.0-ta) * d1 + to * (1.0-ta) * d2 + to * ta * d3 + (1.0-to) * ta * d4
 
+
   end subroutine bilin_int_uneven
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  sorts storms by mslp.  It is called by
@@ -7073,8 +7050,10 @@ c     ----------------------------------------------------------------
         do ist = 1, maxstorm
           if (prstemp(sortindex(ist))/100.0 < 9998.0) then
             if (prstemp(sortindex(ist)) > 50000.0) then
+              ! pressure values are in Pa CAITLYN - repeating code
               write (6,82) ist, sortindex(ist), prstemp(sortindex(ist))/100.0
             else
+              ! pressure values are in mb
               write (6,82) ist, sortindex(ist), prstemp(sortindex(ist))
             endif
           endif
@@ -7092,7 +7071,9 @@ c     ----------------------------------------------------------------
 
     deallocate (prstemp); deallocate (iwork)
 
+
   end subroutine sort_storms_by_pressure
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine takes as input a u-wind and v-wind value
@@ -7121,6 +7102,7 @@ c     ----------------------------------------------------------------
   !*
   !****************************************************************************
   subroutine getvrvt (centlon, centlat, xlon, xlat, udat, vdat, vr, vt, ifh, igvtret)
+
     use trig_vals; use verbose_output
 
     implicit none
@@ -7136,6 +7118,7 @@ c     ----------------------------------------------------------------
     tmpxlon    = xlon
     tmpcentlon = centlon
 
+    ! multiple GM-wrapping scenarios
     if (tmpcentlon > 330.0) then
       if (xlon > 360.0) then
         tmpxlon = xlon  ! all lons will be in the 300+ range
@@ -7147,7 +7130,7 @@ c     ----------------------------------------------------------------
     elseif (tmpcentlon >= 0 .and. tmpcentlon < 30.0) then
 
       if (xlon >= 360.0) then
-
+        ! put tmpxlon in same 0.0+ reference frame as tmpcentlon
         tmpxlon = xlon - 360.0
 
         elseif (xlon > 330.0 .and. xlon < 360.0) then
@@ -7162,6 +7145,7 @@ c     ----------------------------------------------------------------
 
     elseif (tmpcentlon < 0.0) then
 
+      ! get both centlon and xlon in the 360+ reference frame
       if (xlon >= 360.0) then
         tmpcentlon = 360.0 + tmpcentlon
         tmpxlon    = xlon
@@ -7226,6 +7210,8 @@ c     ----------------------------------------------------------------
       cos_angle = acos(cos_value) / dtr
       tmpangle = 0.5 * (sin_angle + cos_angle)
 
+      ! The previous lines of code just calculated an angle between 0 and 90.
+      ! This next if structure adjusts that angle to instead be between 0 and 360.
       if (centlat <= xlat .and. tmpcentlon <= tmpxlon) then
         angle = 90.0 - tmpangle
       else if (centlat >  xlat .and. tmpcentlon <= tmpxlon) then
@@ -7253,6 +7239,7 @@ c     ----------------------------------------------------------------
 
 
   end subroutine getvrvt
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
@@ -7395,10 +7382,10 @@ c     ----------------------------------------------------------------
     if (xminmslp == 999999.0) xminmslp = 0.0
 
     if (xminmslp < 1100.0) then
-        ! Pressure units are in mb...
+      ! pressure units are in mb
       mslp_outp_adj = 1.0
     elseif (xminmslp > 80000.0) then
-        ! Pressure units are in Pa...
+      ! pressure units are in Pa
       mslp_outp_adj = 100.0
     else
       if (verb .ge. 3) then
@@ -7414,14 +7401,6 @@ c     ----------------------------------------------------------------
     endif
 
     conv_ms_knots = 1.9427
-
-c     First convert all of the lat/lon values from reals into integers.
-c     These integer values must be 10x their real value (eg. 125.4 will
-c     be written out as 1254).  Convert the lon values so that they go
-c     from 0-180E or 0-180W, and convert the lat values so that they are
-c     positive and use 'N' or 'S' to differentiate hemispheres.
-c     Also, because the outlon value may be >360 due to GM wrapping, we
-c     need to mod it to get it in a 0-360 framework.
 
     if (outlon < -998.0 .or. outlat < -998.0) then
       intlon = 0
@@ -7471,6 +7450,7 @@ c     need to mod it to get it in a 0-360 framework.
     end select
 
     if (atcfname(1:2) == 'SP') then
+      ! add 3 for SREF to account for the 3-hour off-synoptic time offset
       output_fhr = ifcsthour + 3
     else
       output_fhr = ifcsthour
@@ -7505,6 +7485,7 @@ c     need to mod it to get it in a 0-360 framework.
       print *, 'output: plastbar = ', plastbar,' iplastbar = ', iplastbar
     endif
 
+    ! convert all of the cyclone phase space parameter values from real to integer
     do ic = 1, 3
       if (cps_vals(ic) > -9999.0) then
         if (cps_vals(ic) >= 0.0) then
@@ -7555,6 +7536,7 @@ c     need to mod it to get it in a 0-360 framework.
 
     if (shearflag == 'y' .or. shearflag == 'Y') then
       if (shear_mag > -998.0) then
+        ! convert the shear from m/s to knots for output
         ishear_mag = int(((shear_mag * 1.9427) * 10.0) + 0.5)
       else
         ishear_mag = -99
@@ -7575,6 +7557,10 @@ c     need to mod it to get it in a 0-360 framework.
 
     if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
       if (stcvtype(ist) == 'FOF') then
+        ! If this is a TC vitals-described storm (i.e., one that is
+        ! numbered by JTWC or NHC), then leave the basinid as is.
+        ! Otherwise, we want to use the "basinid" location as a
+        ! label to identify what type of run this is.
         if (trkrinfo%type == 'midlat') basinid = 'ML'
         if (trkrinfo%type == 'tcgen')  basinid = 'TG'
       endif
@@ -7647,6 +7633,7 @@ c     need to mod it to get it in a 0-360 framework.
     flush(64)
 
   end subroutine output_atcfunix
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  is very similar to subroutine
@@ -7752,10 +7739,10 @@ c     need to mod it to get it in a 0-360 framework.
     if (xminmslp == 999999.0) xminmslp = 0.0
 
     if (xminmslp < 1100.0) then
-        ! Pressure units are in mb...
+      ! pressure units are in mb
       mslp_outp_adj = 1.0
     elseif (xminmslp > 80000.0) then
-        ! Pressure units are in Pa...
+      ! pressure units are in Pa
       mslp_outp_adj = 100.0
     else
       if (verb .ge. 0) then
@@ -7819,6 +7806,7 @@ c     need to mod it to get it in a 0-360 framework.
     end select
 
     if (atcfname(1:2) == 'SP') then
+      ! add 3 for SREF to account for the 3-hour off-synoptic time offset
       output_fhr = ifcsthour + 3
     else
       output_fhr = ifcsthour
@@ -7851,6 +7839,7 @@ c     need to mod it to get it in a 0-360 framework.
       print *, 'output: plastbar = ', plastbar, ' iplastbar = ', iplastbar
     endif
 
+    ! convert all of the cyclone phase space parameter values from real to integer
     do ic = 1, 3
       if (cps_vals(ic) > -9999.0) then
         if (cps_vals(ic) >= 0.0) then
@@ -7894,7 +7883,7 @@ c     need to mod it to get it in a 0-360 framework.
 
     if (shearflag == 'y' .or. shearflag == 'Y') then
       if (shear_mag > -998.0) then
-          ! Convert the shear from m/s to knots for the output
+        ! convert the shear from m/s to knots for the output
         ishear_mag = int(((shear_mag * 1.9427) * 10.0)+ 0.5)
       else
         ishear_mag = -99
@@ -7968,10 +7957,10 @@ c     need to mod it to get it in a 0-360 framework.
     if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
 
       if (stcvtype(ist) == 'FOF') then
-          ! If this is a TC vitals-described storm (i.e., one that is
-          ! numbered by JTWC or NHC), then leave the basinid as is.
-          ! Otherwise, we want to use the "basinid" location as a 
-          ! label to identify what type of run this is.
+        ! If this is a TC vitals-described storm (i.e., one that is
+        ! numbered by JTWC or NHC), then leave the basinid as is.
+        ! Otherwise, we want to use the "basinid" location as a
+        ! label to identify what type of run this is.
         if (trkrinfo%type == 'midlat') basinid = 'ML'
         if (trkrinfo%type == 'tcgen')  basinid = 'TG'
       endif
@@ -8136,6 +8125,7 @@ c     need to mod it to get it in a 0-360 framework.
     return
 
   end subroutine output_aext
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a 1-line message for each
@@ -8242,7 +8232,9 @@ c     need to mod it to get it in a 0-360 framework.
 
 81  format (i2, a4, 4i2.2, 14i4, 1x, a3)
 
+
   end subroutine output_all
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a 1-line message for each storm
@@ -8288,11 +8280,13 @@ c     need to mod it to get it in a 0-360 framework.
           if (ifhours(ifh) == 99) then
             intlon(ifh) = 0
             intlat(ifh) = 0
+            cycle ! ifhloop
           endif
 
         else
           intlon(ifh) = 0
           intlat(ifh) = 0
+          cycle ! ifhloop
         endif
 
         if (fixlon(ist,ifh) < -998.0 .or. fixlat(ist,ifh) < -998.0) then
@@ -8380,6 +8374,7 @@ c     need to mod it to get it in a 0-360 framework.
 
 
   end subroutine output_atcf
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
@@ -8536,6 +8531,7 @@ c     need to mod it to get it in a 0-360 framework.
     end select
 
     if (atcfname(1:2) == 'SP') then
+      ! add 3 for SREF to account for the 3-hour off-synoptic time offset
       ileadtime  = nint((fhreal(ifh) + 3.0) * 100.0)
     else
       ileadtime  = nint(fhreal(ifh) * 100.0)
@@ -8570,7 +8566,9 @@ c     need to mod it to get it in a 0-360 framework.
            i4, ', ', a12,4(', ', i4.4), ',    0,    0, ', i3)
 
     flush(69)
+
   end subroutine output_hfip
+
   !****************************************************************************
   !*
   !*   ABSTRACT: This subroutine  outputs a 1-line message for a given
@@ -8694,7 +8692,7 @@ c     need to mod it to get it in a 0-360 framework.
       xoutlon = mod(outlon, 360.0)
 
       if (xoutlon >= 180.0) then
-        intlon    = 3600 - int(xoutlon * 10.0 + 0.5)
+        intlon    = 3600 - int(xoutlon * 10.0 + 0.5)  !CAITLYN - repeating coe?
         intlon100 = 36000 - int(xoutlon * 100.0 + 0.5)
         clonew    = 'W'
       else
@@ -8728,6 +8726,7 @@ c     need to mod it to get it in a 0-360 framework.
       case default;    basinid = '**'
     end select
 
+      ! add 3 for SREF to account for the 3-hour off-synoptic time offset
       output_fhr = ifcsthour + 3
     else
       output_fhr = ifcsthour
@@ -8770,10 +8769,7 @@ c     need to mod it to get it in a 0-360 framework.
 81  format (a2, ', ', a2, ', ', i10.10, ', 03, ', a4, ', ', i3.3, ', ', i3, a1, ', ', i4, a1, ', ', i3, ', ', i4, ', ', &
             a6, i3.3, ', ', i3.3, ', ', i3, ', ', a2, a1, 4(', ', i4), ', ', i4, a1, ', ', i5, a1)
 
-c     --------------------------------------------------
-c     Now compute and write out the pdf values for the
-c     wind magnitude....
-c     --------------------------------------------------
+    ! compute and write out the pdf values for the wind magnitude
 
     do ip = 1, 16
       pdfval = real(pdf_ct_bin(ip)) / real(pdf_ct_tot)
@@ -8786,6 +8782,7 @@ c     --------------------------------------------------
 
 
   end subroutine output_fract_wind
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
@@ -8963,11 +8960,13 @@ c     --------------------------------------------------
     end select
 
     if (atcfname(1:2) == 'SP') then
+      ! add 3 for SREF to account for the 3-hour off-synoptic time offset
       output_fhr = ifcsthour + 3
     else
       output_fhr = ifcsthour
     endif
 
+    ! total wind (converted to knots*10), earth relative
     do iq = 1, numquad
       do ir = 1, numdist
 
@@ -8984,6 +8983,7 @@ c     --------------------------------------------------
                     intlat100, clatns, intlon100, clonew
     enddo
 
+    ! total wind (converted to knots*10), storm relative
     do iq = 1, numquad
       do ir = 1, numdist
         if (sr_wind(iq,ir) < -998.0) then
@@ -8999,6 +8999,7 @@ c     --------------------------------------------------
                     intlat100, clatns, intlon100, clonew
     enddo
 
+    ! tangential wind (m/s * 10), earth relative
     do iq = 1, numquad
       do ir = 1, numdist
         if (er_vt(iq,ir) < -998.0) then
@@ -9014,6 +9015,7 @@ c     --------------------------------------------------
                     (ioutwind(it), it=1, numdist), intlat100, clatns, intlon100, clonew
     enddo
 
+    ! tangential wind (m/s * 10), storm relative
     do iq = 1, numquad
       do ir = 1, numdist
         if (sr_vt(iq,ir) < -998.0) then
@@ -9029,6 +9031,7 @@ c     --------------------------------------------------
                     (ioutwind(it),it=1,numdist), intlat100, clatns, intlon100, clonew
     enddo
 
+    ! radial wind (m/s * 10), earth relative
     do iq = 1, numquad
       do ir = 1, numdist
         if (er_vr(iq,ir) < -998.0) then
@@ -9044,6 +9047,7 @@ c     --------------------------------------------------
                     (ioutwind(it),it=1,numdist), intlat100, clatns, intlon100, clonew
     enddo
 
+    ! radial wind (m/s * 10), storm relative
     do iq = 1, numquad
       do ir = 1, numdist
         if (sr_vr(iq,ir) < -998.0) then
@@ -9059,7 +9063,6 @@ c     --------------------------------------------------
                     (ioutwind(it),it=1,numdist), intlat100, clatns, intlon100, clonew
     enddo
 
-c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
 81 format (a2, ', ', a2, ', ', i10.10, ', 03, ', a4, ', ', i3.3, ', ', i3, a1, ', ', i4, a1, ', ', i3, ', ', &
            i4, a10, a2, a1, 14(', ', i4), ', ', i4, a1, ', ', i5, a1)
 
@@ -9067,6 +9070,7 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
      &       ,', ',i4,a1,', ',i5,a1)
 
   end subroutine output_wind_structure
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
@@ -9214,6 +9218,7 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
     end select
 
     if (atcfname(1:2) == 'SP') then
+      ! add 3 for SREF to account for the 3-hour off-synoptic time offset
       output_fhr = ifcsthour + 3
     else
       output_fhr = ifcsthour
@@ -9229,7 +9234,9 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
            i4, a14, 8(',',i5), ', ', i4, a1, ', ', i5, a1)
 
     flush(74)
+
   end subroutine output_ike
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
@@ -9353,6 +9360,7 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
     end select
 
     if (atcfname(1:2) == 'SP') then
+      ! add 3 for SREF to account for the 3-hour off-synoptic time offset
       output_fhr = ifcsthour + 3
     else
       output_fhr = ifcsthour
@@ -9366,7 +9374,9 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
            i3, ', ', i4, ', ', a14, 3(',', i6))
 
     flush(71)
+
   end subroutine output_phase
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
@@ -9500,7 +9510,7 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
 
     if (xminmslp == 999999.0) xminmslp = 0.0
 
-    if (xminmslp < 1100.0) then
+    if (xminmslp < 1100.0) then ! CAITLYN - repeating code? this part could maybe even be in main program
       mslp_outp_adj = 1.0   ! pressure units are in mb
     elseif (xminmslp > 80000.0) then
       mslp_outp_adj = 100.0   ! pressure units are in Pa
@@ -9565,12 +9575,6 @@ c  192 format (1x,'dxx ',a3,a2,a1,1x,'iq= ',i3,'ir= ',i3
 
     gstm = gstorm(ist)
 
-c     If the "gv_gen_date" for this storm does not equal 99999,
-c     then that means that a vitals was read in for this storm in
-c     subroutine  read_gen_vitals, so be sure to use the genesis
-c     date, genesis latitude and genesis longitude for the storm
-c     identifier at the beginning of the modified atcfunix record.
-
     if (gstm%gv_gen_date /= 99999) then
       continue    ! use the info from the gstorm array, which
 
@@ -9582,6 +9586,7 @@ c     identifier at the beginning of the modified atcfunix record.
       gstm%gv_gen_lon   = intlon
       gstm%gv_gen_lonew = clonew
       gstm%gv_gen_type  = 'FOF'
+
       gstorm(ist) = gstm
     endif
 
@@ -9603,7 +9608,7 @@ c     identifier at the beginning of the modified atcfunix record.
       irmax = -99
     endif
 
-    if (cps_vals(1) > -9999.0) then
+    if (cps_vals(1) > -9999.0) then ! CAITLYN - repeating code?
       if (cps_vals(1) >= 0.0) then
         iparamb = int(cps_vals(1) * 10.0 + 0.5)
       else
@@ -9731,6 +9736,7 @@ c     identifier at the beginning of the modified atcfunix record.
     end select
 
     if (atcfname(1:2) == 'SP') then
+      ! add 3 for SREF to account for the 3-hour off-synoptic time offset
       output_fhr = ifcsthour + 3
     else
      output_fhr = ifcsthour
@@ -9816,7 +9822,9 @@ c     identifier at the beginning of the modified atcfunix record.
            i9, 4(', ', i4))
 
     flush(66)
+
   end subroutine output_atcf_gen
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a 1-line message for a given
@@ -9947,14 +9955,8 @@ c     identifier at the beginning of the modified atcfunix record.
 
     gstm = gstorm(ist)
 
-c     If the "gv_gen_date" for this storm does not equal 99999,
-c     then that means that a vitals was read in for this storm in
-c     subroutine  read_gen_vitals, so be sure to use the genesis
-c     date, genesis latitude and genesis longitude for the storm
-c     identifier at the beginning of the modified atcfunix record.
-
     if (gstm%gv_gen_date /= 99999) then
-      continue    ! Just use the info off the genesis vitals record
+      continue    ! just use the info off the genesis vitals record
 
     else  !CAITLYN - there are some reapeated comments, work on that
       gstm%gv_gen_date  = inp%bcc * 100000000 + inp%byy * 1000000 + inp%bmm * 10000 + inp%bdd * 100 + inp%bhh
@@ -9983,6 +9985,7 @@ c     identifier at the beginning of the modified atcfunix record.
     end select
 
     if (atcfname(1:2) == 'SP') then
+      ! add 3 for SREF to account for the 3-hour off-synoptic time offset
       output_fhr = ifcsthour + 3
     else
       output_fhr = ifcsthour
@@ -10012,13 +10015,13 @@ c     identifier at the beginning of the modified atcfunix record.
         iclat(icc)   = nint(clat(ist, ifh, ip) * 100.0)
 
         if (ip == 1 .or. ip == 2 .or. ip == 11) then
-            ! Scale vorticity up by 1e5, then multiply by 10
+          ! scale vorticity up by 1e5, then multiply by 10
           icxval(icc) = nint(xval(ip) * 1.0E5 * 10.0)
         else if (ip == 3 .or. ip == 5 .or. ip == 10) then
-            ! Scale circulation down by 1e6, then multiply by 10
+          ! scale circulation down by 1e6, then multiply by 10
           icxval(icc) = nint(xval(ip) * 1.0E-6 * 10.0)
         else
-            ! Multiply other variables -- GPH & MSLP -- by 10
+          ! multiply other variables -- GPH & MSLP -- by 10
           icxval(icc) = nint(xval(ip) * 10.0)
         endif
 
@@ -10037,7 +10040,9 @@ c     identifier at the beginning of the modified atcfunix record.
             a4, ', ', i3.3, ', ', i5, ', ', i5, ', ', i3, ', ', i4, 9(', ', a1, ', ', i5, ', ', i5, ', ', i6))
 
     flush(81)
+
   end subroutine output_atcf_parms
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a tcvitals record.  The
@@ -10069,12 +10074,6 @@ c     identifier at the beginning of the modified atcfunix record.
 
     iovret = 0
 
-c     Initially, set all "stm" components equal to the input "storm"
-c     components for this storm, then we will change the specific
-c     components that we need to.
-c     Also, because the xlon value may be >360 due to GM wrapping, we
-c     need to mod it to get it in a 0-360 framework.
-
     stm = storm(ist)
     xlon = mod(xlon, 360.0)
     stm%tcv_center = 'AEAR'
@@ -10105,7 +10104,9 @@ c     need to mod it to get it in a 0-360 framework.
            i2, 1x, i3, 1x, 4(i4, 1x), a1)
 
     flush(65)
+
   end subroutine output_tcvitals
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a modified vitals record.
@@ -10197,6 +10198,7 @@ c     need to mod it to get it in a 0-360 framework.
       endif
 
       gstm%gv_gen_type = 'FOF'
+      ! transfer all this local "gstm" data back into the saved "gstorm" array for use in subsequent fcst hrs
       gstorm(ist) = gstm
     endif
 
@@ -10235,6 +10237,7 @@ c     need to mod it to get it in a 0-360 framework.
     flush(67)
 
   end subroutine output_gen_vitals
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  outputs a GRIB record that contains the
@@ -10267,7 +10270,7 @@ c     need to mod it to get it in a 0-360 framework.
     integer    :: kpds(200), kgds(200)
     logical(1) :: masked_outc(imax,jmax), lb(imax,jmax)
     real       :: xmask(imax,jmax)
-c
+
     if (ifh == 1) then
       call baopenw (77, "fort.77", igoret)
         print *,'baopenw: igoret= ',igoret
@@ -10383,8 +10386,9 @@ c
     endif
 
     flush(6)
+
   end subroutine output_tracker_mask
-c
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine calculates a guess position for the next
@@ -10553,6 +10557,7 @@ c
         tmp_fix_lon_prev = fixlon(ist, ifh-1)
 
         if (tmp_fix_lon_prev < 0.0 .and. tmp_fix_lon_prev > -25.0) then
+          ! previous lon position is within 25 deg west of the GM and is listed in negative degrees
           if (tmp_fix_lon_curr < 0.0 .and. tmp_fix_lon_curr > -25.0) then
             if (verb .ge. 3) then
               print *, ' '
@@ -10574,7 +10579,7 @@ c
           endif
 
         elseif (tmp_fix_lon_prev > 335.0 .and. tmp_fix_lon_prev <= 360.0) then
-          ! previous lon position is within 25 deg west of the GM and is listed in positive degrees.
+          ! previous lon position is within 25 deg west of the GM and is listed in positive degrees
           if (tmp_fix_lon_curr > 335.0 .and. tmp_fix_lon_curr <= 360.0) then
             if (verb .ge. 3) then
               print *, ' '
@@ -10629,6 +10634,7 @@ c
           endif
 
         elseif (tmp_fix_lon_prev >= 0.0 .and. tmp_fix_lon_prev <= 25.0) then
+          ! previous lon position is within 25 deg east of the GM and is listed in positive degrees
           if (tmp_fix_lon_curr >= 0.0 .and. tmp_fix_lon_curr <= 35.0) then
             if (verb .ge. 3) then
               print *, ' '
@@ -10766,7 +10772,7 @@ c     subroutine for further details.
       print *, '           jbeg = ', jbeg,            '  jend = ',    jend
     endif
 
-    if ((dx+dy)/2 > 0.20) then ! CAITLYN - are the 2's supposed to be 2.0?
+    ! skip some points for speed
       bskip = 1
     else if ((dx+dy)/2 > 0.10 .and. (dx+dy)/2 <= 0.20) then
       bskip = 2
@@ -10778,6 +10784,7 @@ c     subroutine for further details.
       bskip = 10
     endif
 
+    ! calculate average wind at each level (currently: 850, 700 & 500)
     re   = redlm
     ri   = ridlm
     icut = 0
@@ -10883,8 +10890,7 @@ c     subroutine for further details.
       icut = icut + 1
     enddo ! radmaxloop
 
-      enddo radmaxloop
-
+    ! do a weighted average
     if (extrap_flag == 'y' .and. barnes_flag == 'y') then
       wt_total = barneswt + extrapwt
       slatfg(ist, ifh+1) = (barneswt * barnlat + extrapwt * extraplat) / wt_total
@@ -11182,7 +11188,9 @@ c     subroutine for further details.
       print *, 'iocheck, stmdir = ', stmdir, '  istmdir = ', istmdir
     endif
 
+
   end subroutine get_next_ges
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine calculates a guess position for the next
@@ -11209,8 +11217,10 @@ c     subroutine for further details.
   !*      iatret   :: Return code from this subroutine
   !*
   !****************************************************************************
+
     use def_vitals;     use trkrparms; use tracked_parms; use gen_vitals
     use verbose_output; use trig_vals; use set_max_parms
+
     type (trackstuff) :: trkrinfo
     integer           :: iatret, inctcv
     real              :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
@@ -11338,6 +11348,7 @@ c     subroutine for further details.
 
 
   end subroutine advect_tcvitals_from_hour0
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine looks through the wind data near an
@@ -11790,10 +11801,11 @@ c     subroutine for further details.
         endif
 
         call calcdist (xcenlon, xcenlat, glon(ip), glat(j), dist, degrees)
-        if (dist > radmax) cycle iloop
+        if (dist > radmax) cycle ! iloop
 
         if (valid_pt(ip,j)) then
           vmag = sqrt(u(ip, j, levsfc)**2  + v(ip, j, levsfc)**2)
+          ! calculate the angle from the center point to this point, then assign this point to the appropriate quadrant bin
           rlonc = (360.0 - glon(ip)) * dtr
           rlatc = glat(j) * dtr
           rlonb = (360.0 - xcenlon) * dtr
@@ -11818,16 +11830,16 @@ c     subroutine for further details.
           endif
 
           if (pt_heading >= 0.0 .and. pt_heading < 90.0) then
-              ! NE quadrant
+            ! NE quadrant
             iq = 1
           else if (pt_heading >= 90.0 .and. pt_heading < 180.0) then
-              ! SE quadrant
+            ! SE quadrant
             iq = 2
           else if (pt_heading >= 180.0 .and. pt_heading < 270.0) then
-              ! SW quadrant
+            ! SW quadrant
             iq = 3
           else if (pt_heading >= 270.0 .and. pt_heading <= 360.0) then
-              ! NW quadrant
+            ! NW quadrant
             iq = 4
           endif
 
@@ -12067,6 +12079,7 @@ c     subroutine for further details.
 
 
   end subroutine getradii
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine looks through the wind data near an
@@ -12306,6 +12319,7 @@ c     subroutine for further details.
         enddo  ! qtr_azimloop1
 
         if (azimuth_ct > 0) then
+          ! compute quadrant-azimuthally-averaged winds at this distance
           mean_radii_wind(iquad, idist) = wmag_sum / real(azimuth_ct)
           mean_radii_vr(iquad, idist)   = vr_sum / real(azimuth_ct)
           mean_radii_vt(iquad, idist)   = vt_sum / real(azimuth_ct)
@@ -12416,6 +12430,7 @@ c     subroutine for further details.
       enddo   ! quadloop1
 
       if (good_quad_ct > 0) then
+        ! compute the 4-quadrant mean Vt at this radius
         mean_radii_vt_4quad(idist) = mean_radii_vt_4quad_sum / real(good_quad_ct)
         if (idist == 1) then
           write (6,305) iquad, idist, mean_radii_vt_4quad_sum, good_quad_ct, mean_radii_vt_4quad(idist)
@@ -12429,7 +12444,6 @@ c     subroutine for further details.
 
     if (bimct > 0) then
       if (verb .ge. 3) then
-
         print *, ' '
         print *, 'Warning summary: From sub getradii_2, there were'
         print *, 'calls to sub bilin_int_uneven that resulted in'
@@ -12479,10 +12493,12 @@ c     subroutine for further details.
               endif
 
               iwindix = iwindix + 1
+              cycle ! threshloop
             endif
 
           else
             iwindix = iwindix + 1
+            cycle ! threshloop
           endif
         endif
 
@@ -12742,6 +12758,7 @@ c     subroutine for further details.
 
 
   end subroutine getradii_2
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine looks for the maximum near-surface wind
@@ -13054,7 +13071,9 @@ c     subroutine for further details.
       print *, 'At end of get_max_wind, vmax = ', vmax, ' rmax = ', rmax
     endif
 
+
   end subroutine get_max_wind
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine calculates the axisymmetric RMW (ARMW),
@@ -13198,7 +13217,7 @@ c     subroutine for further details.
         enddo  ! azimloop
 
         if (azimuth_ct > 0) then
-            ! Compute azimuthally-averaged winds at 
+          ! compute azimuthally-averaged winds at this distance
           azim_ave_wmag(idist) = wmag_sum / real(azimuth_ct)
         else
           azim_ave_wmag(idist) = -999.0
@@ -13240,6 +13259,7 @@ c     subroutine for further details.
       perform_rising_dvdr = 'y'
       integ_dvdr_thresh   = 0.10
 
+      ! find the starting index for the search
       if (maxrmw_ix < 18) then
         if (maxrmw_ix < 5) then
           idv_start           = maxrmw_ix  ! needed for declining_sum loop
@@ -13252,6 +13272,7 @@ c     subroutine for further details.
         idv_start = maxrmw_ix - 17
       endif
 
+      ! find the ending index for the search
       if (maxrmw_ix > (numdist-17)) then
         if (maxrmw_ix > (numdist-5)) then
           if (rdist_ix < 4) then
@@ -13350,6 +13371,7 @@ c     subroutine for further details.
 
 
   end subroutine get_axisymet_rmw
+
   !****************************************************************************
   !*  ABSTRACT: This subroutine loops through the different parameters
   !*      for the input storm number (ist) and calculates the
@@ -13527,7 +13549,7 @@ c     subroutine for further details.
 
     do ip = 1, maxtp
 
-      if (ip == 4 .or. ip == 6) then   ! Parms 4 & 6 not defined.
+      if (ip == 4 .or. ip == 6) then  ! parms 4 & 6 not defined.
         calcparm(ip, ist) = .false.
         cycle
       endif
@@ -13613,6 +13635,7 @@ c     subroutine for further details.
     do ip = 1, maxtp
       if (ip == 1 .or. ip == 2 .or. ip == 11) then
 
+        ! this IF block allows vorticity values to be written out and scaled up by 1e5
         if (clon(ist,ifh,ip) < 0.001 .and. clon(ist,ifh,ip) > -0.001) then
           if (verb .ge. 3) then
             write (6,27) ip, charparm(ip), charmaxmin(ip), 0.0, 0.0, clat(ist,ifh,ip), xvalues(ip)*1.0E5, &
@@ -13627,6 +13650,7 @@ c     subroutine for further details.
 
       elseif (ip == 3 .or. ip == 5 .or. ip == 10) then
 
+        ! this IF block allows circulation values to be written out and scaled down by 1e-6
         if (clon(ist,ifh,ip) < 0.001 .and. clon(ist,ifh,ip) > -0.001) then
           if (verb .ge. 3) then
             write (6,27) ip, charparm(ip), charmaxmin(ip), 0.0, 0.0, clat(ist,ifh,ip), xvalues(ip)*1.0E-6, &
@@ -13665,6 +13689,7 @@ c     subroutine for further details.
 
     if (iclose > 0) then
 
+      ! get distances from first-guess mean position
       do ip = 1, maxtp
         if (calcparm(ip,ist)) then
           call calcdist (clon_fguess, clat_fguess, clon(ist,ifh,ip), clat(ist,ifh,ip), dist, degrees)
@@ -13672,6 +13697,7 @@ c     subroutine for further details.
         endif
       enddo
 
+      ! get the mean distance of each parameter estimate from the first-guess mean position
       call avgcalc (dist_from_mean, maxtp, calcparm(1,ist), xmn_dist_from_mean, iaret)
 
       if (iaret == 0) then
@@ -13726,8 +13752,6 @@ c     subroutine for further details.
         ifret            = 95
         return
       endif
-c       then wtpos values of 0, leading to a divide by 0 crash
-c       later on in subroutine  wtavrg.
 
       kprm = 0
 
@@ -13762,8 +13786,7 @@ c       later on in subroutine  wtavrg.
 
 113     format (1x, 'ip = ', i2, ' kprm = ', i2, ' dist_from_mean = ', f7.3, ' devia = ', f7.3, ' wtpos = ', &
                 f8.5, 2x, 4(2x, f7.2))
-      
-            if (calcparm(ip,ist)) then
+
       else
         if (iclose == 1) then
           do ip = 1, maxtp
@@ -13880,7 +13903,9 @@ c       later on in subroutine  wtavrg.
       endif
     endif
 
+
   end subroutine fixcenter
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine just calculates a straight average of
@@ -13922,7 +13947,9 @@ c       later on in subroutine  wtavrg.
       iaret = 95
     endif
 
+
   end subroutine avgcalc
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine calculates a weighted average of the
@@ -13960,7 +13987,9 @@ c       later on in subroutine  wtavrg.
       iwtret = 95
     endif
 
+
   end subroutine wtavrg
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine calculates a weighted average of the
@@ -13983,6 +14012,7 @@ c       later on in subroutine  wtavrg.
     gt345_ct = 0
     lt15_ct  = 0
 
+    ! first check to see if we have lons that are both to the left and the right of the greenwich meridian
     do i = 1, kmax
       if (xlon(i) > 345.0) then
         gt345_ct = gt345_ct + 1
@@ -14016,7 +14046,9 @@ c       later on in subroutine  wtavrg.
       iwtret = 95
     endif
 
+
   end subroutine wtavrg_lon
+
 !****************************************************************************
 !*
 !****************************************************************************
@@ -14053,7 +14085,9 @@ c       later on in subroutine  wtavrg.
       isret = 95
     endif
 
+
   end subroutine stdevcalc
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine calculates the center fix position for
@@ -14168,6 +14202,7 @@ c       later on in subroutine  wtavrg.
     fmax  = -1.0E+15; fmin  = 1.0E+15
     ctlon = 0.0;      ctlat = 0.0
 
+    ! distances checked and the radial intervals are a function of the grid resolution
     if (dell > 0.50) then
       rdist(1) =  50.0
       rdist(2) =  85.0
@@ -14276,12 +14311,12 @@ c       later on in subroutine  wtavrg.
           if (trkrinfo%gridtype == 'global') then
             rlont = rlont + 360.0  ! GM-wrapped for the full, regular, global grid
           else
-            cycle   ! iloop1
+            cycle ! iloop1
           endif
         endif
 
         if (rlatt > (grid_maxlat - grid_buffer) .or. rlatt < (grid_minlat + grid_buffer)) then
-          cycle   ! iloop1
+          cycle ! iloop1
         endif
 
         call check_valid_point (imax, jmax, dx, dy, u(1,1,nlev), maxmin, valid_pt, rlont, rlatt, grid_maxlat, &
@@ -14296,7 +14331,7 @@ c       later on in subroutine  wtavrg.
         endif
 
         call calcdist (rlont, rlatt, temp_guesslon, uvgeslat, dist, degrees)
-        if (dist .gt. rads) cycle   ! iloop1
+        if (dist .gt. rads) cycle ! iloop1
 
         vt_mean = 0.0
         vt      = 0.0
@@ -14499,7 +14534,7 @@ c       later on in subroutine  wtavrg.
             if (trkrinfo%gridtype == 'global') then
               rlont = rlont - 360.0
             else
-              cycle   ! iloop2
+              cycle ! iloop2
             endif
           endif
 
@@ -14507,24 +14542,24 @@ c       later on in subroutine  wtavrg.
             if (trkrinfo%gridtype == 'global') then
               rlont = rlont + 360.0
             else
-              cycle   ! iloop2
+              cycle ! iloop2
             endif
           endif
 
           if (rlatt > (grid_maxlat - grid_buffer) .or. rlatt < (grid_minlat + grid_buffer) .or. &
           rlont >= (grid_maxlon + dx - grid_buffer) .or. rlont < (grid_minlon + grid_buffer)) then
-            cycle   ! iloop2
+            cycle ! iloop2
           endif
 
           call check_valid_point (imax, jmax, dx, dy, u(1,1,nlev), maxmin, valid_pt, rlont, rlatt, grid_maxlat, &
                & grid_minlat, grid_maxlon, grid_minlon, trkrinfo, icvpret)
 
           if (icvpret /= 0) then
-            cycle   ! iloop2
+            cycle ! iloop2
           endif
 
           call calcdist (rlont, rlatt, temp_guesslon, uvgeslat, dist, degrees)
-          if (dist .gt. rads) cycle   ! iloop2
+          if (dist .gt. rads) cycle ! iloop2
 
           vt_mean = 0.0
           vt      = 0.0
@@ -14633,6 +14668,7 @@ c       later on in subroutine  wtavrg.
 
 
   end subroutine get_wind_circulation
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine calculates the center fix position for
@@ -15121,7 +15157,9 @@ c       later on in subroutine  wtavrg.
     igucret = 0
 
 998 continue
+
   end subroutine get_uv_center
+
   !****************************************************************************
   !*
   !*  ABSTRACT: The purpose of this subroutine is to get a modified
@@ -15242,7 +15280,9 @@ c       later on in subroutine  wtavrg.
       igugret = 91
     endif
 
+
   end subroutine get_uv_guess
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine calculates the magnitude of the wind
@@ -15261,7 +15301,9 @@ c       later on in subroutine  wtavrg.
       enddo
     enddo
 
+
   end subroutine calc_vmag
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine does a bilinear interpolation on a
@@ -15304,38 +15346,46 @@ c       later on in subroutine  wtavrg.
     implicit none
 
     real  :: xold(imxold,jmxold), xnew(imxnew,jmxnew)
+
+    ! put original (O) values from input array into new, expanded array
     do i = 1, imxold
       do j = 1, jmxold
         xnew(2*i-1, 2*j-1) = xold(i, j)
       enddo
     enddo
 
+    ! interpolate to get primary interior (1) points
     do i = 1, imxold-1
       do j = 1, jmxold-1
         xnew(2*i, 2*j) = 0.25 * (xnew(2*i-1, 2*j-1) + xnew(2*i+1, 2*j-1) + xnew(2*i+1, 2*j+1) + xnew(2*i-1, 2*j+1))
       enddo
     enddo
 
+    ! interpolate edge northernmost (e) points
     j = 1
     do i = 1, imxold-1
       xnew(2*i, j) = 0.3333 * (xnew(2*i-1, j) + xnew(2*i+1, j) + xnew(2*i, 2))
     enddo
 
+    ! interpolate edge Southernmost 'e' points
     j = 2 * jmxold - 1
     do i = 1, imxold-1
       xnew(2*i, j) = 0.3333 * (xnew(2*i-1, j) + xnew(2*i+1, j) + xnew(2*i, j-1))
     enddo
 
+    ! interpolate edge Westernmost 'e' points
     i = 1
     do j = 1,jmxold-1
       xnew(i, 2*j) = 0.3333 * (xnew(i, 2*j-1) + xnew(i, 2*j+1) + xnew(2, 2*j))
     enddo
 
+    ! interpolate edge Easternmost 'e' points
     i = 2 * imxold - 1
     do j = 1, jmxold-1
       xnew(i, 2*j) = 0.3333 * (xnew(i, 2*j-1) + xnew(i, 2*j+1) + xnew(i-1, 2*j))
     enddo
 
+    ! interpolate to get secondary interior (2) points
     do j = 2, 2*jmxold-2
       istep = mod(j+1, 2)
       do i = istep+2, 2*imxold-2, 2
@@ -15343,7 +15393,9 @@ c       later on in subroutine  wtavrg.
       enddo
     enddo
 
+
   end subroutine bilin_int_even
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine linearly interpolates evenly spaced
@@ -15355,15 +15407,20 @@ c       later on in subroutine  wtavrg.
     implicit none
 
     real    :: xold(ioldmax), xnew(inewmax)
+
+    ! copy points from old grid onto new, larger grid
     do i = 1, ioldmax
       xnew(2*i-1) = xold(i)
     enddo
 
+    ! interpolate to get the in-between points
     do i = 1, ioldmax-1
       xnew(2*i) = 0.5 * (xnew(2*i-1) + xnew(2*i+1))
     enddo
 
+
   end subroutine lin_int
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine linearly interpolates evenly spaced
@@ -15378,10 +15435,13 @@ c       later on in subroutine  wtavrg.
     implicit none
 
     real  :: xold(ioldmax), xnew(inewmax)
+
+    ! copy points from old grid onto new, larger grid
     do i = 1, ioldmax
       xnew(2*i-1) = xold(i)
     enddo
 
+    ! interpolate to get the in-between points, and make the
     do i = 1, ioldmax-1
       if (xnew(2*i-1) > 350.0 .and. xnew(2*i+1) < 10.0) then
         xnew(2*i) = 0.5 * (xnew(2*i-1) + (360.0 + xnew(2*i+1)))
@@ -15390,7 +15450,9 @@ c       later on in subroutine  wtavrg.
       endif
     enddo
 
+
   end subroutine lin_int_lon
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine finds the maximum and mean zeta values
@@ -15518,6 +15580,7 @@ c       later on in subroutine  wtavrg.
         if (igsvret == 0) then
           imeanzeta(n) = int((xsmoothval * 1.0E6) + 0.5)
         else
+          ! out of regional grid bounds
           imeanzeta(n) = -99
           igridzeta(n) = -99
 
@@ -15528,6 +15591,7 @@ c       later on in subroutine  wtavrg.
             write (6,521)
             write (6,523)
           endif
+          ! if out of grid bounds at 850, then will also be out at 700
  519      format (1x, ' The call to get_smooth_value_at_pt in')
  520      format (1x, ' get_zeta_values returned a non-zero return')
  521      format (1x, ' code.  The search for zeta values will not')
@@ -15578,6 +15642,7 @@ c       later on in subroutine  wtavrg.
 
 
   end subroutine get_zeta_values
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine  finds the location (clon,clat) of and value of the
@@ -15842,24 +15907,24 @@ c       later on in subroutine  wtavrg.
               rlont = rlont - 360.0  ! GM-wrapped for the full, regular, global grid
             endif
           else
-            cycle   ! iloop
+            cycle ! iloop
           endif
         endif
 
         if (rlont < (temp_grid_minlon + grid_buffer)) then
           if (trkrinfo%gridtype == 'global') then
             if (cparm == 'vmag') then
-              cycle   ! iloop  ! We are off the small vmag subgrid
+              cycle ! iloop;  we are off the small vmag subgrid
             else
               rlont = rlont + 360.0  ! GM-wrapped for the full, regular, global grid
             endif
           else
-            cycle   ! iloop
+            cycle ! iloop
           endif
         endif
 
         if (rlatt > (grid_maxlat - grid_buffer) .or. rlatt < (grid_minlat + grid_buffer)) then
-          cycle   ! iloop
+          cycle ! iloop
         endif
 
         call check_valid_point (imax, jmax, dx, dy, fxy, maxmin, valid_pt, rlont, rlatt, grid_maxlat, &
@@ -15869,7 +15934,7 @@ c       later on in subroutine  wtavrg.
           if (verb .ge. 1) then
             print *, '!!! NOT A VALID PT:  icvpret = ', icvpret
           endif
-          cycle   ! iloop
+          cycle  ! iloop
         endif
 
         call calcdist (rlont, rlatt, temp_guesslon, guesslat, dist, degrees)
@@ -16202,7 +16267,9 @@ c       later on in subroutine  wtavrg.
       xval = fmin
     endif
 
+
   end subroutine find_maxmin
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine performs a single-pass barnes anaylsis
@@ -16340,7 +16407,9 @@ c       later on in subroutine  wtavrg.
     endif
     iret = 0
 
+
   end subroutine barnes
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine performs a single-pass barnes anaylsis
@@ -16489,7 +16558,9 @@ c       later on in subroutine  wtavrg.
     endif
     iret = 0
 
+
   end subroutine sst_barnes
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine figures out, based on ri, dx and dy and
@@ -16582,6 +16653,7 @@ c       later on in subroutine  wtavrg.
   !****************************************************************************
   subroutine get_ij_bounds (npts, nhalf, ri, imax, jmax, dx, dy, rglatmax, rglatmin, rglonmax, rglonmin, &
                            & geslon, geslat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
+
     use trig_vals; use trkrparms; use verbose_output
 
     implicit none
@@ -16669,6 +16741,7 @@ c       later on in subroutine  wtavrg.
       print *, ' +++ jbeg = ', jbeg, ' jend = ', jend
     endif
 
+    ! if using a global grid, avoid using the pole points, or else you'll get a cosfac = 0
     if (jend == jmax .and. rglatmin == -90.0) then
       jend = jmax - 2
     endif
@@ -16681,7 +16754,7 @@ c       later on in subroutine  wtavrg.
     dlon     = min((ri / tmpangle ), 20.0)
 
     if (nhalf > 0) then
-      ihlonpts    = ceiling(rdeg / dx) + 1
+      ihlonpts    = ceiling(rdeg / dx) + 1 !CAITLYN - check data types
       ibmaxlonpts = ihlonpts + ceiling(dlon / dx) + 2
     else
       ibmaxlonpts = npts + ceiling(dlon / dx) + 2
@@ -16697,7 +16770,7 @@ c       later on in subroutine  wtavrg.
       print *, ' +++ ibmaxlonpts = ', ibmaxlonpts, ' dx = ', dx, ' dy = ', dy
     endif
 
-    ilonfix = int((geslon - rglonmin)/dx + 2.0)
+    ! roughly fix geslon to the grid point just EASTward of geslon
 
     ibeg = ilonfix - ibmaxlonpts
     iend = ilonfix + ibmaxlonpts
@@ -16740,6 +16813,7 @@ c       later on in subroutine  wtavrg.
         endif
 
       else
+        ! for a regional grid, just set iend to be imax
         iend = imax
       endif
     endif
@@ -16754,6 +16828,7 @@ c       later on in subroutine  wtavrg.
         endif
 
       else
+        ! for a regional grid, just set ibeg to be 1
         ibeg = 1
       endif
     endif
@@ -16780,7 +16855,9 @@ c       later on in subroutine  wtavrg.
       endif
     endif
 
+
   end subroutine get_ij_bounds
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine checks to make sure that the requested
@@ -16841,7 +16918,9 @@ c       later on in subroutine  wtavrg.
 
 125 continue
 
+
   end subroutine check_bounds
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine computes the distance between two
@@ -16919,7 +16998,9 @@ c       later on in subroutine  wtavrg.
     xdist   = xdist8
     degrees = degrees8
 
+
   end subroutine calcdist
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine  subtracts out the coriolis parameter
@@ -16945,7 +17026,9 @@ c       later on in subroutine  wtavrg.
       enddo
     enddo
 
+
   end subroutine subtract_cor
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine uses various input regarding the model
@@ -16979,8 +17062,6 @@ c       later on in subroutine  wtavrg.
     character(len=5)  :: cfmin
     character(len=10) :: cymdh
     integer           :: ifh, nlen1, nlen2, nlen3, nlen4, nlen5
-    integer           :: ifh, nlen1, nlen2, nlen3, nlen4, nlen5
-    integer           :: ifh, nlen1, nlen2, nlen3, nlen4, nlen5
 
     write (cfmin, '(i5.5)')   iftotalmins(ifh)
     write (cymdh, '(i10.10)') atcfymdh
@@ -16994,10 +17075,6 @@ c       later on in subroutine  wtavrg.
 
     nlen3     = len_trim(atcfdescr)
     nlen4     = len_trim(gfilename)
-
-c     If an extension to the name with the ATCF or storm name descriptor
-c     was included, then add it to the name now.  Otherwise, just add
-c     the starting date and the lead time in minutes.
 
     if (nlen3 > 0) then
       gfilename = trim(gfilename(1:nlen4))//'.'//trim(atcfdescr(1:nlen3))//'.'//cymdh//'.f'//cfmin
@@ -17015,7 +17092,10 @@ c     the starting date and the lead time in minutes.
     endif
 
 72  format (1x, 'In get_grib_file_name, file name for ', a9, ' is ', a120)
+
+
   end subroutine get_grib_file_name
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine reads the input GRIB file for the
@@ -17382,7 +17462,7 @@ c     the starting date and the lead time in minutes.
           write (6,531) date_time(5), date_time(6), date_time(7)
  531      format (//, 1x, 'TIMING: before getgb2-1', i2.2, ':', i2.2, ':', i2.2)
         endif
-          
+
         call getgb2 (lugb, lugi, jskp, jdisc, jids, jpdtn, jpdt, jgdtn, jgdt, unpack, krec, gfld, iret)
 
         if (enable_timing /= 0) then
@@ -17419,11 +17499,12 @@ c     the starting date and the lead time in minutes.
             print *, ' gfld%idrtnum = ', gfld%idrtnum
           endif
 
-          if (gfld%idrtnum .eq. 0) then      ! Simple packing
+          ! set DRT info (packing info)
+          if (gfld%idrtnum .eq. 0) then      ! simple packing
             ipack = 0
-          elseif (gfld%idrtnum .eq. 2) then  ! Complex packing
+          elseif (gfld%idrtnum .eq. 2) then  ! complex packing
             ipack = 2
-          elseif (gfld%idrtnum .eq. 3) then  ! Complex & spatial packing
+          elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
             ipack = 31
           elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
             ipack = 40 ! JPEG 2000 packing
@@ -17452,6 +17533,7 @@ c     the starting date and the lead time in minutes.
           readflag(ip) = .true.
           call bitmapchk (kf, lb, f, dmin, dmax)
 
+          ! convert logical bitmap to 2-d array (only need to do this once since using same model for all variables).
           if (lbrdflag .eq. 'n') then
             call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
             lbrdflag = 'y'
@@ -17491,6 +17573,7 @@ c     the starting date and the lead time in minutes.
               print *, '    j = ', j, ' gfld%igdtmpl(j) = ', gfld%igdtmpl(j)
             enddo
 
+            ! get parameter abbrev for record that was retrieved
             print *, ' '
             print *, '     PDT num (gfld%ipdtnum) = ', gfld%ipdtnum
             print *, ' '
@@ -17587,7 +17670,9 @@ c     the starting date and the lead time in minutes.
 
       if (phaseflag == 'y') then
         if (phasescheme == 'cps' .or. phasescheme == 'both') then
+          ! read in GP Height levels for cyclone phase space
           do ip = 1, nreadcpsparms  ! grib2_cps_parm_lev_loop
+            ! initialize Variables
             gfld%idsect     => NULL()
             gfld%local      => NULL()
             gfld%list_opt   => NULL()
@@ -17613,6 +17698,7 @@ c     the starting date and the lead time in minutes.
             jgds = -1
             j    = 0
 
+            ! set defaults for JPDT, then override in array assignments below
             jpdt(1:15)=(/-9999, -9999, -9999, -9999, -9999, -9999, -9999, &
                          -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999/)
 
@@ -17676,17 +17762,19 @@ c     the starting date and the lead time in minutes.
             endif
 
             if (iret == 0) then
+            ! determine packing information from GRIB2 file; the default packing is 40 JPEG 2000
               ipack = 40
 
               if (verb_g2 .ge. 1) then
                 print *, ' gfld%idrtnum = ', gfld%idrtnum
               endif
 
-              if (gfld%idrtnum .eq. 0) then      ! Simple packing
+              ! set DRT info ( packing info )
+              if (gfld%idrtnum .eq. 0) then      ! simple packing
                 ipack = 0
-              elseif (gfld%idrtnum .eq. 2) then  ! Complex packing
+              elseif (gfld%idrtnum .eq. 2) then  ! complex packing
                 ipack = 2
-              elseif (gfld%idrtnum .eq. 3) then  ! Complex & spatial packing
+              elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
                 ipack = 31
               elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
                   ! JPEG 2000 packing
@@ -17715,6 +17803,7 @@ c     the starting date and the lead time in minutes.
 
               call bitmapchk (kf, lb, f, dmin, dmax)
 
+              ! convert logical bitmap to 2-d array (only need to do this once since using same model for all variables)
               if (lbrdflag .eq. 'n') then
                 call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
                 lbrdflag = 'y'
@@ -17755,6 +17844,7 @@ c     the starting date and the lead time in minutes.
                   print *,'    j = ', j, ' gfld%igdtmpl(j) = ', gfld%igdtmpl(j)
                 enddo
 
+                ! get parameter abbrev for record that was retrieved
                 print *, ' '
                 print *, '     PDT num (gfld%ipdtnum) = ', gfld%ipdtnum
                 print *, ' '
@@ -17777,6 +17867,7 @@ c     the starting date and the lead time in minutes.
                       lastval, dmin, dmax
               endif
 
+              ! convert data to 2-d array
               call conv1d2d_real (imax, jmax, f, cpshgt(1,1,ip), need_to_flip_lats)
             endif
 
@@ -17828,10 +17919,11 @@ c     the starting date and the lead time in minutes.
                 print *, 'Genesis read NOT requested for RH, ip = ', ip
                 print *, ' '
               endif
-              cycle   ! grib2_gen_parm_loop
+              cycle ! grib2_gen_parm_loop
             endif
           endif
 
+          ! initialize variables
           gfld%idsect     => NULL()
           gfld%local      => NULL()
           gfld%list_opt   => NULL()
@@ -17858,8 +17950,7 @@ c     the starting date and the lead time in minutes.
           jgds = -1
           j    = 0
 
-            ! Set defaults for JPDT, then override in array
-            ! assignments below...
+          ! set defaults for JPDT, then override in array assignments below
 
           jpdt(1:15) = (/-9999, -9999, -9999, -9999, -9999, -9999, -9999, &
                          -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999/)
@@ -17914,22 +18005,24 @@ c     the starting date and the lead time in minutes.
           endif
 
           if (iret == 0) then
+          ! determine packing information from GRIB2 file; the default packing is 40 JPEG 2000
             ipack = 40
 
             if (verb_g2 .ge. 1) then
               print *, ' gfld%idrtnum = ', gfld%idrtnum
             endif
 
-            if (gfld%idrtnum .eq. 0) then      ! Simple packing
+            ! set DRT info ( packing info )
+            if (gfld%idrtnum .eq. 0) then      ! simple packing
               ipack = 0
-            elseif (gfld%idrtnum .eq. 2) then  ! Complex packing
+            elseif (gfld%idrtnum .eq. 2) then  ! complex packing
               ipack = 2
-            elseif (gfld%idrtnum .eq. 3) then  ! Complex & spatial packing
+            elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
               ipack = 31
             elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
               ! JPEG 2000 packing
               ipack = 40
-            elseif (gfld%idrtnum .eq. 41) then  ! PNG packing
+            elseif (gfld%idrtnum .eq. 41) then ! PNG packing
               ipack = 41
             endif
 
@@ -17994,6 +18087,7 @@ c     the starting date and the lead time in minutes.
                 print * , '    j = ', j, ' gfld%igdtmpl(j) = ', gfld%igdtmpl(j)
               enddo
 
+              ! get parameter abbrev for record that was retrieved
               print *, ' '
               print *, '     PDT num (gfld%ipdtnum) = ',  gfld%ipdtnum
               print *, ' '
@@ -18016,6 +18110,7 @@ c     the starting date and the lead time in minutes.
                      lastval, dmin, dmax
             endif
 
+            ! convert data to 2-d array
             select case (ch_genparm(ip))
               case ('spfh')
                 if (jpdt(12) == 85000) then
@@ -18190,7 +18285,7 @@ c     the starting date and the lead time in minutes.
               else if (jpds(7) == 200) then
                 call conv1d2d_real (imax, jmax, f, u(1,1,nlev200), need_to_flip_lats)
               else
-                ! Near-surface data
+                ! near-surface data
                 call conv1d2d_real (imax, jmax, f, u(1,1,levsfc), need_to_flip_lats)
               endif
             case ('vgrid')
@@ -18203,7 +18298,7 @@ c     the starting date and the lead time in minutes.
               else if (jpds(7) == 200) then
                 call conv1d2d_real (imax, jmax, f, v(1,1,nlev200), need_to_flip_lats)
               else
-                ! Near-surface data
+                ! near-surface data
                 call conv1d2d_real (imax, jmax, f, v(1,1,levsfc), need_to_flip_lats)
               endif
             case ('gphgt')
@@ -18248,13 +18343,14 @@ c     the starting date and the lead time in minutes.
       if (phaseflag == 'y') then
         if (phasescheme == 'cps' .or. phasescheme == 'both') then
 
+          ! read in GP Height levels for cyclone phase space
           do ip = 1, nreadcpsparms  ! cps_grib1_lev_loop
             jpds = -1
             jgds = -1
             j    = 0
 
             if (inp%model == 4) then
-                ! Use different grib parm id for ECMWF GP height
+              ! use different grib parm id for ECMWF GP height
               jpds(5) = ec_cpsgparm(ip)
             else
               jpds(5) = cpsgparm(ip)
@@ -18308,6 +18404,7 @@ c     the starting date and the lead time in minutes.
                 print '(i4,2x,8i5,i8,2g12.4)', k, (kpds(i),i=5,11), kpds(14), kf, dmin, dmax
               endif
 
+              ! convert data to 2-d array
               call conv1d2d_real (imax, jmax, f, cpshgt(1,1,ip), need_to_flip_lats)
           enddo !cps_grib1_lev_loop
         endif
@@ -18376,7 +18473,7 @@ c     the starting date and the lead time in minutes.
             jpds(5)  = ec_genparm(ip)
             jpds(6)  = ec_genlevtyp(ip)
             jpds(7)  = ec_genlev(ip)
-          else   ! All other models use NCEP-standard GRIB table
+          else   ! all other models use NCEP-standard GRIB table
             jpds(5)  = genparm(ip)
             jpds(6)  = genlevtyp(ip)
             jpds(7)  = genlev(ip)
@@ -18438,6 +18535,7 @@ c     the starting date and the lead time in minutes.
               print '(i4,2x,8i5,i8,2g12.4)', k, (kpds(i),i=5,11), kpds(14), kf, dmin, dmax
             endif
 
+            ! convert data to 2-d array
             select case (ch_genparm(ip))
               case ('spfh')
                 if (jpds(7) == 850) then
@@ -18514,7 +18612,9 @@ c     the starting date and the lead time in minutes.
     deallocate (f)
     deallocate (lb)
 
+
   end subroutine getdata_grib
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine reads the input NetCDF file for the
@@ -18643,6 +18743,8 @@ c     the starting date and the lead time in minutes.
     integer             :: xtype,ignrret
 
     lbrdflag = 'n'
+
+    ! load the names of the NetCDF variables for the standard variables into the chparm array
     chparm(1)  = netcdfinfo%rv850name
     chparm(2)  = netcdfinfo%rv700name
     chparm(3)  = netcdfinfo%u850name
@@ -18919,6 +19021,7 @@ c     the starting date and the lead time in minutes.
         chparm_cps(12) = netcdfinfo%z350name
         chparm_cps(13) = netcdfinfo%z300name
 
+        ! read in GP Height levels for cyclone phase space
         if (verb .ge. 3) then
           print *, ' '
           print *, '--- Reads for CPS parms follow...'
@@ -19067,7 +19170,7 @@ c     the starting date and the lead time in minutes.
               print *, 'Genesis read NOT requested for RH, ip = ', ip
               print *, ' '
             endif
-            cycle   ! netcdf_gen_parm_loop
+            cycle  ! netcdf_gen_parm_loop
           endif
         endif
 
@@ -19076,8 +19179,8 @@ c     the starting date and the lead time in minutes.
             print *, ' '
             print *, '!!! NetCDF genesis read NOT requested for parm # ', ip
           endif
-          cycle   ! netcdf_gen_parm_loop
-          
+          cycle  ! netcdf_gen_parm_loop
+
         else
           if (verb .ge. 3) then
             print *, ' '
@@ -19197,6 +19300,7 @@ c     the starting date and the lead time in minutes.
 
 
   end subroutine getdata_netcdf
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine queries a netcdf file to get the
@@ -19221,7 +19325,7 @@ c     the starting date and the lead time in minutes.
     if (status .ne. nf_noerr) call handle_netcdf_err( status)
 
     end subroutine get_ncdim1
-c
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine reads a netcdf file in order to return
@@ -19258,6 +19362,7 @@ c
 
     if (status .ne. nf_noerr) call handle_netcdf_err (status)
     if (xtype == 5) then
+      ! from netcdf3.inc, xtype=5 means we have a 4-byte real
       allocate (readvar4(nmax), stat = ira)
       if (ira /= 0) then
         if (verb .ge. 1) then
@@ -19270,6 +19375,7 @@ c
         STOP 91
       endif
     elseif (xtype == 6) then
+      ! from netcdf3.inc, xtype=6 means we have an 8-byte double real
       allocate (readvar8(nmax), stat = ira)
       if (ira /= 0) then
         if (verb .ge. 1) then
@@ -19282,6 +19388,7 @@ c
         STOP 91
       endif
     else
+      ! xtype is not equal to 5 (i.e., 4-byte real) or 6 (8-byte double real), exit
       if (verb .ge. 1) then
         print *, ' '
         print *, '!!! ERROR in get_var1_one_dim.  The value of xtype'
@@ -19295,14 +19402,14 @@ c
     endif
 
     if (xtype == 5) then
-        ! Read data into a 4-byte real array
+      ! read data into a 4-byte real array
       status = nf_get_var_real(ncid, var1id, var1)
       if (status .ne. nf_noerr) call handle_netcdf_err (status)
       do i = 1, nmax
         var1(i) = readvar4(i)
       enddo
     elseif (xtype == 6) then
-        ! Read data into an 8-byte double real array
+      ! read data into an 8-byte double real array
       status = nf_get_var_double(ncid,var1id,var1)
       if (status .ne. nf_noerr) call handle_netcdf_err (status)
       do i = 1, nmax
@@ -19314,7 +19421,7 @@ c
     if (allocated(readvar8)) deallocate (readvar8)
 
   end subroutine get_var1_one_dim
-c
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine reads a netcdf file in order to return
@@ -19340,12 +19447,12 @@ c
     status = nf_inq_varid(ncid, var1_name, var1id)
     if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
-      ! Read data into a 4-byte real array
+    ! read data into a 4-byte real array
     status = nf_get_var_real(ncid, var1id, readvar4)
     if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
   end subroutine get_var1_one_dim4
-c
+
   !****************************************************************************
   !*
   !* ABSTRACT: This routine reads a netcdf file in order to return
@@ -19371,10 +19478,12 @@ c
     status = nf_inq_varid(ncid, var1_name, var1id)
     if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
+    ! read data into an 8-byte real array
     status = nf_get_var_real(ncid, var1id, readvar8)
     if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
   end subroutine get_var1_one_dim8
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine inquires into a NetCDF file using calls
@@ -19433,7 +19542,9 @@ c
       STOP 91
     endif
 
+
   end subroutine get_netcdf_real_type
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine reads a netcdf file and returns a
@@ -19509,6 +19620,7 @@ c
     if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
   end subroutine get_var3_tlev_real4
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine reads a netcdf file and returns a
@@ -19584,7 +19696,7 @@ c
     if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
   end subroutine get_var3_tlev_double
-c
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine is an error handling routine for NetCDF-
@@ -19607,6 +19719,7 @@ c
     endif
 
   end subroutine handle_netcdf_err
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine checks the bitmap for non-existent data values.
@@ -19640,7 +19753,9 @@ c
       endif
     enddo
 
+
   end subroutine bitmapchk
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine converts a 1-dimensional input
@@ -19680,7 +19795,9 @@ c
     logical(1) :: lb1d(imax*jmax), lb2d(imax,jmax)
     logical(1) :: need_to_flip_lats
     integer    :: ilat, ilatix, ilon, imax, jmax
+
     if (need_to_flip_lats) then
+      ! input data is south to north; flip the data while converting to 2-d grid
       do ilat = 1, jmax
         ilatix = jmax - ilat + 1
         do ilon = 1, imax
@@ -19698,6 +19815,7 @@ c
 
 
   end subroutine conv1d2d_logic
+
   !****************************************************************************
   !*
   !*  ABSTRACT: The purpose of this routine is to create a 2-d logical
@@ -19761,6 +19879,7 @@ c
     endif
 
     if (need_to_flip_lats) then
+      ! input data is south to north; flip the data while converting to 2-d grid
       do ilat = 1, jmax
         ilatix = jmax - ilat + 1
         do ilon = 1, imax
@@ -19775,6 +19894,7 @@ c
       enddo
 
     else
+      ! input data is north to south; convert the data onto a 2-d grid, do not flip it
       do ilat = 1, jmax
         do ilon = 1, imax
           if (dat1d(ilon + (ilat-1) * imax) == xmissing_val) then
@@ -19790,11 +19910,11 @@ c
 
     print *, ' '
     print *, ' LB STATS: tct = ', tct, ' fct = ', fct, ' mct = ', mct
-c
+
       return
-      end
+
   end subroutine conv1d2d_logic_netcdf
-c-----------------------------------------------------------------------
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine converts a 1-dimensional input
@@ -19838,6 +19958,7 @@ c-----------------------------------------------------------------------
 
     if (need_to_flip_lats) then
 
+      ! input data is south to north; flip the data while converting to 2-d grid
       do ilat = 1, jmax
         ilatix = jmax - ilat + 1
         do ilon = 1, imax
@@ -19846,7 +19967,7 @@ c-----------------------------------------------------------------------
       enddo
 
         enddo
-      enddo
+      ! input data is north to south; convert the data onto a 2-d grid, do not flip it
       do ilat = 1, jmax
         do ilon = 1, imax
           dat2d(ilon, ilat) = dat1d(ilon + (ilat-1) * imax)
@@ -19854,7 +19975,9 @@ c-----------------------------------------------------------------------
       enddo
     endif
 
+
   end subroutine conv1d2d_real
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine converts a 1-dimensional input
@@ -19895,9 +20018,10 @@ c-----------------------------------------------------------------------
     logical(1) :: need_to_flip_lats
     real       :: dat1d(imax*jmax)
     real       :: dat2d(imax,jmax)
-c
+
     if (need_to_flip_lats) then
 
+      ! input data is south to north; flip the data while converting to 2-d grid
       do ilat = 1, jmax
         ilatix = jmax - ilat + 1
         do ilon = 1, imax
@@ -19905,6 +20029,7 @@ c
         enddo
       enddo
 
+      ! input data is north to south; convert the data onto a 2-d grid, do not flip it
       do ilat = 1, jmax
         do ilon = 1, imax
           dat2d(ilon, ilat) = dat1d(ilon + (ilat-1) * imax)
@@ -19912,7 +20037,9 @@ c
       enddo
     endif
 
+     !CAITLYN - can these be merged together?
   end subroutine conv1d2d_real_netcdf
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine simply reads in the namelists that are
@@ -19955,6 +20082,7 @@ c
     namelist /sstdiaginfo_nml/   sstflag
     namelist /gendiaginfo_nml/   genflag, gen_read_rh_fields, need_to_compute_rh_from_q, smoothe_mslp_for_gen_scan
 
+    ! set namelist default values
     use_per_fcst_command   = 't'
     per_fcst_command       = ' '
     atcffreq               = 600
@@ -20321,6 +20449,7 @@ c
       if (len_trim(per_fcst_command) > 0) then
         write (6,156) trim(per_fcst_command)
       else
+        ! no command specified, so disable the feature
         se_per_fcst_command = 'n'
       endif
  
@@ -20413,7 +20542,9 @@ c
 
 944 continue
 
+
   end subroutine read_nlists
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine reads in a text file that contains the
@@ -20556,9 +20687,9 @@ c
            f6.2, ' clock_lead_time = ', i3, ':', i2)
 
 c
-      return
+
   end subroutine read_fhours
-c
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine reads in the updated TC Vitals file
@@ -20601,11 +20732,9 @@ c
     logical(1)        :: vit_file_exists
     integer           :: isa, issa, ioa, iaa, ita, iret, ict, maxstorm
     integer           :: i, ii, lucard, numtcv
-c------
 
-      ! Check to see if the TC Vitals file exists.  If so, then open it
-      ! using the unit specified in lucard.
 
+    ! check to see if the TC Vitals file exists. If so, then open it using the unit specified in lucard.
     inquire (file = "tcvit_rsmc_storms.txt", exist = vit_file_exists)
 
     if (vit_file_exists) then
@@ -20674,6 +20803,8 @@ c------
     numtcv = ii - 1
 
     if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
+      ! For the mid-latitude or tc genesis cases, the max number of storms (maxstorm) allowed 
+      ! to be tracked throughout a forecast is defined in module set_max_parms.
       if (verb .ge. 3) then
         print *, ' '
         print *, 'In read_tcv_card, tracker type of "midlat" or '
@@ -20740,6 +20871,8 @@ c------
       iret = 0
       return
     else
+      ! For the  tracker cases, the max number of storms (maxstorm) allowed to be tracked throughout 
+      ! a forecast is defined by the number of vitals read in above.
       maxstorm = numtcv
 
       if (maxstorm > 0) then
@@ -20795,6 +20928,8 @@ c------
           write (*,31) storm(i)
         endif
 
+        ! TC vitals contain positions in either a "W" or "E" framework.  Convert them here for 
+        ! the slonfg array so that they are in a uniform, 0-360E framework for all vitals.
         if (storm(i)%tcv_lonew == 'W') then
           slonfg(i, 1) =  360.0 - real(storm(i)%tcv_lon) / 10.0
         else
@@ -20853,7 +20988,9 @@ c------
     endif
 
     iret = 98
+
   end subroutine read_tcv_card
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine reads in a modified TC Vitals file
@@ -20942,11 +21079,9 @@ c------
     logical(1)        :: vit_file_exists
     integer           :: iret, maxstorm
     integer           :: i, ii, lgvcard, numtcv, num_mod_vit, vitix, iga
-c------
 
-      ! Check to see if the genesis TC Vitals file exists.  If so, then
-      ! open it using the unit specified in lgvcard.
 
+    ! check to see if the genesis TC Vitals file exists. If so, then open it using the unit specified in lgvcard.
     inquire (file = "tcvit_genesis_storms.txt", exist = vit_file_exists)
 
     if (vit_file_exists) then
@@ -20962,6 +21097,7 @@ c------
       endif
     endif
 
+    ! read in all of the "genesis vitals" into a temp array
     ii = numtcv + 1
 
     if (vit_file_exists) then
@@ -21064,6 +21200,7 @@ c------
 34  format (i10, 1x, 'F', i3.3, 1x, i3.3, a1, 1x, i4.4, a1, 1x, a3, 1x, i8, 1x, i4.4, 1x, i3.3, a1, 1x, i4.4, &
             a1, 1x, i3, 1x, i3, 3(1x, i4), 1x, i2, 1x, i3, 1x, 4(i4, 1x), a1)
 
+    ! update the total number of vitals that have been read in
     numtcv = numtcv + num_mod_vit
 
     goto 895
@@ -21087,6 +21224,7 @@ c------
     return
 
   end subroutine read_gen_vitals
+
   !****************************************************************************
   !*
   !*  ABSTRACT: The purpose of this subroutine is just to get the max
@@ -21152,6 +21290,7 @@ c------
 
     if (trkrinfo%gribver == 2) then
 
+      ! search for a record from a GRIB2 file; initialize Variables
       gfld%idsect     => NULL()
       gfld%local      => NULL()
       gfld%list_opt   => NULL()
@@ -21173,11 +21312,14 @@ c------
       icount  = 0
       jskp    = 0
 
+      ! search for Temperature or GP Height by production template
       jpdt(1:15) = (/-9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999,  &
                      -9999, -9999, -9999, -9999, -9999, -9999, -9999/)
 
+      ! request a record on a lat/lon grid.
       jgdtn = 0
 
+      ! request a record at the current forecast lead time
       if (inp%lt_units == 'minutes') then
         jpdt(8) = 0
         jpdt(9) = iftotalmins(ifh)
@@ -21200,6 +21342,7 @@ c------
         stop 95
       endif
 
+      ! determine packing information from GRIB2 file; The default packing is 40  JPEG 2000
       ipack = 40
       if (verb_g2 .ge. 1) then
         print *, ' '
@@ -21209,12 +21352,12 @@ c------
         print *, ' gfld%idrtnum = ', gfld%idrtnum
       endif
 
-        !   Set DRT info  ( packing info )
-      if (gfld%idrtnum .eq. 0) then      ! Simple packing
+      ! set DRT info ( packing info )
+      if (gfld%idrtnum .eq. 0) then      ! simple packing
         ipack = 0
-      elseif (gfld%idrtnum .eq. 2) then  ! Complex packing
+      elseif (gfld%idrtnum .eq. 2) then  ! complex packing
         ipack = 2
-      elseif (gfld%idrtnum .eq. 3) then  ! Complex & spatial packing
+      elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
         ipack = 31
       elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
         ! JPEG 2000 packing
@@ -21269,6 +21412,7 @@ c------
           print *, '    j = ', j, ' gfld%igdtmpl(j) = ', gfld%igdtmpl(j)
         enddo
 
+        ! get parameter abbrev for record that was retrieved
         print *, ' '
         print *, '     PDT num (gfld%ipdtnum) = ',  gfld%ipdtnum
         print *, ' '
@@ -21306,12 +21450,12 @@ c------
       iscanflag = gfld%igdtmpl(19)
 
       if (mod(iscanflag, 128) >= 64) then
-          ! Input data is south to north...
+        ! input data is south to north
         glatmin = real(gfld%igdtmpl(12)) / 1.0E6
         glatmax = real(gfld%igdtmpl(15)) / 1.0E6
         need_to_flip_lats = .true.
       else
-        ! Input data is north to south...
+        ! input data is north to south
         glatmin = real(gfld%igdtmpl(15)) / 1.0E6
         glatmax = real(gfld%igdtmpl(12)) / 1.0E6
         need_to_flip_lats = .false.
@@ -21330,6 +21474,7 @@ c------
       call gf_free (gfld)
 
     else
+      ! search for a record from a GRIB1 file
       jpds    = -1
       jgds    = -1
       jgds(1) = 0   ! request a record that's on a lat/lon grid
@@ -21342,6 +21487,7 @@ c------
         print *,'        iftotalmins(ifh) = ', iftotalmins(ifh)
       endif
 
+      ! request a record at the current forecast lead time
       if (inp%lt_units == 'minutes') then
         jpds(14) = iftotalmins(ifh)
       else
@@ -21430,14 +21576,14 @@ c------
 
       need_to_flip_lons = .false.
       iscanflag = igetgds(11)
-        iscanflag = igetgds(11)
+
       if (mod(iscanflag,128) >= 64) then
-          ! Input data is south to north...
+        ! input data is south to north
         glatmin = real(igetgds(4)) / 1000.0
         glatmax = real(igetgds(7)) / 1000.0
         need_to_flip_lats = .true.
       else
-        ! Input data is north to south...
+        ! input data is north to south
         glatmin = real(igetgds(7)) / 1000.0
         glatmax = real(igetgds(4)) / 1000.0
         need_to_flip_lats = .false.
@@ -21496,6 +21642,7 @@ c------
       endif
 
     elseif (glonmin < 0.0 .and. glonmax < 0.0) then
+      ! examples of this are GFDL and HWRF; In this case, make both glonmin and glonmax positive.
       if (verb .ge. 3) then
         print *, ' '
         print *, 'NOTE: glonmin is < 0 and glonmax < 0, so both'
@@ -21541,6 +21688,7 @@ c------
 
     if (glonmin > 200.0 .and. glonmin <= 360.0) then
       if (glonmax < 50.0) then
+        ! likely GM-wrapping in current record
         glonmax = glonmax + 360.0
       endif
     endif
@@ -21614,6 +21762,7 @@ c------
         xhold = trkrinfo%eastbd
         trkrinfo%eastbd = glonmax - 5.0
         if (verb .ge. 3) then
+          !CAITLYN - can we remove all these 'writes' and the ones below?
           write (6,97) 'EASTERN LONGITUDE'
           write (6,98) xhold
           write (6,99) trkrinfo%eastbd
@@ -21666,7 +21815,9 @@ c------
 98  format (' USER-INPUT BOUNDARY VALUE: ', f8.2)
 99  format (' NEW BOUNDARY VALUE: ', f8.2)
 
+
   end subroutine getgridinfo_grib
+
   !****************************************************************************
   !*
   !*  ABSTRACT: The purpose of this subroutine is just to get the max
@@ -21742,6 +21893,7 @@ c------
       print *, 'in getgridinfo_netcdf, ncfile_id = ', ncfile_id
     endif
 
+    ! get type (32/64-bit) of longitude, then read longitude into correctly sized array
     call get_netcdf_real_type (ncfile_id, netcdfinfo%lon_name, xtype, ignrret)
 
     if (xtype == 5) then
@@ -21755,6 +21907,7 @@ c------
     if (allocated(temp_tmplon4)) deallocate (temp_tmplon4)
     if (allocated(temp_tmplon8)) deallocate (temp_tmplon8)
 
+    ! get type (32/64-bit) of latitude, then read latitude into correctly sized array
     call get_netcdf_real_type (ncfile_id, netcdfinfo%lat_name, xtype, ignrret)
 
     if (xtype == 5) then
@@ -21769,6 +21922,7 @@ c------
     if (allocated(temp_tmplat8)) deallocate (temp_tmplat8)
 
 
+    ! compute the dx and dy by picking values out of the middle of the lat and lon arrays
     midi = imax / 2
     midj = jmax / 2
 
@@ -21901,9 +22055,9 @@ c------
 99  format (' NEW BOUNDARY VALUE: ', f8.2)
 
 c
-      return
+
   end subroutine getgridinfo_netcdf
-c
+
   !****************************************************************************
   !*
   !*  ABSTRACT: The purpose of this subroutine is to read the "time"
@@ -21957,6 +22111,7 @@ c
     irnhret = 0
     ncfile_has_hour0 = 'n'
 
+    ! first read the NetCDF file to get the number of time levels, which will be returned in "ncfile_tmax"
     print *, ' '
     print *, 'in read_netcdf_hours...'
     print *, 'ncfile_id            = ',            ncfile_id
@@ -22009,6 +22164,7 @@ c
       return
     endif
 
+    ! now read in the actual time values that are stored in the NetCDF file
     call get_netcdf_real_type (ncfile_id, netcdfinfo%time_name, xtype, ignrret)
 
     if (xtype == 5) then
@@ -22119,7 +22275,9 @@ c
       endif
     enddo ! userloop
 
+
   end subroutine read_netcdf_hours
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine checks to see if the input lat/lon
@@ -22201,6 +22359,7 @@ c
 
 
   end subroutine check_valid_point
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine takes an input lat/lon position and
@@ -22313,16 +22472,17 @@ c
 
     ifilret = 0
 
+    ! fix parmlat to the *nearest* j-point
     if (parmlat >= 0.0) then    ! N. Hemisphere
       jpfix = int((grid_maxlat - parmlat) / dy + 1.0 + 0.5)
     else                        ! S. Hemisphere
       jpfix = ceiling((grid_maxlat - parmlat) / dy + 1.0 - 0.5)
     endif
 
+    ! fix parmlon to the *nearest* i-point
     ipfix = int((parmlon - grid_minlon) / dx + 1.0 + 0.5)
 
-    xplon = grid_minlon + (ipfix-1) * dx
-    yplat = grid_maxlat - (jpfix-1) * dy
+    ! calculate the longitude and latitude of these ipfix and jpfix points
 
     grdspc = (dx+dy) * 0.5
     if (grdspc <= 0.025) then
@@ -22361,6 +22521,7 @@ c
       jend   = jpfix + (1 * grfact)
     endif
 
+    ! make sure the edges of our box are within the grid bounds
     if (jstart > jmax ) then
       if (verb .ge. 1) then
         print *, '!!! ERROR in fix_latlon_to_ij, jstart > jmax'
@@ -22422,6 +22583,7 @@ c
       endif
     endif
 
+    ! now look for the max or min value
     dmax = -9.99E12
     dmin =  9.99E12
     ifix = ipfix
@@ -22433,10 +22595,10 @@ c
         j = jix
 
         if (i < 1) then
-          i = iix + imax  !GM wrapping
+          i = iix + imax  ! GM wrapping
         endif
         if (i > imax) then
-          i = iix - imax  !GM wrapping
+          i = iix - imax  ! GM wrapping
         endif
 
         if (valid_pt(i,j)) then
@@ -22480,8 +22642,10 @@ c
     else
       gridpoint_maxmin = dmax
     endif
-      
+
+
   end subroutine fix_latlon_to_ij
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine calculates the relative vorticity (zeta)
@@ -22516,14 +22680,19 @@ c
     integer    :: ii, jj
     logical(1) :: vp(imax,jmax)
 
+    ! figure out what level of data we have and what the array indices should be
     if (z == 1) then
+      ! z = 1 for 850 mb zeta, w = 1 for 850 mb winds
       w = nlev850
     else if (z == 2) then
+      ! z = 2 for 700 mb zeta, w = 2 for 700 mb winds
       w = nlev700
     else if (z == 3) then
+      ! z = 3 for sfc zeta, w = 5 for sfc (10m) winds
       w = levsfc
     endif
 
+    ! calculate grid increments for interior and edge points
     if (dtk < 750.0) then    ! if dtk was defined as km, then x1000
       dfix = 1000.0
     else                     ! dtk was already defined as meters
@@ -22550,6 +22719,7 @@ c
       print *, 'Just before inter rvcalc, dlon_inter = ', dlon_inter, ' dlat_inter = ', dlat_inter
     endif
 
+    ! interior points
     do j = 2, jmax-1
       do i = 2, imax-1
         if (vp(i,j) .and. vp(i+1,j) .and. vp(i-1,j) .and. vp(i,j+1) .and. vp(i,j-1)) then
@@ -22561,6 +22731,7 @@ c
       enddo
     enddo
 
+    ! bottom (Southernmost) points
     j = jmax
     do i = 2, imax-1
       if (vp(i,j) .and. vp(i+1,j) .and. vp(i-1,j) .and. vp(i,j-1)) then
@@ -22570,6 +22741,7 @@ c
       endif
     enddo
 
+    ! top (Northernmost) points
     j = 1
     do i = 2, imax-1
       if (vp(i,j) .and. vp(i+1,j) .and. vp(i-1,j) .and. vp(i,j+1)) then
@@ -22580,6 +22752,7 @@ c
       endif
     enddo
 
+    ! left edge (Westernmost) points
     i = 1
     do j = 2, jmax-1
       if (vp(i,j) .and. vp(i+1,j) .and. vp(i,j+1) .and. vp(i,j-1)) then
@@ -22590,6 +22763,7 @@ c
       endif
     enddo
 
+    ! right edge (Easternmost) points
     i = imax
     do j = 2, jmax-1
       if (vp(i,j) .and. vp(i-1,j) .and. vp(i,j+1) .and. vp(i,j-1)) then
@@ -22600,6 +22774,7 @@ c
       endif
     enddo
 
+    ! SW corner
     i = 1
     j = jmax
     if (vp(i,j) .and. vp(i+1,j) .and. vp(i,j-1)) then
@@ -22609,6 +22784,7 @@ c
       zeta(i, j, z) = 2.0 * omega * sin(rlat(j) * dtr)
     endif
 
+    ! NW corner
     i = 1
     j = 1
     if (vp(i,j) .and. vp(i+1,j) .and. vp(i,j+1)) then
@@ -22618,6 +22794,7 @@ c
       zeta(i, j, z) = 2.0 * omega * sin(rlat(j) * dtr)
     endif
 
+    ! NE corner
     i = imax
     j = 1
     if (vp(i,j) .and. vp(i-1,j) .and. vp(i,j+1)) then
@@ -22627,6 +22804,7 @@ c
       zeta(i, j, z) = 2.0 * omega * sin(rlat(j) * dtr)
     endif
 
+    ! SE corner
     i = imax
     j = jmax
     if (vp(i,j) .and. vp(i-1,j) .and. vp(i,j-1)) then
@@ -22642,7 +22820,9 @@ c
       enddo
     enddo
 
+
   end subroutine rvcal
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine calculates the divergence
@@ -22692,7 +22872,7 @@ c
     integer           :: nlat, nlon, i, j, imax, jmax, w
     integer           :: ii, jj, idvcret, ida
     logical(1)        :: vp(imax,jmax)
-c
+
     if (allocated(div)) deallocate (div)
     allocate (div(imax,jmax), stat = ida)
     if (ida /= 0) then
@@ -22729,6 +22909,7 @@ c
       cosfac(jmax) = cosfac(jmax-1)
       tanfac(jmax) = tanfac(jmax-1)
 
+    ! interior points
     if (verb .ge. 3) then
       print *, 'Just before inter divcal, dlon_inter = ', dlon_inter, ' dlat_inter = ', dlat_inter
     endif
@@ -22744,6 +22925,7 @@ c
       enddo
     enddo
 
+    ! bottom (Southernmost) points
     j = jmax
     do i = 2, imax-1
       if (vp(i,j) .and. vp(i+1,j) .and. vp(i-1,j) .and. vp(i,j-1)) then
@@ -22754,6 +22936,7 @@ c
       endif
     enddo
 
+    ! top (Northernmost) points
     j = 1
     do i = 2, imax-1
       if (vp(i,j) .and. vp(i+1,j) .and. vp(i-1,j) .and. vp(i,j+1)) then
@@ -22764,6 +22947,7 @@ c
       endif
     enddo
 
+    ! left edge (Westernmost) points
     i = 1
     do j = 2, jmax-1
       if (vp(i,j) .and. vp(i+1,j) .and. vp(i,j+1) .and. vp(i,j-1)) then
@@ -22774,6 +22958,7 @@ c
       endif
     enddo
 
+    ! right edge (Easternmost) points
     i = imax
     do j = 2, jmax-1
       if (vp(i,j) .and. vp(i-1,j) .and. vp(i,j+1) .and. vp(i,j-1)) then
@@ -22784,6 +22969,7 @@ c
       endif
     enddo
 
+    ! SW corner
     i = 1
     j = jmax
     if (vp(i,j) .and. vp(i+1,j) .and. vp(i,j-1)) then
@@ -22793,6 +22979,7 @@ c
       div(i, j) = xsmalldiff / (dlon_inter * cosfac(j)) + xsmalldiff / (dlat_inter)
     endif
 
+    ! NW corner
     i = 1
     j = 1
     if (vp(i,j) .and. vp(i+1,j) .and. vp(i,j+1)) then
@@ -22802,6 +22989,7 @@ c
       div(i, j) = xsmalldiff / (dlon_inter * cosfac(j)) + xsmalldiff / (dlat_inter)
     endif
 
+    ! NE corner
     i = imax
     j = 1
     if (vp(i,j) .and. vp(i-1,j) .and. vp(i,j+1)) then
@@ -22811,6 +22999,7 @@ c
       div(i, j) = xsmalldiff / (dlon_inter * cosfac(j)) + xsmalldiff / (dlat_inter)
     endif
 
+    ! SE corner
     i = imax
     j = jmax
     if (vp(i,j) .and. vp(i-1,j) .and. vp(i,j-1)) then
@@ -22828,7 +23017,9 @@ c
 
     if (allocated(div)) deallocate (div)
 
+
   end subroutine divcal
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine computes one smoothed value of a value from
@@ -22879,13 +23070,6 @@ c
     character(len=*)  :: cvar
 
     xsmoothval = -9999.0
-
-c     We will do a barnes analysis on the data from the input array to 
-c     this subroutine near the current fix location in order to get one 
-c     average value that will be returned to the calling routine.  The
-c     call to get_ij_bounds is needed in order to restrict the number of
-c     grid points that are searched in the  barnes subroutine.  See 
-c     Abstract of subroutine  get_next_ges for further details.
 
     if (verb >= 3) then
       print *, ' '
@@ -22952,6 +23136,7 @@ c     Abstract of subroutine  get_next_ges for further details.
       print *, '     jbeg    = ',    jbeg, '  jend    = ',    jend
     endif
 
+    ! barnes analysis centered at one point; set bskip = 1
     bskip   = 1
     icut    = 0
     in_grid = 'n'
@@ -23018,6 +23203,7 @@ c     Abstract of subroutine  get_next_ges for further details.
       enddo radmaxloop
 
   end subroutine get_smooth_value_at_pt
+
   !****************************************************************************
   !*
   !*ABSTRACT: This routine computes smoothed values of RH, averaged
@@ -23085,6 +23271,7 @@ c     Abstract of subroutine  get_next_ges for further details.
       return
     endif
 
+    ! call compute_rh_from_q to get the RH for each of the vertical layers
     if (verb >= 1) then
       print *, 'rq1, need_to_compute_rh_from_q = ',       need_to_compute_rh_from_q
       print *, '     already_computed_domain_wide_rh = ', already_computed_domain_wide_rh
@@ -23092,11 +23279,13 @@ c     Abstract of subroutine  get_next_ges for further details.
 
     if (need_to_compute_rh_from_q == 'y' .and. already_computed_domain_wide_rh == 'n') then
       do ip = 2, 8
+        ! start at 2 because the first RH variable is the 2nd variable in the list
         call compute_rh_from_q (ist, ifh, imax, jmax, dx, dy, ip, valid_pt, maxstorm, trkrinfo, readgenflag, ichrret)
       enddo
       already_computed_domain_wide_rh = 'y'
     endif
 
+    ! call calc_multi_layer_mean for 1000-925 to get the mean RH in that layer
     mean_rh = 0.0
     icmlret = 0
     call calc_multi_layer_mean (xcenlon, xcenlat, ist, ifh, imax, jmax, 'rh', '1000-925', dx, dy, &
@@ -23115,6 +23304,7 @@ c     Abstract of subroutine  get_next_ges for further details.
       rh_1000_925_smooth = -9999.0
     endif
 
+    ! call calc_multi_layer_mean for 800-600 to get the mean RH in that layer
     mean_rh = 0.0
     icmlret = 0
     call calc_multi_layer_mean (xcenlon, xcenlat, ist, ifh, imax, jmax, 'rh', '800-600', dx, dy, &
@@ -23132,8 +23322,10 @@ c     Abstract of subroutine  get_next_ges for further details.
     else
       rh_800_600_smooth = -9999.0
     endif
-      
+
+
   end subroutine get_rh_at_center
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine computes relative humidity across a full
@@ -23212,6 +23404,7 @@ c     Abstract of subroutine  get_next_ges for further details.
         do i = 1, imax  ! iloop
 
           if (valid_pt(i,j)) then
+            ! Teten's formula:
             es = eo * exp((b * (temperature(i, j, z) - t1)) / (temperature(i, j, z) - t2))
             qs = (rd_over_rv * es) / penv
             rh(i, j, z) = (spfh(i, j, z) / qs) * 100.0
@@ -23251,7 +23444,9 @@ c     Abstract of subroutine  get_next_ges for further details.
       print *, 'x999ct = ',            x999ct, ' rhgt100ct = ', rhgt100ct
     endif
 
+
   end subroutine compute_rh_from_q
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This routine computes a multi-layer mean of an input variable.
@@ -23354,6 +23549,7 @@ c     Abstract of subroutine  get_next_ges for further details.
 
     deallocate (point_ct)
 
+
   !*
   !*  The array indices for the 3 different thickness layers are
   !*      as follows:
@@ -23396,7 +23592,9 @@ c     Abstract of subroutine  get_next_ges for further details.
       enddo
     enddo
 
+
   end subroutine thickness_calc
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine scans an array and picks out areas of
@@ -23479,6 +23677,7 @@ c     Abstract of subroutine  get_next_ges for further details.
 
     if (trkrinfo%northbd < -998.0 .or. trkrinfo%southbd < -998.0 .or. trkrinfo%westbd < -998.0  &
        .or. trkrinfo%eastbd < -998.0) then
+      ! user did not specify a subgrid, so scan the whole domain
       ibeg = 1
       iend = imax
       jbeg = 1
@@ -23537,7 +23736,7 @@ c     Abstract of subroutine  get_next_ges for further details.
  377    continue
 
       else
-
+        ! calculate the beginning and ending i and j points
         print *, 'FGC  REGULAR ELSE AA'
         jbeg = int(((glatmax + dy - trkrinfo%northbd) / dy) + 0.5)
         jend = int(((glatmax + dy - trkrinfo%southbd) / dy) + 0.5)
@@ -23572,6 +23771,7 @@ c     Abstract of subroutine  get_next_ges for further details.
       return
     endif
 
+    ! get the mean value in the domain
     dmin   =  9.99E08
     dmax   = -9.99E08
     ict    = 0
@@ -23616,6 +23816,7 @@ c     Abstract of subroutine  get_next_ges for further details.
     print *, 'xsum from mean (xavg) calculation = ', xsum
     print *, 'xavg from mean (xavg) calculation = ', xavg
 
+    ! get the standard deviation in the domain
     stdx = 0.0
     ict  = 0
 
@@ -23768,11 +23969,11 @@ c     Abstract of subroutine  get_next_ges for further details.
 
           if (verb .ge. 3) then
             if (slp(maxmini(n),maxminj(n)) > 50000.0) then
-                ! Pressure units are in Pa....
+              ! pressure units are in Pa
               write (6,71) maxmini(n), maxminj(n), slonfg(n,ifh), 360.0-slonfg(n,ifh), slatfg(n,ifh), &
                            slp(maxmini(n), maxminj(n)) / 100.0
             else
-              else
+              ! pressure units are in mb
               write (6,71) maxmini(n), maxminj(n), slonfg(n,ifh), 360.0-slonfg(n,ifh), slatfg(n,ifh), &
                            slp(maxmini(n), maxminj(n))
             endif
@@ -23794,7 +23995,9 @@ c     Abstract of subroutine  get_next_ges for further details.
 71  format (1x, 'i = ', i4, '  j = ', i4, '   lon: ', f7.2, 'E  (', f6.2, 'W)', 2x, ' lat: ', &
             f6.2, '    mslp: ', f8.3, ' mb')
 
+
   end subroutine first_ges_center
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine will search an area delineated by
@@ -23899,8 +24102,7 @@ c     Abstract of subroutine  get_next_ges for further details.
     real                    :: wgt1, wgt3, wgt5, wgt7, wgt9, sdiff, maxmslpsmooth
     real(kind=8)            :: xavg, stdv
 
-c-----
-      still_finding_valid_maxmins = .true.
+    still_finding_valid_maxmins = .true.
 
     if (allocated(sortindex))     deallocate (sortindex,    stat = isia)
     if (allocated(prstemp))       deallocate (prstemp,      stat = ipa)
@@ -24099,7 +24301,7 @@ c-----
             if (i < ibeg_sm .or. i > iend_sm) then
               pt_eligible(i, j)   = .false.
               valid_smoothe(i, j) = .false.
-              cycle iloop_s
+              cycle ! iloop_s
             endif
 
             ip = i
@@ -24139,7 +24341,7 @@ c-----
                 valid_pt(ip+4,jp+4)) then
                 continue
             else
-              cycle   ! iloop_s
+              cycle ! iloop_s
             endif
 
             compute_ct = compute_ct + 1
@@ -24189,6 +24391,7 @@ c-----
     endif
 
     if (smoothe_mslp_for_gen_scan == 'y') then
+      ! copy the smoothed MSLP data into the slp_array to smooth data
       slp_array    = mslp_smoothe
       slp_valid_pt = valid_smoothe
       slp          = mslp_smoothe
@@ -24219,6 +24422,7 @@ c-----
       endif
 
     else
+      ! use the original, unsmoothed MSLP data
       slp_array    = fxy
       slp_valid_pt = valid_pt
     endif
@@ -24254,7 +24458,8 @@ c-----
         endif
 
         if (pt_eligible(ip,jp) .and..not. masked_out(ip,jp) .and. slp_valid_pt(ip,jp)) then
-          
+
+          ! call routine to check for MSLP gradient here
           yyct1    = yyct1 + 1
           icmrgret = 88
           call check_mslp_radial_gradient (imax, jmax, ip, jp, dx, dy, slp_array(1,1), slp_valid_pt, trkrinfo, &
@@ -24265,6 +24470,7 @@ c-----
             write (6,31) date_time(5), date_time(6), date_time(7)
  31         format (1x, 'TIMING: b4 check_for_closed_wind_circ at ', i2.2, ':', i2.2, ':', i2.2)
 
+            ! call routine to check for low-level circulation here
             low_level_wind_circ_flag = 'n'
             call check_for_closed_wind_circulation (imax, jmax, ip, jp, dx, dy, valid_pt, trkrinfo, ifh, &
                  & low_level_wind_circ_flag, gm_wrap_flag, vtquadmax, 'genesis', iccwcret)
@@ -24298,7 +24504,7 @@ c-----
                   print *, ' !!! MSLP radial gradient passed but LL wind circ check FAILED. ip = ', ip, ' jp = ', jp
                   print *, ' '
                 endif
-                cycle   ! iloop_g
+                cycle ! iloop_g
               endif
               
             else
@@ -24307,11 +24513,11 @@ c-----
                 print *, ' !!! Failed check 2 of LL wind circ, ip = ', ip, ' jp = ', jp
                 print *, ' '
               endif
-              cycle   ! iloop_g
+              cycle ! iloop_g
             endif
 
           else
-            cycle   ! iloop_g
+            cycle ! iloop_g
           endif
         endif
       enddo ! iloop_g
@@ -24372,7 +24578,7 @@ c-----
             print *, ' '
           endif
 
-          cycle   ! candidate_loop
+          cycle  ! candidate_loop
         endif
       endif
 
@@ -24395,7 +24601,7 @@ c-----
         if (masked_out(ip,jp)) then
           cand_masked_out_ct = cand_masked_out_ct + 1
         endif
-        cycle candidate_loop
+        cycle ! candidate_loop
       endif
 
       if (verb .ge. 3) then
@@ -24530,7 +24736,9 @@ c-----
     if (allocated(mslp_smoothe))  deallocate (mslp_smoothe)
     if (allocated(valid_smoothe)) deallocate (valid_smoothe)
 
+
   end subroutine find_all_maxmins
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine performs a computation that looks out
@@ -24608,14 +24816,17 @@ c-----
 
     if (fxy(ip,jp) > 50000.0) then
       if (trkrinfo%contint < 20.0) then
+        ! convert mb to Pa
         xmslp_thresh = trkrinfo%contint * 100.0
       else
+        ! no conversion needed
         xmslp_thresh = trkrinfo%contint
       endif
       xmslp_noise = 0.0
-      
+
     else
       if (trkrinfo%contint < 20.0) then
+        ! no conversion needed
         xmslp_thresh = trkrinfo%contint
       else
         xmslp_thresh = trkrinfo%contint / 100.0
@@ -24623,7 +24834,7 @@ c-----
       xmslp_noise = 0.0
     endif
 
-    xmlat = glatmax - (jp - 1.0) * dy
+    xmlat = glatmax - (jp - 1.0) * dy !CAITLYN - repeated code?
     xmlon = glonmin + (ip - 1.0) * dx
     iazim_good_depth_ct = 0
 
@@ -24781,7 +24992,9 @@ c-----
       return
     endif
 
+
   end subroutine check_mslp_radial_gradient
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine checks for a low-level (10-m)
@@ -24925,6 +25138,7 @@ c-----
           vtct(iq, idist)  = vtct(iq, idist) + 1
 
           if ((hemisphere*vt) >= 8.75) then
+            ! increment counter by 1 if cyclonic Vt > 8.75 m/s (17 kts) @ this azimuth
             vt_exceed_17kts_ct(iq, idist) = vt_exceed_17kts_ct(iq, idist) + 1
           endif
         endif
@@ -24937,6 +25151,7 @@ c-----
       enddo
 
       do nq = 1, numquad
+        ! we need at least 2 valid azimuths in order to get a proper mean Vt.
         if (vtct(nq,idist) >= 2) then
           vtavg = vtsum(nq, idist) / vtct(nq, idist)
           if ((hemisphere * vtavg) >= full_vt_thresh) then
@@ -25006,7 +25221,9 @@ c-----
       low_level_wind_circ_flag   = 'n'
     endif
 
+
   end subroutine check_for_closed_wind_circulation
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine masks out grid points for a storm that
@@ -25133,7 +25350,6 @@ c-----
              & valid_pt, bimct, -99, ibiret2)
 
         if (ibiret1 == 0 .and. ibiret2 == 0) then
-        else
           call getvrvt (ctlon, ctlat, targlon, targlat, xintrp_u, xintrp_v, vr(iazim), vt(iazim), -99, igvtret)
           azimuth_ct = azimuth_ct + 1
           vt_azim_sum = vt_azim_sum + vt(iazim)
@@ -25144,6 +25360,7 @@ c-----
       enddo  ! azimloop
 
       if (azimuth_ct > 0) then
+        ! compute azimuthally-averaged Vt at this distance
         vt_mean = vt_azim_sum / real(azimuth_ct)
       else
         vt_mean = -999.0
@@ -25261,10 +25478,11 @@ c-----
           print *, '                         glatmin = ', glatmin
           imbowret = 95
           return
-        cycle   ! bearloop
+        cycle ! bearloop
       endif
 
       if (i == 1) then
+        ! get j for northern latitude; round targlat to the closest jpoint
         if (targlat >= 0.0) then    ! N. Hemisphere
           jnfix = int((glatmax - targlat)/dy + 1.0 + 0.5)
         else                        ! S. Hemisphere
@@ -25272,9 +25490,11 @@ c-----
         endif
 
       elseif (i == 2) then
+        ! get i for eastern longitude; round targlon to closest ipoint
         iefix = int((targlon - glonmin) / dx + 1.0 + 0.5)
 
       elseif (i == 3) then
+        ! get i for southern latitude; round targlat to the closest jpoint
         if (targlat >= 0.0) then    ! N. Hemisphere
           jsfix = int((glatmax - targlat) / dy + 1.0 + 0.5)
         else                        ! S. Hemisphere
@@ -25282,6 +25502,7 @@ c-----
         endif
 
       elseif (i == 4) then
+        ! get i for western longitude; round targlon to the closest ipoint
         iwfix = int((targlon - glonmin) / dx + 1.0 + 0.5)
       endif
     enddo  ! bearloop
@@ -25299,7 +25520,9 @@ c-----
       enddo
     enddo
 
+
   end subroutine mask_based_on_wind_circ
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine checks a field of data around an input
@@ -25666,7 +25889,7 @@ c-----
                 jby = beyond_contour_j(nb)
 
                 if (.not. point_is_already_in_beyond_pool(ibx,jby)) then
-                  cycle   ! bey_con_max_loop
+                  cycle  ! bey_con_max_loop
                 endif
 
                 if (fxy(ibx,jby) >  contlo_next .and. fxy(ibx,jby) <= conthi_next) then
@@ -25797,7 +26020,7 @@ c-----
               case (6); irx = ixp1;  jrx = jxp1;   !
               case (7); irx = icenx; jrx = jxp1;   !     8       7       6
               case (8); irx = ixm1;  jrx = jxp1;   !
-              case (9); irx = icenx; jrx = jcenx; ! = center pt of ring
+              case (9); irx = icenx; jrx = jcenx;  ! = center pt of ring
             end select
 
             if (.not. valid_pt(irx,jrx)) then
@@ -26069,7 +26292,9 @@ c-----
     if (allocated(ringposi))         deallocate (ringposi)
     if (allocated(ringposj))         deallocate (ringposj)
 
+
   end subroutine check_closed_contour
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine looks at the values for the land-sea
@@ -26180,9 +26405,10 @@ c-----
       endif
     endif
 
+    ! now get the mean land fraction
     if (imct > 0) then
       fract_land = xmask_sum / real(imct)
-      
+
       if (fract_land < 0.50) then
         point_is_over_water = 'y'
         if (verb .ge. 3) then
@@ -26209,7 +26435,9 @@ c-----
       fract_land          = 99.0
     endif
 
+
   end subroutine check_land_mask
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine takes an (i,j) position input and
@@ -26309,7 +26537,9 @@ c-----
       return
     endif
 
+
   end subroutine get_ijplus1_check_wrap
+
   !****************************************************************************
   !*
   !*  ABSTRACT: This subroutine uses an order n*log(n) quick sort to sort a real (dp)
@@ -26377,6 +26607,7 @@ c-----
     j = n
     r = 0.375
 
+    ! top of loop
  20 if (i >= j) go to 70
     if (r <= 0.5898437) then
       r = r + 0.0390625
@@ -26384,12 +26615,15 @@ c-----
       r = r - 0.21875
     end if
 
+    ! initialize k
  30 k = i
 
+    ! select a central element of x and save it in t
     ij = i + r * (j - i)
     it = ind(ij)
     t  = x(it)
 
+    ! if the first element of the array is > t, interchange it with t
     indx = ind(i)
     if (x(indx) > t) then
       ind(ij) = indx
@@ -26398,8 +26632,10 @@ c-----
       t       = x(it)
     endif
 
+    ! initialize l
     l = j
 
+    ! if the last element of the array is < t, interchange it with t
     indx = ind(j)
     if (x(indx) >= t) go to 50
     ind(ij) = indx
@@ -26407,6 +26643,7 @@ c-----
     it      = indx
     t       = x(it)
 
+    ! if the first element of the array is > t, interchange it with t
     indx = ind(i)
     if (x(indx) <= t) go to 50
     ind(ij) = indx
@@ -26415,19 +26652,25 @@ c-----
     t       = x(it)
     go to 50
 
+    ! interchange elements k an l
  40 itt    = ind(l)
     ind(l) = ind(k)
     ind(k) = itt
 
+    ! find an element in the upper part of the array which is not larger than t
  50 l   = l - 1
     indx = ind(l)
     if (x(indx) > t) go to 50
 
+    ! find and element in the lower part of the array which is not smaller than t
  60 k    = k + 1
     indx = ind(k)
     if (x(indx) < t) go to 60
+
+    ! if k <= l, interchange elements k and l
     if (k <= l) go to 40
 
+    ! save the upper and lower subscripts of the portion of the array yet to be sorted
     if (l-i > j-k) then
       il(m) = i
       iu(m) = l
@@ -26442,6 +26685,7 @@ c-----
     m     = m + 1
     go to 80
 
+    ! begin again on another unsorted portion of the array
  70 m = m - 1
     if (m == 0) return
     i = il(m)
@@ -26451,6 +26695,7 @@ c-----
     if (i == 1) go to 20
     i = i - 1
 
+    ! sort elements i+1,...,j --> 1 <= i < j AND j-1 < 11
  90 i = i + 1
     if (i == j) go to 70
     indx = ind(i+1)
@@ -26467,5 +26712,5 @@ c-----
 
     ind(k+1) = it
     go to 90
-    
+
   end subroutine qsort
