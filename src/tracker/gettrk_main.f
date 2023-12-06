@@ -4,7 +4,7 @@
 ! Author
 ! Email/Contact Info
 
-      program trakmain
+program trakmain
 
   use def_vitals; use inparms; use set_max_parms; use level_parms
   use trig_vals;  use atcf;    use trkrparms;     use verbose_output
@@ -125,6 +125,7 @@
 
   stop
 
+end program trakmain
 
   subroutine tracker (inp, maxstorm, numtcv, ifhmax, trkrinfo, ncfile, &
                      & ncfile_id, nc_lsmask_file, nc_lsmask_file_id,   &
@@ -11273,6 +11274,7 @@ c     subroutine for further details.
   !*      iatret   :: Return code from this subroutine
   !*
   !****************************************************************************
+  subroutine advect_tcvitals_from_hour0 (fixlon, fixlat, maxstorm, inctcv, ifh, trkrinfo, iatret)
 
     use def_vitals;     use trkrparms; use tracked_parms; use gen_vitals
     use verbose_output; use trig_vals; use set_max_parms
@@ -23673,6 +23675,8 @@ c     subroutine for further details.
     deallocate (point_ct)
 
     return
+
+  end subroutine calc_multi_layer_mean
 
   !*
   !*  The array indices for the 3 different thickness layers are
