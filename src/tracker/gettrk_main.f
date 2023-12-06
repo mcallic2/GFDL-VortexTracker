@@ -3636,6 +3636,8 @@ end program trakmain
       endif
 
       if (verb .ge. 3) then
+        write (6,*) ' '
+        write (6,631)
         write (6,633)
         write (6,635)
         write (6,*) ' '
@@ -4625,6 +4627,7 @@ end program trakmain
                     ifclockmins(ifh), wcore_flag, tlastout, rlastout
 
  115  format (1x,   '    wcore: ', a4, 1x, i10.10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1, '_', a3, 2x, i4, ':',  &
+              i2.2, '  wcore_flag = ', a1, 2x, ' Temp of last contour(K) = ', f7.2, 2x, 'Radius of last contour(km) = ', f8.2)
     endif
 
     return
@@ -6077,8 +6080,8 @@ end program trakmain
 
       if (verb .ge. 3) then
         print *, ' '
-        write (6,73) storm(ist)%tcv_storm_id, ifhours(ifh), ifclockmins(ifh), fixlon(ist,ifh), &
-                     360.0-fixlon(ist,ifh), fixlat(ist,ifh), mod(fixlon(ist,ifh),360.0)
+        write (6,73) storm(ist)%tcv_storm_id, ifhours(ifh), ifclockmins(ifh), fixlon(ist, ifh), &
+                     360.0 - fixlon(ist, ifh), fixlat(ist, ifh), mod(fixlon(ist, ifh), 360.0)
   73    format ('At start of get_shear:  ', a4, '  fhr = ', i4, ':', i2.2, '   Mean fix position =  ', f7.2, &
                 'E  (', f6.2, 'W)', 2x, f7.2, '  (0-360) mean lon fix = ', f7.2)
         print *, ' '
