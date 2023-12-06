@@ -2866,7 +2866,7 @@
     if (allocated(netcdf_file_time_values)) deallocate (netcdf_file_time_values)
     if (allocated(nctotalmins))             deallocate (nctotalmins)
 
-    
+    return
 
   end subroutine tracker
 
@@ -3054,7 +3054,7 @@
       return
     endif
 
-      return
+    return
   end subroutine open_grib_files
 
   !****************************************************************************
@@ -3184,6 +3184,7 @@
       endif
 
       isiret = 92
+      return
     endif
 
     ! We will want to speed things up for finer resolution grids.
@@ -4229,6 +4230,7 @@
       print *, ' *--------------------------------------------------* '
     endif
 
+    return
   end subroutine calccorr
 
   !****************************************************************************
@@ -4259,6 +4261,7 @@
 
     zmean = xsum / real(max(inum, 1))
 
+    return
 
   end subroutine getmean
 
@@ -4290,6 +4293,7 @@
       zdiff(i) = xarr(i) - zmean
     enddo
 
+    return
 
   end subroutine getdiff
 
@@ -4327,6 +4331,7 @@
 
     slope = sumxy / sumx2
 
+    return
 
   end subroutine getslope
 
@@ -4358,6 +4363,7 @@
       yestim(i) = yint + xarr(i) * slope
     enddo
 
+    return
 
   end subroutine getyestim
 
@@ -4387,6 +4393,7 @@
       yresid(i) = yarr(i) - yestim(i)
     enddo
 
+    return
 
   end subroutine getresid
 
@@ -4440,6 +4447,7 @@
       R2 = 0.0
     endif
 
+    return
 
   end subroutine getcorr
 
@@ -4617,6 +4625,7 @@
  115  format (1x,   '    wcore: ', a4, 1x, i10.10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1, '_', a3, 2x, i4, ':',  &
     endif
 
+    return
 
   end subroutine get_vtt_phase
 
@@ -4723,6 +4732,7 @@
       print *, '+++   sfc-only mean:   lon:  ', xsfclon,  '   lat: ', xsfclat,  ' (0-360) xsfclon  = ', mod(xsfclon,360.0)
     endif
 
+    return
 
   end subroutine get_sfc_center
 
@@ -4894,7 +4904,7 @@
       quad_wind_circ_check = 'fail'
     endif
 
-      return
+    return
 
   end subroutine check_quadrant_wind_circ
 
@@ -5183,6 +5193,7 @@
       endif
     endif
 
+    return
 
   end subroutine get_wind_structure
 
@@ -5295,7 +5306,7 @@
         endif
 
         igfwret = 94
-          return
+        return
       endif
     endif
 
@@ -5645,6 +5656,7 @@
       enddo
     endif
 
+    return
 
   end subroutine get_fract_wind_cov
 
@@ -5893,6 +5905,7 @@
       print *, ' SDP                     = ', sdp
     endif
 
+    return
 
   end subroutine get_ike_stats
 
@@ -6344,6 +6357,7 @@
       print '(2x,22x,a40,f8.2)', ' shear(ist,ifh,2) = shear_dir_point_to = ', shear(ist,ifh,2)
     endif
 
+    return
 
   end subroutine get_shear
 
@@ -6413,6 +6427,7 @@
       sst_smooth = -9999.0
     endif
 
+    return
 
   end subroutine get_sst
 
@@ -6672,7 +6687,7 @@
 
     if (allocated(divg_850)) deallocate(divg_850)
 
-      return
+    return
 
   end subroutine get_divg
 
@@ -6765,6 +6780,7 @@
     return
     20 xlont = 0.0
 
+    return
 
   end subroutine distbear
 
@@ -6974,6 +6990,7 @@
     z = 1.9427
     xintrp_val = (1.0-to) * (1.0-ta) * d1 + to * (1.0-ta) * d2 + to * ta * d3 + (1.0-to) * ta * d4
 
+    return
 
   end subroutine bilin_int_uneven
 
@@ -7088,6 +7105,7 @@
 
     deallocate (prstemp); deallocate (iwork)
 
+    return
 
   end subroutine sort_storms_by_pressure
 
@@ -7254,6 +7272,7 @@
               f7.2, ' uvtcomp = ', f7.2, ' vvtcomp = ', f7.2)
     endif
 
+    return
 
   end subroutine getvrvt
 
@@ -7649,6 +7668,7 @@
     !flush the output stream so it actually writes
     flush(64)
 
+    return
   end subroutine output_atcfunix
 
   !****************************************************************************
@@ -8250,6 +8270,7 @@
 
 81  format (i2, a4, 4i2.2, 14i4, 1x, a3)
 
+    return
 
   end subroutine output_all
 
@@ -8392,6 +8413,7 @@
 
 82  format (i2, a4, 4i2.2, 10i4, 5i3, 1x, a4, i2.2)
 
+    return
 
   end subroutine output_atcf
 
@@ -8587,6 +8609,7 @@
            i4, ', ', a12,4(', ', i4.4), ',    0,    0, ', i3)
 
     flush(69)
+    return !CAITLYN: are these returns needed?
 
   end subroutine output_hfip
 
@@ -8802,6 +8825,7 @@
 85  format (1x, i10.10, 3x, a2, a2, 3x, i3, 3x, i3.3, '_', i3.3, 3x, i7, 2x, i7, 2x, f6.3)
     flush(73)
 
+    return
 
   end subroutine output_fract_wind
 
@@ -9089,7 +9113,7 @@
            i4, a10, a2, a1, 14(', ', i4), ', ', i4, a1, ', ', i5, a1)
 
     flush(72)
-     &       ,', ',i4,a1,', ',i5,a1)
+    return
 
   end subroutine output_wind_structure
 
@@ -9256,6 +9280,7 @@
            i4, a14, 8(',',i5), ', ', i4, a1, ', ', i5, a1)
 
     flush(74)
+    return
 
   end subroutine output_ike
 
@@ -9396,6 +9421,7 @@
            i3, ', ', i4, ', ', a14, 3(',', i6))
 
     flush(71)
+    return
 
   end subroutine output_phase
 
@@ -9844,6 +9870,7 @@
            i9, 4(', ', i4))
 
     flush(66)
+    return
 
   end subroutine output_atcf_gen
 
@@ -10063,6 +10090,7 @@
             a4, ', ', i3.3, ', ', i5, ', ', i5, ', ', i3, ', ', i4, 9(', ', a1, ', ', i5, ', ', i5, ', ', i6))
 
     flush(81)
+    return
 
   end subroutine output_atcf_parms
 
@@ -10127,6 +10155,7 @@
            i2, 1x, i3, 1x, 4(i4, 1x), a1)
 
     flush(65)
+    return
 
   end subroutine output_tcvitals
 
@@ -10258,6 +10287,7 @@
            1x, i3, 1x, i3, 3(1x, i4), 1x, i2, 1x, i3, 4(1x, i4), 1x, a1)
 
     flush(67)
+    return
 
   end subroutine output_gen_vitals
 
@@ -10409,6 +10439,7 @@
     endif
 
     flush(6)
+    return
 
   end subroutine output_tracker_mask
 
@@ -11212,6 +11243,7 @@ c     subroutine for further details.
       print *, 'iocheck, stmdir = ', stmdir, '  istmdir = ', istmdir
     endif
 
+    return
 
   end subroutine get_next_ges
 
@@ -11371,6 +11403,7 @@ c     subroutine for further details.
 25  format (' | Updated guess lat for next fcst hour is ', f7.2)
 27  format (' | Updated guess lon for next fcst hour is ', f7.2, 'W   (', f7.2, 'E)')
 
+  return
 
   end subroutine advect_tcvitals_from_hour0
 
@@ -12100,9 +12133,7 @@ c     subroutine for further details.
       return
     endif
 
-      return
-    endif
-
+    return
 
   end subroutine getradii
 
@@ -12786,6 +12817,7 @@ c     subroutine for further details.
       enddo   ! threshloop
     enddo   ! quadloop2
 
+    return
 
   end subroutine getradii_2
 
@@ -13101,6 +13133,7 @@ c     subroutine for further details.
       print *, 'At end of get_max_wind, vmax = ', vmax, ' rmax = ', rmax
     endif
 
+    return
 
   end subroutine get_max_wind
 
@@ -13400,6 +13433,7 @@ c     subroutine for further details.
       endif
     enddo   ! rdistloop
 
+    return
 
   end subroutine get_axisymet_rmw
 
@@ -13935,6 +13969,7 @@ c     subroutine for further details.
       endif
     endif
 
+    return
 
   end subroutine fixcenter
 
@@ -13979,6 +14014,7 @@ c     subroutine for further details.
       iaret = 95
     endif
 
+    return
 
   end subroutine avgcalc
 
@@ -14019,6 +14055,7 @@ c     subroutine for further details.
       iwtret = 95
     endif
 
+    return
 
   end subroutine wtavrg
 
@@ -14079,6 +14116,7 @@ c     subroutine for further details.
       iwtret = 95
     endif
 
+    return
 
   end subroutine wtavrg_lon
 
@@ -14118,6 +14156,7 @@ c     subroutine for further details.
       isret = 95
     endif
 
+    return
 
   end subroutine stdevcalc
 
@@ -14701,6 +14740,7 @@ c     subroutine for further details.
       fxval = xmin_circul_disk
     endif
 
+    return
 
   end subroutine get_wind_circulation
 
@@ -15036,6 +15076,7 @@ c     subroutine for further details.
             print *, 'grid; iend should not > imax here !!!'
           endif
           igucret = 99
+          return
         endif
       endif
 
@@ -15195,6 +15236,7 @@ c     subroutine for further details.
     igucret = 0
 
 998 continue
+    return
 
   end subroutine get_uv_center
 
@@ -15318,6 +15360,7 @@ c     subroutine for further details.
       igugret = 91
     endif
 
+    return
 
   end subroutine get_uv_guess
 
@@ -15339,6 +15382,7 @@ c     subroutine for further details.
       enddo
     enddo
 
+    return
 
   end subroutine calc_vmag
 
@@ -15431,6 +15475,7 @@ c     subroutine for further details.
       enddo
     enddo
 
+    return
 
   end subroutine bilin_int_even
 
@@ -15456,6 +15501,7 @@ c     subroutine for further details.
       xnew(2*i) = 0.5 * (xnew(2*i-1) + xnew(2*i+1))
     enddo
 
+    return
 
   end subroutine lin_int
 
@@ -15488,6 +15534,7 @@ c     subroutine for further details.
       endif
     enddo
 
+    return
 
   end subroutine lin_int_lon
 
@@ -15678,6 +15725,7 @@ c     subroutine for further details.
 633 format(1x, '# End of loop to get 850 & 700 zeta for atcf_gen file.  #')
 635 format(1x, '#---------------------------------------------------#')
 
+    return
 
   end subroutine get_zeta_values
 
@@ -16307,6 +16355,7 @@ c     subroutine for further details.
       xval = fmin
     endif
 
+    return
 
   end subroutine find_maxmin
 
@@ -16447,6 +16496,7 @@ c     subroutine for further details.
     endif
     iret = 0
 
+    return
 
   end subroutine barnes
 
@@ -16598,6 +16648,7 @@ c     subroutine for further details.
     endif
     iret = 0
 
+    return
 
   end subroutine sst_barnes
 
@@ -16895,6 +16946,7 @@ c     subroutine for further details.
       endif
     endif
 
+    return
 
   end subroutine get_ij_bounds
 
@@ -16958,6 +17010,7 @@ c     subroutine for further details.
 
 125 continue
 
+    return
 
   end subroutine check_bounds
 
@@ -17038,6 +17091,7 @@ c     subroutine for further details.
     xdist   = xdist8
     degrees = degrees8
 
+    return
 
   end subroutine calcdist
 
@@ -17066,6 +17120,7 @@ c     subroutine for further details.
       enddo
     enddo
 
+    return
 
   end subroutine subtract_cor
 
@@ -17133,6 +17188,7 @@ c     subroutine for further details.
 
 72  format (1x, 'In get_grib_file_name, file name for ', a9, ' is ', a120)
 
+    return
 
   end subroutine get_grib_file_name
 
@@ -18655,6 +18711,7 @@ c     subroutine for further details.
     deallocate (f)
     deallocate (lb)
 
+    return
 
   end subroutine getdata_grib
 
@@ -19341,6 +19398,7 @@ c     subroutine for further details.
 
     if (allocated(f)) deallocate(f)
 
+    return !CAITLYN - double check these are necessary
 
   end subroutine getdata_netcdf
 
@@ -19585,6 +19643,7 @@ c     subroutine for further details.
       STOP 91
     endif
 
+    return
 
   end subroutine get_netcdf_real_type
 
@@ -19796,6 +19855,7 @@ c     subroutine for further details.
       endif
     enddo
 
+    return
 
   end subroutine bitmapchk
 
@@ -19856,6 +19916,7 @@ c     subroutine for further details.
       enddo
     endif
 
+    return
 
   end subroutine conv1d2d_logic
 
@@ -19954,7 +20015,7 @@ c     subroutine for further details.
     print *, ' '
     print *, ' LB STATS: tct = ', tct, ' fct = ', fct, ' mct = ', mct
 
-      return
+    return
 
   end subroutine conv1d2d_logic_netcdf
 
@@ -20018,6 +20079,7 @@ c     subroutine for further details.
       enddo
     endif
 
+    return
 
   end subroutine conv1d2d_real
 
@@ -20081,6 +20143,7 @@ c     subroutine for further details.
       enddo
     endif
 
+    return
      !CAITLYN - can these be merged together?
   end subroutine conv1d2d_real_netcdf
 
@@ -20586,6 +20649,7 @@ c     subroutine for further details.
 
 944 continue
 
+    return
 
   end subroutine read_nlists
 
@@ -20730,7 +20794,7 @@ c     subroutine for further details.
 87  format (1x, 'i = ', i3, 'input lead time index = ', i4, ' minutes = ', i5, ' real_lead_time = ', &
            f6.2, ' clock_lead_time = ', i3, ':', i2)
 
-c
+    return
 
   end subroutine read_fhours
 
@@ -20952,6 +21016,7 @@ c
           print *, '!!! ',       issa, ' ita = ', ita
         endif
         iret = 97
+        return
       endif
 
       if (verb .ge. 3) then
@@ -21033,6 +21098,7 @@ c
     endif
 
     iret = 98
+    return
 
   end subroutine read_tcv_card
 
@@ -21862,6 +21928,7 @@ c
 98  format (' USER-INPUT BOUNDARY VALUE: ', f8.2)
 99  format (' NEW BOUNDARY VALUE: ', f8.2)
 
+    return
 
   end subroutine getgridinfo_grib
 
@@ -22101,7 +22168,7 @@ c
 98  format (' USER-INPUT BOUNDARY VALUE: ', f8.2)
 99  format (' NEW BOUNDARY VALUE: ', f8.2)
 
-c
+    return
 
   end subroutine getgridinfo_netcdf
 
@@ -22322,6 +22389,7 @@ c
       endif
     enddo ! userloop
 
+    return
 
   end subroutine read_netcdf_hours
 
@@ -22396,6 +22464,7 @@ c
 
     if (ifilret /= 0) then
       icvpret = 99
+      return
     endif
 
     if (valid_pt(ifix,jfix)) then
@@ -22404,6 +22473,7 @@ c
       icvpret = 99
     endif
 
+    return
 
   end subroutine check_valid_point
 
@@ -22690,6 +22760,7 @@ c
       gridpoint_maxmin = dmax
     endif
 
+    return
 
   end subroutine fix_latlon_to_ij
 
@@ -22868,6 +22939,7 @@ c
       enddo
     enddo
 
+    return
 
   end subroutine rvcal
 
@@ -23065,6 +23137,7 @@ c
 
     if (allocated(div)) deallocate (div)
 
+    return
 
   end subroutine divcal
 
@@ -23248,7 +23321,7 @@ c
       endif
     enddo  ! radmaxloop
 
-      enddo radmaxloop
+    return
 
   end subroutine get_smooth_value_at_pt
 
@@ -23371,6 +23444,7 @@ c
       rh_800_600_smooth = -9999.0
     endif
 
+    return
 
   end subroutine get_rh_at_center
 
@@ -23492,6 +23566,7 @@ c
       print *, 'x999ct = ',            x999ct, ' rhgt100ct = ', rhgt100ct
     endif
 
+    return
 
   end subroutine compute_rh_from_q
 
@@ -23597,6 +23672,7 @@ c
 
     deallocate (point_ct)
 
+    return
 
   !*
   !*  The array indices for the 3 different thickness layers are
@@ -23640,6 +23716,7 @@ c
       enddo
     enddo
 
+    return
 
   end subroutine thickness_calc
 
@@ -24043,6 +24120,7 @@ c
 71  format (1x, 'i = ', i4, '  j = ', i4, '   lon: ', f7.2, 'E  (', f6.2, 'W)', 2x, ' lat: ', &
             f6.2, '    mslp: ', f8.3, ' mb')
 
+    return
 
   end subroutine first_ges_center
 
@@ -24785,6 +24863,7 @@ c
     if (allocated(mslp_smoothe))  deallocate (mslp_smoothe)
     if (allocated(valid_smoothe)) deallocate (valid_smoothe)
 
+    return
 
   end subroutine find_all_maxmins
 
@@ -25041,6 +25120,7 @@ c
       return
     endif
 
+    return
 
   end subroutine check_mslp_radial_gradient
 
@@ -25271,6 +25351,7 @@ c
       low_level_wind_circ_flag   = 'n'
     endif
 
+    return
 
   end subroutine check_for_closed_wind_circulation
 
@@ -25571,6 +25652,7 @@ c
       enddo
     enddo
 
+    return
 
   end subroutine mask_based_on_wind_circ
 
@@ -26343,6 +26425,7 @@ c
     if (allocated(ringposi))         deallocate (ringposi)
     if (allocated(ringposj))         deallocate (ringposj)
 
+    return
 
   end subroutine check_closed_contour
 
@@ -26487,6 +26570,7 @@ c
       fract_land          = 99.0
     endif
 
+    return
 
   end subroutine check_land_mask
 
@@ -26589,6 +26673,7 @@ c
       return
     endif
 
+    return
 
   end subroutine get_ijplus1_check_wrap
 
