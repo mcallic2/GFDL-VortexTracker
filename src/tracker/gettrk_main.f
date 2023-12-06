@@ -19425,7 +19425,7 @@ c     subroutine for further details.
 
     implicit none
 
-      include "netcdf.inc"
+    include "netcdf.inc"
 
     integer,                        intent(in)  :: ncid
     character(len=*), dimension(*), intent(in)  :: var1_name
@@ -19456,7 +19456,7 @@ c     subroutine for further details.
 
     implicit none
 
-      include "netcdf.inc"
+    include "netcdf.inc"
 
     integer,                        intent(in)  :: ncid
     character(len=*), dimension(*), intent(in)  :: var1_name
@@ -19549,7 +19549,7 @@ c     subroutine for further details.
 
     implicit none
 
-      include "netcdf.inc"
+    include "netcdf.inc"
 
     integer,                        intent(in)  :: ncid
     character(len=*), dimension(*), intent(in)  :: var1_name
@@ -19580,7 +19580,7 @@ c     subroutine for further details.
 
     implicit none
 
-      include "netcdf.inc"
+    include "netcdf.inc"
 
     integer,                        intent(in)  :: ncid
     character(len=*), dimension(*), intent(in)  :: var1_name
@@ -19620,6 +19620,7 @@ c     subroutine for further details.
 
     implicit none
 
+    include "netcdf.inc"
 
     integer,                        intent(in) :: ncid
     character(len=*), dimension(*), intent(in) :: var3_name
@@ -19695,7 +19696,7 @@ c     subroutine for further details.
 
     implicit none
 
-      include "netcdf.inc"
+    include "netcdf.inc"
 
     integer,                        intent(in)  :: ncid, ncix
     character(len=*), dimension(*), intent(in)  :: var3_name
@@ -19771,7 +19772,7 @@ c     subroutine for further details.
 
     implicit none
 
-      include "netcdf.inc"
+    include "netcdf.inc"
 
     integer,                        intent(in)  :: ncid, ncix
     character(len=*), dimension(*), intent(in)  :: var3_name
@@ -19822,7 +19823,7 @@ c     subroutine for further details.
 
     implicit none
 
-      include          "netcdf.inc"
+    include "netcdf.inc"
 
     integer :: status
 
