@@ -687,6 +687,7 @@ c       If not enough tracked parms were read in, exit the program....
             fixlat(istmp, ifhtemp) = -999.0
           enddo
           ifhtemp = ifhtemp + 1
+        enddo
 
         call output_all (fixlon, fixlat, inp, maxstorm, ifhmax, ioaret)
         call output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax, ioaret)
@@ -717,7 +718,7 @@ c       If not enough tracked parms were read in, exit the program....
               call output_hfip (x999_lon, x999_lat, inp, istmp, ifh, xzero_vmax, xzero_minslp, &
                    & vradius, x99_rmax, ioaxret)
             endif
-            enddo
+          enddo
         endif
         return
       endif
@@ -725,19 +726,19 @@ c       If not enough tracked parms were read in, exit the program....
       if (user_wants_to_track_gph850 == 'n' .or. user_wants_to_track_gph850 == 'N') then
         do jj = 1, maxstorm
           calcparm(7, jj) = .false.
-          enddo
+        enddo
         endif
 
       if (user_wants_to_track_gph700 == 'n' .or. user_wants_to_track_gph700 == 'N') then
         do jj = 1, maxstorm
           calcparm(8, jj) = .false.
-          enddo
+        enddo
         endif
 
         if (user_wants_to_track_mslp == 'n' .or. user_wants_to_track_mslp == 'N') then
         do jj = 1, maxstorm
           calcparm(9, jj) = .false.
-          enddo
+        enddo
         endif
           
       do ivort = 1, 2  ! vortloop
@@ -754,7 +755,7 @@ c       If not enough tracked parms were read in, exit the program....
           if (user_wants_to_track_zeta700 == 'n' .or. user_wants_to_track_zeta700 == 'N') then
             do jj = 1, maxstorm
               calcparm(2, jj) = .false.
-              enddo
+            enddo
             cycle ! vortloop
           endif
         endif
@@ -763,6 +764,7 @@ c       If not enough tracked parms were read in, exit the program....
           call subtract_cor (imax, jmax, dy, ivort)
           do jj = 1, maxstorm
             calcparm(ivort, jj) = .true.
+          enddo
         else
           if (ivort == 1) then
             if (readflag(3) .and. readflag(4)) then
@@ -797,32 +799,32 @@ c       If not enough tracked parms were read in, exit the program....
         if (user_wants_to_track_wcirc850 == 'n' .or. user_wants_to_track_wcirc850 == 'N') then
           do jj = 1, maxstorm
             calcparm(3, jj) = .false.
-            enddo
+          enddo
         else
           do jj = 1, maxstorm
             calcparm(3, jj) = .true.
-            enddo
+          enddo
         endif
       else
         do jj = 1, maxstorm
           calcparm(3, jj) = .false.
-          enddo
+        enddo
       endif
 
       if (readflag(5) .and. readflag(6)) then
         if (user_wants_to_track_wcirc700 == 'n' .or. user_wants_to_track_wcirc700 == 'N') then
           do jj = 1, maxstorm
             calcparm(5, jj) = .false.
-            enddo
+          enddo
         else
           do jj = 1, maxstorm
             calcparm(5, jj) = .true.
-            enddo
+          enddo
         endif
       else
         do jj = 1, maxstorm
           calcparm(5, jj) = .false.
-          enddo
+        enddo
       endif
 
       if (readflag(10) .and. readflag(11)) then
@@ -911,7 +913,7 @@ c       If not enough tracked parms were read in, exit the program....
           calcparm(12, m) = .false.
           calcparm(13, m) = .false.
           calcparm(14, m) = .false.
-          enddo
+        enddo
       endif
 
       if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
@@ -1773,12 +1775,14 @@ c       If not enough tracked parms were read in, exit the program....
                     cc_time_sum_tot = 0.0
                     cc_time_sum_yes = 0.0
 
+                    do while (iccfh > 1 .and. closed_mslp_ctr_flag(ist,iccfh) /= 'u' .and. cc_time_sum_tot < 24.0)
                       xinterval_fhr = fhreal(iccfh) - fhreal(iccfh - 1)
                       cc_time_sum_tot = cc_time_sum_tot + xinterval_fhr
                       if (closed_mslp_ctr_flag(ist,iccfh) == 'y') then
                         cc_time_sum_yes = cc_time_sum_yes + xinterval_fhr
                       endif
                       iccfh = iccfh - 1
+                    enddo
 
                     if (cc_time_sum_tot > 0.0) then
                       cc_time_pct = cc_time_sum_yes / cc_time_sum_tot
@@ -1897,11 +1901,13 @@ c       If not enough tracked parms were read in, exit the program....
                         cc_time_sum_tot = 0.0
                         cc_time_sum_yes = 0.0
 
+                        do while (iccfh > 1 .and. vt850_flag(ist,iccfh) /= 'u' .and. cc_time_sum_tot < 24.0)
                           xinterval_fhr = fhreal(iccfh) - fhreal(iccfh - 1)
                           cc_time_sum_tot = cc_time_sum_tot + xinterval_fhr
                           if (vt850_flag(ist,iccfh) == 'y') then
                             cc_time_sum_yes = cc_time_sum_yes + xinterval_fhr
                           iccfh = iccfh - 1
+                        enddo
 
                         if (cc_time_sum_tot > 0.0) then
                           cc_time_pct = cc_time_sum_yes / cc_time_sum_tot
@@ -2245,7 +2251,9 @@ c       If not enough tracked parms were read in, exit the program....
               vradius = 0
               first_time_thru_getradii = .true.
               r34_check_okay = 'n'
+              do ivr = 1, 4
                 need_to_expand_r34(ivr) = 'y'
+              enddo
               radmax       = 370.0
               n_r34_iter   = 0
               ix_radii_beg = 1
@@ -2261,6 +2269,7 @@ c       If not enough tracked parms were read in, exit the program....
                         f8.3, '   ', i2.2, ':', i2.2, ':', i2.2)
               endif
 
+              do while (r34_check_okay == 'n' .and. radmax <= 1070.0) ! getrad_iter_loop
                 call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
                 if (verb .ge. 3) then
                   write (6,244) ifcsthour, igrct, date_time(5), date_time(6), date_time(7)
@@ -3529,9 +3538,8 @@ c
           close_to_boundary = 'y'
           return
         endif
+      enddo ! azimloop1
 
-      enddo azimloop1
-          
       return
     end subroutine probe_for_boundary
   !****************************************************************************
@@ -4119,6 +4127,7 @@ c
 
             zmax(kix) = max(tmp1, tmp2)
             zmin(kix) = min(tmp3, tmp2)
+          enddo ! i-loop
         enddo   ! j-loop
 
         zdiff(kix) = zmax(kix) - zmin(kix)
@@ -4318,6 +4327,7 @@ c
 
     do i = 1, inum
       zdiff(i) = xarr(i) - zmean
+    enddo
   end subroutine getdiff
   !****************************************************************************
   !*
@@ -4344,10 +4354,12 @@ c
     sumxy = 0.0
     do i = 1, inum
       sumxy = sumxy + xarr(i) * yarr(i)
+    enddo
 
     sumx2 = 0.0
     do i = 1, inum
       sumx2 = sumx2 + xarr(i) * xarr(i)
+    enddo
 
     slope = sumxy / sumx2
 
@@ -4422,6 +4434,7 @@ c     OUTPUT:
     real    :: yarr(inum), yestim(inum), yresid(inum)
     integer :: i, inum
 
+    do i = 1, inum
       yresid(i) = yarr(i) - yestim(i)
     enddo
 
@@ -4456,7 +4469,7 @@ c     OUTPUT:
     do i = 1, inum
       sumyresid = sumyresid + yresid(i) * yresid(i)
       sumydiff  = sumydiff  + ydiff(i) * ydiff(i)
-      enddo
+    enddo
 
     if (verb .ge. 3) then
       write (6,*)  ' '
@@ -5639,7 +5652,10 @@ c     -----------------------------------------------------------------
         do iq = 1, numquad
           sum_total_area(ib, it)  = sum_total_area(ib, it) + area_total_quad_bin(iq, ib)
           sum_exceed_area(ib, it) = sum_exceed_area(ib, it) + area_exceed_quad_bin(iq, ib, it)
+        enddo
         wfract_cov(5, ib, it) = sum_exceed_area(ib, it) / sum_total_area(ib, it)
+      enddo
+    enddo
 
     if (verb .ge. 3) then
       do ib = 1, numbin
@@ -6171,6 +6187,7 @@ c     ------------------------------------------------------------------
       max_dist_index(ilev) = numdist
       found_vt_ge_1_flag = 'n'
 
+      do idist = numdist, 1, -1 ! inverse_radius_loop
 
         if (xcenlat >= 0.0) then
           if (vt_mean(idist,ilev) >= 1.0) then
@@ -7498,6 +7515,7 @@ c     need to mod it to get it in a 0-360 framework.
       else
         icps_vals(ic) = -9999
       endif
+    enddo
 
     if (istmspd < -998) then
       istmspd = -99
@@ -14771,6 +14789,7 @@ c       later on in subroutine  wtavrg.
     imxold = iend - ibeg + 1
     jmxold = jend - jbeg + 1
 
+    do i = ibeg, iend
       if (i > imax) then
 
         if (trkrinfo%gridtype == 'global') then
@@ -15165,6 +15184,7 @@ c       later on in subroutine  wtavrg.
       lt15_ct  = lt15_ct + 2
     endif
 
+    do ip = 1, maxtp
       if ((ip > 2 .and. ip < 7) .or. ip == 10) then
         cycle   ! because 3-6 are for 850 & 700 u & v and 10 is for surface wind magnitude.
       else
@@ -15316,6 +15336,7 @@ c       later on in subroutine  wtavrg.
       xnew(i, 2*j) = 0.3333 * (xnew(i, 2*j-1) + xnew(i, 2*j+1) + xnew(i-1, 2*j))
     enddo
 
+    do j = 2, 2*jmxold-2
       istep = mod(j+1, 2)
       do i = istep+2, 2*imxold-2, 2
         xnew(i, j) = 0.25 * (xnew(i-1, j) + xnew(i, j-1) + xnew(i+1, j) + xnew(i, j+1))
@@ -20644,7 +20665,7 @@ c------
       do while (.true. .and. ii <= maxstorm_tc)
         read (lucard, 21, end = 801, err = 891) tmpstorm(ii)
         ii = ii + 1
-        enddo
+      enddo
 21    format (a4, 1x, a3, 1x, a9, 1x, i8, 1x, i4, 1x, i3, a1, 1x, i4, a1, 1x, i3, 1x, i3, 3(1x, i4), 1x, i2, 1x, i3, &
               1x, 4(i4, 1x), a1)
 801   continue
@@ -25723,6 +25744,7 @@ c-----
             cycle   ! check_beyond_loop
           endif
 
+          do nring = 1, ringct
             if (ibx == ringposi(nring) .and. jby == ringposj(nring)) then
               point_is_already_in_beyond_pool(ibx,jby) = .false.
             endif
