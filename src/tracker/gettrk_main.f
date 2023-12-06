@@ -3839,6 +3839,7 @@ end program trakmain
       endif
 
       ! Calculate angle from storm center to point, in a 0-360 framework, clockwise positive
+      rlonc = (360.0 - glon(ip)) * dtr ! CAITLYN - repeated code?
       rlatc = glat(j) * dtr
       rlonb = (360.0 - fixlon(ist, ifh)) * dtr
       rlatb = fixlat(ist, ifh) * dtr
@@ -10796,18 +10797,7 @@ end program trakmain
       endif
     endif
 
-c     -------------------------------
-c     METHOD 2: Barnes analysis
-c     -------------------------------
-c     Do a barnes analysis on the u & v components of the wind near the
-c     storm to get an average u & v, then advect the storm according to
-c     the average wind vector obtained.  The call to get_ij_bounds is 
-c     needed in order to restrict the number of grid points that are 
-c     searched in the  barnes subroutine.  See Abstract from this 
-c     subroutine for further details.
- 
-      npts = ceiling(ridlm/(dtk*((dx+dy)/2)))
-    npts = ceiling(ridlm / (dtk * ((dx+dy) / 2)))
+    npts = ceiling(ridlm / (dtk * ((dx+dy) / 2))) ! CAITLYN - should 2 be 2.0?
 
     call get_ij_bounds (npts, 0, ridlm, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, &
          & fixlon(ist,ifh), fixlat(ist,ifh), trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
@@ -11039,7 +11029,7 @@ c     subroutine for further details.
         endif
       endif
 
-        ignret = 0
+      ignret = 0
     else if (extrap_flag == 'y' .and. barnes_flag == 'n') then
 
       if (verb .ge. 3) then
@@ -11895,7 +11885,7 @@ c     subroutine for further details.
             if (sin(rlonc-rlonb) < 0.0) then
               pt_heading_rad = acos(cosarg)
             else
-              pt_heading_rad = 2 * pi - acos(cosarg)
+              pt_heading_rad = 2.0 * pi - acos(cosarg)
             endif
 
             pt_heading = pt_heading_rad / dtr
@@ -13660,7 +13650,7 @@ c     subroutine for further details.
 
     if (iclose > 0) then
       if (gt345_ct > 0 .and. lt15_ct > 0) then
-        clon_fguess = (clonsum + (360.0 * real(lt15_ct))) / iclose
+        clon_fguess = (clonsum + (360.0 * real(lt15_ct))) / real(iclose)
       else
         clon_fguess = clonsum / real(iclose)
       endif
@@ -15353,11 +15343,11 @@ c     subroutine for further details.
     if (ict > 0) then
 
       if (gt345_ct > 0 .and. lt15_ct > 0) then
-        uvgeslon = (sumlon + (360.0 * real(lt15_ct))) / ict
+        uvgeslon = (sumlon + (360.0 * real(lt15_ct))) / real(ict)
       else
-        uvgeslon = sumlon / ict
+        uvgeslon = sumlon / real(ict)
       endif
-      uvgeslat = sumlat / ict
+      uvgeslat = sumlat / real(ict)
       igugret  = 0
 
     else
@@ -16875,6 +16865,7 @@ c     subroutine for further details.
     endif
 
     ! roughly fix geslon to the grid point just EASTward of geslon
+    ilonfix = int((geslon - rglonmin) / dx + 2.0)
 
     ibeg = ilonfix - ibmaxlonpts
     iend = ilonfix + ibmaxlonpts
@@ -17126,7 +17117,7 @@ c     subroutine for further details.
     real    :: dy, coriolis, rlat
 
     do j = 1, jmax
-      rlat = glatmax - ((j-1) * dy)
+      rlat = glatmax - ((real(j - 1)) * dy)
       coriolis = 2.0 * omega * sin(rlat * dtr)
       do i = 1, imax
         zeta(i, j, level) = zeta(i, j, level) - coriolis
@@ -19524,7 +19515,7 @@ c     subroutine for further details.
       enddo
     elseif (xtype == 6) then
       ! read data into an 8-byte double real array
-      status = nf_get_var_double(ncid,var1id,var1)
+      status = nf_get_var_double(ncid, var1id, var1)
       if (status .ne. nf_noerr) call handle_netcdf_err (status)
       do i = 1, nmax
         var1(i) = readvar8(i)
@@ -19925,7 +19916,7 @@ c     subroutine for further details.
       ! Input data is north to south; convert the data onto a 2-d grid, do not flip it
       do ilat = 1, jmax
         do ilon = 1, imax
-          lb2d(ilon, ilat) = lb1d(ilon + (ilat-1) * imax)
+          lb2d(ilon, ilat) = lb1d(ilon + (ilat - 1) * imax)
         enddo
       enddo
     endif
@@ -22614,6 +22605,8 @@ c     subroutine for further details.
     ipfix = int((parmlon - grid_minlon) / dx + 1.0 + 0.5)
 
     ! calculate the longitude and latitude of these ipfix and jpfix points
+    xplon = grid_minlon + (ipfix - 1.0) * dx
+    yplat = grid_maxlat - (jpfix - 1.0) * dy
 
     grdspc = (dx+dy) * 0.5
     if (grdspc <= 0.025) then
@@ -24684,8 +24677,8 @@ c     subroutine for further details.
 
       do ist = 1, maxstorm
         if (prstemp(sortindex(ist)) < 999998.0) then
-          xmlat = glatmax - (jpos(sortindex(ist)) - 1) * dy
-          xmlon = glonmin + (ipos(sortindex(ist)) - 1) * dx
+          xmlat = glatmax - (real(jpos(sortindex(ist)) - 1)) * dy
+          xmlon = glonmin + (real(ipos(sortindex(ist)) - 1)) * dx
           if (prstemp(sortindex(ist)) < 1500.0) then    ! pressure values are in mb
             write (6,82) ist, sortindex(ist), prstemp(sortindex(ist)), ipos(sortindex(ist)), jpos(sortindex(ist)), &
                          360.0-xmlon, xmlon, xmlat
@@ -25031,7 +25024,7 @@ c     subroutine for further details.
               return
             else
               if (idist > 1) then
-                max_radial_grad_dist(iazim) = rdist(idist - 1.0)
+                max_radial_grad_dist(iazim) = rdist(idist - 1)
                 exit  ! distloop1
               else
                 max_radial_grad_dist(iazim) = 0.0
@@ -25237,10 +25230,10 @@ c     subroutine for further details.
     iccwcret               = 0
     igvtret                = 0
 
-      full_vt_thresh = 7.0                   ! wind speed in m/s
-      half_vt_thresh = 0.5 * full_vt_thresh  ! wind speed in m/s
+    full_vt_thresh = 7.0                   ! wind speed in m/s
+    half_vt_thresh = 0.5 * full_vt_thresh  ! wind speed in m/s
 
-      bimct = 0
+    bimct = 0
 
     xcandlon = glonmin + (real(ip - 1) * dx)
     ycandlat = glatmax - (real(jp - 1) * dy)
