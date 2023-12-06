@@ -2871,6 +2871,7 @@ end program trakmain
 
   end subroutine tracker
 
+  !***************************************************************************
   !*
   !*  ABSTRACT: This subroutine is used to generate the pre-forecast-command
   !*      It will edit the command (argument "arg") and replace string
@@ -2880,7 +2881,7 @@ end program trakmain
   !*      %[FHOUR]  -> replace with ->  last forecast hour
   !*      %[FMIN]   -> replace with ->  last forecast minute
   !*
-  !****************************************************************************
+  !***************************************************************************
   subroutine argreplace(arg, n, name, val)
 
     implicit none
@@ -23678,6 +23679,10 @@ c     subroutine for further details.
 
   end subroutine calc_multi_layer_mean
 
+  !****************************************************************************
+  !*
+  !*  ABSTRACT: This routine calculates the  thicknesses for three
+  !*      different layers: 200-500, 500-850 and 200-850 mb.
   !*
   !*  The array indices for the 3 different thickness layers are
   !*      as follows:
