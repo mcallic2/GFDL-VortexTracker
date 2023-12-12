@@ -429,24 +429,24 @@ end program trakmain
           igridzeta = -99
 
           call output_aext (x999_lon, x999_lat, inp, inctcv, izero_fhr, xzero_vmax, &
-               & xzero_minslp, vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar,     &
+               & xzero_minslp, vradius, trkrinfo, x99_pbar, x99_rbar,               &
                & x99_rmax, cps_vals, wcore_flag, i999_stmspd, i999_stmdir,          &
                & x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,              &
                & x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800,       &
-               & x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
+               & x999_rh1000_925, x999_omega500, imeanzeta, igridzeta)
 
           if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
             call output_atcf_gen (x999_lon, x999_lat, inp, inctcv, izero_fhr,   &
-                 & xzero_vmax, xzero_minslp, vradius, maxstorm, trkrinfo,       &
+                 & xzero_vmax, xzero_minslp, vradius, trkrinfo,                 &
                  & i999_stmspd, i999_stmdir, x99_pbar, x99_rbar, x99_rmax,      &
                  & cps_vals, c_undef_wcflag, imeanzeta, igridzeta, x999_shrmag, &
                  & x999_shrdir, x999_divg, x999_moist_divg, x999_rh600_800,     &
                  & x999_rh1000_925, x999_omega500, x999_sst, x999_axirmw_dist,  &
-                 & x999_axirmw_val, ioaxret)
+                 & x999_axirmw_val)
           endif
 
           call output_hfip (x999_lon, x999_lat, inp, inctcv, ifh, xzero_vmax &
-               & xzero_minslp, vradius, x99_rmax, ioaxret)
+               & xzero_minslp, vradius, x99_rmax)
 
           if (verb .ge. 3) then
             print *, ' '
@@ -706,7 +706,7 @@ end program trakmain
         enddo
 
         call output_all (fixlon, fixlat, inp, maxstorm, ifhmax, ioaret)
-        call output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax, ioaret)
+        call output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax)
 
         if (ifh == 1) then
           vradius     = 0
@@ -726,13 +726,13 @@ end program trakmain
               imeanzeta = -99
               igridzeta = -99
               call output_aext (x999_lon, x999_lat, inp, istmp, ifcsthour, xzero_vmax,         &
-                   & xzero_minslp, vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax,  &
+                   & xzero_minslp, vradius, trkrinfo, x99_pbar, x99_rbar, x99_rmax,            &
                    & cps_vals, wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, &
                    & x999_sst, x999_axirmw_dist, x999_axirmw_val, x999_divg, x999_moist_divg,  &
-                   & x999_rh600_800, x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
+                   & x999_rh600_800, x999_rh1000_925, x999_omega500, imeanzeta, igridzeta)
 
               call output_hfip (x999_lon, x999_lat, inp, istmp, ifh, xzero_vmax, xzero_minslp, &
-                   & vradius, x99_rmax, ioaxret)
+                   & vradius, x99_rmax)
             endif
           enddo
         endif
@@ -937,7 +937,7 @@ end program trakmain
       endif
 
       if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
-        call sort_storms_by_pressure (gridprs, ifh, maxstorm, prsindex, issret)
+        call sort_storms_by_pressure (gridprs, ifh, maxstorm, prsindex)
         if ((ifh == 1) .or. (ifh == 2 .and. trkrinfo%inp_data_type == 'netcdf' .and. ncfile_has_hour0 == 'n')) then
           stormct = numtcv
         endif
@@ -1437,17 +1437,17 @@ end program trakmain
                     igridzeta = -99
 
                     call output_aext (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp,  &
-                         & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals,           &
+                         & vradius, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals,                     &
                          & wcore_flag, i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst,      &
                          & x999_axirmw_dist, x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800, &
-                         & x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
+                         & x999_rh1000_925, x999_omega500, imeanzeta, igridzeta)
 
                     call output_atcf_gen (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax,  &
-                         & xzero_minslp, vradius, maxstorm, trkrinfo, i999_stmspd, i999_stmdir, &
+                         & xzero_minslp, vradius, trkrinfo, i999_stmspd, i999_stmdir, &
                          & x99_pbar, x99_rbar, x99_rmax, cps_vals, c_undef_wcflag, imeanzeta,   &
                          & igridzeta, x999_shrmag, x999_shrdir, x999_divg, x999_moist_divg,     &
                          & x999_rh600_800, x999_rh1000_925, x999_omega500, x999_sst,            &
-                         & x999_axirmw_dist, x999_axirmw_val, ioaxret)
+                         & x999_axirmw_dist, x999_axirmw_val)
                   endif
                   cycle ! stormloop
                 endif
@@ -2404,7 +2404,7 @@ end program trakmain
             if (igwsret == 0) then
               call output_wind_structure (fixlon(ist,ifh), fixlat(ist,ifh), xsfclon, xsfclat,    &
                    & inp, ist, ifcsthour, xmaxwind(ist,ifh), gridprs(ist,ifh), er_wind, sr_wind, &
-                   & er_vr, sr_vr, er_vt, sr_vt, maxstorm, iowsret)
+                   & er_vr, sr_vr, er_vt, sr_vt, maxstorm)
             endif
           endif
 
@@ -2424,7 +2424,7 @@ end program trakmain
                  & valid_pt, calcparm, ike, sdp, wdp, maxstorm, trkrinfo, igisret)
             if (igisret == 0) then
               call output_ike (fixlon(ist,ifh), fixlat(ist,ifh), xsfclon, xsfclat, inp, ist,  ifcsthour, &
-                   & xmaxwind(ist,ifh), gridprs(ist,ifh), ike, sdp, wdp, maxstorm, ioiret)
+                   & xmaxwind(ist,ifh), gridprs(ist,ifh), ike, sdp, wdp, maxstorm)
             endif
           endif
 
@@ -2526,18 +2526,18 @@ end program trakmain
                    & axisymet_rmw_dist, axisymet_rmw_val, ioaxret)
 
               call output_aext (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifcsthour, xmaxwind(ist,ifh), &
-                   & gridprs(ist,ifh), vradius, maxstorm, trkrinfo, plastbar, rlastbar, rmax, cps_vals,   &
+                   & gridprs(ist,ifh), vradius, trkrinfo, plastbar, rlastbar, rmax, cps_vals,             &
                    & wcore_flag, istmspd, istmdir, shear(ist,ifh,1), shear(ist,ifh,2), sst_smooth,        &
                    & axisymet_rmw_dist, axisymet_rmw_val, divg, moist_divg, rh_800_600_smooth,            &
-                   & rh_1000_925_smooth, omega500_smooth, imeanzeta, igridzeta, ioaxret)
+                   & rh_1000_925_smooth, omega500_smooth, imeanzeta, igridzeta)
 
               if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
                 call output_atcf_gen (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifcsthour,          &
-                     & xmaxwind(ist,ifh), gridprs(ist,ifh), vradius, maxstorm, trkrinfo, istmspd,     &
+                     & xmaxwind(ist,ifh), gridprs(ist,ifh), vradius, trkrinfo, istmspd,               &
                      & istmdir, plastbar, rlastbar, rmax, cps_vals, wcore_flag, imeanzeta, igridzeta, &
                      & shear(ist,ifh,1), shear(ist,ifh,2), divg, moist_divg, rh_800_600_smooth,       &
                      & rh_1000_925_smooth, omega500_smooth, sst_smooth, axisymet_rmw_dist,            &
-                     & axisymet_rmw_val, ioaxret)
+                     & axisymet_rmw_val)
               endif
 
               call output_atcf_parms (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, ifcsthour,  &
@@ -2553,7 +2553,7 @@ end program trakmain
             ! The exception here is for the call to the output_hfip routine, 
             ! which will be called for every lead time that is processed
             call output_hfip (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, xmaxwind(ist,ifh)
-                 & gridprs(ist,ifh), vradius, rmax, ioaxret)
+                 & gridprs(ist,ifh), vradius, rmax)
           else
             if (verb .ge. 3) then
               write (6,452) 'fixpos ', storm(ist)%tcv_storm_id, ' fhr = ', ifhours(ifh), ifclockmins(ifh), &
@@ -2647,10 +2647,10 @@ end program trakmain
                 imeanzeta = -99
                 igridzeta = -99
                 call output_aext (slonfg(ist,ifh), slatfg(ist,ifh), inp, ist, ifcsthour, tcv_max_wind_ms,  &
-                     & tcv_mslp_pa, vradius, maxstorm, trkrinfo, plastbar, rlastbar, x99_rmax,cps_vals,    &
+                     & tcv_mslp_pa, vradius, trkrinfo, plastbar, rlastbar, x99_rmax,cps_vals,              &
                      & wcore_flag, istmspd, istmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist, &
                      & x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800, x999_rh1000_925,       &
-                     & x999_omega500, imeanzeta, igridzeta, ioaxret)
+                     & x999_omega500, imeanzeta, igridzeta)
 
               else
                 ! For all other models, we print out missing data values at tau=00h if the  tracker was unable to find the storm
@@ -2662,23 +2662,22 @@ end program trakmain
                 imeanzeta = -99
                 igridzeta = -99
                 call output_aext (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp,    &
-                     & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag, &
+                     & vradius, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag,           &
                      & i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,  &
                      & x999_axirmw_val, x999_divg, x999_moist_divg, x999_rh600_800, x999_rh1000_925,    &
-                     & x999_omega500, imeanzeta, igridzeta, ioaxret)
+                     & x999_omega500, imeanzeta, igridzeta)
               endif
 
               imeanzeta = -99
               igridzeta = -99
               if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
                 call output_atcf_gen (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp,    &
-                     & vradius, maxstorm, trkrinfo, i999_stmspd, i999_stmdir, x99_pbar, x99_rbar, x99_rmax, &
+                     & vradius, trkrinfo, i999_stmspd, i999_stmdir, x99_pbar, x99_rbar, x99_rmax,           &
                      & cps_vals, c_undef_wcflag, imeanzeta, igridzeta, x999_shrmag, x999_shrdir, x999_divg, &
                      & x999_moist_divg, x999_rh600_800, x999_rh1000_925, x999_omega500, x999_sst,           &
-                     & x999_axirmw_dist, x999_axirmw_val, ioaxret)
+                     & x999_axirmw_dist, x999_axirmw_val)
               endif
-              call output_hfip (x999_lon, x999_lat, inp, ist, ifh, xzero_vmax,
-                   & xzero_minslp, vradius, x99_rmax, ioaxret)
+              call output_hfip (x999_lon, x999_lat, inp, ist, ifh, xzero_vmax, xzero_minslp, vradius, x99_rmax)
 
               if (trkrinfo%type == 'tracker') then
                 if (verb .ge. 3) then
@@ -2763,18 +2762,17 @@ end program trakmain
             igridzeta = -99
 
             call output_aext (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp, vradius, &
-                 & maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag, i999_stmspd,   &
+                 & trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag, i999_stmspd,             &
                  & i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist, x999_axirmw_val,    &                  ,x999_divg,x999_moist_divg
-                 & x999_rh600_800, x999_rh1000_925, x999_omega500, imeanzeta, igridzeta, ioaxret)
+                 & x999_rh600_800, x999_rh1000_925, x999_omega500, imeanzeta, igridzeta)
             if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
               call output_atcf_gen (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax ,xzero_minslp,    &
-                   & vradius, maxstorm, trkrinfo, i999_stmspd, i999_stmdir, x99_pbar, x99_rbar, x99_rmax, &
+                   & vradius, trkrinfo, i999_stmspd, i999_stmdir, x99_pbar, x99_rbar, x99_rmax, &
                    & cps_vals, c_undef_wcflag, imeanzeta, igridzeta, x999_shrmag, x999_shrdir, x999_divg, &
                    & x999_moist_divg, x999_rh600_800, x999_rh1000_925, x999_omega500, x999_sst,           &
-                   & x999_axirmw_dist, x999_axirmw_val, ioaxret)
+                   & x999_axirmw_dist, x999_axirmw_val)
             endif
-            call output_hfip (x999_lon, x999_lat, inp, ist, ifh, xzero_vmax, &
-                 & xzero_minslp, vradius, x99_rmax, ioaxret)
+            call output_hfip (x999_lon, x999_lat, inp, ist, ifh, xzero_vmax, xzero_minslp, vradius, x99_rmax)
           endif
 
         case (3)
@@ -2835,7 +2833,7 @@ end program trakmain
     enddo ! ifhloop
 
     call output_all (fixlon, fixlat, inp, maxstorm, ifhmax, ioaret)
-    call output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax, ioaret)
+    call output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax)
 
   73 format ('fixpos  ', a4, '  fhr = ', i4, ':', i2.2, '   Fix position =  ', f7.2, 'E  (', f6.2, &
               'W)', 2x, f7.2, '   Max Wind = ', i3, ' kts')
@@ -7051,7 +7049,7 @@ end program trakmain
   !*      issret    :: return code from this subroutine
   !*
   !****************************************************************************
-  subroutine sort_storms_by_pressure (gridprs, ifh, maxstorm, sortindex, issret)
+  subroutine sort_storms_by_pressure (gridprs, ifh, maxstorm, sortindex)
 
     use set_max_parms; use verbose_output
 
@@ -7747,11 +7745,11 @@ end program trakmain
   !*      storm              :: An array of type tcvcard.  Use this for the storm ID
   !*
   !****************************************************************************
-  subroutine output_aext (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius, maxstorm,   &
+  subroutine output_aext (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius,             &
                          & trkrinfo, plastbar, rlastbar, rmax, cps_vals, wcore_flag, istmspd, istmdir,  &
                          & shear_mag, shear_dir, sst_smooth, axisymet_rmw_dist, axisymet_rmw_val, divg, &
                          & moist_divg, rh_800_600_smooth, rh_1000_925_smooth, omega500_smooth,          &
-                         & imeanzeta, igridzeta, ioaxret)
+                         & imeanzeta, igridzeta)
 
     use def_vitals; use inparms; use set_max_parms; use atcf;          use verbose_output
     use trkrparms;  use phase;   use shear_diags;   use genesis_diags; use level_parms
@@ -7768,8 +7766,8 @@ end program trakmain
     real              :: vmaxwind, conv_ms_knots, xminmslp, plastbar, rlastbar
     real              :: shear_mag, shear_dir, sst_smooth, divg, moist_divg
     real              :: rh_800_600_smooth, rh_1000_925_smooth, omega500_smooth
-    integer           :: intlon, intlat, irmax, output_fhr, ic, iplastbar, irlastbar
-    integer           :: ishear_mag, ishear_dir, istmspd, istmdir, isst
+    integer           :: intlon, intlat, irmax, output_fhr, ic, ist, iplastbar, irlastbar
+    integer           :: ishear_mag, ishear_dir, istmspd, istmdir, isst, ifcsthour
     integer           :: irmw_dist, irmw_val
     integer           :: idivg, imoistdivg, irh_800_600, irh_1000_925, iomega500
     integer           :: vradius(3,4), icps_vals(3)
@@ -8201,6 +8199,8 @@ end program trakmain
 
     type (datecard)  :: inp
 
+    integer          :: maxstorm, maxtime, maxmodel
+    integer          :: ifhmax, ioaret
     real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
     integer          :: modelnum(maxmodel)
     integer          :: intlon(maxtime), intlat(maxtime)
@@ -8305,14 +8305,14 @@ end program trakmain
   !*      made.
   !*
   !****************************************************************************
-  subroutine output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax, ioaret)
+  subroutine output_atcf (fixlon, fixlat, inp, xmaxwind, maxstorm, ifhmax)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use tracked_parms
 
     implicit none
 
     type (datecard)  :: inp
-
+    integer          :: maxstorm, maxtime, maxmodel, ifhmax
     real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
     real             :: xmaxwind(maxstorm,maxtime)
     real             :: conv_ms_knots
@@ -8507,7 +8507,7 @@ end program trakmain
   !*      intlat    :: integer that holds the value of outlat*10
   !*
   !****************************************************************************
-  subroutine output_hfip (outlon, outlat, inp, ist, ifh, vmaxwind, xminmslp, vradius, rmax, ioaxret)
+  subroutine output_hfip (outlon, outlat, inp, ist, ifh, vmaxwind, xminmslp, vradius, rmax)
 
     use def_vitals;    use inparms; use set_max_parms; use atcf
     use tracked_parms; use verbose_output
@@ -8519,6 +8519,7 @@ end program trakmain
     real, intent(in) :: outlon, outlat
     real             :: mslp_outp_adj, xoutlon
     real             :: vmaxwind, conv_ms_knots, xminmslp, rmax
+    integer          :: ist, ifh
     integer          :: intlon, intlat, output_fhr, irmax, ileadtime
     integer          :: vradius(3,4)
     character(len=2) :: basinid
@@ -8714,7 +8715,7 @@ end program trakmain
   !****************************************************************************
   subroutine output_fract_wind (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour,    &
                                & vmaxwind, xminmslp, wfract_cov, wfract_type, pdf_ct_bin, &
-                               & pdf_ct_tot, maxstorm, iofwret)
+                               & pdf_ct_tot, maxstorm)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
 
@@ -8727,7 +8728,8 @@ end program trakmain
     real               :: xoutlon, pdfval
     real               :: wfract_cov(numquad+1,numbin,numthresh)
     real               :: vmaxwind, conv_ms_knots, xminmslp, xsfclon, xsfclat
-    integer            ::  windthresh(numthresh) = (/34,50,64/)
+    integer            :: ist, ifcsthour
+    integer            :: windthresh(numthresh) = (/34,50,64/)
     integer            :: pdf_ct_bin(16)
     integer            :: intlon, intlat, output_fhr, intlon100, intlat100, pdf_ct_tot
     integer            :: maxstorm
@@ -8941,7 +8943,7 @@ end program trakmain
   !****************************************************************************
   subroutine output_wind_structure (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour, &
                                    & vmaxwind, xminmslp, er_wind, sr_wind, er_vr, sr_vr, er_vt, &
-                                   & sr_vt, maxstorm, iofwret)
+                                   & sr_vt, maxstorm)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
 
@@ -8952,6 +8954,7 @@ end program trakmain
     real, intent(in)   :: outlon,outlat
     integer, parameter :: numdist = 14, numquad = 4, numbin = 5, numthresh = 3
     integer            :: ioutwind(numdist)
+    integer            :: maxstorm
     real               :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
     real               :: er_wind(numquad,numdist)
     real               :: sr_wind(numquad,numdist)
@@ -8962,6 +8965,7 @@ end program trakmain
     real               :: xoutlon
     real               :: vmaxwind, conv_ms_knots, xminmslp, xsfclon, xsfclat
     integer            :: intlon, intlat, output_fhr, id, intlon100, intlat100, ir
+    integer            :: ist, ifcsthour
     character(len=1)   :: clatns, clonew, wt
     character(len=2)   :: basinid
     character(len=5)   :: wfract_type
@@ -9209,7 +9213,7 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine output_ike (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour, vmaxwind, &
-                        & xminmslp, ike, sdp, wdp, maxstorm, ioiret)
+                        & xminmslp, ike, sdp, wdp, maxstorm)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
 
@@ -9222,6 +9226,7 @@ end program trakmain
     real               :: xoutlon, sdp, wdp
     real               :: ike(max_ike_cats)
     real               :: vmaxwind, conv_ms_knots, xminmslp, xsfclon, xsfclat
+    integer            :: ist, ifcsthour
     integer            :: intlon, intlat, output_fhr, intlon100, intlat100, maxstorm
     character(len=1)   :: clatns, clonew, wt
     character(len=2)   :: basinid, cquad
@@ -9360,7 +9365,7 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine output_phase (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, &
-                          & paramb, vtl_slope, vtu_slope, ioiret)
+                          & paramb, vtl_slope, vtu_slope)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
 
@@ -9371,7 +9376,7 @@ end program trakmain
     real, intent(in) :: outlon, outlat
     real             :: xoutlon, paramb, vtl_slope, vtu_slope
     real             :: vmaxwind, conv_ms_knots, xminmslp
-    integer          :: intlon, intlat, output_fhr
+    integer          :: intlon, intlat, output_fhr, ist, ifcsthour
     character(len=2) :: basinid
     character(len=1) :: clatns, clonew
 
@@ -9534,10 +9539,10 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine output_atcf_gen (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius,  &
-                             & maxstorm, trkrinfo, istmspd, istmdir, plastbar, rlastbar, rmax,   &
+                             & trkrinfo, istmspd, istmdir, plastbar, rlastbar, rmax,             &
                              & cps_vals, wcore_flag, imeanzeta, igridzeta, shear_mag, shear_dir, &
                              & divg, moist_divg, rh_800_600_smooth, rh_1000_925_smooth,          &
-                             & omega500_smooth, sst_smooth, axisymet_rmw_dist, axisymet_rmw_val, ioaxret)
+                             & omega500_smooth, sst_smooth, axisymet_rmw_dist, axisymet_rmw_val)
 
     use def_vitals;     use inparms;     use set_max_parms; use atcf
     use trkrparms;      use gen_vitals;  use level_parms
@@ -9549,13 +9554,14 @@ end program trakmain
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
 
-    real, intent(in)  ::  outlon,outlat
+    real, intent(in)  :: outlon,outlat
     real              :: xoutlon, plastbar, rlastbar, rmax
     real              :: vmaxwind, conv_ms_knots, xminmslp, mslp_outp_adj
     real              :: cps_vals(3)
     real              :: shear_mag, shear_dir, axisymet_rmw_dist, axisymet_rmw_val
     real              :: divg, moist_divg, rh_800_600_smooth, rh_1000_925_smooth
     real              :: omega500_smooth, sst_smooth
+    integer           :: ist, ifcsthour
     integer           :: intlon, intlat, istmspd, istmdir, iplastbar, irlastbar, irmax
     integer           :: ivtl, ivtu, iparamb, output_fhr, ishear_mag, ishear_dir
     integer           :: vradius(3,4)
@@ -10135,6 +10141,7 @@ end program trakmain
     type (tcvcard)  :: stm
     type (datecard) :: inp
     real            :: xlon, xlat
+    integer         :: ist, iovret
 
     iovret = 0
 
@@ -11505,15 +11512,17 @@ end program trakmain
 
     type (trackstuff) :: trkrinfo
 
+    integer               :: imax, jmax
     logical(1)            :: valid_pt(imax,jmax)
     logical(1)            :: first_time_thru_getradii
     real, allocatable     :: quadinfo(:,:,:), iwork(:)
     real                  :: quadmax(4,4)
     real                  :: exactdistnm, exactdistkm, radmax, degrees, cosarg
+    real                  :: xcenlon, xcenlat, dx, dy
     real                  :: rlonb, rlonc, rlatb, rlatc, vmaxwind
     real                  :: pt_heading_rad, pt_heading, d
     integer, allocatable  :: isortix(:)
-    integer               :: iwindix, ipoint, ifcsthr, igrct
+    integer               :: iwindix, ipoint, ifcsthr, igrct, igrret
     integer               :: quadct(4), vradius(3,4)
     integer, parameter    :: dp = selected_real_kind(12, 60)
     real(dp), allocatable :: dtemp(:)
@@ -12227,7 +12236,7 @@ end program trakmain
   subroutine getradii_2 (xcenlon, xcenlat, imax, jmax, dx, dy, valid_pt, cstormid, ifh, ifcsthr, vmaxwind, &
                         & vradius, trkrinfo, need_to_expand_r34, num_r34_bins, pctile_quad_bin_wind,       &
                         & fp_pctile_quad_bin_wind, radmax, axi_rmw, ix_radii_beg, ix_radii_end,            &
-                        & n_r34_iter, ist, first_time_thru_getradii, igrct, gm_wrap_flag,igrret)
+                        & n_r34_iter, ist, first_time_thru_getradii, igrct, gm_wrap_flag, igrret)
 
     use grid_bounds; use tracked_parms; use trig_vals;  use level_parms
     use trkrparms;   use structure;     use def_vitals; use verbose_output
@@ -13990,6 +13999,8 @@ end program trakmain
 
     implicit none
 
+    integer    :: kmax, iaret
+    real       :: xavg
     real       :: xdat(kmax)
     logical(1) :: valid(kmax)
 
@@ -14035,7 +14046,9 @@ end program trakmain
 
     implicit none
 
-    real :: xdat(kmax), wt(kmax)
+    integer :: kmax, iwtret
+    real    :: xwtavg
+    real    :: xdat(kmax), wt(kmax)
 
     iwtret = 0
     xwtavg = 0.0
@@ -14077,6 +14090,8 @@ end program trakmain
 
     implicit none
 
+    integer  :: kmax, iwtret
+    real     :: xwtavg
     real     :: xlon(kmax), wt(kmax)
     integer  :: gt345_ct, lt15_ct
 
@@ -14132,8 +14147,11 @@ end program trakmain
 
     implicit none
 
+    integer    :: kmax
+    real       :: xavg, stdx
     real       :: xdat(kmax)
     logical(1) :: valid(kmax)
+    integer    :: isret
 
     isret = 0
     stdx  = 0.0
