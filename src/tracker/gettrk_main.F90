@@ -2763,8 +2763,9 @@ end program trakmain
 
             call output_aext (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp, vradius, &
                  & trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag, i999_stmspd,             &
-                 & i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist, x999_axirmw_val,    &                  ,x999_divg,x999_moist_divg
-                 & x999_rh600_800, x999_rh1000_925, x999_omega500, imeanzeta, igridzeta)
+                 & i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist, x999_axirmw_val,    &
+                 & x999_divg, x999_moist_divg, x999_rh600_800, x999_rh1000_925, x999_omega500, imeanzeta, &
+                   igridzeta)
             if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
               call output_atcf_gen (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax ,xzero_minslp,    &
                    & vradius, trkrinfo, i999_stmspd, i999_stmdir, x99_pbar, x99_rbar, x99_rmax, &
