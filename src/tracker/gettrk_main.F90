@@ -1656,7 +1656,7 @@ end program trakmain
                       print *, 'longitude = ', xinp_fixlon,'E (', 360-mod(xinp_fixlon,360.0),  &
                                'W) (0-360E) xinp_fixlon = ', mod(xinp_fixlon,360.0)
                       print *, 'latitude = ',                     xinp_fixlat
-                      print *, 'mean mslp value (xval(9)) = ',    xval(9)
+                      print *, 'mean mslp value (xval(9)) = ',    xval(9)
                       print *, 'gridpoint mslp value = ',         slp(ifix,jfix)
                       print *, 'ccflag = ',                       ccflag
                       print *, 'prs of last closed isobar = ',    plastbar
@@ -1788,7 +1788,7 @@ end program trakmain
                   print *, 'latitude = ',                     xinp_fixlat
                   print *, 'mean mslp value (xval(9)) = ',    xval(9)
                   print *, 'gridpoint mslp value = ',         slp(ifix,jfix)
-                  print *, 'ccflag = ',                       ccflag
+                  print *, 'ccflag = ',                       ccflag
                   print *, 'prs of last closed isobar = ',    plastbar
                   print *, 'radius of last closed isobar = ', rlastbar,' nm'
                   print *, ' '
