@@ -2552,7 +2552,7 @@ end program trakmain
 
             ! The exception here is for the call to the output_hfip routine, 
             ! which will be called for every lead time that is processed
-            call output_hfip (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, xmaxwind(ist,ifh)
+            call output_hfip (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, xmaxwind(ist,ifh), &
                  & gridprs(ist,ifh), vradius, rmax)
           else
             if (verb .ge. 3) then
