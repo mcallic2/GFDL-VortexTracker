@@ -445,7 +445,7 @@ end program trakmain
                  & x999_axirmw_val)
           endif
 
-          call output_hfip (x999_lon, x999_lat, inp, inctcv, ifh, xzero_vmax &
+          call output_hfip (x999_lon, x999_lat, inp, inctcv, ifh, xzero_vmax, &
                & xzero_minslp, vradius, x99_rmax)
 
           if (verb .ge. 3) then
