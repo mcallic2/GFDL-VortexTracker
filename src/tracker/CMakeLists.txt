@@ -8,7 +8,7 @@ set(tracker_srcs
   gettrk_modules.f 
   module_waitfor.f 
   cwaitfor.c
-  gettrk_main.f)
+  gettrk_main.F90)
 
 set(exe_name gettrk.x) 
 set(exec_dir ${CMAKE_SOURCE_DIR}/exec)
