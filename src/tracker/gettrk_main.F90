@@ -1396,7 +1396,7 @@ end program trakmain
             if (ifret == 0) then
               if ((trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') .and. trkrinfo%gridtype == 'regional') then
                 if (fixlon(ist,ifh) > (trkrinfo%eastbd + 7.0) .or. fixlon(ist,ifh) < (trkrinfo%westbd - 7.0) .or. &
-                   & fixlat(ist,ifh) > (trkrinfo%northbd + 7.0) .or.
+                   & fixlat(ist,ifh) > (trkrinfo%northbd + 7.0) .or. &
                    & fixlat(ist,ifh) < (trkrinfo%southbd - 7.0)) then
 
                   if (verb .ge. 3) then
