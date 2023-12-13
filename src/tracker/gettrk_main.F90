@@ -2893,7 +2893,7 @@ end program trakmain
     integer                                :: found, namelen, i1, i2
     character(len=n)                       :: out
 
-    found   = index(arg, name)
+    found   = index(arg(n), name)
     namelen = len(name)
     i1      = found - 1        ! last char that is before name
     i2      = found+namelen    ! index of last char in name
