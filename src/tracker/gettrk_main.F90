@@ -3120,7 +3120,7 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine is_it_a_storm (imax, jmax, dx, dy, cparm, ist, defined_pt, parmlon, parmlat, &
-                           &, parmval, trkrinfo, stormcheck, ifh, isiret)
+                           & parmval, trkrinfo, stormcheck, ifh, isiret)
 
     use radii;     use grid_bounds;   use set_max_parms; use level_parms
     use trig_vals; use tracked_parms; use atcf;          use trkrparms
