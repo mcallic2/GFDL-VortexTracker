@@ -1986,7 +1986,7 @@ end program trakmain
 
                 if (isiret3 == 0 .and. isastorm(3) == 'Y' .and. trkrinfo%type == 'tracker') then
 
-                  if (alcparm(3,ist)) then
+                  if (calcparm(3,ist)) then
                     xinp_fixlat = clat(ist, ifh, 3)
                     xinp_fixlon = clon(ist, ifh, 3)
                   else
