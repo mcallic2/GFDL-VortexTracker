@@ -6134,7 +6134,7 @@ end program trakmain
             endif
           endif
 
-          call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, 'u' &
+          call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, 'u', &
                & xintrp_u, valid_pt, bimct, ifh, ibiret1)
           call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, 'v', &
                & xintrp_v, valid_pt, bimct, ifh, ibiret2)
