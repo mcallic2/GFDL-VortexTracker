@@ -4208,9 +4208,9 @@ end program trakmain
 
     if (verb .ge. 3) then
       print *, '   i     ydat     xdat       ydiff    xdiff        e',   &
-             , '       e2      ydiff2'
+               '       e2      ydiff2'
       print *, ' ----   -----    -----       -----    -----    -----  ', &
-             , '  -----       -----'
+               '  -----       -----'
 
       do i = 1, numpts
         write(6, '(2x,i3,2x,f7.2,2x,f7.4,2x,f10.2,2x,f7.4,2(2x,f7.2),2x,f10.2)') &
@@ -4218,7 +4218,7 @@ end program trakmain
       enddo
 
       print *, ' ----   -----    -----    -----    -----    -----   ', &
-             , ' -----     -----'
+               ' -----     -----'
       print *, ' '
       write (6, '(1x,a13,f9.3,3x,a5,f7.2)') ' means:   y: ', ymean, '  x: ', xmean
       write (6,*) ' '
