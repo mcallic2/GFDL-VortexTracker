@@ -2540,8 +2540,8 @@ end program trakmain
                      & axisymet_rmw_val)
               endif
 
-              call output_atcf_parms (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, ifcsthour,  &
-                   & xmaxwind(ist,ifh), gridprs(ist,ifh), maxstorm, trkrinfo, clon, clat, calcparm &
+              call output_atcf_parms (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, ifcsthour,   &
+                   & xmaxwind(ist,ifh), gridprs(ist,ifh), maxstorm, trkrinfo, clon, clat, calcparm, &
                    & xval, ioapret)
 
               if (inp%model == 12 .and. ifcsthour == 0) then
