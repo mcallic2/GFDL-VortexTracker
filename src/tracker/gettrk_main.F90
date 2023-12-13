@@ -1368,8 +1368,8 @@ end program trakmain
  145            format (1x, 'TIMING: Before GWC Sfc ... ', i2.2, ':', i2.2, ':', i2.2)
               endif
 
-              call get_wind_circulation (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, 1020,   &
-                   & valid_pt, calcparm(10,ist), clon(ist,ifh,10), clat(ist,ifh,10), xval(10) &
+              call get_wind_circulation (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, 1020,    &
+                   & valid_pt, calcparm(10,ist), clon(ist,ifh,10), clat(ist,ifh,10), xval(10), &
                    & trkrinfo, inp%modtyp, cmaxmin, ifh, gm_wrap_flag, igwcret)
 
               if (enable_timing /= 0 ) then
