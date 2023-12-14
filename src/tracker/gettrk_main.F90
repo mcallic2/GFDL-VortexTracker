@@ -7345,7 +7345,7 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine output_atcfunix (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius,       &
-                             & maxstorm, trkrinfo, plastbar, rlastbar, rmax, cps_vals, ,wcore_flag,   &
+                             & maxstorm, trkrinfo, plastbar, rlastbar, rmax, cps_vals, wcore_flag,    &
                              & istmspd, istmdir, shear_mag, shear_dir, sst_smooth, axisymet_rmw_dist, &
                              & axisymet_rmw_val, ioaxret)
 
