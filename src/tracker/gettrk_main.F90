@@ -8161,7 +8161,6 @@ end program trakmain
 
     type (datecard)  :: inp
 
-    integer          :: maxstorm, maxtime, maxmodel
     integer          :: ifhmax, ioaret
     real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
     integer          :: modelnum(maxmodel)
@@ -8273,7 +8272,6 @@ end program trakmain
 
 
     type (datecard)  :: inp
-    integer          :: maxstorm, maxtime, maxmodel, ifhmax
     real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
     real             :: xmaxwind(maxstorm,maxtime)
     real             :: conv_ms_knots
