@@ -11,7 +11,7 @@ program trakmain
   use netcdf_parms
 
       implicit none
-c
+  
   logical(1)         :: file_open
   integer            :: date_time(8)
   character(len=10)  :: big_ben(3)
@@ -3125,7 +3125,7 @@ end program trakmain
     use verbose_output
 
       implicit none
-c
+
     type (trackstuff) :: trkrinfo
 
     real             :: vt, vtavg, vr, parmlat, parmlon, parmval, dist
@@ -10276,7 +10276,7 @@ c
   subroutine output_tracker_mask (masked_outc, lb, ifh, ifcsthour, imax, jmax, iotmret)
 
       implicit none
-c
+
     integer    :: ifh, imax, jmax, iotmret, kf, igoret, iix, jjx, ipret
     integer    :: ifcsthour
     integer    :: kpds(200), kgds(200)
