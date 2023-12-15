@@ -19545,7 +19545,7 @@ end program trakmain
 
     if (status /= nf_noerr) then
       print *, ' '
-      print *, 'NOTE: Could not find variable ', var3_name, ' at time NetCDF file ID = ncid = ', ncid
+      !print *, 'NOTE: Could not find variable ', var3_name, ' at time NetCDF file ID = ncid = ', ncid
       ignrret = 92
       return
     endif
@@ -19635,7 +19635,7 @@ end program trakmain
 
     if (status /= nf_noerr) then
       print *, ' '
-      print *, 'NOTE: Could not find variable ', var3_name, ' at time index ncix = ', ncix, &
+      !print *, 'NOTE: Could not find variable ', var3_name, ' at time index ncix = ', ncix, &
                ' nctotalmins(ncix) = ', nctotalmins(ncix)
       igvret = 92
       return
@@ -19711,8 +19711,8 @@ end program trakmain
 
     if (status /= nf_noerr) then
       print *, ' '
-      print *, 'NOTE: Could not find variable ', var3_name, ' at time index ncix = ', ncix, &
-               ' nctotalmins(ncix) = ', nctotalmins(ncix)
+      !print *, 'NOTE: Could not find variable ', var3_name, ' at time index ncix = ', ncix, &
+      !         ' nctotalmins(ncix) = ', nctotalmins(ncix)
       igvret = 92
       return
     endif
