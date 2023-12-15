@@ -10339,7 +10339,7 @@ end program trakmain
     write(*,984) kpds(9),  kpds(10)
     write(*,985) kpds(11), kpds(12)
     write(*,986) kpds(13), kpds(14)
-    write(*,987) kpds(15), kpds(16)
+    !write(*,987) kpds(15), kpds(16)
     write(*,988) kpds(17), kpds(18)
     write(*,989) kpds(19), kpds(20)
     write(*,990) kpds(21), kpds(22)
