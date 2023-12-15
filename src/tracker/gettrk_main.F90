@@ -10910,7 +10910,7 @@ end program trakmain
           extraplon = extraplon + 360.0
         endif
 
-      elseif (fixlon(ist,ifh) >= 0.0 and. fixlon(ist,ifh) < 30.0) then
+      elseif (fixlon(ist,ifh) >= 0.0 .and. fixlon(ist,ifh) < 30.0) then
 
         if ((extraplon >= 0.0 .and. extraplon < 60.0) .and. (barnlon >= 0.0 .and. barnlon < 60.0)) then
           extraplon = extraplon + 360.0
