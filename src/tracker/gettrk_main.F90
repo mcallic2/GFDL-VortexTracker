@@ -23925,8 +23925,8 @@ end program trakmain
     zzct3 = 0
 
     oldstormct = stormct
-    call find_all_maxmins (imax, jmax, ibeg, iend, jbeg, jend, fxy, valid_pt, masked_out, contour_info, dx, dy  &
-         & trkrinfo, cmaxmin, maxstorm, stormct, maxmini, maxminj, ifh, xavg, stdx, ssct1, yyct1, yyct2, zzct1, &
+    call find_all_maxmins (imax, jmax, ibeg, iend, jbeg, jend, fxy, valid_pt, masked_out, contour_info, dx, dy,  &
+         & trkrinfo, cmaxmin, maxstorm, stormct, maxmini, maxminj, ifh, xavg, stdx, ssct1, yyct1, yyct2, zzct1,  &
          & zzct2, zzct3, gm_wrap_flag, ifamret)
 
     print *, ' '
