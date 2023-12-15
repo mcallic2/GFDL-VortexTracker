@@ -831,7 +831,7 @@ module netcdf_parms
   type netcdfstuff  ! Define a new type for NetCDF information
                     ! All of these "name" variables are the names for the 
                     ! different variables in the NetCDF file.
-    integer ::   num_netcdf_vars
+    integer            :: num_netcdf_vars
     character(len=180) :: netcdf_filename
     character(len=180) :: netcdf_lsmask_filename
     character(len=30)  :: rv850name
