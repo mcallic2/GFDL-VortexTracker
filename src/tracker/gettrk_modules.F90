@@ -148,13 +148,13 @@ end module gen_vitals
 module inparms
 
   type datecard  ! Define a new type for the input namelist parms
-    integer          :: bc
-    integer          :: by
+    integer          :: bcc
+    integer          :: byy
     integer          :: bmm
     integer          :: bdd
-    integer          :: bh
+    integer          :: bhh
     integer          :: model
-    character(len=8) :: modty
+    character(len=8) :: modtyp
     character(len=7) :: lt_units
     character(len=6) :: file_seq
     character(len=8) :: nesttyp 
