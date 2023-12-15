@@ -10879,7 +10879,7 @@ end program trakmain
           print *, '     wgttot   = ', wgttot
           print *, '     fixlon   = ', fixlon(ist,ifh), '  fixlat = ', fixlat(ist,ifh)
           print *, '     barnlo n = ', barnlon,         ' barnlat = ', barnlat
-          print *, '     dt       = ', dt,              ' dtkm = ',    dtkm, ' cosfac = ', cosfac
+          print *, '     dt       = ', dt,              ' dtkm = ',    dtkm, ' cosfac = ', cosfac
         endif
 
         if (icut >= 2) barneswt = barneswt / 2.0
