@@ -18421,7 +18421,6 @@ end program trakmain
                   write (6,41)
                 endif
  39             format (' rec#  parm# levt lev  byy   bmm  bdd  bhh  fmin   npts  minval       maxval')
- 41             format (' rec#  parm# levt lev  byy   bmm  bdd  bhh  fhr    npts  minval       maxval')
                 print '(i4,2x,8i5,i8,2g12.4)', k, (kpds(i),i=5,11), kpds(14), kf, dmin, dmax
               endif
 
