@@ -20138,39 +20138,39 @@ end program trakmain
       return
     endif
 
-    read (lunml, nml = datein, END = 801)
+    read (lunml, nml = datein_nml, END = 801)
 801 continue
-    read (lunml, nml = atcfinfo, END = 807)
+    read (lunml, nml = atcfinfo_nml, END = 807)
 807 continue
     print *, 'just before trackerinfo read namelist'
-    read (lunml, nml = trackerinfo, END = 809)
+    read (lunml, nml = trackerinfo_nml, END = 809)
 809 continue
     print *, 'just after trackerinfo read namelist'
-    read (lunml, nml = phaseinfo, end = 811)
+    read (lunml, nml = phaseinfo_nml, end = 811)
 811 continue
-    read (lunml, nml = structinfo, end = 815)
+    read (lunml, nml = structinfo_nml, end = 815)
 815 continue
-    read (lunml, nml = fnameinfo, end = 817)
+    read (lunml, nml = fnameinfo_nml, end = 817)
 817 continue
-    read (lunml, nml = cintinfo, end = 831)
+    read (lunml, nml = cintinfo_nml, end = 831)
 831 continue
-    read (lunml, nml = waitinfo, end = 821)
+    read (lunml, nml = waitinfo_nml, end = 821)
 821 continue
-    read (lunml, nml = netcdflist, end = 823)
+    read (lunml, nml = netcdflist_nml, end = 823)
 823 continue
-    read (lunml, nml = parmpreflist, end = 825)
+    read (lunml, nml = parmpreflist_nml, end = 825)
 825 continue
-    read (lunml, nml = verbose, end = 819, err = 833)
+    read (lunml, nml = verbose_nml, end = 819, err = 833)
 819 continue
     goto 837
 833 continue
     verb = 1
 837 continue
-    read (lunml, nml = sheardiaginfo, end = 839)
+    read (lunml, nml = sheardiaginfo_nml, end = 839)
 839 continue
-    read (lunml, nml = sstdiaginfo, end = 840)
+    read (lunml, nml = sstdiaginfo_nml, end = 840)
 840 continue
-    read (lunml, nml = gendiaginfo, end = 841)
+    read (lunml, nml = gendiaginfo_nml, end = 841)
 841 continue
 
     close (lunml)
