@@ -6,7 +6,7 @@
 
 set(tracker_srcs
   gettrk_modules.F90
-  module_waitfor.f 
+  module_waitfor.F90
   cwaitfor.c
   gettrk_main.F90)
 
