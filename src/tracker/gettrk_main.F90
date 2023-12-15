@@ -19971,9 +19971,7 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine conv1d2d_real (imax, jmax, dat1d, dat2d, need_to_flip_lats)
-c     OUTPUT:
-c     dat2d    2-d real array of data
-c
+    
     logical(1) :: need_to_flip_lats
     real       :: dat1d(imax*jmax), dat2d(imax,jmax)
 
