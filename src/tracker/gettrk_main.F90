@@ -13551,7 +13551,7 @@ end program trakmain
     errdist    = 0.0
     use4next   = .false.
     gt345_ct   = 0
-    lt15_ct    = 0
+    lt15_ct    = 0
 
     do ip = 1, maxtp
 
