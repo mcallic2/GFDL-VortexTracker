@@ -22114,8 +22114,6 @@ end program trakmain
     use netcdf_parms; use tracked_parms; use verbose_output
 
       implicit none
-c
-      type (netcdfstuff) netcdfinfo
 
     type (netcdfstuff) :: netcdfinfo
 
