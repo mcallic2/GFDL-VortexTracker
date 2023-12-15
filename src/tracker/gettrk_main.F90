@@ -13973,7 +13973,7 @@ end program trakmain
 
     use verbose_output
 
-    implicit none
+    !implicit none
 
     integer :: kmax, iwtret
     real    :: xwtavg
