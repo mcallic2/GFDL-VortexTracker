@@ -528,16 +528,7 @@ end module tracking_parm_prefs
 !*************************************************************************!
 
 module radii
-c       
-c
 
-c
-c        real, parameter :: retrk_most=60.0, retrk_vmag=60.0
-c        real, parameter :: ritrk_most=120.0, ritrk_vmag=120.0
-c        real, parameter :: rads_most=120.0, rads_vmag=120.0
-c        real, parameter :: retrk_most=150.0, retrk_vmag=60.0
-c        real, parameter :: ritrk_most=300.0, ritrk_vmag=120.0
-c        real, parameter :: rads_most=300.0, rads_vmag=120.0
   real, parameter :: retrk_most     = 75.0, retrk_vmag   = 60.0
   real, parameter :: ritrk_most     = 150.0, ritrk_vmag  = 120.0
   real, parameter :: rads_most      = 300.0, rads_vmag   = 120.0
@@ -546,8 +537,6 @@ c        real, parameter :: rads_most=300.0, rads_vmag=120.0
   real, parameter :: ritrk_coarse   = 300.0, rads_coarse = 350.0
   real, parameter :: rads_wind_circ = 250.0
   real, parameter :: ri_wind_circ   = 150.0
-c        real, parameter :: redlm=500.0, ridlm=2000.0
-c        real, parameter :: redlm=500.0, ridlm=1700.0
   real, parameter :: redlm           = 500.0, ridlm      = 1000.0
   real, parameter :: re_genscan      = 50.0
   real, parameter :: ri_genscan      = 100.0
@@ -594,7 +583,6 @@ module error_parms
   real, parameter :: err_reg_max  = 225.0
   real, parameter :: maxspeed_tc  = 60
   real, parameter :: maxspeed_ml  = 80
-C        real, parameter :: errpgro=1.25, errpmax=600.0
   real, parameter :: errpgro  = 1.25, errpmax = 485.0
   real, parameter :: stermn   = 0.1
   real, parameter :: uverrmax = 225.0
