@@ -20469,7 +20469,7 @@ end program trakmain
         write (6,156) trim(per_fcst_command)
       else
         ! no command specified, so disable the feature
-        se_per_fcst_command = 'n'
+        use_per_fcst_command = 'n'
       endif
  
  151  format ('Flag for input file waiting = use_waitfor = ', a1)
