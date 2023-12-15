@@ -333,7 +333,7 @@ end module atcf
 
 module gfilename_info
 
-  character(len=4), save  :: gmodname
+  character(len=4),  save :: gmodname
   character(len=40), save :: rundescr
   character(len=40), save :: atcfdescr
 
@@ -356,9 +356,9 @@ end module gfilename_info
 
 module phase
 
-  character(len=1), save ::   phaseflag
-  character(len=4), save ::   phasescheme
-  real, save             :: wcore_depth
+  character(len=1), save :: phaseflag
+  character(len=4), save :: phasescheme
+  real,             save :: wcore_depth
 end module phase
 
 !*************************************************************************!
@@ -382,11 +382,11 @@ end module phase
 
 module structure
 
-  character(len=1), save ::   structflag
-  character(len=1), save ::   ikeflag
-  real, save             :: radii_pctile
-  real, save             :: radii_free_pass_pctile
-  real, save             :: radii_width_thresh
+  character(len=1), save :: structflag
+  character(len=1), save :: ikeflag
+  real,             save :: radii_pctile
+  real,             save :: radii_free_pass_pctile
+  real,             save :: radii_width_thresh
 
 end module structure
 
@@ -468,11 +468,11 @@ module tracked_parms
   real,    save, allocatable  ::  temperature(:,:,:)
   real,    save, allocatable  ::  omega500(:,:)
   real,    save, allocatable  ::  wcirc_grid(:,:,:)
-  integer, save, allocatable :: ifhours(:)  
-  integer, save, allocatable :: iftotalmins(:)
-  integer, save, allocatable :: ifclockmins(:)
-  integer, save, allocatable :: ltix(:)
-  real,    save, allocatable    :: fhreal(:)
+  integer, save, allocatable  :: ifhours(:)  
+  integer, save, allocatable  :: iftotalmins(:)
+  integer, save, allocatable  :: ifclockmins(:)
+  integer, save, allocatable  :: ltix(:)
+  real,    save, allocatable  :: fhreal(:)
 
 end module tracked_parms
 
@@ -538,19 +538,19 @@ c        real, parameter :: rads_most=120.0, rads_vmag=120.0
 c        real, parameter :: retrk_most=150.0, retrk_vmag=60.0
 c        real, parameter :: ritrk_most=300.0, ritrk_vmag=120.0
 c        real, parameter :: rads_most=300.0, rads_vmag=120.0
-  real, parameter :: retrk_most = 75.0, retrk_vmag = 60.0
-  real, parameter :: ritrk_most = 150.0, ritrk_vmag = 120.0
-  real, parameter :: rads_most = 300.0, rads_vmag = 120.0
-  real, parameter :: retrk_coarse = 150.0, retrk_hres = 60.0
-  real, parameter :: rads_fine = 200.0, rads_hres = 150.0
-  real, parameter :: ritrk_coarse = 300.0, rads_coarse = 350.0
+  real, parameter :: retrk_most     = 75.0, retrk_vmag   = 60.0
+  real, parameter :: ritrk_most     = 150.0, ritrk_vmag  = 120.0
+  real, parameter :: rads_most      = 300.0, rads_vmag   = 120.0
+  real, parameter :: retrk_coarse   = 150.0, retrk_hres  = 60.0
+  real, parameter :: rads_fine      = 200.0, rads_hres   = 150.0
+  real, parameter :: ritrk_coarse   = 300.0, rads_coarse = 350.0
   real, parameter :: rads_wind_circ = 250.0
-  real, parameter :: ri_wind_circ = 150.0
+  real, parameter :: ri_wind_circ   = 150.0
 c        real, parameter :: redlm=500.0, ridlm=2000.0
 c        real, parameter :: redlm=500.0, ridlm=1700.0
-  real, parameter :: redlm = 500.0, ridlm = 1000.0
-  real, parameter :: re_genscan = 50.0
-  real, parameter :: ri_genscan = 100.0
+  real, parameter :: redlm           = 500.0, ridlm      = 1000.0
+  real, parameter :: re_genscan      = 50.0
+  real, parameter :: ri_genscan      = 100.0
 
 end module radii
 
@@ -590,13 +590,13 @@ module error_parms
 
   real, parameter :: err_gfs_init = 275.0
   real, parameter :: err_reg_init = 300.0
-  real, parameter :: err_ecm_max = 330.0
-  real, parameter :: err_reg_max = 225.0
-  real, parameter :: maxspeed_tc = 60
-  real, parameter :: maxspeed_ml = 80
+  real, parameter :: err_ecm_max  = 330.0
+  real, parameter :: err_reg_max  = 225.0
+  real, parameter :: maxspeed_tc  = 60
+  real, parameter :: maxspeed_ml  = 80
 C        real, parameter :: errpgro=1.25, errpmax=600.0
-  real, parameter :: errpgro = 1.25, errpmax = 485.0
-  real, parameter :: stermn = 0.1
+  real, parameter :: errpgro  = 1.25, errpmax = 485.0
+  real, parameter :: stermn   = 0.1
   real, parameter :: uverrmax = 225.0
 
 end module error_parms
@@ -621,12 +621,12 @@ module set_max_parms
 
   integer, parameter :: maxstorm_tc = 15 
   integer, parameter :: maxstorm_mg = 2000
-  integer, parameter :: maxtime = 500
-  integer, parameter :: maxtp = 14
+  integer, parameter :: maxtime  = 500
+  integer, parameter :: maxtp    = 14
   integer, parameter :: maxmodel = 20
   integer, parameter :: max_ike_cats = 6
-  integer, save :: interval_fhr
-  integer, parameter :: maxcenters = 150
+  integer, save      :: interval_fhr
+  integer, parameter :: maxcenters   = 150
 end module set_max_parms
 
 !*************************************************************************!
@@ -651,14 +651,14 @@ end module set_max_parms
 
 module level_parms
 
-  integer, parameter :: nlevs = 5
-  integer, parameter :: nlevg = 3
+  integer, parameter :: nlevs   = 5
+  integer, parameter :: nlevg   = 3
   integer, parameter :: nlevhgt = 4
   integer, parameter :: nlevgrzeta = 2
-  integer, parameter :: nlevzeta = 3
-  integer, parameter :: nlevthick = 3
-  integer, parameter :: nlevmoist = 7
-  integer, parameter :: levsfc = 5
+  integer, parameter :: nlevzeta   = 3
+  integer, parameter :: nlevthick  = 3
+  integer, parameter :: nlevmoist  = 7
+  integer, parameter :: levsfc  = 5
   integer, parameter :: nlev850 = 1
   integer, parameter :: nlev700 = 2
   integer, parameter :: nlev500 = 3
@@ -682,7 +682,7 @@ end module level_parms
 
 module read_parms
 
-  integer, parameter :: nreadparms = 20
+  integer, parameter :: nreadparms    = 20
   integer, parameter :: nreadcpsparms = 13
   integer, parameter :: nreadgenparms = 23
 
@@ -702,10 +702,10 @@ end module read_parms
 module trig_vals
 
   real, save :: pi, dtr
-  real, save :: dtk = 111.1949
-  real, save :: erad = 6371.0e+3
+  real, save :: dtk     = 111.1949
+  real, save :: erad    = 6371.0e+3
   real, save :: ecircum = 40030.2
-  real, save :: omega = 7.292e-5
+  real, save :: omega   = 7.292e-5
 
 end module trig_vals
 
@@ -834,66 +834,66 @@ module netcdf_parms
     integer ::   num_netcdf_vars
     character(len=180) :: netcdf_filename
     character(len=180) :: netcdf_lsmask_filename
-    character(len=30) ::  rv850name
-    character(len=30) ::  rv700name
-    character(len=30) ::  u850name
-    character(len=30) ::  v850name
-    character(len=30) ::  u700name
-    character(len=30) ::  v700name
-    character(len=30) ::  z850name
-    character(len=30) ::  z700name
-    character(len=30) ::  mslpname
-    character(len=30) ::  usfcname
-    character(len=30) ::  vsfcname
-    character(len=30) ::  u500name
-    character(len=30) ::  v500name
-    character(len=30) ::  tmean_300_500_name
-    character(len=30) ::  z500name
-    character(len=30) ::  z200name
-    character(len=30) ::  lmaskname
-    character(len=30) ::  z900name
-    character(len=30) ::  z800name
-    character(len=30) ::  z750name
-    character(len=30) ::  z650name
-    character(len=30) ::  z600name
-    character(len=30) ::  z550name
-    character(len=30) ::  z450name
-    character(len=30) ::  z400name
-    character(len=30) ::  z350name
-    character(len=30) ::  z300name
-    character(len=30) ::  time_name
-    character(len=30) ::  lon_name
-    character(len=30) ::  lat_name
-    character(len=30) ::  time_units
-    character(len=30) ::  u200name
-    character(len=30) ::  v200name
-    character(len=30) ::  sstname
-    character(len=30) ::  q850name
-    character(len=30) ::  rh1000name
-    character(len=30) ::  rh925name
-    character(len=30) ::  rh800name
-    character(len=30) ::  rh750name
-    character(len=30) ::  rh700name
-    character(len=30) ::  rh650name
-    character(len=30) ::  rh600name
-    character(len=30) ::  spfh1000name
-    character(len=30) ::  spfh925name
-    character(len=30) ::  spfh800name
-    character(len=30) ::  spfh750name
-    character(len=30) ::  spfh700name
-    character(len=30) ::  spfh650name
-    character(len=30) ::  spfh600name
-    character(len=30) ::  temp1000name
-    character(len=30) ::  temp925name
-    character(len=30) ::  temp800name
-    character(len=30) ::  temp750name
-    character(len=30) ::  temp700name
-    character(len=30) ::  temp650name
-    character(len=30) ::  temp600name
-    character(len=30) ::  omega500name
+    character(len=30)  :: rv850name
+    character(len=30)  :: rv700name
+    character(len=30)  :: u850name
+    character(len=30)  :: v850name
+    character(len=30)  :: u700name
+    character(len=30)  :: v700name
+    character(len=30)  :: z850name
+    character(len=30)  :: z700name
+    character(len=30)  :: mslpname
+    character(len=30)  :: usfcname
+    character(len=30)  :: vsfcname
+    character(len=30)  :: u500name
+    character(len=30)  :: v500name
+    character(len=30)  :: tmean_300_500_name
+    character(len=30)  :: z500name
+    character(len=30)  :: z200name
+    character(len=30)  :: lmaskname
+    character(len=30)  :: z900name
+    character(len=30)  :: z800name
+    character(len=30)  :: z750name
+    character(len=30)  :: z650name
+    character(len=30)  :: z600name
+    character(len=30)  :: z550name
+    character(len=30)  :: z450name
+    character(len=30)  :: z400name
+    character(len=30)  :: z350name
+    character(len=30)  :: z300name
+    character(len=30)  :: time_name
+    character(len=30)  :: lon_name
+    character(len=30)  :: lat_name
+    character(len=30)  :: time_units
+    character(len=30)  :: u200name
+    character(len=30)  :: v200name
+    character(len=30)  :: sstname
+    character(len=30)  :: q850name
+    character(len=30)  :: rh1000name
+    character(len=30)  :: rh925name
+    character(len=30)  :: rh800name
+    character(len=30)  :: rh750name
+    character(len=30)  :: rh700name
+    character(len=30)  :: rh650name
+    character(len=30)  :: rh600name
+    character(len=30)  :: spfh1000name
+    character(len=30)  :: spfh925name
+    character(len=30)  :: spfh800name
+    character(len=30)  :: spfh750name
+    character(len=30)  :: spfh700name
+    character(len=30)  :: spfh650name
+    character(len=30)  :: spfh600name
+    character(len=30)  :: temp1000name
+    character(len=30)  :: temp925name
+    character(len=30)  :: temp800name
+    character(len=30)  :: temp750name
+    character(len=30)  :: temp700name
+    character(len=30)  :: temp650name
+    character(len=30)  :: temp600name
+    character(len=30)  :: omega500name
   end type netcdfstuff
 
-  real, save, allocatable    :: netcdf_file_time_values(:)
+  real,    save, allocatable :: netcdf_file_time_values(:)
   integer, save, allocatable :: nctotalmins(:)
 
 end module netcdf_parms
