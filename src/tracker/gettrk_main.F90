@@ -19636,7 +19636,7 @@ end program trakmain
     if (status /= nf_noerr) then
       print *, ' '
       !print *, 'NOTE: Could not find variable ', var3_name, ' at time index ncix = ', ncix, &
-               ' nctotalmins(ncix) = ', nctotalmins(ncix)
+      !         ' nctotalmins(ncix) = ', nctotalmins(ncix)
       igvret = 92
       return
     endif
