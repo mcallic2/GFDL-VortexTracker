@@ -18387,7 +18387,7 @@ end program trakmain
 
             if (enable_timing /= 0) then
               call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
-              write (6,841) date_time(5),date_time(6),date_time(7)
+              !write (6,841) date_time(5),date_time(6),date_time(7)
   41          format (1x, 'TIMING: before cps getgb-1', i2.2, ':', i2.2, ':', i2.2)
             endif
 
