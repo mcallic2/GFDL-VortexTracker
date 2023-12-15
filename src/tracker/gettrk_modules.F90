@@ -53,9 +53,9 @@ module def_vitals
   end type tcvcard
 
   type (tcvcard), save, allocatable :: storm(:)
-    integer, save, allocatable      :: stormswitch(:)
-    real, save, allocatable         :: slonfg(:,:), slatfg(:,:)
-    character*3, save, allocatable  :: stcvtype(:) ! FOF or TCV
+    integer,      save, allocatable :: stormswitch(:)
+    real,         save, allocatable :: slonfg(:,:), slatfg(:,:)
+    character*3,  save, allocatable :: stcvtype(:) ! FOF or TCV
 
 end module def_vitals
 
