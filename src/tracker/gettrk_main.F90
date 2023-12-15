@@ -15731,7 +15731,7 @@ end program trakmain
     use trig_vals; use trkrparms;   use verbose_output
 
       implicit none
-c
+
     type (trackstuff)  :: trkrinfo
 
     character(len=*)   :: maxmin, cparm, cmodel_type
