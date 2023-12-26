@@ -4365,6 +4365,8 @@ end program trakmain
   !****************************************************************************
   subroutine getyestim(xarr, slope, yint, inum, yestim)
 
+    implicit none
+
     real    :: xarr(inum), yestim(inum)
     real    :: slope, yint
     integer :: i, inum
