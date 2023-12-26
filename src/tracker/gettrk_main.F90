@@ -3668,7 +3668,7 @@ end program trakmain
     use grid_bounds; use tracked_parms; use def_vitals;    use trkrparms
     use verbose_output
 
-      implicit none
+    implicit none
 
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
@@ -3936,7 +3936,7 @@ end program trakmain
     use grid_bounds; use tracked_parms; use def_vitals;    use trkrparms
     use verbose_output
 
-      implicit none
+    implicit none
 
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
@@ -4178,7 +4178,7 @@ end program trakmain
 
     use verbose_output
 
-      implicit none
+    implicit none
 
     real    :: xdat(numpts), ydat(numpts)
     real    :: xdiff(numpts), ydiff(numpts)
@@ -4260,8 +4260,8 @@ end program trakmain
   !****************************************************************************
   subroutine getmean(xarr, inum, zmean)
 
-      implicit none
-      
+    implicit none
+
     real    :: xarr(inum)
     real    :: xsum, zmean
     integer :: i, inum
@@ -4295,8 +4295,8 @@ end program trakmain
   !****************************************************************************
   subroutine getdiff(xarr, inum, zmean, zdiff)
 
-      implicit none
-      
+    implicit none
+
     real    :: xarr(inum), zdiff(inum)
     real    :: zmean
     integer :: i, inum
@@ -4324,6 +4324,9 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine getslope(xarr, yarr, inum, slope)
+
+  
+
     real    :: xarr(inum), yarr(inum)
     real    :: slope, sumxy, sumx2
     integer :: i, inum
