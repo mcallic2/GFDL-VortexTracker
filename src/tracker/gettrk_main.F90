@@ -2883,7 +2883,7 @@ end program trakmain
   !***************************************************************************
   subroutine argreplace(arg, n, name, val)
 
-      implicit none
+    implicit none
 
     integer,                 intent(in)    :: n
     character, dimension(n), intent(inout) :: arg
@@ -2953,7 +2953,7 @@ end program trakmain
 
     use inparms ; use verbose_output
 
-      implicit none
+    implicit none
 
     type (datecard)    :: inp
 
@@ -3073,17 +3073,18 @@ end program trakmain
   !****************************************************************************
   subroutine open_ncfile (filename, ncid)
 
-      implicit none
+    implicit none
 
-      include "netcdf.inc"
+    include "netcdf.inc"
 
-      character(len=*), dimension(*), intent(in) :: filename
-      integer, intent(out)                       :: ncid
-      integer                                    :: status
+    character(len=*), dimension(*), intent(in) :: filename
+    integer, intent(out)                       :: ncid
+    integer                                    :: status
 
-      status = nf_open(filename, NF_NOWRITE, ncid)
-      if (status .ne. nf_noerr) call handle_netcdf_err(status)
-      ! CAITLYN - where is nf_noerr declared?
+    status = nf_open(filename, NF_NOWRITE, ncid)
+    if (status .ne. nf_noerr) call handle_netcdf_err(status)
+    ! CAITLYN - where is nf_noerr declared?
+
   end subroutine open_ncfile
 
   !****************************************************************************
@@ -3126,7 +3127,7 @@ end program trakmain
     use trig_vals; use tracked_parms; use atcf;          use trkrparms
     use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
 
