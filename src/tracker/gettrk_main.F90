@@ -4965,7 +4965,7 @@ end program trakmain
     use inparms;    use phase;     use set_max_parms; use tracked_parms
     use def_vitals; use trig_vals; use trkrparms;     use verbose_output
 
-      implicit none
+    implicit none
 
     type (datecard)    :: inp
     type (trackstuff)  :: trkrinfo
