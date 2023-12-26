@@ -5235,7 +5235,7 @@ end program trakmain
     use def_vitals; use trig_vals; use grid_bounds;   use level_parms;   use verbose_output
 
     implicit none
-    
+
     type (datecard)    :: inp
     type (trackstuff)  :: trkrinfo
 
@@ -5702,6 +5702,8 @@ end program trakmain
     use inparms;    use phase;     use set_max_parms; use tracked_parms
     use def_vitals; use trig_vals; use grid_bounds;   use level_parms
     use trkrparms;  use verbose_output
+
+    implicit none
 
     type (datecard)    :: inp
     type (trackstuff)  :: trkrinfo
