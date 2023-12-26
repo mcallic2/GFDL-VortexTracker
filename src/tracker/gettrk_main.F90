@@ -6409,6 +6409,8 @@ end program trakmain
     use tracked_parms; use trkrparms;     use def_vitals
     use inparms;       use set_max_parms; use read_parms
 
+    implicit none
+
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
 
