@@ -136,7 +136,7 @@ end program trakmain
     use contours;      use gen_vitals;     use structure;     use verbose_output
     use waitfor_parms; use module_waitfor; use netcdf_parms;  use phase
     use shear_diags;   use genesis_diags;  use sst_diags;     use atcf
-    use read_parms;    use radii;          use trig_vals;     use tracking_parm_pref
+    use read_parms;    use radii;          use trig_vals;     use tracking_parm_prefs
 
     implicit none
 
