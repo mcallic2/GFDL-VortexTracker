@@ -4396,6 +4396,8 @@ end program trakmain
   !****************************************************************************
   subroutine getresid(yarr, yestim, inum, yresid)
 
+    implicit none
+
     real    :: yarr(inum), yestim(inum), yresid(inum)
     integer :: i, inum
 
