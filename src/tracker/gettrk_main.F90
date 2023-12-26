@@ -6014,6 +6014,8 @@ end program trakmain
     use grid_bounds; use tracked_parms; use trig_vals; use def_vitals; use verbose_output
     use level_parms; use trkrparms;     use inparms;   use set_max_parms
 
+    implicit none
+
     type (trackstuff)  :: trkrinfo
     type (datecard)    :: inp
 
