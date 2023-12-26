@@ -4682,7 +4682,8 @@ end program trakmain
                             & xsfclon, xsfclat, maxstorm, igscret)
 
     use set_max_parms; use verbose_output
-    
+
+    implicit none
 
     integer    :: ist, ifh, ipct, igscret, maxstorm
     real       :: clon(maxstorm,maxtime,maxtp)
