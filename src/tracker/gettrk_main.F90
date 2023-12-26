@@ -4427,7 +4427,7 @@ end program trakmain
 
     use verbose_output
 
-      implicit none
+    implicit none
 
     real    :: yresid(inum), ydiff(inum)
     real    :: R2, sumyresid, sumydiff
@@ -4509,7 +4509,7 @@ end program trakmain
     use tracked_parms; use gen_vitals;  use def_vitals; use inparms
     use phase ;        use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo,wcore_trkrinfo
     type (cint_stuff) :: wcore_contour_info
@@ -4682,6 +4682,7 @@ end program trakmain
                             & xsfclon, xsfclat, maxstorm, igscret)
 
     use set_max_parms; use verbose_output
+    
 
     integer    :: ist, ifh, ipct, igscret, maxstorm
     real       :: clon(maxstorm,maxtime,maxtp)
