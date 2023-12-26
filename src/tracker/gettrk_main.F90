@@ -4787,6 +4787,8 @@ end program trakmain
 
     use set_max_parms; use tracked_parms; use trig_vals; use trkrparms; use verbose_output
 
+    implicit none
+
     type (trackstuff)  :: trkrinfo
 
     integer, parameter :: numdist = 5, numquad = 4, num_qtr_azim = 6
