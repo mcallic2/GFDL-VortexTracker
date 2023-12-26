@@ -6502,7 +6502,9 @@ end program trakmain
                            & already_computed_domain_wide_rh, iggdret)
 
     use grid_bounds; use tracked_parms; use trig_vals; use read_parms;    use def_vitals;
-    use level_parms; use trkrparms;     use inparms;   use set_max_parms; use verbose_output;
+    use level_parms; use trkrparms;     use inparms;   use set_max_parms; use verbose_output
+
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
