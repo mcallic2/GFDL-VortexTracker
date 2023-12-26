@@ -3427,6 +3427,8 @@ end program trakmain
                                  & pfixlat, trkrinfo, close_to_boundary, gm_wrap_flag, ipfbret)
 
     use def_vitals; use trkrparms; use grid_bounds; use verbose_output
+  
+    implicit none
 
     type (trackstuff) :: trkrinfo
 
