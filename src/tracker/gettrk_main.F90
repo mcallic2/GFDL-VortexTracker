@@ -4325,7 +4325,7 @@ end program trakmain
   !****************************************************************************
   subroutine getslope(xarr, yarr, inum, slope)
 
-  
+    implicit none
 
     real    :: xarr(inum), yarr(inum)
     real    :: slope, sumxy, sumx2
