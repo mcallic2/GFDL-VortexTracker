@@ -7059,7 +7059,7 @@ end program trakmain
 
     real, allocatable      :: iwork(:)
     real                   :: gridprs(maxstorm,maxtime)
-    integer                :: ifh, maxstorm, iva, iwa
+    integer                :: ifh, maxstorm, iva, iwa, ist, imode
     integer                :: sortindex(maxstorm)
     integer, parameter     :: dp = selected_real_kind(12, 60)
     real(dp), allocatable  :: prstemp(:)
