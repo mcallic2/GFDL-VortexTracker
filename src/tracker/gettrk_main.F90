@@ -11527,10 +11527,10 @@ end program trakmain
     real                  :: rlonb, rlonc, rlatb, rlatc, vmaxwind
     real                  :: pt_heading_rad, pt_heading, d
     integer, allocatable  :: isortix(:)
-    integer               :: iwindix, ipoint, ifcsthr, igrct, igrret
+    integer               :: iwindix, ipoint, ifcsthr, igrct, igrret, itret, imode
     integer               :: jlatfix, ilonfix, idta, iisa, iwa, iqa, numalloc
     integer               :: numipts, numjpts, jbeg, jend, ibeg, iend, inum, jnum
-    integer               :: i, j, k, ip, iq
+    integer               :: i, j, k, ip, iq, m
     integer               :: quadct(4), vradius(3,4)
     integer, parameter    :: dp = selected_real_kind(12, 60)
     real(dp), allocatable :: dtemp(:)
