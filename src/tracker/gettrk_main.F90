@@ -9940,6 +9940,7 @@ end program trakmain
 
     real, intent(in)  :: xmeanlon, xmeanlat
     real              :: xoutlon, vmaxwind, xminmslp
+    real              :: mslp_outp_adj, conv_ms_knots
     real              :: clon(maxstorm,maxtime,maxtp), clat(maxstorm,maxtime,maxtp)
     real              :: xval(maxtp)
     integer           :: ist, ifcsthour, maxstorm, ioapret, intmeanlon, intmeanlat
