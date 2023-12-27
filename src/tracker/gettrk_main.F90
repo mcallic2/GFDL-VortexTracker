@@ -8315,6 +8315,7 @@ end program trakmain
 
     type (datecard)  :: inp
     integer          :: maxstorm, ifhmax
+    integer          :: ist, ifh
     real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
     real             :: xmaxwind(maxstorm,maxtime)
     real             :: conv_ms_knots
