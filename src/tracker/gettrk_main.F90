@@ -140,8 +140,6 @@ end program trakmain
 
     implicit none
 
-    implicit none
-
     type (datecard)    :: inp
     type (trackstuff)  :: trkrinfo,gb_check_trkrinfo
     type (netcdfstuff) :: netcdfinfo
@@ -3429,8 +3427,6 @@ end program trakmain
                                  & pfixlat, trkrinfo, close_to_boundary, gm_wrap_flag, ipfbret)
 
     use def_vitals; use trkrparms; use grid_bounds; use verbose_output
-  
-    implicit none
 
     implicit none
 
@@ -6507,8 +6503,6 @@ end program trakmain
 
     use grid_bounds; use tracked_parms; use trig_vals; use read_parms;    use def_vitals;
     use level_parms; use trkrparms;     use inparms;   use set_max_parms; use verbose_output
-
-    implicit none
 
     implicit none
 
