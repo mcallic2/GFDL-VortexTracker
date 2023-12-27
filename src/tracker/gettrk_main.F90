@@ -9947,6 +9947,7 @@ end program trakmain
     integer           :: ip, icc, output_fhr, k, intlonew, intlatns, ifh
     integer           :: iclon(9), iclat(9), icxval(9)
     character(len=1)  :: icvalid(9), clatns, clonew
+    character(len=2)  :: basinid
     logical(1)        :: calcparm(maxtp,maxstorm)
 
     if (verb .ge. 3) then
