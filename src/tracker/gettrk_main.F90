@@ -8202,6 +8202,7 @@ end program trakmain
     type (datecard)  :: inp
 
     integer          :: ifhmax, ioaret
+    integer          :: ist, ifh, maxstorm
     real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
     integer          :: modelnum(maxmodel)
     integer          :: intlon(maxtime), intlat(maxtime)
