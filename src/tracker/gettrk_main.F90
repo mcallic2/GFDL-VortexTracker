@@ -11529,7 +11529,7 @@ end program trakmain
     integer, allocatable  :: isortix(:)
     integer               :: iwindix, ipoint, ifcsthr, igrct, igrret
     integer               :: jlatfix, ilonfix, idta, iisa, iwa, iqa
-    integer               :: numipts, numjpts, jbeg, jend
+    integer               :: numipts, numjpts, jbeg, jend, ibeg, iend, inum, jnum
     integer               :: quadct(4), vradius(3,4)
     integer, parameter    :: dp = selected_real_kind(12, 60)
     real(dp), allocatable :: dtemp(:)
