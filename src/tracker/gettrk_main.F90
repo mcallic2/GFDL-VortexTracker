@@ -8731,7 +8731,7 @@ end program trakmain
     real               :: xoutlon, pdfval
     real               :: wfract_cov(numquad+1,numbin,numthresh)
     real               :: vmaxwind, conv_ms_knots, xminmslp, xsfclon, xsfclat
-    integer            :: ist, ifcsthour
+    integer            :: ist, ifcsthour, ib, it
     integer            :: windthresh(numthresh) = (/34,50,64/)
     integer            :: pdf_ct_bin(16)
     integer            :: intlon, intlat, output_fhr, intlon100, intlat100, pdf_ct_tot
