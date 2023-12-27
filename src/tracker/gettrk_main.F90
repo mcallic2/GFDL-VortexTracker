@@ -8957,7 +8957,7 @@ end program trakmain
     real, intent(in)   :: outlon,outlat
     integer, parameter :: numdist = 14, numquad = 4, numbin = 5, numthresh = 3
     integer            :: ioutwind(numdist)
-    integer            :: maxstorm
+    integer            :: maxstorm, iq, it
     real               :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
     real               :: er_wind(numquad,numdist)
     real               :: sr_wind(numquad,numdist)
