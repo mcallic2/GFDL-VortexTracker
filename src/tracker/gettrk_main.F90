@@ -11528,7 +11528,7 @@ end program trakmain
     real                  :: pt_heading_rad, pt_heading, d
     integer, allocatable  :: isortix(:)
     integer               :: iwindix, ipoint, ifcsthr, igrct, igrret
-    integer               :: jlatfix, ilonfix
+    integer               :: jlatfix, ilonfix, idta, iisa, iwa, iqa
     integer               :: quadct(4), vradius(3,4)
     integer, parameter    :: dp = selected_real_kind(12, 60)
     real(dp), allocatable :: dtemp(:)
