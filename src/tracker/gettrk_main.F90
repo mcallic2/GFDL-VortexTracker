@@ -10,8 +10,8 @@ program trakmain
   use trig_vals;  use atcf;    use trkrparms;     use verbose_output
   use netcdf_parms
 
-      implicit none
-  
+  implicit none
+
   logical(1)         :: file_open
   integer            :: date_time(8)
   character(len=10)  :: big_ben(3)
@@ -137,6 +137,8 @@ end program trakmain
     use waitfor_parms; use module_waitfor; use netcdf_parms;  use phase
     use shear_diags;   use genesis_diags;  use sst_diags;     use atcf
     use read_parms;    use radii;          use trig_vals;     use tracking_parm_prefs
+
+    implicit none
 
     implicit none
 
@@ -3430,6 +3432,8 @@ end program trakmain
   
     implicit none
 
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     character(len=*)   :: cparm, gm_wrap_flag
@@ -6506,6 +6510,8 @@ end program trakmain
 
     implicit none
 
+    implicit none
+
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
 
@@ -6648,7 +6654,7 @@ end program trakmain
     use level_parms;    use trkrparms;     use inparms;
     use verbose_output; use def_vitals;    use read_parms
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
@@ -6738,7 +6744,7 @@ end program trakmain
 
     use trig_vals
 
-      implicit none
+    implicit none
 
     character(len=*) :: gm_wrap_flag
     real, parameter  :: rad_earth_nm = 3440.170  ! radius of earth
@@ -6825,6 +6831,8 @@ end program trakmain
                               & cparm, xintrp_val, valid_pt, bimct, ifh, ibiret)
 
     use grid_bounds; use tracked_parms; use level_parms; use trkrparms; use verbose_output
+
+    implicit none
 
     type (trackstuff) :: trkrinfo
 
@@ -7052,6 +7060,9 @@ end program trakmain
   subroutine sort_storms_by_pressure (gridprs, ifh, maxstorm, sortindex)
 
     use set_max_parms; use verbose_output
+
+    implicit none
+
     real, allocatable      :: iwork(:)
     real                   :: gridprs(maxstorm,maxtime)
     integer                :: ifh, maxstorm
@@ -7148,7 +7159,7 @@ end program trakmain
 
     use trig_vals; use verbose_output
 
-      implicit none
+    implicit none
 
     real    :: centlon, centlat, xlon, xlat, udat, vdat, vr, vt, degrees, tmpxlon
     real    :: angle, xlondiff, xlatdiff, opp_dist, hyp_dist, sin_value
@@ -7379,6 +7390,8 @@ end program trakmain
 
     use def_vitals; use inparms; use set_max_parms; use atcf;         use verbose_output
     use trkrparms;  use phase;   use shear_diags;   use genesis_diags
+
+    implicit none
 
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
@@ -7748,6 +7761,9 @@ end program trakmain
 
     use def_vitals; use inparms; use set_max_parms; use atcf;          use verbose_output
     use trkrparms;  use phase;   use shear_diags;   use genesis_diags; use level_parms
+
+    implicit none
+
     type (datecard)   ::inp
     type (trackstuff) :: trkrinfo
 
@@ -8187,6 +8203,8 @@ end program trakmain
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use tracked_parms
 
+    implicit none
+
     type (datecard)  :: inp
 
     integer          :: ifhmax, ioaret
@@ -8298,6 +8316,7 @@ end program trakmain
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use tracked_parms
 
+    implicit none
 
     type (datecard)  :: inp
     real             :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
@@ -8498,6 +8517,9 @@ end program trakmain
 
     use def_vitals;    use inparms; use set_max_parms; use atcf
     use tracked_parms; use verbose_output
+
+    implicit none
+
     type (datecard) :: inp
 
     real, intent(in) :: outlon, outlat
@@ -8702,6 +8724,8 @@ end program trakmain
                                & pdf_ct_tot, maxstorm)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
+
+    implicit none
 
     type (datecard)    :: inp
 
@@ -8928,6 +8952,9 @@ end program trakmain
                                    & sr_vt, maxstorm)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
+
+    implicit none
+
     type (datecard)    :: inp
 
     real, intent(in)   :: outlon,outlat
@@ -9195,6 +9222,9 @@ end program trakmain
                         & xminmslp, ike, sdp, wdp, maxstorm)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
+
+    implicit none
+
     type (datecard)    :: inp
 
     integer, parameter :: numdist = 14, numquad = 4, numbin = 5, numthresh = 3
@@ -9344,6 +9374,9 @@ end program trakmain
                           & paramb, vtl_slope, vtu_slope)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
+
+    implicit none
+
     type (datecard)  :: inp
 
     real, intent(in) :: outlon, outlat
@@ -9520,6 +9553,9 @@ end program trakmain
     use def_vitals;     use inparms;     use set_max_parms; use atcf
     use trkrparms;      use gen_vitals;  use level_parms
     use verbose_output; use shear_diags; use genesis_diags
+
+    implicit none
+
     type (gencard)    :: gstm
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
@@ -9898,6 +9934,9 @@ end program trakmain
 
     use def_vitals; use inparms;    use set_max_parms; use atcf
     use trkrparms;  use gen_vitals; use verbose_output
+
+    implicit none
+
     type (gencard)    :: gstm
     type (datecard)   :: inp
     type (trackstuff) :: trkrinfo
@@ -10103,6 +10142,8 @@ end program trakmain
 
     use def_vitals; use inparms; use set_max_parms; use verbose_output
 
+    implicit none
+
     type (tcvcard)  :: stm
     type (datecard) :: inp
     real            :: xlon, xlat
@@ -10199,7 +10240,7 @@ end program trakmain
 
     use def_vitals; use gen_vitals; use inparms; use set_max_parms; use verbose_output
 
-      implicit none
+    implicit none
 
     type (gencard)  :: gstm
     type (datecard) :: inp
@@ -10301,7 +10342,7 @@ end program trakmain
   !****************************************************************************
   subroutine output_tracker_mask (masked_outc, lb, ifh, ifcsthour, imax, jmax, iotmret)
 
-      implicit none
+    implicit none
 
     integer    :: ifh, imax, jmax, iotmret, kf, igoret, iix, jjx, ipret
     integer    :: ifcsthour
@@ -10519,7 +10560,7 @@ end program trakmain
     use radii;         use def_vitals;  use set_max_parms; use grid_bounds; use gen_vitals
     use tracked_parms; use level_parms; use trig_vals;     use trkrparms;   use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
     integer           :: icutmax, istmspd, istmdir, bskip, ileadtime, ifcsthour
@@ -11472,6 +11513,9 @@ end program trakmain
 
     use grid_bounds; use tracked_parms;  use trig_vals;
     use trkrparms;   use verbose_output; use level_parms
+
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     integer               :: imax, jmax
@@ -12202,6 +12246,9 @@ end program trakmain
 
     use grid_bounds; use tracked_parms; use trig_vals;  use level_parms
     use trkrparms;   use structure;     use def_vitals; use verbose_output
+
+    implicit none
+
     type (trackstuff)  :: trkrinfo
 
     logical(1)         :: valid_pt(imax,jmax)
@@ -12829,7 +12876,7 @@ end program trakmain
 
     use grid_bounds; use tracked_parms; use trig_vals; use trkrparms; use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
 
@@ -13159,6 +13206,7 @@ end program trakmain
 
     use grid_bounds; use tracked_parms; use trig_vals; use trkrparms; use verbose_output
 
+    implicit none
 
     type (trackstuff)  :: trkrinfo
 
@@ -13492,6 +13540,7 @@ end program trakmain
     use error_parms; use set_max_parms; use inparms;        use def_vitals
     use gen_vitals;  use tracked_parms; use verbose_output; use atcf;
 
+    implicit none
 
     type (datecard)  :: inp
 
@@ -14184,6 +14233,8 @@ end program trakmain
     use radii;       use grid_bounds; use tracked_parms; use trig_vals
     use level_parms; use trkrparms;   use verbose_output
 
+    implicit none
+
     type (trackstuff)  :: trkrinfo
 
     integer            :: date_time(8)
@@ -14748,6 +14799,9 @@ end program trakmain
 
     use radii;       use grid_bounds; use tracked_parms; use trig_vals
     use level_parms; use trkrparms;   use verbose_output
+
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     real, allocatable       :: uold(:,:), vold(:,:), unew(:,:), vnew(:,:)
@@ -15249,6 +15303,7 @@ end program trakmain
 
     use set_max_parms; use level_parms; use error_parms; use verbose_output
 
+    implicit none
 
     logical(1) :: calcparm(maxtp,maxstorm)
     real       :: clon(maxstorm,maxtime,maxtp)
@@ -15343,6 +15398,9 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine calc_vmag (xu, xv, imx, jmx, wspeed, icvret)
+
+    implicit none
+
     real    :: xu(imx,jmx), xv(imx,jmx), wspeed(imx,jmx)
 
     do i = 1, imx
@@ -15393,6 +15451,9 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine bilin_int_even (imxold, jmxold, xold, imxnew, jmxnew, xnew, ibiret)
+
+    implicit none
+
     real  :: xold(imxold,jmxold), xnew(imxnew,jmxnew)
 
     ! put original (O) values from input array into new, expanded array
@@ -15452,6 +15513,9 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine lin_int (ioldmax, inewmax, xold, xnew, iliret)
+
+    implicit none
+
     real    :: xold(ioldmax), xnew(inewmax)
 
     ! copy points from old grid onto new, larger grid
@@ -15478,6 +15542,9 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine lin_int_lon (ioldmax, inewmax, xold, xnew, iliret)
+
+    implicit none
+
     real  :: xold(ioldmax), xnew(inewmax)
 
     ! copy points from old grid onto new, larger grid
@@ -15513,6 +15580,7 @@ end program trakmain
     use tracked_parms; use radii;       use trig_vals;   use set_max_parms; use verbose_output
     use trkrparms;     use level_parms; use grid_bounds; use inparms;
 
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
@@ -15758,7 +15826,7 @@ end program trakmain
     use radii;     use grid_bounds; use set_max_parms; use level_parms
     use trig_vals; use trkrparms;   use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff)  :: trkrinfo
 
@@ -16378,6 +16446,8 @@ end program trakmain
 
     use trkrparms; use verbose_output
 
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     real              :: fxy(iimax,jjmax), rlon(iimax), rlat(jjmax)
@@ -16505,6 +16575,7 @@ end program trakmain
 
     use trkrparms; use verbose_output; use tracked_parms
 
+    implicit none
 
     type (trackstuff) :: trkrinfo
 
@@ -16702,6 +16773,8 @@ end program trakmain
                            & geslon, geslat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
     use trig_vals; use trkrparms; use verbose_output
+
+    implicit none
 
     type (trackstuff) :: trkrinfo
     real              :: tmpangle
@@ -16916,7 +16989,7 @@ end program trakmain
 
     use def_vitals; use grid_bounds; use set_max_parms; use trkrparms ; use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
     real              :: guesslon, guesslat
@@ -17011,7 +17084,7 @@ end program trakmain
       
     use trig_vals
 
-      implicit none
+    implicit none
 
     integer, parameter  :: dp = selected_real_kind(12, 60)
     real                :: rlonb, rlatb, rlonc, rlatc, xdist, degrees
@@ -17062,7 +17135,7 @@ end program trakmain
 
     use tracked_parms; use trig_vals; use grid_bounds
 
-      implicit none
+    implicit none
 
     integer :: i, j, imax, jmax, level
     real    :: dy, coriolis, rlat
@@ -17106,7 +17179,7 @@ end program trakmain
 
     use gfilename_info; use tracked_parms; use atcf; use verbose_output
 
-      implicit none
+    implicit none
 
     character(len=*)  :: gfilename, ifilename
     character(len=5)  :: cfmin
@@ -17272,7 +17345,9 @@ end program trakmain
 
     use tracked_parms;  use level_parms; use inparms;  use read_parms; use phase
     use verbose_output; use params;      use grib_mod; use trkrparms;  use genesis_diags
-     
+
+    implicit none
+
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
     type (gribfield)  :: gfld
@@ -18768,6 +18843,8 @@ end program trakmain
     use netcdf_parms;  use verbose_output; use read_parms; use trkrparms
       
 
+    implicit none
+
     type (trackstuff)  :: trkrinfo
     type (netcdfstuff) :: netcdfinfo
 
@@ -19391,7 +19468,7 @@ end program trakmain
 
     use verbose_output
 
-      implicit         none
+    implicit none
 
     include "netcdf.inc"
 
@@ -19484,7 +19561,7 @@ end program trakmain
 
     use verbose_output
 
-      implicit         none
+    implicit none
 
     include "netcdf.inc"
 
@@ -19515,7 +19592,7 @@ end program trakmain
 
     use verbose_output
 
-      implicit         none
+    implicit none
 
     include "netcdf.inc"
 
@@ -19758,7 +19835,7 @@ end program trakmain
   !****************************************************************************
   subroutine handle_netcdf_err (status)
 
-      implicit         none
+    implicit none
 
     include "netcdf.inc"
 
@@ -19788,6 +19865,9 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine bitmapchk (n, ld, d, dmin, dmax)
+
+    implicit none
+
     logical(1) :: ld
     dimension  :: ld(n), d(n) !CAITLYN - i have never seen this data type before
 
@@ -19840,6 +19920,9 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine conv1d2d_logic (imax, jmax, lb1d, lb2d, need_to_flip_lats)
+
+    implicit none
+
     logical(1) :: lb1d(imax*jmax), lb2d(imax,jmax)
     logical(1) :: need_to_flip_lats
     integer    :: ilat, ilatix, ilon, imax, jmax
@@ -19909,7 +19992,7 @@ end program trakmain
 
     use verbose_output
 
-      implicit none
+    implicit none
 
     logical(1) :: lb2d(imax,jmax)
     logical(1) :: need_to_flip_lats
@@ -19999,7 +20082,9 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine conv1d2d_real (imax, jmax, dat1d, dat2d, need_to_flip_lats)
-    
+
+    implicit none
+
     logical(1) :: need_to_flip_lats
     real       :: dat1d(imax*jmax), dat2d(imax,jmax)
 
@@ -20060,6 +20145,9 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine conv1d2d_real_netcdf (imax, jmax, dat1d, dat2d, need_to_flip_lats)
+
+    implicit none
+
     logical(1) :: need_to_flip_lats
     real       :: dat1d(imax*jmax)
     real       :: dat2d(imax,jmax)
@@ -20102,7 +20190,7 @@ end program trakmain
     use verbose_output;      use waitfor_parms;  use netcdf_parms
     use tracking_parm_prefs; use shear_diags;    use genesis_diags
 
-      implicit none
+    implicit none
 
     type (datecard)    :: inp
     type (trackstuff)  :: trkrinfo
@@ -20627,6 +20715,9 @@ end program trakmain
   subroutine read_fhours (ifhmax)
 
     use tracked_parms; use verbose_output
+
+    implicit none
+
     integer, parameter :: iunit_fh = 15
     integer            :: itmphrs(750), itmpmins(750), input_mins(750), itmpltix(750)
     integer            :: ifhmax, inphr, inpmin, ict, i, ifa, ifma, icma, ira, inpltix, ila
@@ -20770,7 +20861,7 @@ end program trakmain
 
     use def_vitals; use set_max_parms; use trkrparms; use verbose_output
 
-      implicit none
+    implicit none
 
     type (tcvcard)    :: tmpstorm(maxstorm_tc)
     type (trackstuff) :: trkrinfo
@@ -21120,7 +21211,7 @@ end program trakmain
 
     use def_vitals; use set_max_parms; use trkrparms; use gen_vitals; use verbose_output
 
-      implicit none
+    implicit none
 
     type (gencard)    :: tmpstorm(maxstorm_mg)
     type (trackstuff) :: trkrinfo
@@ -21290,6 +21381,8 @@ end program trakmain
 
     use grid_bounds;    use trkrparms; use tracked_parms; use inparms
     use verbose_output; use params;    use grib_mod
+
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
@@ -21882,6 +21975,9 @@ end program trakmain
                                 & need_to_flip_lons, inp, netcdfinfo, iggret)
 
     use grid_bounds; use trkrparms; use inparms; use verbose_output; use netcdf_parms
+
+    implicit none
+
     type (trackstuff)  :: trkrinfo
     type (netcdfstuff) :: netcdfinfo
     type (datecard)    :: inp
@@ -22141,7 +22237,7 @@ end program trakmain
 
     use netcdf_parms; use tracked_parms; use verbose_output
 
-      implicit none
+    implicit none
 
     type (netcdfstuff) :: netcdfinfo
 
@@ -22377,6 +22473,9 @@ end program trakmain
                                & grid_minlat, grid_maxlon, grid_minlon, trkrinfo, icvpret)
 
     use trkrparms
+
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     integer          :: imax, jmax, ifix, jfix
@@ -22502,6 +22601,9 @@ end program trakmain
                               & grid_maxlon, grid_minlon, trkrinfo, ifilret)
 
     use grid_bounds; use trkrparms; use verbose_output
+
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     integer           :: imax, jmax, istart, iend, jstart, jend, ifix, jfix
@@ -22715,7 +22817,7 @@ end program trakmain
 
     use tracked_parms; use trig_vals; use grid_bounds; use verbose_output; use level_parms
 
-      implicit none
+    implicit none
 
     dimension  :: cosfac(jmax), tanfac(jmax) !CAITLYN - i still have never seen this data type
     real       :: tmpzeta(imax,jmax)
@@ -22908,7 +23010,7 @@ end program trakmain
 
     use trig_vals; use grid_bounds; use verbose_output; use level_parms; use tracked_parms
 
-      implicit none
+    implicit none
 
     real, parameter   :: xsmalldiff = 0.0
     dimension         :: cosfac(jmax),tanfac(jmax)
@@ -23105,6 +23207,8 @@ end program trakmain
     use def_vitals;    use grid_bounds; use trig_vals
     use tracked_parms; use trkrparms;   use verbose_output
 
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     integer           :: ist, ifh, imax, jmax, maxstorm, igsvret, npts, bskip, icut
@@ -23295,7 +23399,7 @@ end program trakmain
     use def_vitals; use grid_bounds; use trig_vals;     use tracked_parms; 
     use read_parms; use trkrparms;   use genesis_diags; use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
     
@@ -23407,6 +23511,7 @@ end program trakmain
 
     use def_vitals; use grid_bounds; use trig_vals; use tracked_parms; use read_parms; use trkrparms
 
+    implicit none
 
     type (trackstuff) :: trkrinfo
     real, parameter   :: rd_over_rv = 0.622
@@ -23525,6 +23630,8 @@ end program trakmain
 
     use def_vitals; use grid_bounds; use trig_vals; use tracked_parms; use trkrparms
 
+    implicit none
+
     type (trackstuff)    :: trkrinfo
     
     integer, allocatable :: point_ct(:,:)
@@ -23623,6 +23730,9 @@ end program trakmain
   subroutine thickness_calc (imax, jmax, vp)
 
     use tracked_parms; use verbose_output
+
+    implicit none
+
     integer    :: i, j, layer, upper, lower, imax, jmax
     logical(1) :: vp(imax,jmax)
 
@@ -23700,6 +23810,8 @@ end program trakmain
 
     use trkrparms; use grid_bounds;   use set_max_parms; use def_vitals
     use contours;  use tracked_parms; use verbose_output
+
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (cint_stuff) :: contour_info
@@ -24113,6 +24225,7 @@ end program trakmain
     use trkrparms;   use set_max_parms; use contours;      use verbose_output; use radii
     use grid_bounds; use tracked_parms; use genesis_diags; use trig_vals;      use atcf
 
+    implicit none
 
     type (trackstuff) :: trkrinfo
     type (cint_stuff) :: contour_info
@@ -24841,7 +24954,7 @@ end program trakmain
 
     use set_max_parms; use trkrparms; use grid_bounds; use verbose_output; use level_parms
 
-      implicit none
+    implicit none
 
     type (trackstuff)  :: trkrinfo
 
@@ -25105,6 +25218,7 @@ end program trakmain
 
     use grid_bounds; use tracked_parms; use trig_vals; use trkrparms; use verbose_output
 
+    implicit none
 
     type (trackstuff)   :: trkrinfo
 
@@ -25318,6 +25432,7 @@ end program trakmain
 
     use set_max_parms; use trkrparms; use grid_bounds; use verbose_output; use level_parms
 
+    implicit none
 
     type (trackstuff)  :: trkrinfo
 
@@ -25731,6 +25846,7 @@ end program trakmain
 
     use set_max_parms; use trkrparms; use contours; use grid_bounds; use verbose_output
 
+    implicit none
 
     type (trackstuff)    :: trkrinfo
     type (cint_stuff)    :: contour_info
@@ -26381,6 +26497,8 @@ end program trakmain
 
     use grid_bounds; use tracked_parms; use trkrparms; use verbose_output
 
+    implicit none
+
     type (trackstuff) :: trkrinfo
 
     integer            :: date_time(8)
@@ -26510,7 +26628,7 @@ end program trakmain
 
     use trkrparms; use verbose_output
 
-      implicit none
+    implicit none
 
     type (trackstuff) :: trkrinfo
     integer           :: i, j, imax, jmax, iplus1, jplus1, iminus1, jminus1, igicwret
@@ -26641,6 +26759,9 @@ end program trakmain
   !*
   !****************************************************************************
   subroutine qsort(x, ind, n)
+
+    implicit none
+
     integer, parameter   :: dp = SELECTED_REAL_KIND(12, 60)
     real(dp), intent(in) :: x(n)
     integer, intent(out) :: ind(n)
