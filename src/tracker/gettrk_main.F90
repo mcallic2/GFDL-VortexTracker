@@ -11523,7 +11523,7 @@ end program trakmain
     real, allocatable     :: quadinfo(:,:,:), iwork(:)
     real                  :: quadmax(4,4)
     real                  :: exactdistnm, exactdistkm, radmax, degrees, cosarg
-    real                  :: xcenlon, xcenlat, dx, dy, cosfac
+    real                  :: xcenlon, xcenlat, dx, dy, cosfac, dist, vmag
     real                  :: rlonb, rlonc, rlatb, rlatc, vmaxwind
     real                  :: pt_heading_rad, pt_heading, d
     integer, allocatable  :: isortix(:)
