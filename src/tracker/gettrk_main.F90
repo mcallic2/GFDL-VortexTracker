@@ -15412,6 +15412,7 @@ end program trakmain
 
     implicit none
 
+    integer :: i, j, imx, jmx, icvret
     real    :: xu(imx,jmx), xv(imx,jmx), wspeed(imx,jmx)
 
     do i = 1, imx
