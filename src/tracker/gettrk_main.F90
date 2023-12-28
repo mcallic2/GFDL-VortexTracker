@@ -15467,6 +15467,7 @@ end program trakmain
     implicit none
 
     integer :: i, j, istep
+    integer :: imxold, jmxold, imxnew, jmxnew
     real    :: xold(imxold,jmxold), xnew(imxnew,jmxnew)
 
     ! put original (O) values from input array into new, expanded array
