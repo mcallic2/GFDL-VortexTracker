@@ -16793,9 +16793,10 @@ end program trakmain
     implicit none
 
     type (trackstuff) :: trkrinfo
-    
+
     integer           :: igiret
     real              :: tmpangle
+    real              :: geslon, geslat
 
     igiret = 0
 
