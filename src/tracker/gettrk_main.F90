@@ -15530,7 +15530,7 @@ end program trakmain
 
     implicit none
 
-    integer :: i, ioldmac, inewmax, iliret
+    integer :: i, ioldmax, inewmax, iliret
     real    :: xold(ioldmax), xnew(inewmax)
 
     ! copy points from old grid onto new, larger grid
