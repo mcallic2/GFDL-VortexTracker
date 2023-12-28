@@ -20176,6 +20176,8 @@ end program trakmain
 
     implicit none
 
+    integer    :: imax, jmax
+    integer    :: ilat, ilatix, ilon
     logical(1) :: need_to_flip_lats
     real       :: dat1d(imax*jmax)
     real       :: dat2d(imax,jmax)
