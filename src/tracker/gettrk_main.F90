@@ -16797,7 +16797,7 @@ end program trakmain
     integer           :: igiret
     integer           :: npts, nhalf, jhlatpts, jripts, jbmaxlatpts
     integer           :: i, imax, jmax, ibeg, jbeg, iend, jend
-    integer           :: ilonfix, jlatfix
+    integer           :: ilonfix, jlatfix, ihlonpts, ibmaxlonpts
     real              :: tmpangle
     real              :: geslon, geslat, rdeg, cosfac
     real              :: dx, dy, ri, dlon
