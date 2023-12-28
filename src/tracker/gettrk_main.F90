@@ -16800,6 +16800,7 @@ end program trakmain
     real              :: tmpangle
     real              :: geslon, geslat, rdeg
     real              :: dx, dy, ri
+    real              :: rglatmax, rglatmin, rglonmax, rglongmin
 
     igiret = 0
 
