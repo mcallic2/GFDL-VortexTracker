@@ -16796,6 +16796,7 @@ end program trakmain
 
     integer           :: igiret
     integer           :: npts, nhalf
+    integer           :: i, imax, jmax
     real              :: tmpangle
     real              :: geslon, geslat, rdeg
 
