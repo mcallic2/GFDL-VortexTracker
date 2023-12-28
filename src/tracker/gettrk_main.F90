@@ -16799,7 +16799,7 @@ end program trakmain
     integer           :: i, imax, jmax, ibeg, jbeg, iend, jend
     integer           :: ilonfix, jlatfix
     real              :: tmpangle
-    real              :: geslon, geslat, rdeg
+    real              :: geslon, geslat, rdeg, cosfac
     real              :: dx, dy, ri
     real              :: rglatmax, rglatmin, rglonmax, rglonmin
 
