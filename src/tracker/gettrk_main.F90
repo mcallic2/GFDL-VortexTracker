@@ -11295,7 +11295,7 @@ end program trakmain
     implicit none
 
     type (trackstuff) :: trkrinfo
-    integer           :: iatret, inctcv
+    integer           :: iatret, inctcv, ileadtime, ifh, ifcsthour
     real              :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
     real              :: dist, distm, xincr, yincr, stmspd, stmdir, atan, arct, degrees
     real              :: ucomp, vcomp, xdist, ydist, ydeg, dt, extraplat
