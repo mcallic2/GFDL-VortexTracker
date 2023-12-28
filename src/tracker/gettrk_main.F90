@@ -14811,6 +14811,7 @@ end program trakmain
     real, allocatable       :: vmag(:,:)
     real                    :: dx, dy
     real                    :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
+    integer                 :: npts
     character(len=1)        :: gotlat
     logical(1)              :: cflag, valid_pt(imax,jmax)
     logical(1), allocatable :: lbi(:,:)
