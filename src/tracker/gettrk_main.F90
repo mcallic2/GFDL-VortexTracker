@@ -19892,6 +19892,7 @@ end program trakmain
 
     implicit none
 
+    integer    :: i, n
     logical(1) :: ld
     dimension  :: ld(n), d(n) !CAITLYN - i have never seen this data type before
     real       :: dmin, dmax
