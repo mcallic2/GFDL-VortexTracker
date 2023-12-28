@@ -16815,8 +16815,8 @@ end program trakmain
       do i = 1, nhalf
         rdeg = rdeg + real(npts) * (1.0 / (real(i) * 2.0)) * (dx+dy) / 2.0
       enddo
-      jhlatpts    = ceiling(rdeg / dy) + 1.0
-      jripts      = ceiling((ri + 1.0) / (dtk * dx)) + 1.0
+      jhlatpts    = ceiling(rdeg / dy) + 1.0 !CAITLYN - this () needs to be moved, variable jhlatpts is integer
+      jripts      = ceiling((ri + 1.0) / (dtk * dx)) + 1.0 !CAITLYN - same ^^
       jbmaxlatpts = jhlatpts + jripts
     else
       jbmaxlatpts = npts * 2.0 + 2.0
