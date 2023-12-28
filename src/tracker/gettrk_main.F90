@@ -11292,6 +11292,8 @@ end program trakmain
     use def_vitals;     use trkrparms; use tracked_parms; use gen_vitals
     use verbose_output; use trig_vals; use set_max_parms
 
+    implicit none
+
     type (trackstuff) :: trkrinfo
     integer           :: iatret, inctcv
     real              :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
@@ -14005,7 +14007,7 @@ end program trakmain
 
     use verbose_output
 
-    !implicit none
+    implicit none
 
     integer    :: kmax, iaret
     real       :: xavg
@@ -14052,7 +14054,7 @@ end program trakmain
 
     use verbose_output
 
-    !implicit none
+    implicit none
 
     integer :: kmax, iwtret
     real    :: xwtavg
@@ -14096,7 +14098,7 @@ end program trakmain
 
     use verbose_output
 
-    !implicit none
+    implicit none
 
     integer  :: kmax, iwtret
     real     :: xwtavg
@@ -14153,7 +14155,7 @@ end program trakmain
 
     use verbose_output
 
-    !implicit none
+    implicit none
 
     integer    :: kmax
     real       :: xavg, stdx
