@@ -16799,6 +16799,7 @@ end program trakmain
     integer           :: i, imax, jmax
     real              :: tmpangle
     real              :: geslon, geslat, rdeg
+    real              :: dx, dy, ri
 
     igiret = 0
 
