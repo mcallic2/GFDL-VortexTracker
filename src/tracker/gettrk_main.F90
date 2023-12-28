@@ -14102,7 +14102,7 @@ end program trakmain
     implicit none
 
     integer  :: kmax, iwtret, i
-    real     :: xwtavg
+    real     :: xwtavg, wtot
     real     :: xlon(kmax), wt(kmax)
     integer  :: gt345_ct, lt15_ct
 
