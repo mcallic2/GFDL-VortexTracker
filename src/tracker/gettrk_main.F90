@@ -15466,7 +15466,7 @@ end program trakmain
 
     implicit none
 
-    integer :: i, j, istep
+    integer :: i, j, istep, ibiret
     integer :: imxold, jmxold, imxnew, jmxnew
     real    :: xold(imxold,jmxold), xnew(imxnew,jmxnew)
 
