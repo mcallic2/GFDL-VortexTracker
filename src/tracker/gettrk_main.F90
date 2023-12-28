@@ -14057,7 +14057,7 @@ end program trakmain
 
     implicit none
 
-    integer :: kmax, iwtret
+    integer :: kmax, iwtret, i
     real    :: xwtavg, wtot
     real    :: xdat(kmax), wt(kmax)
 
