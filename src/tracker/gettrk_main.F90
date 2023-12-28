@@ -11298,8 +11298,8 @@ end program trakmain
     integer           :: iatret, inctcv, ileadtime, ifh, ifcsthour
     real              :: fixlon(maxstorm,maxtime), fixlat(maxstorm,maxtime)
     real              :: dist, distm, xincr, yincr, stmspd, stmdir, atan, arct, degrees
-    real              :: ucomp, vcomp, xdist, ydist, ydeg, dt, extraplat
-    real              :: cosfac
+    real              :: ucomp, vcomp, xdist, ydist, ydeg, dt, extraplat, extraplon
+    real              :: cosfac, xdeg
     real              :: dtkm
     character(len=1)  :: in_grid, extrap_flag
 
