@@ -14812,6 +14812,7 @@ end program trakmain
     real                    :: dx, dy
     real                    :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
     real                    :: uvgeslon, uvgeslat, dell
+    real                    :: chk_lonspc_old, chk_latspc_old
     integer                 :: npts, ilonfix, jlatfix, igiret, igucret, igrret, ibiret, iliret
     integer                 :: ibeg, jbeg, iend, jend, ist
     integer                 :: level, nlev, numinterp
