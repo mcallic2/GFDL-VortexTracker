@@ -14812,7 +14812,7 @@ end program trakmain
     real                    :: dx, dy
     real                    :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
     real                    :: uvgeslon, uvgeslat
-    integer                 :: npts, ilonfix, jlatfix, igiret
+    integer                 :: npts, ilonfix, jlatfix, igiret, igucret, igrret
     integer                 :: ibeg, jbeg, iend, jend, ist
     character(len=1)        :: gotlat
     logical(1)              :: cflag, valid_pt(imax,jmax)
