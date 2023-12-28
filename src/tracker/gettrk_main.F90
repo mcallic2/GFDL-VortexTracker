@@ -14811,7 +14811,7 @@ end program trakmain
     real, allocatable       :: vmag(:,:)
     real                    :: dx, dy
     real                    :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
-    real                    :: uvgeslon, uvgeslat, dell
+    real                    :: uvgeslon, uvgeslat, dell, ctlon, ctlat
     real                    :: chk_lonspc_old, chk_latspc_old, chk_lonspc_new, chk_latspc_new
     integer                 :: npts, ilonfix, jlatfix, igiret, igucret, igrret, ibiret, iliret, icvret
     integer                 :: ibeg, jbeg, iend, jend, ist
