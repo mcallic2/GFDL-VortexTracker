@@ -16797,7 +16797,7 @@ end program trakmain
     integer           :: igiret
     integer           :: npts, nhalf
     real              :: tmpangle
-    real              :: geslon, geslat
+    real              :: geslon, geslat, rdeg
 
     igiret = 0
 
