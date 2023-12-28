@@ -16795,6 +16795,7 @@ end program trakmain
     type (trackstuff) :: trkrinfo
 
     integer           :: igiret
+    integer           :: npts, nhalf
     real              :: tmpangle
     real              :: geslon, geslat
 
