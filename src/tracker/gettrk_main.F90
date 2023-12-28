@@ -14815,6 +14815,7 @@ end program trakmain
     integer                 :: npts, ilonfix, jlatfix, igiret, igucret, igrret
     integer                 :: ibeg, jbeg, iend, jend, ist
     integer                 :: level, nlev, numinterp
+    integer                 :: imxold, jmxold, i, ip, j
     character(len=1)        :: gotlat
     logical(1)              :: cflag, valid_pt(imax,jmax)
     logical(1), allocatable :: lbi(:,:)
