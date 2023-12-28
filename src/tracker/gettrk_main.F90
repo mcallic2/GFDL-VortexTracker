@@ -16793,6 +16793,8 @@ end program trakmain
     implicit none
 
     type (trackstuff) :: trkrinfo
+    
+    integer           :: igiret
     real              :: tmpangle
 
     igiret = 0
