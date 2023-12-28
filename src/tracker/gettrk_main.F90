@@ -15322,6 +15322,7 @@ end program trakmain
     real       :: uvgeslon, uvgeslat, sumlon, sumlat
     real       :: guesslon, guesslat, dist, degrees
     integer    :: gt345_ct, lt15_ct, ict, ip, igugret, maxstorm, ist, ifh
+    integer    :: i, j, imx, jmx
 
     sumlon   = 0.0
     sumlat   = 0.0
