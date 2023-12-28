@@ -14278,7 +14278,7 @@ end program trakmain
       print *, ' (0-360 uvgeslon)  = ', mod(uvgeslon,360.0)
       print *, ' dx                = ', dx,       ' dy        = ', dy, ' ist= ', ist
       print *, ' cflag             = ', cflag
-      print *, ' ctlon             = ', ctlon,    ' ctlat     = ', ctlat
+      print *, ' ctlon             = ', ctlon,    ' ctlat     = ', ctlat
       print *, ' fxval             = ', fxval
       print *, ' igwcret           = ', igwcret
     endif
@@ -14813,6 +14813,7 @@ end program trakmain
     real                    :: grid_maxlat, grid_minlat, grid_maxlon, grid_minlon
     real                    :: uvgeslon, uvgeslat
     integer                 :: npts, ilonfix, jlatfix, igiret
+    integer                 :: ibeg, jbeg, iend, jend, ist
     character(len=1)        :: gotlat
     logical(1)              :: cflag, valid_pt(imax,jmax)
     logical(1), allocatable :: lbi(:,:)
