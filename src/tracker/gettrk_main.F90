@@ -14011,7 +14011,7 @@ end program trakmain
     implicit none
 
     integer    :: kmax, iaret
-    real       :: xavg
+    real       :: xavg, xsum
     real       :: xdat(kmax)
     logical(1) :: valid(kmax)
 
