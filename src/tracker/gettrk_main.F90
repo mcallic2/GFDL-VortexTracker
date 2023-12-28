@@ -19892,10 +19892,10 @@ end program trakmain
 
     implicit none
 
-    integer    :: i, n
-    logical(1) :: ld
-    dimension  :: ld(n), d(n) !CAITLYN - i have never seen this data type before
-    real       :: dmin, dmax
+    integer            :: i, n
+    logical(1)         :: ld
+    real, dimension(n) :: d
+    real               :: dmin, dmax
 
     dmin = 1.0E15
     dmax = -1.0E15
