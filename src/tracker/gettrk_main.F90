@@ -3376,6 +3376,11 @@ end program trakmain
 
     dell = (dx+dy) / 2.0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First define the radius of influence, which depends on the grid spacing of the model data being used. The ceiling
+    ! statement for npts in the first if statement is needed in case the resolution of the grib files eventually goes
+    ! very low, down to say a half degree or less, in order to cover enough points in the search.
+    !------------------------------------------------------------------------------------------------------------------
     if (dell < 1.24) then      ! GFS, MRF, NAM, NGM, NAVGEM, GDAS,
                                ! GFDL, NCEP Ensemble & Ensemble
                                ! Relocation, SREF Ensemble
@@ -3420,9 +3425,19 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If the input cparm is slp, then check to see that the MSLP gradient in any direction from the MSLP center is at
+    ! least 1mb / 200km, or 0.003mb/km. This is based on discussions with  Morris & Bob, who have had good results
+    ! using a 2mb/200km requirement. Since their model has a much finer resolution than all of the models we run the
+    ! tracker on AND a much better depiction of the hurricane vortex, we do not use a requirement as strict as theirs,
+    ! and so make the requirement only half as strong as theirs.
+    ! If the input cparm is v850, then check to see that there is a circulation at 850 mb.  We will do this by
+    ! calculating the tangential wind of all points within a specified radius of the 850 minimum wind center, and
+    ! seeing if there is a net average tangential wind speed of at least 3 m/s.
+    !------------------------------------------------------------------------------------------------------------------
+
     ! We will want to speed things up for finer resolution grids.
     ! We can do this by skipping some of the points in the loop.
-
     if ((dx+dy) / 2.0 > 0.20) then
       bskip = 1
     else if ((dx+dy) / 2.0 > 0.10 .and. (dx+dy) / 2.0 <= 0.20) then
