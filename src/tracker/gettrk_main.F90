@@ -8292,6 +8292,12 @@ end program trakmain
 
     conv_ms_knots = 1.9427  ! CAITLYN - repeating, conversions could be on program level
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     if (outlon < -998.0 .or. outlat < -998.0) then
       intlon = 0
       intlat = 0
@@ -8491,10 +8497,8 @@ end program trakmain
     if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
 
       if (stcvtype(ist) == 'FOF') then
-        ! If this is a TC vitals-described storm (i.e., one that is
-        ! numbered by JTWC or NHC), then leave the basinid as is.
-        ! Otherwise, we want to use the "basinid" location as a
-        ! label to identify what type of run this is.
+        ! If this is a TC vitals-described storm (i.e., one that is numbered by JTWC or NHC), then leave the basinid as
+        ! is. Otherwise, we want to use the "basinid" location as a label to identify what type of run this is.
         if (trkrinfo%type == 'midlat') basinid = 'ML'
         if (trkrinfo%type == 'tcgen')  basinid = 'TG'
       endif
@@ -8506,8 +8510,8 @@ end program trakmain
       print *, 'atcfymdh            = ', atcfymdh,   ' atcfname   = ', adjustr(atcfname)
       print *, 'output_fhr          = ', output_fhr
       print *, 'intlat              = ', intlat,     ' clatns     = ', clatns
-      print *, 'intlon              = ', intlon,     ' clonew     = ', clonew
-      print *, 'int_wind_kts        = ', int((vmaxwind*conv_ms_knots) + 0.5)
+      print *, 'intlon              = ', intlon,     ' clonew     = ', clonew
+      print *, 'int_wind_kts        = ', int((vmaxwind*conv_ms_knots) + 0.5)
       print *, 'int_mslp            = ', int(xminmslp/mslp_outp_adj + 0.5)
       print *, 'filler              = ','XX,  34, NEQ'
       print *, 'vradius(1-4)        = ', vradius(1,1), vradius(1,2), vradius(1,3), vradius(1,4)
@@ -8600,7 +8604,7 @@ end program trakmain
       print *, 'isst                                = ', isst
       print *, 'irmw_dist                           = ', irmw_dist
       print *, 'irmw_val                            = ', irmw_val
-      print *, 'idivg                               = ', idivg
+      print *, 'idivg                               = ', idivg
       print *, 'imoistdivg                          = ', imoistdivg
       print *, 'irh_800_600                         = ', irh_800_600
       print *, 'irh_1000_925                        = ', irh_1000_925
