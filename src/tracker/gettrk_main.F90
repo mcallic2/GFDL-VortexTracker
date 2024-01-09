@@ -3941,6 +3941,10 @@ end program trakmain
 
     ricps = 500.0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First, determine the angle that the storm took getting from the last position to the current one. If this is for
+    ! ifh=1 for a regular type=tracker case, we will just use the storm direction as read from the tcvitals card.
+    !------------------------------------------------------------------------------------------------------------------
     if (ifh == 1) then
       st_heading = real(storm(ist)%tcv_stdir)
     else
@@ -3979,6 +3983,10 @@ end program trakmain
       print *, ' '
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now call get_ij_bounds to get the boundaries for a smaller subdomain, or subset of gridpoints, in which to
+    ! evaluate the parameter B statistic. We will only include points within 500 km of the storm center for evaluation.
+    !------------------------------------------------------------------------------------------------------------------
     npts = ceiling(ricps / (dtk * (dx+dy) / 2.0))
 
     call get_ij_bounds (npts, 0, ricps, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, &
@@ -3995,8 +4003,15 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now loop through all of the points of the subdomain. If the point is further than 500 km from the storm center,
+    ! discard it. Otherwise, evaluate the angle from the storm center to this point to determine the hemisphere of the
+    ! point, that is, if the point is to the left or the right of the storm track.
+    !------------------------------------------------------------------------------------------------------------------
+
    !CAITLYN - repeating code
-    ! now loop through all of the points of the subdomain
+    ! We will want to speed things up for finer resolution grids. We can do this by skipping some of the points in the
+    ! loop for the evaluation of parameter B.
     if ((dx+dy) / 2.0 > 0.20) then
       bskip = 1
     else if ((dx+dy) / 2.0 > 0.10 .and. (dx+dy) / 2.0 <= 0.20) then
@@ -4093,7 +4108,7 @@ end program trakmain
         return
       endif
 
-      ! Calculate angle from storm center to point, in a 0-360 framework, clockwise positive
+      ! calculate angle from storm center to point, in a 0-360 framework, clockwise positive
       rlonc = (360.0 - glon(ip)) * dtr ! CAITLYN - repeated code?
       rlatc = glat(j) * dtr
       rlonb = (360.0 - fixlon(ist, ifh)) * dtr
@@ -4108,7 +4123,7 @@ end program trakmain
             if (sin(rlonc-rlonb) < 0.0) then
               pt_dir_rad = acos(cosarg)
             else
-              pt_dir_rad = 2 * pi - acos(cosarg)
+              pt_dir_rad = 2 * pi - acos(cosarg) ! CAITLYN - that 2 needs to be 2.0, this is real math
             endif
 
           else
@@ -4117,8 +4132,10 @@ end program trakmain
 
           pt_dir = pt_dir_rad / dtr
 
-          ! Based on the angle that the point is from the storm center,
-          ! determine if the point is to the left or the right of the storm track.
+          !------------------------------------------------------------------------------------------------------------
+          ! Based on the angle that the point is from the storm center, determine if the point is to the left or the
+          ! right of the storm track.
+          !------------------------------------------------------------------------------------------------------------
           if (st_heading >= 180.0) then
             if ((st_heading - pt_dir) > 0.0 .and. (st_heading - pt_dir) <= 180.0) then
               hemis = 2
@@ -4137,16 +4154,19 @@ end program trakmain
             endif
           endif
 
-          ! Calculate the 600-900 mb thickness at this point and add
-          ! the thickness value to the array for the correct "storm hemisphere"
+          !------------------------------------------------------------------------------------------------------------
+          ! Calculate the 600-900 mb thickness at this point and add the thickness value to the array for the correct
+          ! "storm hemisphere"
+          !------------------------------------------------------------------------------------------------------------
           zthick = cpshgt(ip, j, 7) - cpshgt(ip, j, 1)
           zthicksum(hemis) = zthicksum(hemis) + zthick
         enddo ! i-loop
       enddo   ! j-loop
 
-     !Now calculate parameter B.  The hemval parameter = +1 for storms
-     !in the Northern Hemisphere and -1 for Southern Hemisphere storms.
-
+      !------------------------------------------------------------------------------------------------------------
+      ! Now calculate parameter B. The hemval parameter = +1 for storms in the Northern Hemisphere and -1 for
+      ! Southern Hemisphere storms.
+      !------------------------------------------------------------------------------------------------------------
       zthick_right_mean = zthicksum(1) / real(right_ct)
       zthick_left_mean  = zthicksum(2) / real(left_ct)
 
