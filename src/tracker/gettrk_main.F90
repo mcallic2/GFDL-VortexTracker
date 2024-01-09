@@ -6108,7 +6108,7 @@ end program trakmain
     dell = (dx+dy) / 2.0
     npts = rads / (dtk * dell)
 
-    ! call get_ij_bounds in order to get the dimensions for a smaller subdomain of grid points to search over.
+    ! call get_ij_bounds in order to get the dimensions for a smaller subdomain of grid points to search over
     call get_ij_bounds (npts, 0, ri, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, xsfclon, &
          & xsfclat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
@@ -6198,6 +6198,10 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Search a grid of points near the storm center, evaluate if the storm is within the "rads" distance threshold. If
+    ! so, compute the IKE values for all applicable thresholds (10, 18, 33 m/s).
+    !------------------------------------------------------------------------------------------------------------------
     do j = jbeg, jend
       do i = ibeg, iend
 
