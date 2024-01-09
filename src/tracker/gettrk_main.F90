@@ -6971,6 +6971,11 @@ end program trakmain
 
     divg = -9999.0
     if (readflag(3) .and. readflag(4)) then
+      !----------------------------------------------------------------------------------------------------------------
+      ! Call get_divg, which will call a routine to compute divergence over the whole domain and then compute just a
+      ! barnes-averaged value at the center point, returned in the variable "divg". In get_divg, I'll be doing this
+      ! analysis only at 850 mb.
+      !----------------------------------------------------------------------------------------------------------------
       call get_divg (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, calcparm, &
            & maxstorm, trkrinfo, clon, clat, divg, igdret)
     endif
@@ -6981,6 +6986,10 @@ end program trakmain
  122  format (1x, 'TIMING: gen_diag after divg 850 ... ', i2.2, ':', i2.2, ':', i2.2)
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now get a smoothed, barnes-averaged value of q850 at the center point. Then multiply the 850 mb divg we just
+    ! calculated by the smoothed q850 to get the 850 mb moisture convergence (q850conv).
+    !------------------------------------------------------------------------------------------------------------------
     if (readgenflag(1)) then
       re      = 125.0
       ri      = 250.0
@@ -7014,10 +7023,10 @@ end program trakmain
       q850conv = -9999.0
     endif
 
-    ! Now get a smoothed, barnes-averaged value of RH at the center
-    ! point.  We will do this for a level that averages 1000 & 925 mb,
-    ! and also for a level that averages 800,750,700,650 & 600 mb.
-
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now get a smoothed, barnes-averaged value of RH at the center point. We will do this for a level that averages
+    ! 1000 & 925 mb, and also for a level that averages 800, 750, 700, 650 & 600 mb.
+    !------------------------------------------------------------------------------------------------------------------
     if (verb .ge. 3) then
       call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
       write (6,128) date_time(5), date_time(6), date_time(7)
@@ -7037,8 +7046,9 @@ end program trakmain
  130  format (1x, 'TIMING: gen_diag after get_rh ... ', i2.2, ':', i2.2, ':', i2.2)
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
     ! Now get a smoothed, barnes-averaged value of 500 mb omega at the center point
-
+    !------------------------------------------------------------------------------------------------------------------
     if (readgenflag(23)) then
       if (verb .ge. 3) then
         call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
