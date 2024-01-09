@@ -5140,8 +5140,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xclon > 330.0 .and. xclon <= 360.0) .and. targlon < 25.0) then
-              ! targlon returned from distbear is just east of the
-              ! GM with a non-360-adjusted value.  Adjust it:
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
 
