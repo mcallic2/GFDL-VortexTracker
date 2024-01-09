@@ -5316,6 +5316,12 @@ end program trakmain
     sr_vr   = 0.0
     sr_vt   = 0.0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now determine the angle that the storm took getting from the last position to the current one. If this is the
+    ! initial time, use the observed direction of motion from the TC Vitals. This may not match up with the model
+    ! storm's initial direction of motion, but it is all we have available to us in order to get a heading estimate for
+    ! he initial time. This storm heading information will be used for the storm-relative profiles.
+    !------------------------------------------------------------------------------------------------------------------
     if (ifh == 1) then
       st_heading = real(storm(ist)%tcv_stdir)
 
@@ -5349,6 +5355,12 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Get the profiles for the earth-relative coordinate system. Start with NE, then SE, SW, and NW. First go through
+    ! radiusloop, which goes from one radial distance to the next, then do the quadloop, which goes through each
+    ! quadrant, and then within each quadrant, the qtr_azimloop goes through for six points along an arc, spaced 15
+    ! degrees apart, starting at 7.5 degrees clockwise from the north.
+    !------------------------------------------------------------------------------------------------------------------
     if (verb .ge. 3) then
       print *, ' '
       print *, ' *****************************************************'
@@ -5389,8 +5401,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xsfclon > 330.0 .and. xsfclon <= 360.0) .and. targlon < 25.0) then
-              ! targlon returned from distbear is just east of the
-              ! GM with a non-360-adjusted value.  Adjust it:
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
             if (xsfclon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -5406,7 +5417,6 @@ end program trakmain
           endif
 
           ! NOTE: The 1020 in the call here is just a number/code to indicate to the subroutine to process sfc winds
-
           call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, 1020, 'u', xintrp_u, &
                & valid_pt, bimct, -99, ibiret1)
 
@@ -5455,6 +5465,10 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Get the profiles for the storm-relative coordinate system. Start with the front-right quadrant and go clockwise
+    ! through back-right, back-left and front-left.
+    !------------------------------------------------------------------------------------------------------------------
     bimct = 0
 
     do idist = 1, numdist ! radiusloop2
@@ -5472,7 +5486,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xsfclon > 330.0 .and. xsfclon <= 360.0) .and. targlon < 25.0) then
-              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value. Adjust it:
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
             if (xsfclon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
