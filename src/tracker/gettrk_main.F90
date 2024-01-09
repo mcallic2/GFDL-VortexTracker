@@ -5014,9 +5014,8 @@ end program trakmain
     xlonsum = 0.0
     xlatsum = 0.0
 
-    ! do NOT include MSLP for the surface center at this time.
     if (calcparm(10,ist)) then
-        ! Just use single weighting for the sfc wcirc fix
+        ! just use single weighting for the sfc wcirc fix
         ipct = ipct + 1
         xlonsum = xlonsum + clon(ist, ifh, 10)
         xlatsum = xlatsum + clat(ist, ifh, 10)
