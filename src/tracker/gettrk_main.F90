@@ -6446,6 +6446,12 @@ end program trakmain
     u_cart_sum_ct = 0
     v_cart_sum_ct = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First, get the fix position to use for calculating the shear. For now, the same position will be used for both
+    ! 850 and 200 mb (we may consider at some point using a separate center fix for 200 mb to account for vortex tilt).
+    ! But for now, we will first look to use the center for the 850 mb wind circulation fix, but if that fix could not
+    ! be made for this current lead time, then we will use the mean fix position for this lead time.
+    !------------------------------------------------------------------------------------------------------------------
     if (calcparm(3,ist)) then
       xcenlon = clon(ist, ifh, 3)
       xcenlat = clat(ist, ifh, 3)
@@ -6480,6 +6486,14 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now compute the azimuthally averaged Vt and Vr in radial bands at distance increments as defined in the rdist
+    ! array. Those distance increments are in units of km. Iterate through each radius, starting from inner and working
+    ! to outer, and at each one, go around clockwise through all of the 24 discrete azimuths, starting at 7.5 and
+    ! adding 15 degrees clockwise each time, all the way up through 352.5. Note that the outer loop of this process is
+    ! for vertical level ("levelloop1"), where we will first do all of the analysis for 850 mb, and then next
+    ! for 200 mb.
+    !------------------------------------------------------------------------------------------------------------------
     do ilev = 1, 2 ! levelloop1
 
       if (ilev == 1) then
@@ -6511,7 +6525,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xcenlon > 330.0 .and. xcenlon <= 360.0) .and. targlon < 25.0) then
-              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value.  Adjust it:
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
             if (xcenlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -6563,6 +6577,12 @@ end program trakmain
       enddo ! radiusloop1
     enddo  ! levelloop1
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now loop through again, first at 850 mb then at 200 mb, and check to see at what radius the last azimuthally
+    ! average cyclonic tangential wind of at least 1 m/s occurs. Do this the same way as I did for getting the 34-kt
+    ! radii in subroutine  getradii, that is, start out at the outermost radius and work inward until finding the first
+    ! radius at which the cyclonic mean Vt >= 1 m/s. Be sure to account for northern hemisphere vs. southern hemisphere
+    !------------------------------------------------------------------------------------------------------------------
     do ilev = 1, 2 ! levelloop2
 
       if (ilev == 1) then
@@ -6580,12 +6600,18 @@ end program trakmain
           ! NHEM storm, cyclonic storm has Vt > 0.
           if (vt_mean(idist,ilev) >= 1.0) then
             if (idist == numdist) then
-              ! We found this at the max radius, so just set the
-              ! max_dist_index to this max radius and then exit the loop.
+              ! We found this at the max radius, so just set the max_dist_index to this max radius and then 
+              ! exit the loop
               max_dist_index(ilev) = numdist
               found_vt_ge_1_flag = 'y'
               exit  ! inverse_radius_loop
             else
+              !--------------------------------------------------------------------------------------------------------
+              ! To this point, each iteration of the loop has shown a cyclonic mean Vt < 1.0 m/s. We have hit a
+              ! Vt >= 1.0, so the radius where the mean Vt = 1.0 is somewhere between here and the next outer radius,
+              ! so we will just assign it to that next outer radius, which is fine since our resolution for converting
+              ! to cylindrical coordinates is fairly fine, at 25 km.
+              !--------------------------------------------------------------------------------------------------------
               max_dist_index(ilev) = idist + 1
               found_vt_ge_1_flag = 'y'
               exit  ! inverse_radius_loop
@@ -6595,12 +6621,18 @@ end program trakmain
           ! SHEM storm, cyclonic storm has Vt < 0.
           if (vt_mean(idist,ilev) <= -1.0) then
             if (idist == numdist) then
-              ! We found this at the max radius, so just set the
-              ! max_dist_index to this max radius and then exit the loop.
+              ! We found this at the max radius, so just set the max_dist_index to this max radius and then
+              ! exit the loop
               max_dist_index(ilev) = numdist
               found_vt_ge_1_flag = 'y'
               exit  ! inverse_radius_loop
             else
+              !--------------------------------------------------------------------------------------------------------
+              ! To this point, each iteration of the loop has shown a cyclonic mean Vt weaker than -1.0 m/s. We have
+              ! hit a Vt <= -1.0, so the radius where the mean Vt = -1.0 is somewhere between here and the next outer
+              ! radius, so we will just assign it to that next outer radius, which is fine since our resolution for
+              ! converting to cylindrical coordinates is fairly fine, at 25 km.
+              !--------------------------------------------------------------------------------------------------------
               max_dist_index(ilev) = idist + 1
               found_vt_ge_1_flag = 'y'
               exit  ! inverse_radius_loop
@@ -6610,27 +6642,34 @@ end program trakmain
       enddo ! inverse_radius_loop
 
       if (found_vt_ge_1_flag == 'n') then
+        ! We did *not* find a mean cyclonic Vt that exceeded 1 m/s at any radius, so set max_dist_index to a missing
+        ! value. For this case, we will not remove any winds and we will just use the raw winds as they are.
         max_dist_index(ilev) = -999
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now go through the radii and the azimuths again, and this time subtract the mean Vt from every point at each
+      ! radius for which the mean cyclonic Vt exceeds 1.0 m/s. Where it does not exceed 1.0 m/s, just use the
+      ! original Vt.
+      !----------------------------------------------------------------------------------------------------------------
       do idist = 1, numdist ! radiusloop2
         if (vt_mean(idist,ilev) > -998.0) then
 
-          ! We were able to compute a vt_mean at this radius.
+          ! we were able to compute a vt_mean at this radius
           do iazim = 1, numazim ! azimloop2
             if (idist > max_dist_index(ilev) .or. max_dist_index(ilev) == -999) then
-              ! If we are either beyond the radius at which the
-              ! cyclonic mean Vt has dropped to less than 1 m/s, or
-              ! if we did not find a mean cyclonic Vt that exceeded
-              ! 1 m/s at any radius, just use the original Vt and
+              !--------------------------------------------------------------------------------------------------------
+              ! If we are either beyond the radius at which the cyclonic mean Vt has dropped to less than 1 m/s, or if
+              ! we did not find a mean cyclonic Vt that exceeded 1 m/s at any radius, just use the original Vt and
               ! Vr as they are.
+              !--------------------------------------------------------------------------------------------------------
               vt_prime(iazim, idist, ilev) = vt(iazim, idist, ilev)
               vr_prime(iazim, idist, ilev) = vr(iazim, idist, ilev)
             elseif (idist <= max_dist_index(ilev)) then
-              ! We are still at a radius where our earlier analysis
-              ! above indicated the mean cyclonic Vt > 1 m/s, so we
-              ! should subtract out the azimuthally averaged mean Vt
-              ! and Vr.
+              !--------------------------------------------------------------------------------------------------------
+              ! We are still at a radius where our earlier analysis above indicated the mean cyclonic Vt > 1 m/s, so we
+              ! should subtract out the azimuthally averaged mean Vt and Vr.
+              !--------------------------------------------------------------------------------------------------------
               vt_prime(iazim, idist, ilev) = vt(iazim, idist, ilev) - vt_mean(idist, ilev)
               vr_prime(iazim, idist, ilev) = vr(iazim, idist, ilev) - vr_mean(idist, ilev)
             endif
@@ -6644,6 +6683,10 @@ end program trakmain
         endif
       enddo ! radiusloop2
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now go through and convert all of the Vt & Vr values back to Cartesian wind components. Remember that there are
+      ! contributions to u and v from both Vt and Vr.
+      !----------------------------------------------------------------------------------------------------------------
       do idist = 1, numdist ! radiusloop3
         do iazim = 1, numazim ! azimloop3
           bear = ((real(iazim) - 1.0) * 15.0) + 7.5
@@ -6653,13 +6696,16 @@ end program trakmain
             u_from_vr(iazim, idist) = sin(bear * dtr) * vr_prime(iazim, idist, ilev)
             v_from_vt(iazim, idist) = sin(bear * dtr) * vt_prime(iazim, idist, ilev)
             v_from_vr(iazim, idist) = cos(bear * dtr) * vr_prime(iazim, idist, ilev)
-            ! Create the Cartesian u-component for this point by combining the u contribution
-            ! from the 2 separate cylindrical components.
+
+            ! create the Cartesian u-component for this point by combining the u contribution from the 2 separate
+            ! cylindrical components.
             u_cart(iazim, idist, ilev) = u_from_vt(iazim, idist) + u_from_vr(iazim, idist)
-            ! Create the Cartesian v-component for this point by combining the v contribution
-            ! from the 2 separate cylindrical components.
+
+            ! create the Cartesian v-component for this point by combining the v contribution from the 2 separate
+            ! cylindrical components.
             v_cart(iazim, idist, ilev) = v_from_vt(iazim, idist) + v_from_vr(iazim, idist)
-            ! Add to the sum arrays for the Cartesian u- and v-arrays for this level....
+
+            ! add to the sum arrays for the Cartesian u- and v-arrays for this level
             u_cart_sum(ilev) = u_cart_sum(ilev) + u_cart(iazim, idist, ilev)
             u_cart_sum_ct(ilev) = u_cart_sum_ct(ilev) + 1
             v_cart_sum(ilev) = v_cart_sum(ilev) + v_cart(iazim, idist, ilev)
@@ -6669,10 +6715,10 @@ end program trakmain
       enddo ! radiusloop3
     enddo ! levelloop2
 
-    ! Compute the u- and v-components of the vertical wind shear.
-    ! Remember that vertical level 1 is 850 mb, and level 2 is 200 mb.
-    ! From these, compute the shear magnitude.
-
+    !------------------------------------------------------------------------------------------------------------------
+    ! Compute the u- and v-components of the vertical wind shear. Remember that vertical level 1 is 850 mb, and level 2
+    ! is 200 mb. From these, compute the shear magnitude.
+    !------------------------------------------------------------------------------------------------------------------
     if (u_cart_sum_ct(1) > 0 .and. v_cart_sum_ct(1) > 0 .and. u_cart_sum_ct(2) > 0 .and. v_cart_sum_ct(2) > 0) then
 
       u_cart_mean(1) = u_cart_sum(1) / real(u_cart_sum_ct(1))
@@ -6698,11 +6744,10 @@ end program trakmain
 
     shear(ist, ifh, 1) = shear_mag
 
-    ! Now compute the shear direction (i.e., the direction that the
-    ! shear is coming from).  With the methods below, we will initially
-    ! derive a direction that the shear is pointing to, so we will need
-    ! to adjust by 180 degrees.
-
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now compute the shear direction (i.e., the direction that the shear is coming from). With the methods below, we
+    ! will initially derive a direction that the shear is pointing to, so we will need to adjust by 180 degrees.
+    !------------------------------------------------------------------------------------------------------------------
     if (ushear > -998.0 .and. vshear > -998.0) then
       if (ushear == 0.0 .and. vshear >= 0.0) then
         shear_dir_point_to = 0.0
@@ -6717,7 +6762,11 @@ end program trakmain
         shear_dir_point_to = 90.0
         shear_dir_from     = 270.0
       else
-        ! first get the local angle
+        !--------------------------------------------------------------------------------------------------------------
+        ! First get the local angle, that is, for the atan2 function, use the absolute value of the ushear & vshear
+        ! components, and then adjust to the 0-360 value in the if statement after that by checking the sign of the
+        ! original ushear & vshear to get the actual quadrant.
+        !--------------------------------------------------------------------------------------------------------------
         local_angle = atan2(abs(vshear), abs(ushear)) / dtr
 
         if (ushear > 0.0 .and. vshear > 0.0) then
@@ -6744,6 +6793,12 @@ end program trakmain
       shear_dir_point_to = -999.0
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Per discussion with Mark DeMaria, SHIPS uses the shear *heading* for the shear direction, *not* the direction
+    ! that the shear is coming from. So, for a case of strong, pure easterly shear (i.e., no v-shear, and say
+    ! u_cart_mean(200) = -50 m/s and u_cart_mean(850) = +5 m/s), the shear direction would be coming *from* 90 degrees,
+    ! but the shear "heading" (variable shear_dir_point_to) would be 270 degrees.
+    !------------------------------------------------------------------------------------------------------------------
     shear(ist, ifh, 2) = shear_dir_point_to
 
     if (verb >= 1) then
