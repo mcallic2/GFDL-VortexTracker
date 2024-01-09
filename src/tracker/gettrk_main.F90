@@ -7930,6 +7930,12 @@ end program trakmain
 
     conv_ms_knots = 1.9427
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     if (outlon < -998.0 .or. outlat < -998.0) then
       intlon = 0
       intlat = 0
@@ -8085,10 +8091,8 @@ end program trakmain
 
     if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
       if (stcvtype(ist) == 'FOF') then
-        ! If this is a TC vitals-described storm (i.e., one that is
-        ! numbered by JTWC or NHC), then leave the basinid as is.
-        ! Otherwise, we want to use the "basinid" location as a
-        ! label to identify what type of run this is.
+        ! If this is a TC vitals-described storm (i.e., one that is numbered by JTWC or NHC), then leave the basinid as
+        ! is. Otherwise, we want to use the "basinid" location as a label to identify what type of run this is.
         if (trkrinfo%type == 'midlat') basinid = 'ML'
         if (trkrinfo%type == 'tcgen')  basinid = 'TG'
       endif
@@ -8157,7 +8161,7 @@ end program trakmain
             i4, ', ', a12, 4(', ', i4.4), 2(', ', i4), ', ', i3, a25, 2(', ', i3), a44, ',       THERMO PARAMS', &
             3(', ', i7), ', ', a1, ', ', i2, ', DT, -999, SHR82, ', i4, ', ', i3, ', SST, ', i4, ', ARMW' , 2(', ', i3)', ', a3)
 
-    !flush the output stream so it actually writes
+    ! flush the output stream so it actually writes
     flush(64)
 
     return
