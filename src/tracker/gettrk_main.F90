@@ -3788,6 +3788,13 @@ end program trakmain
     endif
 
     if (phasescheme == 'cps' .or. phasescheme == 'both') then
+      !----------------------------------------------------------------------------------------------------------------
+      ! This condition that ifh > 1 is so that we *not* do the cps stuff for fhour=0 if it's a tcgen or midlat case,
+      ! since we don't know the model storm motion direction for the analysis. For a regular case where type =
+      ! 'tracker', we have the observed storm's heading direction from tc vitals, so we can use that (even though the
+      ! model's storm direction may differ slightly from the observed storm). This current if statement and the ones
+      ! below carefully check for these various instances.
+      !----------------------------------------------------------------------------------------------------------------
       if (ifh > 1 .or. (ifh == 1 .and. trkrinfo%type == 'tracker')) then
         okay_to_call_cps_routines = 'n'
 
@@ -3822,6 +3829,11 @@ end program trakmain
           endif
         endif
 
+        !----------------------------------------------------------------------------------------------------------------
+        ! Similarly, these next two conditions (previous lat and previous lon > -999) are in there in case we're doing a
+        ! tcgen or midlat case and this is the *first* time level within a forecast that the storm has been detected
+        ! (again, we don't yet know the storm heading).
+        !----------------------------------------------------------------------------------------------------------------
         if (okay_to_call_cps_routines == 'y') then
 
           call get_cps_paramb (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo, fixlon, fixlat, &
