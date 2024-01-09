@@ -8816,6 +8816,12 @@ end program trakmain
     integer          :: intlon(maxtime), intlat(maxtime)
     character(len=4) :: modelchar(maxmodel), basinid
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0 - 360, increasing
+    ! westward. Also, because the fixlon value may be >360 due to GM wrapping, we need to mod it to get it in a
+    ! 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     conv_ms_knots = 1.9427
 
     do ist = 1, maxstorm  ! stormloop
