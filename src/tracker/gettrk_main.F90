@@ -32,7 +32,7 @@ program trakmain
 31 format (1x, 'TIMING: beginning ...  ', i2.2, ':', i2.2, ':', i2.2)
 
   pi = 4.0 * atan(1.0)    ! Both pi and dtr were declared in module
-  dtr = pi/180.0          ! trig_vals, but were not yet defined.
+  dtr = pi/180.0          ! trig_vals, but were not yet defined
   ncfile_has_hour0 = 'n'  ! Default value; set in read_netcdf_hours
 
   call read_nlists (inp, trkrinfo, netcdfinfo, lunml)
@@ -243,7 +243,7 @@ end program trakmain
     real              :: x999_moist_divg, x999_rh600_800, x999_rh1000_925
     real              :: x999_omega500, x999_imzeta, x999_igzeta
 
-    ! Define a bunch of missing values for variables to be sent to subroutines that write output
+    ! define a bunch of missing values for variables to be sent to subroutines that write output
     x999_lon         = -999.0
     x999_lat         = -999.0
     izero_fhr        =    0
@@ -281,8 +281,8 @@ end program trakmain
     allocate (closed_mslp_ctr_flag2(maxstorm, ifhmax), stat = icmc2f)
     allocate (quad_wind_circ_flag(maxstorm, ifhmax),   stat = iqwcf)
     allocate (vt850_flag(maxstorm, ifhmax),            stat = ivt8f)
-    ! Initialize flags to 'u', not 'n'.  That way, when we are evaluating its value back over recent past hours,
-    ! we can distinguish a "no" value from an initialized value of 'u' for which a storm hadn't yet been detected.
+    ! initialize flags to 'u', not 'n'; that way, when we are evaluating its value back over recent past hours,
+    ! we can distinguish a "no" value from an initialized value of 'u' for which a storm hadn't yet been detected
     closed_mslp_ctr_flag  = 'u'
     closed_mslp_ctr_flag2 = 'u'
     quad_wind_circ_flag   = 'u'
@@ -316,6 +316,12 @@ end program trakmain
       xmaxwind = 0.0
       stormct  = 0
 
+      ! It is critical to initialize the gridprs array to something
+      ! greater than normal atmospheric pressures (I've chosen 9999.99
+      ! mb). This is so that in the sort on pressure before stormloop,
+      ! the top of the  sorting index array will be filled with pressure
+      ! values from active storms, while those inactive 9999 storms
+      ! will fill the bottom of the sorting index array (prsindex).
       gridprs =  999999.0
       fixlon  =    -999.0
       fixlat  =    -999.0
@@ -330,7 +336,7 @@ end program trakmain
           lugb = 200
           lugi = 600  ! w3lib on Jet cannot handle unit #'s >999
         endif
-      else ! All lead times are included in one big file; these values for lugb and lugi will remain static for all taus.
+      else ! all lead times are included in one big file; these values for lugb and lugi will remain static for all taus
         lugb = 11
         lugi = 31
       endif
@@ -374,7 +380,7 @@ end program trakmain
             stop 91
           endif
 
-          ! Now check for existence of index file.  Use a separate max_wait time -- a much shorter one -- since once the
+          ! Now check for existence of index file. Use a separate max_wait time -- a much shorter one -- since once the
           ! grib file is there, the index file should appear within a matter of seconds.  Also, the index file is much
           ! smaller, so set the wait_min_size accordingly.
           wait_max_ifile_wait = 180
@@ -416,6 +422,14 @@ end program trakmain
         endif
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Within this next IF statement, we deal with writing out atcf records for storms for the case in which we have
+      ! netcdf data, but that netcdf data does not have hour0 data (as of Nov 2016, this is the case for FV3 data).
+      ! In this case, we write out missing values for the hour0 time, and then we update the guess for next lead time
+      ! by extrapolating data from TC Vitals. Note in the IF statement itself, "iftotalmins" is the array of
+      ! of *user-requested* lead times, meaning that the user has requested to look at hour0, but  the ncfile_has_hour0
+      ! flag indicates the hour0 time is not in the NetCDF data.
+      !----------------------------------------------------------------------------------------------------------------
       if (ifh == 1 .and. iftotalmins(ifh) == 0 .and. trkrinfo%inp_data_type == 'netcdf' .and. ncfile_has_hour0 == 'n') then
 
         do inctcv = 1, numtcv  ! null_netcdf_hour0_storm_loop
@@ -478,6 +492,11 @@ end program trakmain
         cycle ! ifhloop
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Make call to getgridinfo in order to get info on the imax, jmax, as well as the x- and y-increments, and also
+      ! to see if the grid is correctly oriented for the  tracker so that the data go north to south and west to east
+      ! or if we need to flip either the lats or the lons.
+      !----------------------------------------------------------------------------------------------------------------
       if (trkrinfo%inp_data_type == 'grib') then
         call getgridinfo_grib (imax, jmax, ifh, dx, dy, lugb, lugi, &
              & trkrinfo, need_to_flip_lats, need_to_flip_lons,      &
@@ -512,8 +531,9 @@ end program trakmain
       if (inp%modtyp == 'regional' .and. inp%nesttyp == 'moveable') then
         if (glatmax == prev_latmax .and. glatmin == prev_latmin .and. &
             glonmax == prev_lonmax .and. glonmin == prev_lonmin) then
-            ! The moveable, nested regional grid has not moved since the last lead time.  This could be an indication that the
-            ! model lost the storm and so the grid has not moved to stay with the cyclone center. Set a flag to indicate this.
+            ! The moveable, nested regional grid has not moved since the last lead time. This could be an indication
+            ! that the model lost the storm and so the grid has not moved to stay with the cyclone center.
+            ! Set a flag to indicate this.
           gridmove_status = 'stopped'
         else
           gridmove_status = 'moving'
@@ -613,14 +633,15 @@ end program trakmain
         return
       endif
 
-      masked_out  = .false.  ! Initialize all pts to false at each hr
-      masked_outc = .false.  ! Initialize all pts to false at each hr
+      masked_out  = .false.  ! initialize all pts to false at each hr
+      masked_outc = .false.  ! initialize all pts to false at each hr
 
       if (verb .ge. 3) then
         print *, 'in beginning of tracker, imax = ', imax, ' jmax = ', jmax
       endif
 
-      ! initialize all readflags to NOT FOUND for this forecast time, then call subroutine to read data for this forecast time.
+      ! initialize all readflags to NOT FOUND for this forecast time, then call subroutine to read data for
+      ! this forecast time
       zeta  = -9999.0
       u     = -9999.0
       hgt   = -9999.0
@@ -661,13 +682,23 @@ end program trakmain
  32     format (1x, 'TIMING: after getdata ... ', i2.2, ':', i2.2, ':', i2.2)
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Count how many parms were successfully read for this fcst time. Also, for right now, put the value of readflag
+      ! into all of the calcparms for parameters 3 through 9. Note that in getdata we read in 19 parms, but in this
+      ! next loop we only check the readflags up to maxtp (= 14 as of 7/2015). That's because read parms 12 & 13 are
+      ! for 500 mb u & v, which are not used for tracking (only for calculating the deep layer mean wind for the next
+      ! guess), parm 14 is the 300-500 mb mean temperature, which is used for determining storm phase, parms 15 & 16
+      ! are for 500 & 200 mb hgt, parm 17 is land-sea mask, and parms 18-19 are 200 mb u & v. Parms 10 & 11 are for
+      ! the near-surface winds, which are used in estimating surface winds near the storm, and will now also be used as
+      ! a parameter for position estimates.
+      !----------------------------------------------------------------------------------------------------------------
       idum = 0
 
       do irf = 1, nreadparms
         if (readflag(irf)) idum = idum + 1
 
         if (irf > 2 .and. irf < 10) then
-          ! calcparm for parms > 9 is done further below.
+          ! calcparm for parms > 9 is done further below
           do jj = 1, maxstorm
             calcparm(irf, jj) = readflag(irf)
           enddo
@@ -739,6 +770,8 @@ end program trakmain
         return
       endif
 
+      ! check the flags that were read in from the namelist for determining which parameters the user wants to track
+      ! check for z850, z700 and mslp
       if (user_wants_to_track_gph850 == 'n' .or. user_wants_to_track_gph850 == 'N') then
         do jj = 1, maxstorm
           calcparm(7, jj) = .false.
@@ -757,6 +790,12 @@ end program trakmain
         enddo
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Parameters 1 & 2 are abs vorticity at 850 & 700. If the data files had this parm at 850 & 700 (ECMWF & UKMET do
+      ! NOT), then we don't need to re-calculate relative vorticity, we just need to subtract out the Coriolis
+      ! component. If the files did not have vorticity, then we need to calculate relative vorticity. If we're able to
+      ! read vorticity or calculate it, then set the vorticity calcparms to TRUE for all storms for now.
+      !----------------------------------------------------------------------------------------------------------------
       do ivort = 1, 2  ! vortloop
         if (ivort == 1) then
           if (user_wants_to_track_zeta850 == 'n' .or. user_wants_to_track_zeta850 == 'N') then
@@ -808,8 +847,8 @@ end program trakmain
         endif
       enddo ! vortloop
 
-      !Check the flags that were read in from the namelist for determining which parameters the user wants to track.
-      !Here, check for user preferences for the wind circulation at 850 & 700
+      ! check the flags that were read in from the namelist for determining which parameters the user wants to track.
+      ! check for user preferences for the wind circulation at 850 & 700
 
       if (readflag(3) .and. readflag(4)) then
         if (user_wants_to_track_wcirc850 == 'n' .or. user_wants_to_track_wcirc850 == 'N') then
@@ -860,8 +899,8 @@ end program trakmain
             calcparm(11 ,jj) = .false.
           enddo
         else
-          ! The 3 in the next call to rvcal is to indicate the 3rd
-          ! level for the zeta array, which is for the surface (or 10m) data.
+          ! the 3 in the next call to rvcal is to indicate the 3rd level for the zeta array,
+          ! which is for the surface (or 10m) data
           call rvcal (imax, jmax, dx, dy, 3, valid_pt)
           do jj = 1, maxstorm
             calcparm(11, jj) = .true.
@@ -875,7 +914,8 @@ end program trakmain
         enddo
       endif
 
-      ! Compute the  thicknesses for 200-850, 200-500 and 500-850 mb if the gp hgt fields have been read in for 200, 500 and 850.
+      ! compute the thicknesses for 200-850, 200-500 and 500-850 mb if the gp hgt fields have been
+      ! read in for 200, 500 and 850
       if (readflag(7) .and. readflag(15) .and. readflag(16)) then
         call thickness_calc (imax, jmax, valid_pt)
       
@@ -969,6 +1009,16 @@ end program trakmain
         if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
 
           if (ist == (prevstormct + 1)) then
+            !----------------------------------------------------------------------------------------------------------
+            ! For the mid-latitude and tropical cyclogenesis cases, we need to scan the mslp field to find new storms.
+            ! If we are at this point inside the if statement in stormloop, then that means we have looped through and
+            ! attempted to track all storms that have already been found up to this point in the forecast, and we need
+            ! to scan the field for any new storms at this forecast hour. If this is for forecast hour = 0, then right
+            ! off the bat we may be scanning the field (if there were no tcvitals records read in for this forecast),
+            ! since ist = 1 and (prevstormct + 1) = 0 + 1 = 1.  All that the call just below to first_ges_center does
+            ! is return a rough idea of the location of new lows; more specific locations are obtained through the
+            ! barnes analysis tracking algorithm further below.
+            !----------------------------------------------------------------------------------------------------------
             if (readflag(9)) then
               masked_out = masked_outc
 
@@ -1046,7 +1096,7 @@ end program trakmain
           endif
 
           call check_bounds (slonfg(ist,ifh), slatfg(ist,ifh), ist, ifh, trkrinfo, icbret)
-          if (icbret == 95) then   ! Out of regional grid bounds
+          if (icbret == 95) then   ! out of regional grid bounds
             fixlon(ist, ifh) = -999.0
             fixlat(ist, ifh) = -999.0
             stormswitch(ist) = 2
@@ -1065,12 +1115,12 @@ end program trakmain
               print *, '         ---    ---    ---'
               print *, 'Now calling find_maxmin for zeta at 850 mb'
             endif
-
+            ! CAITLYN - matches comment from old code line 1884
             call find_maxmin (imax, jmax, dx, dy, 'zeta', zeta(1,1,1), cvort_maxmin,      &
                  & ist, slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
                  & calcparm(1,ist), clon(ist,ifh,1), clat(ist,ifh,1), xval(1), glatmax,   &
                  & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1170,7 +1220,7 @@ end program trakmain
                  & calcparm(11,ist), clon(ist,ifh,11), clat(ist,ifh,11), xval(11), glatmax, &
                  & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1178,6 +1228,8 @@ end program trakmain
             endif
           endif
 
+          ! The array indices for the 3 different thickness layers are as follows:
+          ! 1: 500-850, 2: 200-500, 3: 200-850
           if (calcparm(12,ist)) then
             if (verb .ge. 3) then
               print *, ' '
@@ -1212,7 +1264,7 @@ end program trakmain
                  & calcparm(13,ist), clon(ist,ifh,13), clat(ist,ifh,13), xval(13),   &
                  & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1233,7 +1285,7 @@ end program trakmain
                  & calcparm(14,ist), clon(ist,ifh,14), clat(ist,ifh,14), xval(14),   &
                  & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1241,6 +1293,13 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! Now get centers for wind circulation at 700 & 850 mb and at 10m. First, get a modified guess lat/lon
+          ! position for wind circulation. Do this because we will be searching for this wind circulation center over a
+          ! smaller area and so it's more crucial to have a better first guess position. This modified guess position
+          ! will be an average of the first guess position for this time and the  fix positions for this time from some
+          ! of the other parameters.
+          !------------------------------------------------------------------------------------------------------------
           if (slatfg(ist,ifh) >= 0.0) then
             cmaxmin = 'max'
           else
@@ -1361,7 +1420,7 @@ end program trakmain
                 print *, 'surface (10m) level'
               endif
 
-              ! NOTE: The 1020 in the call here is just a number/code to indicate to the subroutine to process sfc winds.
+              ! NOTE: The 1020 in the call here is just a number/code to indicate to the subroutine to process sfc winds
               if (enable_timing /= 0) then
                 call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
                 write (6,145) date_time(5), date_time(6), date_time(7)
@@ -1388,6 +1447,12 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! All of the parameter center fixes have been done. Now average those positions together to get the best
+          ! guess fix position. If a center fix is able to be made, then call subroutine get_max_wind to get the
+          ! maximum near-surface wind near the center, and then call get_next_ges to get a guess position for the next
+          ! forecast hour.
+          !------------------------------------------------------------------------------------------------------------
           if (stormswitch(ist) == 1) then
 
             call fixcenter (clon, clat, ist, ifh, calcparm,slonfg(ist,ifh), slatfg(ist,ifh), &
@@ -1458,6 +1523,16 @@ end program trakmain
               stormswitch(ist) = 2
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! Just because we've found a center doesn't mean there is actually a storm there. I noticed in the first
+            ! year that for some decaying or just weak storms, the tracker would identify a center to follow, but it
+            ! may have only been a weak trough passing by, or something else that's not our storm. This next subroutine
+            ! checks to see that the surface pressure gradient and/or tangential winds at 850 mb resemble a storm. It
+            ! is called twice; the first time for MSLP, the 2nd time for 850 mb winds. We will apply these storm-
+            ! checking criteria if either the mslp or v850 check come back negative. Remember, there is the possibility
+            ! that centers could not be found for 1 or both of these parameters, in which case the isastorm flag will
+            ! have a value of 'U', for "undetermined".
+            !----------------------------------------------------------------------------------------------------------
             isiret1 = 0; isiret2 = 0; isiret3 = 0
             print *, ' ttest, ifret = ', ifret
 
@@ -1469,7 +1544,7 @@ end program trakmain
                 print *, ' Before call to is_it_a_storm for MSLP'
                 print *, '                clon(ist,ifh,9) = ', clon(ist,ifh,9)
                 print *, '       (0-360E clon(ist,ifh,9)) = ', mod(clon(ist,ifh,9),360.0)
-                print *, '                clat(ist,ifh,9) = ', clat(ist,ifh,9)
+                print *, '                clat(ist,ifh,9) = ', clat(ist,ifh,9)
                 print *, '                        xval(9) = ', xval(9)
 
                 call is_it_a_storm (imax, jmax, dx, dy, 'slp', ist, valid_pt, clon(ist,ifh,9), &
@@ -1503,6 +1578,12 @@ end program trakmain
                            & fixlat(ist,ifh), gridpoint_maxmin, trkrinfo, isastorm(1), ifh, isiret1)
 
                       if (isiret1 == 0) then
+                        !----------------------------------------------------------------------------------------------
+                        ! Even though calcparm(9) is FALSE and mslp will not be used for center-fixing purposes, we
+                        ! need to fill the clat and clon arrays just a few lines below so that calls to
+                        ! fix_latlon_to_ij below do not get screwed up. So, into the clat and clon arrays we put the
+                        ! mean fixlat and fixlon positions for this lead time.
+                        !----------------------------------------------------------------------------------------------
                         clat(ist, ifh, 9) = fixlat(ist, ifh)
                         clon(ist, ifh, 9) = fixlon(ist, ifh)
                         xval(9) = gridpoint_maxmin
@@ -1512,6 +1593,17 @@ end program trakmain
                 endif
               endif
 
+              !--------------------------------------------------------------------------------------------------------
+              ! If we have found a valid mslp gradient, then make a call to fix_latlon_to_ij to (1) get the actual
+              ! gridpoint value of the mslp (the value previously stored in xval(9) is an area-averaged value coming
+              ! from the  barnes analysis), and (2) to get the (i,j) indices for this gridpoint to be used in the call
+              ! to check_closed_contour below.
+              ! NOTE: If a mslp fix was not made, or if the mslp "isastorm" flag comes back as no, we make the same
+              ! call to fix_latlon_to_ij, but we use the mean fix position as our input to search around, and then
+              ! basically we just find the lowest mslp near that mean fix position. There is a check on the value of
+              ! xinp_fixlat and xinp_fixlon to make sure that they contain valid values and not just the
+              ! initialized -99 or -999 values.
+              !--------------------------------------------------------------------------------------------------------
               xinp_fixlat = -99.0
               xinp_fixlat = -990.0
 
@@ -1561,7 +1653,18 @@ end program trakmain
               endif
 
               print *, ' test at location F'
+              !--------------------------------------------------------------------------------------------------------
+              ! In this next IF block, we have the potential to call subroutine check_closed_contour for two different
+              ! cases of a type='tracker' run. First, if the input data are on a fixed regional grid, we check for a
+              ! closed contour for cases in which the storm is close to the grid boundary (this is to prevent the
+              ! tracker tracking along the boundary for a storm that has left the grid). Second, if the user has
+              ! requested to compute and write out the ROCI, then we make a call to check_closed_contour, being sure to
+              ! specify 999 as the number of levels to check
+              !--------------------------------------------------------------------------------------------------------
               if (isiret1 == 0 .and. isastorm(1) == 'Y' .and. trkrinfo%type == 'tracker') then
+                ! If the tests for MSLP gradient have come back okay, then use the tracker-derived MSLP center for the
+                ! closed-contour and ROCI checking. Otherwise, use the mean fix position for this hour, but only if
+                ! MSLP has been read in.
                 close_to_boundary = 'n'
 
                 if (trkrinfo%gridtype == 'regional' .and. inp%nesttyp == 'fixed') then
@@ -1599,7 +1702,10 @@ end program trakmain
                     contour_info%numcont = maxconts
                   endif
 
-                  ! MSLP contour interval for ROCI (if the user requests it) will always be 4 mb
+                  ! Note that the MSLP contour interval for ROCI (if the user requests it) will always be 4 mb, because
+                  ! that is what is used observationally and by forecasters. In this next IF statement, we are just
+                  ! making sure that the units of our ROCI threshold that we are setting match the units in the
+                  ! input data
                   if (xval(9) < 1100.0) then ! CAITLYN - repeating code?
                     ! pressure units are in mb
                     roci_prs_contint_thresh = 4.0
@@ -1621,6 +1727,12 @@ end program trakmain
                     stop 95
                   endif
 
+                  !----------------------------------------------------------------------------------------------------
+                  ! In the event that we have the case where both the user requests the ROCI and it's a fixed regional
+                  ! grid where the storm is close to a boundary and we need to check for a closed contour, then we have
+                  ! to call check_closed_contour two separate times, because the contour intervals used may be
+                  ! different, depending on what the user specified in the input namelist.
+                  !----------------------------------------------------------------------------------------------------
                   if (trkrinfo%want_oci) then
                     if (trkrinfo%contint < roci_prs_contint_thresh) then
                       hold_old_contint = trkrinfo%contint
@@ -1638,6 +1750,9 @@ end program trakmain
                       endif
                     endif
 
+                    ! Note that we are within an IF statement for type=tracker, so with this statement, we are *not*
+                    ! accidentally resetting this important masked_outc flag to false for anything
+                    ! that would be genesis-related.
                     masked_outc = .false.
                     get_last_isobar_flag = 'y'
                     dum1 = 0
@@ -1679,6 +1794,9 @@ end program trakmain
                     gb_check_trkrinfo%contint = contint_grid_bound_check  ! except use the grid bound check contour inteval
                                                                           ! specified by the user in the namelist
 
+                    ! Note that we are within an IF statement for type=tracker, so with this statement, we are *not*
+                    ! accidentally resetting this important masked_outc flag to false for anything
+                    ! that would be genesis-related.
                     masked_outc = .false.
                     get_last_isobar_flag = 'n'
                     dum1 = 0
@@ -1713,6 +1831,9 @@ end program trakmain
                       endif
                     else
                       if (close_to_boundary == 'y' .and. abs(xinp_fixlat) > 25.0) then
+                        ! Put this next line (setting flag to n) within the IF statement, since we only want this to be
+                        ! set for a case where the latitude is poleward of 25N/25S. For the 'y' part of the IF
+                        ! statement above, it doesn't matter, since it's a 'y'.
                         closed_mslp_ctr_flag2(ist, ifh) = 'n'
                         if (verb .ge. 3) then
                           print *, '!!! closed_mslp_ctr_flag2 FAIL'
@@ -1722,7 +1843,8 @@ end program trakmain
                     endif
 
                     if (close_to_boundary == 'y' .and. ifh > 1 .and. abs(xinp_fixlat) > 25.0) then
-                      ! CAITLYN - repeating code?
+                      ! The only way that close_to_boundary is set to y is if, above, the grid was detected as being
+                      ! a fixed regional grid *AND* the call to probe_for_boundary came back as 'y'
                       if (closed_mslp_ctr_flag2(ist,ifh) == 'n' .and. closed_mslp_ctr_flag2(ist,ifh-1) == 'n') then
                         if (verb .ge. 0) then
                           print *, ' '
@@ -1751,6 +1873,18 @@ end program trakmain
                 endif
               endif
 
+              !--------------------------------------------------------------------------------------------------------
+              ! For the midlat & tcgen cases, do a check to see if there is a closed mslp contour. The ifix and jfix
+              ! values passed into check_closed_contour are the values for the (i,j) at the gridpoint minimum, which
+              ! was obtained just above from the call to fix_latlon_to_ij.
+              ! A change was made to fix a hole in the logic. Previously, for a genesis run (type = midlat or tcgen),
+              ! if a fix was not made for mslp, then the isastorm(1) flag would not be 'Y', and so the call to
+              ! check_closed_contour in the following IF statement would not be made, and that would prevent the mask
+              ! from getting updated for this particular storm, allowing the same storm to be detected when the scan
+              ! for new storms takes place at this lead time (i.e., after all previously known storms from the last
+              ! lead time have been tracked). As a fix, if that isastorm(1) flag is not 'Y', then we call a new
+              ! subroutine which updates the mask based on the circulation at 850 mb.
+              !--------------------------------------------------------------------------------------------------------
               if (isastorm(1) == 'Y' .and. isiret1 == 0 .and. (trkrinfo%type == 'midlat' .or. &
                  & trkrinfo%type == 'tcgen')) then
 
@@ -1794,7 +1928,14 @@ end program trakmain
                   print *, ' '
                 endif
 
-                ! this next bit of code adds a second layer of closed contour checking
+                !------------------------------------------------------------------------------------------------------
+                ! This next bit of code adds a second layer of closed contour checking. This is to decrease the
+                ! occurrence of interrupted midlat and tcgen tracks, which usually happens when the closed contour
+                ! criterion is not met for one time period. So in this next code, we check to see if the ccflag was 'y'
+                ! for at least half the time over the last 24h. For time periods shorter than 24h (e.g., the storm was
+                ! just detected at 144h and we are now at 156h), the threshold is still that for at least half of the
+                ! time the system has been detected as a storm, it must have a ccflag value of 'y'.
+                !------------------------------------------------------------------------------------------------------
                 if (ccflag == 'y') then
                   closed_mslp_ctr_flag(ist, ifh) = 'y'
                 else
@@ -1923,6 +2064,15 @@ end program trakmain
 
                 if (calcparm(3,ist) .or. (had_to_try_backup_850_vt_check == 'y' .and. isiret3 == 0) ) then
                   if (trkrinfo%type == 'tcgen') then
+                    !--------------------------------------------------------------------------------------------------
+                    ! This next bit of code adds a second layer of 850 mb Vt magnitude checking. This is to decrease
+                    ! the occurrence of interrupted tcgen tracks, which occasionally happens for weak storms when this
+                    ! criterion is not met for one time period. So in this next code, we check to see if the vt850_flag
+                    ! was 'y' for at least 75% of the time over the last 24h. For time periods shorter than 24h (e.g.,
+                    ! the storm was just detected at 144h and we are now at 156h), the threshold is still that for at
+                    ! least 75% of the time the system has been detected as a storm, it must have a vt850_flag
+                    ! value of 'y'.
+                    !--------------------------------------------------------------------------------------------------
                     if (isastorm(3) == 'Y') then
                       vt850_flag(ist, ifh) = 'y'
                     else
@@ -1986,6 +2136,9 @@ end program trakmain
 
                 if (isiret3 == 0 .and. isastorm(3) == 'Y' .and. trkrinfo%type == 'tracker') then
 
+                  ! If the fix center for 850 mb wind circulation was okay and able to be used, then use the tracker-
+                  ! -derived 850 mb wind circulation center for the close-to-boundary closed circulation check.
+                  ! Otherwise, use the mean fix position for this hour, but only if u850 and v850 have been read in.
                   if (calcparm(3,ist)) then
                     xinp_fixlat = clat(ist, ifh, 3)
                     xinp_fixlon = clon(ist, ifh, 3)
@@ -2162,7 +2315,9 @@ end program trakmain
               stormswitch(ist)  = 2
             endif
 
-            ! now do another check for the tracker and tcgen cases
+            ! Now do another check for the  tracker and tcgen cases. If the isastorm flags for mslp gradient and v850
+            ! BOTH came back positive AND you have been able to locate an 850 mb vort center, just do a check to make
+            ! sure that the distance between the 850 vort center and the mslp center is not too great.
             if (trkrinfo%type == 'tracker' .or. trkrinfo%type == 'tcgen') then
               if (isastorm(1) == 'Y' .and. isastorm(3) == 'Y' .and. calcparm(1,ist) .and. stormswitch(ist) == 1) then
 
@@ -2199,6 +2354,14 @@ end program trakmain
               endif
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! Do one final check. Check the new fix position and the old fix position and calculate the speed that the
+            ! storm would have had to travel to get to this point. If that speed exceeds a certain threshold (~60 kt),
+            ! assume you're tracking the wrong thing and quit. Obviously, only do this for times > 00h. The check in
+            ! the if statement to see if the previous hour's lats and lons were > -999 is for the midlat and tcgen
+            ! cases -- remember, they can have genesis at any hour of the forecast, in which case the previous forecast
+            ! hour's lat & lon would be -999.
+            !----------------------------------------------------------------------------------------------------------
             if (ifh > 1 .and. stormswitch(ist) == 1) then
               if (fixlon(ist,ifh-1) > -999.0 .and. fixlat(ist,ifh-1) > -999.0) then
 
@@ -2249,6 +2412,11 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! DIAGNOSE MAX WIND
+          ! Now get the maximum near-surface wind speed near the storm center (get_max_wind). Also, call getradii to
+          ! get the radii in each storm quadrant of gale-force, storm-force and hurricane force winds.
+          !------------------------------------------------------------------------------------------------------------
           if (readflag(10) .and. readflag(11) .and. ifret == 0 .and. stormswitch(ist) == 1) then
             call get_max_wind (fixlon(ist,ifh), fixlat(ist,ifh), imax, jmax, dx, dy, valid_pt, &
                  & levsfc, xmaxwind(ist,ifh), trkrinfo, rmax, igmwret)
@@ -2275,13 +2443,25 @@ end program trakmain
               cycle ! stormloop
             endif
 
+            ! diagnose axisymmetric rmw
             call get_axisymet_rmw (fixlon(ist,ifh), fixlat(ist,ifh), imax, jmax, dx, dy, valid_pt, &
                  & trkrinfo, axisymet_rmw_dist, axisymet_rmw_val, gm_wrap_flag, igarret)
 
             ileadtime = nint(fhreal(ifh) * 100.0)
             ifcsthour = ileadtime / 100
 
+            !----------------------------------------------------------------------------------------------------------
             ! DIAGNOSE WIND RADII: R34, R50, R64
+            ! For the radii, we encountered a problem with radmax being too small. It was set at 650 km. Hurricane
+            ! Sandy exceeded this in the models, so the values returned from getradii were close to the default radmax
+            ! value of 650 km (350 nm), instead of higher. To fix it, we now use an iterative technique, where we start
+            ! with radmax as a small value (500 km). If getradii returns a value for R34 in a quadrant that does not
+            ! exceed 0.97*radmax, then that value is ok. If it does exceed 0.97*radmax, then we bump up radmax by 50 km
+            ! and call getradii again, looking to diagnose radii only in those quadrants where the need_to_expand_r34
+            ! flag = 'n'.
+            ! Note: the initial IF statement, we will only go into this routine if the max wind just diagnosed for this
+            ! lead time is at least 34 kts (17.5 m/s).
+            !-------------------------------------------------------
             if (xmaxwind(ist,ifh) >= 17.5) then
               vradius = 0
               first_time_thru_getradii = .true.
@@ -2289,7 +2469,8 @@ end program trakmain
               do ivr = 1, 4
                 need_to_expand_r34(ivr) = 'y'
               enddo
-              radmax       = 370.0
+              radmax       = 370.0  ! initial radmax, in km; for subsequent iterations that may be needed
+                                    ! radmax gets redefined in sub getradii_2 and bumped up by 50km each iteration
               n_r34_iter   = 0
               ix_radii_beg = 1
               ix_radii_end = -999
@@ -2366,6 +2547,11 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! COMPUTE CYCLONE PHASE SPACE PARAMETERS
+          ! If the user has requested so, then call a routine to determine the type of cyclone, using Bob Hart's 
+          ! cyclone phase space (CPS) algorithms.
+          !------------------------------------------------------------------------------------------------------------
           if (phaseflag == 'y' .and. stormswitch(ist) == 1) then
 
             if (verb .ge. 3) then
@@ -2384,7 +2570,13 @@ end program trakmain
             endif
           endif
 
-          if (structflag == 'y') then
+          !------------------------------------------------------------------------------------------------------------
+          ! COMPUTE SURFACE WIND STRUCTURE DIAGNOSTICS
+          ! If the user has requested so, then call a series of routines to calculate various surface wind structure
+          ! diagnostics and output them in a modified ATCF format that is output to a different unit number from the
+          ! standard ATCF output.
+          !------------------------------------------------------------------------------------------------------------
+          if (structflag == 'y') then  
             if (verb .ge. 3) then
               call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
               write (6,252) date_time(5), date_time(6), date_time(7)
@@ -2436,6 +2628,10 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! COMPUTE 200-850 mb VERTICAL SHEAR
+          ! If the user has requested so, then call a routine to compute the 200-850 mb vertical shear.
+          !------------------------------------------------------------------------------------------------------------
           if ((shearflag == 'y' .or. shearflag == 'Y') .and. stormswitch(ist) == 1) then
 
             if (verb .ge. 3) then
@@ -2453,11 +2649,20 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! COMPUTE AREA-AVERAGED SST
+          ! If the user has requested so, then call a routine to compute the area-averaged SST in the vicinity of the
+          ! tracker-diagnosed center fix.
+          !------------------------------------------------------------------------------------------------------------
           if ((sstflag == 'y' .or. sstflag == 'Y') .and. stormswitch(ist) == 1) then
             call get_sst (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag, &
                  & maxstorm, trkrinfo, sst_smooth, igsstret)
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! COMPUTE GENESIS DIAGNOSTICS
+          ! If the user has requested so, then call a routine to compute a variety of genesis-related diagnostics.
+          !------------------------------------------------------------------------------------------------------------
           if ((genflag == 'y' .or. genflag == 'Y') .and. stormswitch(ist) == 1) then
 
             if (verb .ge. 3) then
@@ -2477,6 +2682,7 @@ end program trakmain
             endif
           endif
 
+          ! print out the current fix position and intensity (in knots) to std output
           if (verb .ge. 3) then
             print *, ' '
             print *, 'After call to fixcenter, fix positions at '
@@ -2512,8 +2718,8 @@ end program trakmain
  617            format (1x, '+++ RPT_STORM_MOTION: istmspd = ', i5, ' kts(*10)  istmdir = ', i5, ' rcc = ', i3)
               endif
 
-              ! Call a routine to find the mean & max relative vorticity at the mean fix positions of the
-              ! storm at 850 & 700.  These will be written out to the "atcf_gen" and "atcfunix_ext" files.
+              ! Call a routine to find the mean & max relative vorticity at the mean fix positions of the storm at
+              ! 850 & 700. These will be written out to the "atcf_gen" and "atcfunix_ext" files.
               imeanzeta = -99
               igridzeta = -99
               call get_zeta_values (fixlon, fixlat, imax, jmax, dx, dy, trkrinfo, imeanzeta, igridzeta, &
@@ -2550,8 +2756,8 @@ end program trakmain
               endif
             endif
 
-            ! The exception here is for the call to the output_hfip routine, 
-            ! which will be called for every lead time that is processed
+            ! exception here is for the call to the output_hfip routine, which will be called for every lead
+            ! time that is processed
             call output_hfip (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, xmaxwind(ist,ifh), &
                  & gridprs(ist,ifh), vradius, rmax)
           else
@@ -2581,6 +2787,11 @@ end program trakmain
               ifcsthour = ileadtime / 100
               print *, 'ctx inp%model = ', inp%model
               if (inp%model == 1 .or. inp%model == 8 .or. inp%model == 22) then
+                !------------------------------------------------------------------------------------------------------
+                ! For the vt=00h lead time, if the tracker failed to locate a position, we are going to write out an
+                ! atcfunix record that contains the position, intensity, mslp and 34-kt wind radii from TC Vitals for
+                ! this storm and initial time. Only do this for the GFS or GDAS runs of the tracker.
+                !------------------------------------------------------------------------------------------------------
                 tcv_max_wind_ms = real(storm(ist)%tcv_vmax)
                 tcv_mslp_pa     = real(storm(ist)%tcv_pcen) * 100.0
 
@@ -2653,7 +2864,8 @@ end program trakmain
                      & x999_omega500, imeanzeta, igridzeta)
 
               else
-                ! For all other models, we print out missing data values at tau=00h if the  tracker was unable to find the storm
+                ! for all other models, we print out missing data values at tau=00h if the tracker was
+                ! unable to find the storm
                 call output_atcfunix (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp, &
                      & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag,  &
                      & i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,   &
@@ -2680,6 +2892,12 @@ end program trakmain
               call output_hfip (x999_lon, x999_lat, inp, ist, ifh, xzero_vmax, xzero_minslp, vradius, x99_rmax)
 
               if (trkrinfo%type == 'tracker') then
+                !------------------------------------------------------------------------------------------------------
+                ! For a 'tracker' run, i.e., one in which we know that there is an observed storm in the area, we will
+                ! assume that there was some type of problem in the initialization that prevented the storm from being
+                ! found. In this case, even though we have written out zeroes for the 00h time, we want to at least try
+                ! tracking again at the next lead time.
+                !------------------------------------------------------------------------------------------------------
                 if (verb .ge. 3) then
                   print *, ' '
                   print *, '++ NOTE: Even though a fix could not be'
@@ -2708,7 +2926,13 @@ end program trakmain
             cycle ! stormloop
           endif
 
-          ! get first guess for next forecast time's position
+          !------------------------------------------------------------------------------------------------------------
+          ! Now get first guess for next forecast time's position. But first, if this is the first time level (ifh=1)
+          ! and the user has requested that storm vitals be output (this is usually only done for model analyses in
+          ! order to get an analysis position from one time to the next), we will write out a storm vitals record for
+          ! this time level. Note that we have already gotten the next guess position info just above for the case of
+          ! the repeated analysis data, so we'll just output the genesis vitals record.
+          !------------------------------------------------------------------------------------------------------------
           if (ifh <= ifhmax) then
             if (ifh == 1 .and. trkrinfo%out_vit == 'y') then
               call output_gen_vitals (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, istmspd, istmdir, iovret)
@@ -2795,6 +3019,13 @@ end program trakmain
       if (use_per_fcst_command == 'y') then
       ! user wants us to run a command per forecast time
         pfc_final = per_fcst_command
+        !--------------------------------------------------------------------------------------------------------------
+        ! Replace %[FHOUR] with forecast hour, %[FMIN] with forecast minute.
+        ! The %[] format is chosen to avoid shell syntax errors if someone includes unknown %[] constructs. A stray
+        ! <FYEAR>, for example, would generate syntax errors or unexpected results in some shells.
+        ! If an unrecognized %[xxx] sequence is used, it will be retained in the final command.  This allows the
+        ! underlying command to detect the unreplaced %[] and use suitable default values or abort, as appropriate.
+        !--------------------------------------------------------------------------------------------------------------
         call argreplace (pfc_final, pfc_cmd_len, '%[FHOUR]', ifhours(ifh))
         call argreplace (pfc_final, pfc_cmd_len, '%[FMIN]', iftotalmins(ifh))
 
