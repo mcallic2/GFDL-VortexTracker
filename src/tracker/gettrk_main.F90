@@ -3709,8 +3709,7 @@ end program trakmain
 
       if (gm_wrap_flag == 'maxplus360') then
         if ((pfixlon > 330.0 .and. pfixlon <= 360.0) .and. targlon < 25.0) then
-          ! targlon returned from distbear is just east of the
-          ! GM with a non-360-adjusted value.  Adjust it:
+          ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
           targlon = targlon + 360.0
         endif
         if (pfixlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -3729,11 +3728,9 @@ end program trakmain
           return
         endif
 
-        ! This last check analyzes a grid point for invalid data, which
-        ! could happen for grids like HAFS-A, HAFS-B and T-SHiELD where
-        ! data from a different map projection are mapped onto a
-        ! lat/lon grid, leaving invalid data around the edges.
-
+        ! This last check analyzes a grid point for invalid data, which could happen for grids like HAFS-A, HAFS-B and
+        ! T-SHiELD where data from a different map projection are mapped onto a lat/lon grid, leaving invalid data
+        ! around the edges.
         call check_valid_point (imax, jmax, dx, dy, fxy, maxmin, valid_pt, targlon, targlat, &
              & glatmax, glatmin, glonmax, glonmin, trkrinfo, icvpret)
 
