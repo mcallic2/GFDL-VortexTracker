@@ -4246,6 +4246,11 @@ end program trakmain
 
     npts = ceiling(ricps / (dtk * (dx+dy) / 2.0)) !CAITLYN - repeated code? also does ceiling default ints or reals?
 
+    !------------------------------------------------------------------------------------------------------------
+    ! First, call  get_ij_bounds to get the boundaries for a smaller subdomain, or subset of gridpoints, in which
+    ! to evaluate the parameter B statistic. We will only include points within 500 km of the storm center for
+    ! evaluation.
+    !------------------------------------------------------------------------------------------------------------
     call get_ij_bounds (npts, 0, ricps, imax, jmax, dx, dy, glatmax, glatmin, glonmax, &
          & glonmin, fixlon(ist,ifh), fixlat(ist,ifh), trkrinfo, ilonfix, jlatfix,      &
          & ibeg, jbeg, iend, jend, igiret)
@@ -4262,6 +4267,12 @@ end program trakmain
       igcvret = 92
       return
     endif
+
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now loop through all of the points of the subdomain at each level. If a point is further than 500 km from the
+    ! storm center, discard it. Otherwise, evaluate the gp height at the point to determine if it is a max or a min for
+    ! the given level.  Store the max and min height at each level in an array.
+    !------------------------------------------------------------------------------------------------------------------
 
     ! We will want to speed things up for finer resolution grids.
     ! We can do this by skipping some of the points in the loop for the evaluation of parameter B.
@@ -4380,6 +4391,11 @@ end program trakmain
 
       enddo ! levloop
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now calculate the vertical derivative of the gp height, that is, d(dz)/d(ln(p)). Here, zdiff is the gp height
+      ! perturbation at a given level, calculated in the loop above; dz is the vertical change in that perturbation
+      ! from one level to the next.
+      !----------------------------------------------------------------------------------------------------------------
       dz     = 0.0
       dlnp   = 0.0
       dzdlnp = 0.0
@@ -4390,6 +4406,16 @@ end program trakmain
         dzdlnp(k) = dz(k) / dlnp(k)
       enddo
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now call a correlation routine to get the slope of a regression line. The independent variable that we input is
+      ! dlnp, the change in log of pressure with height. The dependent variable is dzdlnp, the vertical change in the
+      ! height perturbation with respect to the change in pressure. The slope that is returned defines whether we've
+      ! got a cold core or warm core system. See Hart (MWR, April 2003, Vol 131, pp. 585-616) for more details,
+      ! specifically his Fig. 3 and the discussion surrounding. Note that in the call to calccorr, we are sending only
+      ! 6 of the 7 elements of the dlnp and dzdlnp arrays, beginning with the 2nd element of each. That's because the
+      ! first array value for each of those arrays is empty, since in the loop just above, we start with kbeg+1,
+      ! not kbeg.
+      !----------------------------------------------------------------------------------------------------------------
       call calccorr (lnp(2), zdiff(2), 6, R2, vth_slope)
 
       if (verb .ge. 3) then
