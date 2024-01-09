@@ -7630,12 +7630,20 @@ end program trakmain
     tmpxlon    = xlon
     tmpcentlon = centlon
 
-    ! multiple GM-wrapping scenarios
+    !------------------------------------------------------------------------------------------------------------------
+    ! Multiple GM-wrapping scenarios. We just simply need to make sure that both centlon (or tmpcentlon) and xlon (or
+    ! tmpxlon) are in the same 0-360 reference frame surrounding the GM.
+    !------------------------------------------------------------------------------------------------------------------
     if (tmpcentlon > 330.0) then
       if (xlon > 360.0) then
         tmpxlon = xlon  ! all lons will be in the 300+ range
 
       elseif (xlon < 30.0) then
+        !--------------------------------------------------------------------------------------------------------------
+        ! In this case, the fix center is just to the west of the GM with a lon (centlon) > 330, while the point being
+        ! evaluated (xlon) is just east of the GM, but with a lon (centlon) < 30. Need to adjust here to get the xlon
+        ! in the 330+ frame of reference.
+        !--------------------------------------------------------------------------------------------------------------
         tmpxlon = xlon + 360.0
       endif
 
@@ -7646,7 +7654,7 @@ end program trakmain
         tmpxlon = xlon - 360.0
 
         elseif (xlon > 330.0 .and. xlon < 360.0) then
-          ! Convert centlon to match xlon in the 360+ reference frame
+          ! convert centlon to match xlon in the 360+ reference frame
           tmpcentlon = 360.0 + tmpcentlon
           tmpxlon    = xlon
 
@@ -7704,6 +7712,13 @@ end program trakmain
 
     else
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! This next part figures out the angle from the center point (centlon,centlat) to the data point (tmpxlon,xlat).
+      ! It does this by setting up a triangle and then using inverse trig functions to get the angle. Since this is a
+      ! kludgy way to do it that doesn't account for the curvature of the earth, we'll do it 2 ways; using asin and
+      ! acos, then take the average of those 2 for the angle.
+      ! hyp_dist, calculated just above, is the distance from the center pt to the data pt.
+      !----------------------------------------------------------------------------------------------------------------
       opp_dist  = xlatdiff / 360.0 * ecircum
       sin_value = opp_dist / hyp_dist
 
