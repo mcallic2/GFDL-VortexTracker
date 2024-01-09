@@ -5697,7 +5697,27 @@ end program trakmain
       endif
     endif
 
-    ! CAITLYN - i think this could be its own subroutine
+    !------------------------------------------------------------------------------------------------------------------
+    ! When evaluating the winds at a gridpoint, keep in mind that each gridpoint represents area around it. There are 2
+    ! special cases we need to watch out for. The first is for cases in which the area of a gridpoint straddles across
+    ! a distance threshold, so that some of the gridpoint's area is in the "<200" bin, while some is in the "<100" bin.
+    ! The other is for the case in which the area of a gridpoint straddles between 2 adjacent quadrants (e.g., a
+    ! gridpoint exactly to the north of the center would have half its area in the NW quadrant and half in the NE
+    ! quadrant).
+    ! To properly "partition" and assign gridpoint areas, we need to interpolate the current grid down to a fine
+    ! resolution.
+    ! This next if statement determines how many times to interpolate the input grid to a smaller grid. Here are the
+    ! guidelines that will be used, keeping in mind that we want the final grid spacing to be on the order of between
+    ! 0.05 and 0.10 degree (finer than 0.05 deg is superfluous, and coarser than 0.10 deg is too coarse).
+    !
+    !  Original grid size (deg)     # of interps
+    ! -------------------------    ------------
+    !       0.8 <= g                    4
+    !     0.4 <= g < 0.8                3
+    !     0.2 <= g < 0.4                2
+    !     0.1 <= g < 0.2                1
+    !            g < 0.1                0
+    !------------------------------------------------------------------------------------------------------------------
     if ((dx+dy) / 2.0 >= 0.8) then !CAITLYN - reapeating code
       numinterp = 4
     else if ((dx+dy) / 2.0 < 0.8 .and. (dx+dy) / 2.0 >= 0.4) then
@@ -5715,6 +5735,11 @@ end program trakmain
       grdintincr = 0.5 * grdintincr
     enddo
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now loop through the points in this subdomain, determine if any are within 500 km of the center, and then
+    ! determine what quadrant the point is in relative to the center, and then calculate the fractional area coverage
+    ! for winds.
+    !------------------------------------------------------------------------------------------------------------------
     pdf_ct_tot = 0
     pdf_ct_bin = 0
 
@@ -5775,15 +5800,27 @@ end program trakmain
         call calcdist (glon(ii), glat(j), xsfclon, xsfclat, xdist, degrees)
 
         if (xdist > (rads + (0.75 * ((dx+dy) / 2.0) * dtk * cos(glat(j) * dtr)))) then
+          !------------------------------------------------------------------------------------------------------------
+          ! If the distance is greater than "rads" (500 km at initial writing) plus another 3/4 of a gridpoint, then
+          ! cycle. The extra 3/4 of a gridpoint is to allow for the case of some portion of the area around a gridpoint
+          ! (whose center point > 500 km) being within the 500 km arc, although that is only factored in for grids with
+          ! spacing >= 0.1 deg. For smaller grids, where no interpolation is done in this subroutine, then the distance
+          ! to that point is considered representative and the point is ignored if it is not less than 500 km from
+          ! the center.
+          !------------------------------------------------------------------------------------------------------------
           cycle ! iloop
 
         else
 
+          !------------------------------------------------------------------------------------------------------------
+          ! First interpolate the area surrounding each grid point to get fine resolution of lats & lons for
+          ! determining how to partition the area of a gridpoint among quadrants as welL as among distance thresholds.
+          !------------------------------------------------------------------------------------------------------------
           vmag    = sqrt(u(ii, j, levsfc)**2 + v(ii, j, levsfc)**2)
           vmagkts = vmag * conv_ms_knots
 
           if (numinterp > 0) then
-            grdintincr = ((dx+dy) / 2.0) / 2**numinterp  ! "grid spacing" of interpolated grid !CAITLYN - should the exponent be a real?
+            grdintincr = ((dx+dy) / 2.0) / 2**numinterp  ! "grid spacing" of interpolated grid
             ngridint = (2**numinterp) / 2
             got_pdf = 'notyet'
 
@@ -5795,6 +5832,10 @@ end program trakmain
                 call calcdist (xintlon, xintlat, xsfclon, xsfclat, xdist, degrees)
 
                 if (xdist <= 350.0 .and. got_pdf == 'notyet') then
+                  !----------------------------------------------------------------------------------------------------
+                  ! The got_pdf flag is needed because in these loops for niloop & njloop, we are actually looking at
+                  ! tiny areas around the same grid point. So we want to make sure we only count each gridpoint once.
+                  !----------------------------------------------------------------------------------------------------
                   ipdfbin = min((int(vmagkts / 10.0) + 1), 16)
                   pdf_ct_bin(ipdfbin) = pdf_ct_bin(ipdfbin) + 1
                   pdf_ct_tot = pdf_ct_tot + 1
@@ -5806,6 +5847,14 @@ end program trakmain
                   xarea = (grdintincr * 111195.0) * (grdintincr * 111195.0 * cos(xintlat * dtr))
                   idistbin = int(xdist / 100.0) + 1
 
+                  !----------------------------------------------------------------------------------------------------
+                  ! Go through a loop of the bins. The purpose of this is that these "bins" all go from the center out
+                  ! to a specified radius, they are NOT 100-km wide bins. So if we are dealing with a point at
+                  ! r =250 km, then that falls in the 0-300 km bin, but it also falls in the 0-400 and 0-500 km bins as
+                  ! well. So we need to run through this binloop multiple times to get the area data into multiple
+                  ! bins. Here are the bins & indices:
+                  ! 1: 0-100 km, 2: 0-200 km, 3: 0-300 km, 4: 0-400 km, 5: 0-500 km
+                  !----------------------------------------------------------------------------------------------------
                   do ib = idistbin, numbin ! binloop
                     if (xintlon >= xsfclon .and. xintlat >= xsfclat) then
                       ! NE quadrant
@@ -5868,8 +5917,11 @@ end program trakmain
               enddo ! niloop
             enddo ! njloop
 
-            else  ! case for a grid whose resolution so no further interpolation
+          else
 
+            ! In this else statement is the case for a grid whose resolution is already fine enough that we don't need
+            ! to interpolate any further. For example, we will have the H*Wind data on a 0.05 degree grid, so that's
+            ! already fine enough.
             call calcdist (glon(ii), glat(j), xsfclon, xsfclat, xdist, degrees)
 
             if (xdist <= 350.0) then
@@ -5948,7 +6000,6 @@ end program trakmain
     enddo ! jloop
 
     ! compute the fractional wind coverage for all different quadrants, bins and thresholds
-
     if (verb .ge. 0) then
       write (6,109) '                                 ',     &
                     '                                 ',     &
@@ -5978,8 +6029,7 @@ end program trakmain
 117 format (5x, a2, 5x, a5, 7x, a2, 13x, f6.2, 10x, f16.1, 2x, f16.1)
 
     ! compute the fractional wind coverage for all different bins and thresholds, but for the
-    ! entire "disc" of the storm, that is, summing all quadrants together.
-
+    ! entire "disc" of the storm, that is, summing all quadrants together
     do it = 1, numthresh
       do ib = 1, numbin
         do iq = 1, numquad
