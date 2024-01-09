@@ -4632,16 +4632,19 @@ end program trakmain
     real    :: slope, sumxy, sumx2
     integer :: i, inum
 
+    ! sum up the xarr*yarr products
     sumxy = 0.0
     do i = 1, inum
       sumxy = sumxy + xarr(i) * yarr(i)
     enddo
 
+    ! sum up the x^2 terms
     sumx2 = 0.0
     do i = 1, inum
       sumx2 = sumx2 + xarr(i) * xarr(i)
     enddo
 
+    ! get slope
     slope = sumxy / sumx2
 
     return
