@@ -7289,23 +7289,25 @@ end program trakmain
     ibiret = 0
     tmp_targlon = targlon
 
-    ! convert the lat/lon values into i- and j-indices
-    ! find the j-indices for the points just to the north and the south of targlat
+    !------------------------------------------------------------------------------------------------------------------
+    ! For the latitudes and longitudes surrounding our target lat/lon location, convert the lat/lon values into i- and
+    ! j-indices.
+    ! Find the j-indices for the points just to the north and the south of targlat
+    !------------------------------------------------------------------------------------------------------------------
     if (targlat >= 0.0) then
-      ! For a northern hemisphere storm, jn is the j-index for the
-      ! point just to the *NORTH* (poleward) of targlat.
+      ! for a northern hemisphere storm, jn is the j-index for the point just to the *NORTH* (poleward) of targlat
       jn = int((glatmax - targlat) / dy + 1.0)
       js = jn + 1
     else
-      ! For a southern hemisphere storm, js is the j-index for the
-      ! point just to the *SOUTH* (poleward) of targlat.
+      ! for a southern hemisphere storm, js is the j-index for the point just to the *SOUTH* (poleward) of targlat
       js = ceiling((glatmax - targlat) / dy + 1.0)
       jn = js - 1
     endif
 
-    ! Check to make sure that points are not being requested beyond
-    ! the northern or southern boundaries of the grid.  This is most
-    ! likely to happen for a smaller, regional grid.
+    !------------------------------------------------------------------------------------------------------------------
+    ! Check to make sure that points are not being requested beyond the northern or southern boundaries of the grid.
+    ! This is most likely to happen for a smaller, regional grid.
+    !------------------------------------------------------------------------------------------------------------------
     if (jn > jmax .or. js > jmax) then
       if (verb .ge. 1 .and. bimct == 0) then
         print *, ' '
@@ -7343,6 +7345,11 @@ end program trakmain
     ie_hold = ie
     iw_hold = iw
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Check for GM wrapping. Check "ie" to see if it is between the most eastward gridpoint and the GM (i.e., on a
+    ! 1-deg global grid (360x181), it would be if targlon was between 359.0 (i=360) and the GM (i=1, not i=361)).
+    ! Similarly then, if we adjust ie to then be 1, then we have a problem with iw, since iw = 1 - 1 = 0.
+    !------------------------------------------------------------------------------------------------------------------
     if (ie > imax) then
       if (trkrinfo%gridtype == 'global') then
         ie = ie - imax
@@ -7383,6 +7390,12 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Calculate the longitude (to) and latitude (ta) location ratios. Check for GM wrapping, as we can run into a
+    ! problem here if interpolating for points that are just west of the GM, since we would be interpolating using
+    ! values of longitude just west of GM (say, glon(iw)=359.5) and the GM (glon(ie) = 0.0). This makes for an
+    ! incorrect "to" ratio below, with 0-359.5 in the denominator. We have to account for this
+    !------------------------------------------------------------------------------------------------------------------
     if (glon(iw) > 300.0 .and. (glon(ie) < 10.0 .and. glon(ie) >= 0.0)) then
       eastlon = 360.0 + glon(ie)
       if (tmp_targlon < 10.0 .and. tmp_targlon >= 0.0) then
@@ -7395,6 +7408,7 @@ end program trakmain
     to = (tmp_targlon - glon(iw)) / (eastlon - glon(iw))
     ta = (targlat - glat(jn)) / (glat(js) - glat(jn))
 
+    ! copy the data values at the 4 known points into simple scalar variables
     if (valid_pt(iw,jn) .and. valid_pt(iw,js) .and. valid_pt(ie,jn) .and. valid_pt(ie,js)) then
       continue
     else
@@ -7449,6 +7463,7 @@ end program trakmain
       stop 95
     endif
 
+    ! compute the interpolated value
     z = 1.9427
     xintrp_val = (1.0-to) * (1.0-ta) * d1 + to * (1.0-ta) * d2 + to * ta * d3 + (1.0-to) * ta * d4
 
