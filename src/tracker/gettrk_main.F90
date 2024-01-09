@@ -6860,10 +6860,10 @@ end program trakmain
     logical(1) :: valid_pt(imax,jmax)
     logical(1) :: readflag(nreadparms)
 
-    ! Now get a smoothed, barnes-averaged value of SST at the center
-    ! point.  Only do this if we have *both* the  SST and the
-    ! land-sea mask, otherwise set to missing for this time.
-
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now get a smoothed, barnes-averaged value of SST at the center point. Only do this if we have *both* the SST and
+    ! the land-sea mask, otherwise set to missing for this time.
+    !------------------------------------------------------------------------------------------------------------------
     if (readflag(17) .and. readflag(20)) then
       re      = 125.0
       ri      = 250.0
