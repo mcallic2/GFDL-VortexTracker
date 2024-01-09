@@ -4859,6 +4859,12 @@ end program trakmain
       print *, '      wcore_mean_val = ', wcore_mean_val
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Once  find_maxmin returns a value and a location for the barnes-averaged value of a warm core, then make a call
+    ! to fix_latlon_to_ij to (1) get the actual gridpoint value of the temperature (the value stored in wcore_mean_val
+    ! is an area-averaged value coming from the barnes analysis), and (2) to get the (i,j) indeces for this gridpoint
+    ! to be used in the call to check_closed_contour below.
+    !------------------------------------------------------------------------------------------------------------------
     if (wcore_mean_lat > -99.0 .and. wcore_mean_lon > -990.0) then
       call fix_latlon_to_ij (imax, jmax, dx, dy, tmean, 'max', valid_pt, wcore_mean_lon, &
            & wcore_mean_lat, wcore_mean_val, ifix, jfix, wcore_point_max, 'tracker',     &
@@ -4913,6 +4919,14 @@ end program trakmain
 106 format (1x, '    wcore: ', a4, 1x, i10.10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1,'_', a3,2x, i4, ':', &
             i2.2, '  ifix: ', i5, 2x, ' jfix: ', i5, 2x, 'wcore_point_max(K): ', f12.3)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! The Vitart scheme specifies that the temperature must decrease by at least 1.0C in all directions from the warm
+    ! core center within a distance of 8 deg.  A rigorous check of this criterion is performed here by utilizing the
+    ! check_closed_contour routine. If we have a closed contour in the temperature field surrounding the warm core
+    ! (using a 1 deg K interval), that criterion is satisfied. For diagnostic purposes, we set the value of
+    ! num_check_conts to 999 in order to keep searching for all contours surrounding the warm core, and this allows us
+    ! to get an idea of the "depth" or magnitude of the warm core when the tlastcont and rlastcont values are returned.
+    !------------------------------------------------------------------------------------------------------------------
     wcore_contour_info%numcont = maxconts
     num_check_conts = 999
 
