@@ -16426,6 +16426,14 @@ end program trakmain
     gt345_ct = 0
     lt15_ct  = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! We need to be careful in this routine when averaging the longitudes together, in case we cross the greenwich
+    ! meridian, because then we may be averaging 345+ lons with lons that are less than 15, giving incorrect results.
+    ! Therefore, check for this, and if it occurs, add 360 onto any of the <15 lons (add it twice for those lons being
+    ! counted twice (guesslon and the vorticity centers)).
+    !
+    ! Weight the uv guess position by counting the storm's guess position twice.
+    !------------------------------------------------------------------------------------------------------------------
     sumlon = sumlon + 2.0 * guesslon
     sumlat = sumlat + 2.0 * guesslat
     ict    = ict + 2
@@ -16439,12 +16447,13 @@ end program trakmain
 
     do ip = 1, maxtp
       if ((ip > 2 .and. ip < 7) .or. ip == 10) then
-        cycle   ! because 3-6 are for 850 & 700 u & v and 10 is for surface wind magnitude.
+        cycle   ! because 3-6 are for 850 & 700 u & v and 10 is for surface wind magnitude
       else
         if (calcparm(ip,ist)) then
           call calcdist (guesslon, guesslat, clon(ist,ifh,ip), clat(ist,ifh,ip), dist, degrees)
           if (dist < uverrmax) then
 
+            ! give the vorticity centers 2x weighting as well
             if (ip == 1 .or. ip == 2 .or. ip == 11) then
               sumlon = sumlon + 2.0 * clon(ist, ifh, ip)
               sumlat = sumlat + 2.0 * clat(ist, ifh, ip)
@@ -16475,6 +16484,8 @@ end program trakmain
     if (ict > 0) then
 
       if (gt345_ct > 0 .and. lt15_ct > 0) then
+        ! We have some parms left of the GM and some to the right, so we will add (360*lt15_ct) to the sum of the
+        ! lons (sumlon)
         uvgeslon = (sumlon + (360.0 * real(lt15_ct))) / real(ict)
       else
         uvgeslon = sumlon / real(ict)
