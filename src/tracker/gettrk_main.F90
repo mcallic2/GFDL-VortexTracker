@@ -12807,7 +12807,7 @@ end program trakmain
               print *, 'vradius(iwindix,k) =', vradius(iwindix,k)
             endif
           endif
-          
+
           !------------------------------------------------------------------------------------------------------------
           ! The possibility exists, especially for coarse output grids, that there could be a jump over more than 1
           ! wind- thresh category when going from 1 grid point to the next, so we need to account for this. For
@@ -13019,6 +13019,8 @@ end program trakmain
     character(len=1)   :: free_pass
     character(len=*)   :: gm_wrap_flag
 
+    ! Fill the rdist array, initially using an r34_bin_width of every 3 km, starting from 3 km from the center and
+    ! going out to 1059 km max radius (num_r34_bins = 353)
     igrret  = 0
 
     do i = 1, num_r34_bins
@@ -13029,7 +13031,20 @@ end program trakmain
       ix_radii_beg = 1
       ix_radii_end = int((radmax / r34_bin_width) + 0.5)
     else
+      !----------------------------------------------------------------------------------------------------------------
+      ! For any iterations beyond the first one (i.e., when n_r34_iter > 1), the value of ix_radii_beg will be passed
+      ! into this routine, and it will essentially hold the value of the ix_radii_end from the last call to getradii_2.
+      ! Then we need to simply calculate the new ix_radii_end for this current iteration, which will be for an
+      ! additional 50 km out.
+      !----------------------------------------------------------------------------------------------------------------
       ix_radii_end = ix_radii_beg + int((50.0 / r34_bin_width) + 0.5)
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now for this iteration through, we need to bump up the value of ix_radii_beg by 1. The reason is that, coming
+      ! into this routine, ix_radii_beg held the value of ix_radii_end from the last call to getradii_2. So in the
+      ! statement just above, we correctly use that as the point to start from when adding on an additional 50 km for
+      ! the search radius. However, we have already calculated the wind in the bins for that radius. So now we need to
+      ! move one further radius out to start computing the wind in the bins for additional radii extending outward.
+      !----------------------------------------------------------------------------------------------------------------
       ix_radii_beg = ix_radii_beg + 1
     endif
 
@@ -13043,6 +13058,16 @@ end program trakmain
       print *, '    radmax = ',       radmax
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! In this series of loops, we are computing the wind values that will be considered representative of the wind
+    ! value in each quadrant radial band. Work through each radius, and for each radius process each quadrant, and then
+    ! within each quadrant work your way around through the azimuths, one by one degree, in order to "generate" a large
+    ! sample of wind data points in each quadrant radial band.
+    ! Important note: The pctile_quad_bin_wind and fp_pctile_quad_bin_wind arrays are passed back & forth to the calling
+    ! routine with each iteration through this subroutine. This is done so that, for each iteration through as we
+    ! iteratively add 50 km on to our search radius for R34, we don't need to re-compute all the values in the radial
+    ! bins up to the point that we already computed on the last run through this subroutine.
+    !------------------------------------------------------------------------------------------------------------------
     bimct   =    0
     ifh99   =  -99
     ilevint = 1020
@@ -13084,6 +13109,8 @@ end program trakmain
         azimuth_ct = 0
         radii_wmag_bucket = -999.0
 
+        ! At this distance and in this quadrant, run through 90 points along an arc and evaluate the winds in this
+        ! quadrant bin.
         do iazim = 1, num_qtr_azim  ! qtr_azimloop1
           bear = (real(iquad - 1)) * 90.0 + real(iazim)
 
@@ -13091,6 +13118,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xcenlon > 330.0 .and. xcenlon <= 360.0) .and. targlon < 25.0) then
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
             if (xcenlon > 360.0 .and.(targlon >= 0.0 .and. targlon < 180.0)) then
@@ -13098,6 +13126,8 @@ end program trakmain
             endif
           endif
 
+          ! The 1020 in the ilevint variable in the calling arguments here is just a number/code to indicate to the
+          ! interpolation subroutine to process near-sfc winds
           call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, ilevint, 'u', &
                & xintrp_u, valid_pt, bimct, ifh99, ibiret1)
 
@@ -13146,9 +13176,21 @@ end program trakmain
           mean_radii_vt(iquad, idist)   = -999.0
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Now sort the values in radii_wmag_bucket so that we have them sorted into increasing order to then determine
+        ! the XXth percentile wind value for the radial band we just processed (where the value of "XX" for that
+        ! percentile wind value is input by the user in the radii_pctile variable in the input namelist).
+        !--------------------------------------------------------------------------------------------------------------
         isortix = 0
         call qsort (radii_wmag_bucket, isortix, num_qtr_azim)
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! If run on regional nests, there is a possibility that there could be -999 values in this bin if we run up
+        ! against a grid boundary in the call to bilin_int_uneven above. So run through the sorted array (qsort sorts
+        ! in increasing order, with the missing -999 values being at the beginning of the sorted index) and make note
+        ! of the first array position that has valid data. Also count the number of data points in the bin with valid
+        ! wind data.
+        !--------------------------------------------------------------------------------------------------------------
         first_valid_ix = -99
         valid_wind_ct  = 0
         do n = 1, num_qtr_azim ! find_valid_wind_loop
@@ -13160,6 +13202,27 @@ end program trakmain
           endif
         enddo  ! find_valid_wind_loop
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! In this next section, we are determining the wind value in representative of the radial bin, using the
+        ! radii_percentile that the user entered in the namelist as our guideline. I.e., if the user set
+        ! radii_percentile = 95% in the namelist, then we look through all of those 90 interpolated wind values that we
+        ! just created above and we select the 95th percentile wind. And because that 95th percentile may actually fall
+        ! in between two points, there is some interpolation that we have to do (described more below).
+        !
+        ! Only continue with the radii calculation for this quadrant if ALL of the points in this radial band have
+        ! valid wind data.
+        !
+        ! Interpolate to get the value at the exact threshold that was requested.
+        !
+        ! radii_pctile = Percentile wind threshold value in a radial bin that the user has requested.
+        ! target_slot = The spot in the order of wind values that will be used for the percentile wind value. For
+        ! example, if the user wants the 95th percentile wind value, we have (assuming no points lost to running into a
+        ! regional boundary) 0.95 * 90 (because 90 points in each quadrant radial band) = 85.5 and point 85.5 in the
+        ! array is our target_slot, meaning that we have to interpolate in between sorted array positions 85 and 86 to
+        ! get our representative 95th percentile wind value for this radial band.
+        ! target_ix = The INTEGER array index that is actually *below* the REAL value of target_slot, and then for the
+        ! interpolation we bracket this with target_ix+1 as the upper value
+        !--------------------------------------------------------------------------------------------------------------
         if (radii_pctile > 0.0 .and. radii_pctile <= 100.0) then
           continue
         else
@@ -13174,16 +13237,23 @@ end program trakmain
 
         target_slot = (radii_pctile / 100.0) * real(valid_wind_ct)
 
+        ! The first line in this next IF statement ensures that we will only continue the processing of this radial bin
+        ! if the number of valid points in a radial bin is equal to the expected maximum number of points for that bin.
         if (valid_wind_ct == num_qtr_azim) then
 
           if (int(target_slot) == num_qtr_azim) then
+            ! Just use the value at the highest array position. This would only happen if radii_pctile = 100% and so
+            ! that is unlikely that someone will choose 100%.
             pctile_quad_bin_wind(iquad, idist) = radii_wmag_bucket(isortix(num_qtr_azim))
           elseif (nint(target_slot + 0.49) == first_valid_ix) then
+            ! This would be a weird case, but I have to code for it. It would be if someone selected a
+            ! radii_pctile = 1%.
             pctile_quad_bin_wind(iquad,idist) = radii_wmag_bucket(isortix(first_valid_ix))
           else
             target_ix        = int(target_slot)
             target_remainder = mod(target_slot, 1.0)
             if (target_remainder == 0.0) then
+              ! This is for a case where the requested percentile exactly hits a whole number for the target slot.
               pctile_quad_bin_wind(iquad,idist) = radii_wmag_bucket(isortix(target_ix))
             else
               one_minus_target_remainder = 1.0 - target_remainder
@@ -13204,18 +13274,29 @@ end program trakmain
           pctile_quad_bin_wind(iquad, idist) = -999.0
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Now also compute the "free pass" wind value that can be used later on in this subroutine such that, if we
+        ! have found an R34 at a given radius, *AND* the XXth percentile wind at this same radius is also > 34 kts,
+        ! then we get a "free pass" and can skip over the Holland profile checking since we will assume that we have a
+        ! high enough concentration of winds exceeding 34 kts in this bin.
+        !--------------------------------------------------------------------------------------------------------------
         free_pass_slot = (radii_free_pass_pctile / 100.0) * real(valid_wind_ct)
 
         if (valid_wind_ct == num_qtr_azim) then
 
           if (int(free_pass_slot) == num_qtr_azim) then
+            ! Just use the value at the highest array position. This would only happen if radii_free_pass_pctile = 100%
+            ! and so that is unlikely that someone will choose 100%.
             fp_pctile_quad_bin_wind(iquad, idist) = radii_wmag_bucket(isortix(num_qtr_azim))
           elseif (nint(free_pass_slot + 0.49) == first_valid_ix) then
+            ! This would be a weird case, but I have to code for it. It would be if someone selected a
+            ! radii_free_pass_pctile = 1%.
             fp_pctile_quad_bin_wind(iquad, idist) = radii_wmag_bucket(isortix(first_valid_ix))
           else
             free_pass_ix        = int(free_pass_slot)
             free_pass_remainder = mod(free_pass_slot, 1.0)
             if (free_pass_remainder == 0.0) then
+              ! This is for a case where the requested percentile exactly hits a whole number for the free_pass slot.
               fp_pctile_quad_bin_wind(iquad, idist) = radii_wmag_bucket(isortix(free_pass_ix))
             else
               one_minus_free_pass_remainder = 1.0 - free_pass_remainder
@@ -13262,6 +13343,13 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now go through the array of pctile_quad_bin_wind values and compare those wind values against the set wind
+    ! thresholds to get the wind radii. We analyze these wind values by starting at the farthest point (ix_radii_end)
+    ! and moving inward until we hit a point that has a wind value of at least 34-knot winds (17.5 m/s). We then
+    ! continue searching through the wind values increasingly closer to the storm center to see if we can find values
+    ! for the 50- and 64-knot winds.
+    !------------------------------------------------------------------------------------------------------------------
     if (xcenlat >= 0.0) then
       hemisphere = 1.0
     else
@@ -13280,9 +13368,18 @@ end program trakmain
       iwindix = 1
       idist   = ix_radii_end + 1
 
+      ! Within this quadrant, go through the 3 different windix values to search for the values of R34, R50 and R64.
+      ! iwindix=1: R34, iwindix=2: R50, iwindix=3: R64
       do while (iwindix <= 3 .and. idist > 1) ! threshloop
         if (iwindix > 1) then
           if (first_time_thru_getradii) then
+            !----------------------------------------------------------------------------------------------------------
+            ! We are only doing the wind radii for 50 and 64 kts on the first time through subroutine getradii_2 (we
+            ! only need to do the multiple call iterations for 34 kts).
+            ! Make sure vmax for this lead time exceeds the radii threshold being diagnosed. The check below avoids,
+            ! for example, reporting 50-kt wind radii when the max wind diagnosed was only 44 kts. This can happen
+            ! since the radius for searching for radii is larger than the radius for searching for the max wind.
+            !----------------------------------------------------------------------------------------------------------
             if (vmaxwind >= windthresh(iwindix)) then
 
               if (verb >= 3) then
@@ -13318,17 +13415,50 @@ end program trakmain
         print *, ' '
 
         if (pctile_quad_bin_wind(iquad,idist) < windthresh(iwindix)) then
+          ! For this wind threshold (determined by the value of iwindix: 1=R34, 2=R50, 3=R64), the pctile_quad_bin_wind
+          ! does NOT meet or exceed the wind speed threshold, so just cycle through to the next iteration of threshloop.
           cycle   ! threshloop
         else
 
+          !------------------------------------------------------------------------------------------------------------
+          ! We are at the index for R34 (iwindix=1) and we have detected a pctile bin wind value >= 34 kts (17.5 m/s),
+          ! but we first need to do additional checking to ensure this wind value is part of the mean circulation and
+          ! not just a wind gust from an isolated convective cell. We will check both the 4-quadrant mean cyclonic Vt
+          ! and also the mean cyclonic Vt for just this quadrant; the check for only 1 of the 2 needs to pass. Check #2
+          ! has a more stringent threshold (65% vs the 50% from Check #1) with the idea that the axisymmetric,
+          ! 4-quadrant average check from Check #1 failed, and this may be due to the model storm having asymmetric
+          ! structure. So we consider that one quadrant may have a larger R34 and we check for just this quadrant but
+          ! require that it has a higher bar to get over, with that 65% threshold.
+          !
+          ! Check #1: If r34c is the candidate selected R34 distance, then the mean cyclonic Vt must be at least 50%
+          ! of the Holland profile value over a range of distances from r34c - X, where X ~ 10% of the r34c value
+          ! (e.g., if r34c was found at 190 km, then that threshold would have to be met from ~171-190 km).
+          !
+          ! Check #2: Very similar to Check #1, but in this one the check is only done in the quadrant in question,
+          ! however the threshold is higher: the mean cyclonic Vt must be at least 65% of the Holland profile value
+          ! instead of the 50% that was used in Check #1.
+          ! 
+          ! NOTE: We do NOT do this checking for R50 or R64, only for R34 (i.e., when iwindix = 1).
+          !
+          ! Do a first "free-pass" check, whereby if this check is satisfied, then we can skip the more detailed checks.
+          ! In this first one, we check to see if the mean Vt in the diagnosed R34 bin in this quadrant is >= 34 kts,
+          ! and if it is, then we are done, and no further checking is required for this bin.
+          !------------------------------------------------------------------------------------------------------------
           if (iwindix == 1) then
             free_pass = 'n'
 
             if ((hemisphere * mean_radii_vt(iquad,idist)) >= 17.5) then
+              ! If the mean cyclonic Vt in this bin >= 17.5 m/s, then give a free pass
               free_pass = 'y'
             endif
 
             if (fp_pctile_quad_bin_wind(iquad,idist) >= 17.5) then
+              !--------------------------------------------------------------------------------------------------------
+              ! If the free-pass percentile wind, using the value for radii_free_pass_pctile entered by the user in the
+              ! namelist, exceeds 17.5 m/s, then give a free pass. For example, if the user enters 67.0 (for 67%), then
+              ! if the 67th percentile wind value in this radial band exceeds 17.5 m/s (i.e., if at least roughly 1/3
+              ! of the wind values in this band exceed 17.5 m/s), then give a free pass.
+              !--------------------------------------------------------------------------------------------------------
               free_pass = 'y'
             endif
 
@@ -13339,12 +13469,17 @@ end program trakmain
               b = 2.0
 
               if (axi_rmw <= 0.0) then
+                ! If axi_rmw is undefined, then set holl_rmw to some middle-of-the-road value just so that we can get a
+                ! wind value from the Holland wind profile equation.
                 holl_rmw = 50.0
               else
+                ! The value of axi_rmw is defined and valid, so set the value of RMW to be used for the Holland wind
+                ! profile (holl_rmw) to that axi_rmw value.
                 holl_rmw = axi_rmw
               endif
 
               v_holland = vmaxwind * sqrt((holl_rmw / rdist(idist))**b * exp(1 - ((rdist(idist) / holl_rmw)**(-1.0*b))))
+              ! Set check_dist to be the value that a user enters in the namelist. The units for this are in km.
               check_dist = radii_width_thresh
               num_bins_to_check = nint(check_dist / r34_bin_width)
 
@@ -13410,8 +13545,10 @@ end program trakmain
               else
                 pct_holland_good_1 = 0.0
               endif
-                
+
               if (pct_holland_good_1 >= 0.60) then
+                ! This means that at least 60% of the radial bins near this candidate R34 had a mean Vt value of at
+                ! least 50% of the Holland profile value for that radius.
                 holland_good_1_flag = 'y'
                 if (verb >= 3) then
                   print *, ' '
@@ -13428,6 +13565,11 @@ end program trakmain
                 endif
               endif
 
+              !--------------------------------------------------------------------------------------------------------
+              ! If the result from the first check of the 4-quadrant mean Vt was good (i.e.,holland_good_1_flag == 'y'),
+              ! then skip thru this. Otherwise, now do a check for just this quadrant, but with a more stringent
+              ! threshold criterion.
+              !--------------------------------------------------------------------------------------------------------
               holland_good_2_flag = 'n'
 
               if (holland_good_1_flag == 'y') then
@@ -13481,6 +13623,8 @@ end program trakmain
                 endif
 
                 if (pct_holland_good_2 >= 0.60) then
+                  ! This means that at least 60% of the radial bins near this candidate R34 -- IN THIS QUADRANT -- had
+                  ! a mean Vt value of at least 65% of the Holland profile value for that radius.
                   holland_good_2_flag = 'y'
                   if (verb >= 3) then
                     print *, ' '
@@ -13499,6 +13643,8 @@ end program trakmain
             endif
           endif
 
+          ! Check to see if a radii was found at the distance with the last array index. If so, then we will print a
+          ! message indicating that is the case, and then this subroutine will be called again.
           if (iwindix > 1 .or. (iwindix == 1 .and. (holland_good_1_flag == 'y' .or. holland_good_2_flag == 'y'))) then
             if (idist == ix_radii_end) then
 
@@ -13512,7 +13658,7 @@ end program trakmain
                 print *, '!!! Currently, radmax (km) = ', radmax
                 print *, '!!! iwindix = ', iwindix, ' quadrant = ', iquad
               endif
-                
+
               vradius(iwindix, iquad) = nint(radmax * 0.5396)
             else
 
@@ -13527,6 +13673,16 @@ end program trakmain
               endif
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! Check for invalid R34 values due to model storm approaching the boundary of a regional grid.
+            !
+            ! Check to see if the value of pctile_quad_bin_wind in the very next bin radially outward from the one
+            ! where we just found R34 has an undefined value of -999. If so, this is likely due to the fact that we are
+            ! on a regional grid and if the R34 was found at this radius, then it's an indication that the storm is
+            ! pushing up against the boundary and the real R34 may actually exist beyond the grid boundary. If this is
+            ! the case, then set the radii for ALL thresholds (34, 50, 64) in this quadrant to 0 (as missing).
+            ! Only do this check for regional grids
+            !----------------------------------------------------------------------------------------------------------
             if (trkrinfo%gridtype == 'regional') then
               if (idist <  ix_radii_end) then
                 if (pctile_quad_bin_wind(iquad,idist+1) < -998.0) then
@@ -13558,6 +13714,14 @@ end program trakmain
               endif
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! The possibility exists, especially for coarse output grids, that there could be a jump over more than 1
+            ! wind-thresh category when going from 1 grid point to the next, so we need to account for this. For
+            ! example, if 1 point has vmag = 15 m/s and the next point closer in has vmag = 28 m/s, then between those
+            ! 2 points you have the thresholds for gale force AND storm force winds, so to be safe, we actually need to
+            ! add 1 to ipoint and re-check the current point, if the wind value at that point is found to be greater
+            ! than a wind threshold value (which it has if you've gotten to this point in threshloop).
+            !----------------------------------------------------------------------------------------------------------
             idist   = idist + 1
             iwindix = iwindix + 1
           endif
