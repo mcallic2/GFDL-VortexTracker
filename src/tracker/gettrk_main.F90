@@ -15094,6 +15094,8 @@ end program trakmain
     enddo
 
     if (gt345_ct > 0 .and. lt15_ct > 0) then
+      ! We have some lons that are in the 300's (west of the GM), and some that are in the 0's (east of the GM). We
+      ! need to standardize these if we want to get a meaningful average.
       do i = 1, kmax
         if (xlon(i) < 15.0) then
           xlon(i) = xlon(i) + 360.0
