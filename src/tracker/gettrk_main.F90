@@ -18011,6 +18011,14 @@ end program trakmain
 
     igiret = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Get beginning and ending j points
+    !
+    ! (1) Calculate number of searchable, max/min pts, that is, the pts from x to the edge of Grid B.
+    ! (2) Calculate number of pts beyond the last search point in Grid B, but are within the bounds of Grid R and thus
+    ! can be included in the  barnes analysis.
+    ! (3) Add (1) and (2) to get the max number of pts to subtract/add to x to get jbeg and jend.
+    !------------------------------------------------------------------------------------------------------------------
     if (verb .ge. 4) then
       print *, ' '
       print *, 'Beginning of get_ij_bounds...'
@@ -18018,6 +18026,7 @@ end program trakmain
       print *, ' '
     endif
 
+    ! see abstract for more details about nhalf
     if (nhalf > 0) then
       rdeg = 0.0
       do i = 1, nhalf
@@ -18030,6 +18039,7 @@ end program trakmain
       jbmaxlatpts = npts * 2.0 + 2.0
     endif
 
+    ! roughly fix geslat to the grid point just poleward of geslat
     if (verb .ge. 4) then
       print *, ' '
       print *, ' +++ Near top of get_ij_bounds, '
@@ -18081,7 +18091,7 @@ end program trakmain
       igiret = igiret + 1
       return
     endif
-      
+
     if (jbeg < 1) jbeg = 1
     if (jend > jmax) jend = jmax
 
@@ -18089,7 +18099,7 @@ end program trakmain
       print *, ' +++ jbeg = ', jbeg, ' jend = ', jend
     endif
 
-    ! if using a global grid, avoid using the pole points, or else you'll get a cosfac = 0
+    ! if using a global grid, avoid using the pole points, or else you'll get a cosfac = 0 and then divide by 0
     if (jend == jmax .and. rglatmin == -90.0) then
       jend = jmax - 2
     endif
@@ -18097,6 +18107,19 @@ end program trakmain
       jbeg = 3
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now get beginning and ending i points
+    !
+    ! Using the map factor (cos lat), figure out, based on ri, the max distance beyond the last search point in
+    ! x-direction (in degrees) that could be searched at this guess latitude (geslat) (i.e., in the diagram above, the
+    ! max num pts from pt. e eastward to the edge of Grid R). Calculate how many grid points that is, add 2 to it for a
+    ! cushion, & add the number of points (npts) within the defined search grid (Grid B) to get ibmaxlonpts.
+    !
+    ! A min statement was put on the calculation to derive dlon, since with that cosine in there, the values of of dlon
+    ! could get pretty ridiculous as you approach the poles. Also, the cosine factor (cosfac) used to be computed at
+    ! the most poleward latitude possible given the jend here. For similar concerns with cosines near the poles, I've
+    ! scrapped this to instead compute the cosine factor at the input guess latitude.
+    !------------------------------------------------------------------------------------------------------------------
     cosfac   = cos(geslat * dtr)
     tmpangle = cosfac * dtk
     dlon     = min((ri / tmpangle ), 20.0)
