@@ -13794,6 +13794,8 @@ end program trakmain
       radmaxwind = 500.0
     endif
 
+    ! roughly fix xcenlat to the grid point just poleward of xcenlat, and fix xcenlon to the grid point just
+    ! eastward of xcenlon
     if (xcenlat >= 0.0) then
       jlatfix = int((glatmax - xcenlat) / dy + 1.0)
     else
@@ -13857,6 +13859,8 @@ end program trakmain
       endif
     endif
 
+    ! calculate number of grid points to have surrounding the storm so that we are sure radmaxwind is within
+    ! those points
     cosfac  = cos(xcenlat * dtr)
     numipts = ceiling((radmaxwind / (dtk * dx)) / cosfac)
     numjpts = ceiling(radmaxwind / (dtk * dy))
@@ -13882,6 +13886,9 @@ end program trakmain
     endif
 
     if (jbeg < 1) then
+      ! Storm is close to southern boundary of grid. Set jbeg=1, but check to make sure that this point is still south
+      ! of jlatfix. If it's not, then this makes no sense, as it would mean that the center of the storm is off
+      ! the grid
       jbeg_hold = jbeg
       jbeg      = 1
       if (jbeg >= jlatfix) then
@@ -13919,6 +13926,9 @@ end program trakmain
     endif
 
     if (jend > jmax) then
+      ! Storm is close to northern boundary of grid. Set jend=jmax, but check to make sure that this point is still
+      ! north of jlatfix. If it's not, then this makes no sense, as it would mean that the center of the storm is
+      ! off the grid
       jend_hold = jend
       jend      = jmax
       if (jend <= jlatfix) then
