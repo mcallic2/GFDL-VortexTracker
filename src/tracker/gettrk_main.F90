@@ -18445,6 +18445,8 @@ end program trakmain
     character(len=10) :: cymdh
     integer           :: ifh, nlen1, nlen2, nlen3, nlen4, nlen5
 
+    ! Convert integer minutes to 5-position character, with leading zeroes, and convert 10-digit integer date into
+    ! 10-position character. Then trim the various input variables and combine all into the file name.
     write (cfmin, '(i5.5)')   iftotalmins(ifh)
     write (cymdh, '(i10.10)') atcfymdh
 
@@ -18458,12 +18460,16 @@ end program trakmain
     nlen3     = len_trim(atcfdescr)
     nlen4     = len_trim(gfilename)
 
+    ! If an extension to the name with the ATCF or storm name descriptor was included, then add it to the name now.
+    ! Otherwise, just add the starting date and the lead time in minutes.
     if (nlen3 > 0) then
       gfilename = trim(gfilename(1:nlen4))//'.'//trim(atcfdescr(1:nlen3))//'.'//cymdh//'.f'//cfmin
     else
       gfilename = trim(gfilename(1:nlen4))//'.'//cymdh//'.f'//cfmin
     endif
 
+    ! Create the name for the grib index file, which is just the name of the grib file, with "ix" added to the
+    ! end of it.
     nlen5     = len_trim(gfilename)
     ifilename = trim(gfilename(1:nlen5))//'.ix'
 
