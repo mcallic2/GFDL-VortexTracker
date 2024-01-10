@@ -12229,6 +12229,13 @@ end program trakmain
 
     igrret  = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! PART 1: Define the maximum radius for which you'll search for the wind values, and then get the beginning and
+    ! ending i and j points for that sub-region to search. Define this maximum radius (radmax) in terms of km.
+    !
+    ! Roughly fix xcenlat to the grid point just poleward of xcenlat, and fix xcenlon to the grid point just eastward
+    ! of xcenlon.
+    !------------------------------------------------------------------------------------------------------------------
     if (xcenlat >= 0.0) then
       jlatfix = int((glatmax - xcenlat) / dy + 1.0)
     else
@@ -12311,6 +12318,7 @@ end program trakmain
       endif
     endif
 
+    ! calculate number of grid points to have surrounding the storm so that we are sure radmax is within those points
     cosfac  = cos(xcenlat * dtr)
     numipts = ceiling((radmax / (dtk * dx)) / cosfac)
     numjpts = ceiling(radmax / (dtk * dy))
@@ -12323,6 +12331,8 @@ end program trakmain
     if (ibeg < 1) then
 
       if (trkrinfo%gridtype == 'global') then
+        ! If wrapping past GM, there is code below in this getradii routine that can modify the indices appropriately; 
+        ! do nothing here
         continue
       else
 
@@ -12391,6 +12401,8 @@ end program trakmain
 
     if (iend > imax) then
       if (trkrinfo%gridtype == 'global') then
+        ! If wrapping past GM, there is code below in this getradii routine that can modify the indices appropriately;
+        ! do nothing here.
         continue
       else
 
@@ -12437,6 +12449,11 @@ end program trakmain
       print *, '          ilonfix = ', ilonfix, ' jlatfix = ', jlatfix
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! PART 2: Within the area of grid points defined by jbeg, jend, ibeg and iend, (1) calculate all the wind speeds at
+    ! each grid point, (2) calculate all of the distances from each grid point to the storm center, (3) assign each
+    ! grid point to one of the 4 quadrants (NE, NW, SE, SW), (4) in each quadrant, sort the points, based on windspeed.
+    !------------------------------------------------------------------------------------------------------------------
     jnum = jend - jbeg + 1
     inum = iend - ibeg + 1
     numalloc = jnum * inum + inum/2 + jnum/2
@@ -12475,6 +12492,8 @@ end program trakmain
       return
     endif
 
+    ! Calculate the distances and wind speeds at each grid point. If the distance is < radmax, include that wind info
+    ! in the appropriate quadinfo array location for that quadrant.
     quadct  = 0
     quadmax = 0.0
 
@@ -12630,6 +12649,8 @@ end program trakmain
               ' radius: ', f7.2, ' nm', 2x, ' vmag: ', f6.2, ' kts')
     endif
 
+    ! Now go through each quadrant and put the wind speed distance info into a temporary array (dtemp), sort that
+    ! array, and then scan through that array to find the various thresholds.
     do k = 1, 4 ! quadrantloop
 
       if (need_to_expand_r34(k) == 'y') then
@@ -12704,12 +12725,28 @@ end program trakmain
         cycle   ! quadrantloop
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Within this quadrant, go through the sorted array of wind magnitudes and compare those wind values against the
+      ! set wind thresholds to get the wind radii. The array has been sorted by distance from the storm center in order
+      ! of closest (ipoint=1) to farthest (ipoint=quadct(k)). We analyze these wind values by starting at the farthest
+      ! point and moving inward until we hit a point that has a wind value of at least 34-knot winds (17.5 m/s). When
+      ! we find that point, we interpolate between that point and the next farthest out point to get the distance that
+      ! would be for the exact 17.5 m/s value. We then continue searching through the wind values down closer to the
+      ! storm center to see if we can find values for the 50- and 64-knot winds.
+      !----------------------------------------------------------------------------------------------------------------
       iwindix = 1
       ipoint  = quadct(k) + 1
 
       do while (iwindix <= 3 .and. ipoint > 1) ! threshloop
         if (iwindix > 1) then
           if (first_time_thru_getradii) then
+            !----------------------------------------------------------------------------------------------------------
+            ! We are only doing the wind radii for 50 and 64 kts on the first time through subroutine getradii (we only
+            ! need to do the multiple call iterations for 34 kts).
+            ! Make sure vmax for this lead time exceeds the radii threshold being diagnosed. The check below avoids,
+            ! for example, reporting 50-kt wind radii when the max wind diagnosed was only 44 kts. This can happen
+            ! since the radius for searching for radii is larger than the radius for searching for the max wind.
+            !----------------------------------------------------------------------------------------------------------
             if (vmaxwind >= windthresh(iwindix)) then
               if (verb >= 3) then
                 continue
@@ -12753,7 +12790,11 @@ end program trakmain
 
             vradius(iwindix, k) = int(((quadinfo(k, isortix(ipoint), 2) * 0.5396) / 5.0) + 0.5) * 5
           else
-           
+            !----------------------------------------------------------------------------------------------------------
+            ! Interpolate between the 2 closest distances to each wind threshold to get "exact" distance to that wind
+            ! threshold radius, convert from km to nm, and then round to the nearest 5 nm (since TPC uses this
+            ! precision).
+            !----------------------------------------------------------------------------------------------------------
             exactdistkm = quadinfo(k, isortix(ipoint), 2) + ((quadinfo(k, isortix(ipoint), 1) - windthresh(iwindix)) / &
                          (quadinfo(k, isortix(ipoint), 1) - quadinfo(k, isortix(ipoint+1), 1)) * &
                         ((quadinfo(k, isortix(ipoint+1), 2) - quadinfo(k, isortix(ipoint), 2)) ) )
@@ -12766,7 +12807,15 @@ end program trakmain
               print *, 'vradius(iwindix,k) =', vradius(iwindix,k)
             endif
           endif
-
+          
+          !------------------------------------------------------------------------------------------------------------
+          ! The possibility exists, especially for coarse output grids, that there could be a jump over more than 1
+          ! wind- thresh category when going from 1 grid point to the next, so we need to account for this. For
+          ! example, if 1 point has vmag = 15 m/s and the next point closer in has vmag = 28 m/s, then between those 2
+          ! points you have the thresholds for gale force AND storm force winds, so to be safe, we actually need to add
+          ! 1 to ipoint and re-check the current point, if the wind value at that point is found to be greater than a
+          ! wind threshold value (which it has if you've gotten to this point in threshloop).
+          !------------------------------------------------------------------------------------------------------------
           ipoint  = ipoint + 1
           iwindix = iwindix + 1
         endif
