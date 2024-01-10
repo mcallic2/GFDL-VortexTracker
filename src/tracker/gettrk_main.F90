@@ -11980,6 +11980,11 @@ end program trakmain
     ileadtime = nint(fhreal(ifh) * 100.0)
     ifcsthour = ileadtime / 100
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Using the storm motion vector and storm translation speed as read from the TC Vitals card, do a simple linear
+    ! extrapolation from the current observed (TC Vitals) position and advect the storm to a position at the next
+    ! lead time.
+    !------------------------------------------------------------------------------------------------------------------
     iatret = 0
 
     dtkm = dtk * 1000.0
