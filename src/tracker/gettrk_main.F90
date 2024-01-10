@@ -16978,7 +16978,14 @@ end program trakmain
     ifmret = 0
     nhalf = 5
 
+    ! Set initial parms for use in find_maxmin. Different radii used for V magnitude than for other parms,
+    ! see discussion in module radii for more details.
     if (cparm == 'vmag') then
+      !----------------------------------------------------------------------------------------------------------------
+      ! The maxvgrid variable determines what size grid to send to subroutine barnes. e.g., maxvgrid = 8 means send an
+      ! 8x8 grid; maxvgrid = 12 means send a 12x12 grid. For ultra-fine mesh grids (finer than 0.04 deg, or 1/25 deg),
+      ! we expand to 12 in order to sample a few more points around each grid point.
+      !----------------------------------------------------------------------------------------------------------------
       if ((dx+dy) / 2.0 > 0.04) then
         maxvgrid = 8
       else
@@ -16986,6 +16993,9 @@ end program trakmain
       endif
 
       rads = rads_vmag; re = retrk_vmag; ri = ritrk_vmag
+      ! Basically, this sets re equal to half the distance from the gridpoint in question to the farthest point that
+      ! will be sampled when the (maxvgrid x maxvgrid) grid is passed on to subroutine barnes. Thus, just ignore the 
+      ! parameter retrk_vmag, and use this instead.
       re   = (real(maxvgrid) / 4.0) * ((dx+dy) / 2.0 * dtk)
 
     else if ((dx+dy) / 2.0 < 1.26 .and. (dx+dy) / 2.0 >= 0.40) then
@@ -17014,6 +17024,8 @@ end program trakmain
 
     if (npts == 0) npts = 1
 
+    ! For the  barnes analysis, we will want to speed things up for finer resolution grids. We can do this by skipping
+    ! some of the points in the barnes analysis.
     if (dell > 0.20) then
       bskip1 = 2
       bskip2 = 1
@@ -17036,6 +17048,12 @@ end program trakmain
       bskip2 = 1
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If input parm is vmag, we've already done the minimizing by interpolating to the fine mesh grid, so we'll simply
+    ! send the bounds that were input to this subroutine to barnes as boundaries for the array to search. For all other
+    ! parms, however, no minimizing has been done yet, so we need to call get_ij_bounds to set the boundaries for a
+    ! much smaller grid that surrounds the storm (as opposed to having subroutine barnes search the entire global grid).
+    !------------------------------------------------------------------------------------------------------------------
     if (cparm == 'vmag') then
 
       if (verb .ge. 3) then
@@ -17114,8 +17132,17 @@ end program trakmain
     ibarnes_loopct = 0
 
     if (grid_minlon > 330.0 .and. grid_maxlon < 30.0) then
+      !----------------------------------------------------------------------------------------------------------------
+      ! Our grid is straddling over the GM. This can happen either with a global grid or with a regional grid. How can
+      ! it happen for a global grid? Well, for the case in which this routine is called from subroutine get_uv_center,
+      ! where a smaller subgrid of data is passed in, and that smaller subgrid may straddle the GM. Anyway, we need a
+      ! workaround. This workaround will put the minimum longitude in terms of a negative number, e.g., as opposed to
+      ! being say, 354, it will be -6. You can then leave the grid_maxlon as is.
+      !----------------------------------------------------------------------------------------------------------------
       temp_grid_minlon = grid_minlon - 360.0
       if (guesslon > 330.0) then
+        ! If our grid is straddling the GM and we have adjusted the grid_minlon to be a negative number, then we also
+        ! need to check on the guesslon and adjust it if it is also to west of the GM.
         temp_guesslon = guesslon - 360.0
       else
         temp_guesslon = guesslon
@@ -17142,10 +17169,17 @@ end program trakmain
         iix   = iix + 1
         rlont = temp_guesslon + dell * real(i)
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! If any points in the search grid would extend beyond the grid boundaries,then check and see if this is global
+        ! grid. If it is, and the extension occurred in the i-direction, then adjust the longitude to allow for grid
+        ! wrapping. If it is a regional grid, then just cycle the iloop. In previous versions of the tracker, we would
+        ! exit with an error message, but doing it this way allows us to continue tracking some systems that may be
+        ! close to the grid boundary.  Also, remember to factor in the grid_buffer discussed in the doc block above for
+        ! this subroutine.
         if (rlont >= (grid_maxlon + dx - grid_buffer)) then
           if (trkrinfo%gridtype == 'global') then
             if (cparm == 'vmag') then
-              cycle ! iloop  ! We are off the small vmag subgrid
+              cycle ! iloop  ! we are off the small vmag subgrid
             else
               rlont = rlont - 360.0  ! GM-wrapped for the full, regular, global grid
             endif
@@ -17170,6 +17204,19 @@ end program trakmain
           cycle ! iloop
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Make sure that the point being investigated here as a potential center has valid data at that point. That is,
+        ! for some hires regional grids that have been rotated/converted from a non-latlon grid to a latlon grid, there
+        ! can be locations within the (i,j) space that do not have valid data at them. It makes no sense to consider a
+        ! point such as this as a potential center.
+        ! There is another simpler case here that we are watching out for. This is simply the case, again for model
+        ! data where we only have the innermost nest. Depending on what we choose for the variable "rads" above, with
+        ! the way that "npts" is defined for these iloops and jloops that we're in, we may be searching over points
+        ! that are simply well off the grid. Therefore, it is critical to run through this check_valid_point subroutine
+        ! to make sure that we're not going to inadvertantly be performing an analysis at one of these "off-grid"
+        ! points. So, if the return code from check_valid_point comes back non-zero, simply cycle iloop and go to the
+        ! next point.
+        !--------------------------------------------------------------------------------------------------------------
         call check_valid_point (imax, jmax, dx, dy, fxy, maxmin, valid_pt, rlont, rlatt, grid_maxlat, &
              & grid_minlat, grid_maxlon, temp_grid_minlon, trkrinfo, icvpret)
 
@@ -17184,6 +17231,16 @@ end program trakmain
         if (dist .gt. rads) cycle ! iloop
 
         if (cparm == 'vmag') then
+          !------------------------------------------------------------------------------------------------------------
+          ! This next bit of code gets the ij coordinates for an 8x8 box around the current point under consideration.
+          ! These ij coordinates are sent to barnes so that barnes only loops 64 times, as opposed to nearly 10,000 if
+          ! the whole 97x97 array were sent. So, fix rlatt to the grid point just northward of rlatt and fix rlont to
+          ! the grid point just eastward of rlont. Note that this makes for a modified barnes analysis in that we're
+          ! sort of specifying ahead of time exactly which grid points will be included and we'll be excluding some
+          ! points that would be near the periphery of each (rlont,rlatt)'s range, but as long as we're consistent and
+          ! do it this way for each point, it's well worth the trade-off in cpu time. Parameter maxvgrid determines
+          ! what size array to send to barnes (maxvgrid=8 means 8x8)
+          !------------------------------------------------------------------------------------------------------------
           jvlatfix = int((vmag_latmax - rlatt) / dy + 1.0)
           ivlonfix = int((rlont - temp_grid_minlon) / dx + 2.0)
 
@@ -17196,6 +17253,8 @@ end program trakmain
 
             if (ibeg < 1) then
               if (trkrinfo%gridtype == 'global') then
+                ! If wrapping past GM, there is code below in this find_maxmin routine that can modify the indices
+                ! appropriately; do nothing here
                 continue
               else
                 if (verb .ge. 1) then
@@ -17221,6 +17280,8 @@ end program trakmain
 
             if (iend > imax) then
               if (trkrinfo%gridtype == 'global') then
+                ! If wrapping past GM, there is code below in this find_maxmin routine that can modify the indices
+                ! appropriately; do nothing here
                continue
               else
                 if (verb .ge. 1) then
@@ -17304,6 +17365,8 @@ end program trakmain
 56  format ('k = ', i3, ' i = ', i3, ' j = ', i3, '  rln = ', f7.3, '  rlt = ', f7.3, '  barnval = ', f11.5)
 
     if (ctlon < 0.0) then
+      ! We have grid-wrapped to find the ctlon, which was found to be < 0, so for reporting purposes and for the start
+      ! of the next loop, set ctlon to positive degress east.
       ctlon = ctlon + 360.0
     endif
 
@@ -17328,6 +17391,8 @@ end program trakmain
 64  format (' After first run in find_maxmin, fmax = ',e16.3,' fmin = ', e16.3)
 111 format (i2, '  rlont = ', f7.2, 'W   rlatt = ', f7.2, '  zeta = ', f13.8)
 
+    ! Through interpolation, the grid for vmag has already been minimized considerably, we don't need to go through the
+    ! 2nd part of this subroutine, which halves the grid spacing.
     if (nhalf < 1 .or. cparm == 'vmag') then
       if (maxmin == 'max') then
         xval = fmax
@@ -17337,6 +17402,11 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If on our first pass through, we were dealing with a regional grid that straddled the GM, then it becomes
+    ! (for now) too much of a coding hassle to deal with in the rest of this routine (i.e., in all the nhalf
+    ! iterations), so we will just go with the first run through for the center fix and exit the routine.
+    !------------------------------------------------------------------------------------------------------------------
     if (grid_minlon > 330.0 .and. grid_maxlon < 30.0) then
       if (maxmin == 'max') then
         xval = fmax
@@ -17346,6 +17416,11 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If the grid spacing is fine enough (I've chosen 0.2-deg as a min threshold), there is no need to halve the grid
+    ! more than 3 times, as halving a 0.2-deg grid 3 times gives a resolution of 0.025-deg (2.7 km), or a max error in
+    ! the position estimate of 2.7/2 = 1.35 km.
+    !------------------------------------------------------------------------------------------------------------------
     if ((dx+dy) / 2.0 <= 0.2) then
       if ((dx+dy) / 2.0 <= 0.05) then
         nhalf = 1
@@ -17354,9 +17429,17 @@ end program trakmain
       endif
     endif
 
+    ! Halve the grid spacing to refine the location and value of the max/min value, but restrict the area of the
+    ! new search grid.
     npts = npts / 2
     npts = max(npts, 1)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First, recalculate the i and j beginning and ending points to be used in the barnes analysis subroutine. Only do
+    ! this once for this grid-refinement (even though the grid is redefined 3 times in this subroutine), but make sure
+    ! to have the possible search grid be big enough to allow the possibility of the grid shifting way right or way
+    ! left each time through the loop (get_ij_bounds takes care of this).
+    !------------------------------------------------------------------------------------------------------------------
     call get_ij_bounds (npts, nhalf, ri, imax, jmax, dx, dy, grid_maxlat, grid_minlat, grid_maxlon, &
          &  grid_minlon, ctlon, ctlat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
@@ -17371,6 +17454,7 @@ end program trakmain
       return
     endif
 
+    ! do the actual searching for the max/min value 
     if (verb .ge. 3) then
       print *, ' '  !CAITLYN - does this have a purpose?
     endif
@@ -17444,6 +17528,8 @@ end program trakmain
             cycle ! iloop2
           endif
 
+          ! Again, check and make sure that the lat/lon point in question here has valid data (see the explanation
+          ! further up in this subroutine inside iloop).
           call check_valid_point (imax, jmax, dx, dy, fxy, maxmin, valid_pt, rlont, rlatt, grid_maxlat, &
                & grid_minlat, grid_maxlon, grid_minlon, trkrinfo, icvpret)
 
