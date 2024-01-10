@@ -10844,15 +10844,30 @@ end program trakmain
     integer         :: ist, iovret, istmspd, istmdir
 
     iovret = 0
+    ! Because the xlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
     xlon   = mod(xlon, 360.0)
+    ! Initially, set all "stm" components equal to the input "gstorm" components for this storm, then we will change
+    ! the specific components that we need to.
     gstm   = gstorm(ist)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If the "gv_gen_date" for this storm does not equal 99999, then that means that a vitals was read in for this
+    ! storm in subroutine read_gen_vitals, so be sure to use the genesis date, genesis latitude and genesis longitude
+    ! for the storm identifier at the beginning of the vitals record.
+    !------------------------------------------------------------------------------------------------------------------
     if (gstm%gv_gen_date /= 99999) then
       if (gstm%gv_gen_type /= 'FOF') then
+        ! If this is not a 'FOF' storm (found on the fly storm), then it must be a TC vitals storm, or a tropical cyclone,
+        ! and we don't want to create a vitals record for a tropical cyclone, since we will rely on reading them from the
+        ! TC Vitals database instead.
         return
       endif
 
     else
+      !----------------------------------------------------------------------------------------------------------------
+      ! This storm is new in this forecast/analysis and was found on the fly in the first time level for this run and
+      ! there was no previous vitals record for this system
+      !----------------------------------------------------------------------------------------------------------------
       gstm%gv_gen_date = inp%bcc * 100000000 + inp%byy * 1000000 + inp%bmm * 10000 + inp%bdd * 100 + inp%bhh
       gstm%gv_gen_fhr = 0
       gstm%gv_gen_lat = int(abs(xlat) * 10.0 + 0.5)
@@ -10908,6 +10923,7 @@ end program trakmain
 21 format (i10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1, '_', a3, 1x, i8, 1x, i4.4, 1x, i3.3, a1, 1x, i4.4, a1, &
            1x, i3, 1x, i3, 3(1x, i4), 1x, i2, 1x, i3, 4(1x, i4), 1x, a1)
 
+    ! flush the output stream so it actually writes
     flush(67)
     return
 
