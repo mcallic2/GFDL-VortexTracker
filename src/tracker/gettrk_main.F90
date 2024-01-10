@@ -15882,6 +15882,14 @@ end program trakmain
     logical(1)              :: cflag, valid_pt(imax,jmax)
     logical(1), allocatable :: lbi(:,:)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Interpolate input grid to smaller grid
+    !
+    ! Get beginning and ending j points (on the input grid) for a smaller array that surrounds the storm. It is this
+    ! smaller array that we will interpolate to a finer grid.
+    !
+    ! Calculate number of pts to either side of this j to search
+    !------------------------------------------------------------------------------------------------------------------
     gotlat = 'n'
     npts   = ceiling(rads_vmag / (dtk * ((dx+dy) / 2.0)))
 
@@ -15980,6 +15988,16 @@ end program trakmain
       case (1020); nlev = levsfc
     end select
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! This next if statement determines how many times to interpolate the input grid to a smaller grid. Here are the
+    ! grid sizes for some of the typical grids that will be used:
+    !
+    !   Original grid size     # of interps        Final grid size
+    !  --------------------    ------------     ---------------------
+    !  1.00 deg (111.19 km)        3             0.125 deg (13.9 km)
+    !  1.25 deg (138.99 km)        3             0.156 deg (17.4 km)
+    !  2.50 deg (277.99 km)        4             0.156 deg (17.4 km)
+    !------------------------------------------------------------------------------------------------------------------
     if ((dx+dy) / 2.0 > 1.2) then
       numinterp = 4
     else if ((dx+dy) / 2.0 > 0.50 .and. (dx+dy) / 2.0 <= 1.2) then
@@ -15996,6 +16014,12 @@ end program trakmain
     imxold = iend - ibeg + 1
     jmxold = jend - jbeg + 1
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Before interpolating, make sure that all the original points have valid data. If they don't then exit the
+    ! subroutine. 
+    ! This is NOT checking to see if ALL the pts on the complete & full input grid have valid data; it only checks
+    ! those points that are within the box returned from get_ij_bounds.
+    !------------------------------------------------------------------------------------------------------------------
     do i = ibeg, iend
       if (i > imax) then
 
@@ -16042,6 +16066,7 @@ end program trakmain
       enddo
     enddo
 
+    ! begin the interpolation process
     allocate (uold(imxold, jmxold), stat = iuo)
     allocate (vold(imxold, jmxold), stat = ivo)
     allocate (rlonold(imxold),      stat = iloo)
@@ -16161,6 +16186,9 @@ end program trakmain
 
     if (numinterp == 0) then
 
+      ! No interpolations were done for this fine mesh grid, but we need to fill some of these arrays and define
+      ! variables for subsequent subroutine calls just below here that require the variables imxnew, jmxnew, and the
+      ! arrays unew and vnew.
       if (iend > imax) then
         if (trkrinfo%gridtype == 'global') then
           continue
@@ -16204,9 +16232,13 @@ end program trakmain
         ip = i
 
         if (i > imax) then
+          ! This has to be a global, wrapping grid, or else the if statement a few lines up would have caught
+          ! this already.
           ip = i - imax  ! wrapping past GM
         endif
         if (i < 1) then
+          ! This has to be a global, wrapping grid, or else the if statement a few lines up would have caught
+          ! this already.
           ip = i + imax  ! wrapping past GM
         endif
         rlonnew(i-ibeg+1) = glon(ip)
@@ -16249,6 +16281,13 @@ end program trakmain
  171  format (' dell = ', f7.3, ' uvgeslon = ', f8.3, 'E  (', f8.3, 'W)  uvgeslat = ', f8.3)
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Note that in the next call, I pass the 'global' argument to find_maxmin. This defines what type of grid it is, so
+    ! that the proper grid_buffer can be chosen. This grid_buffer is designed to avoid having a center be chosen too
+    ! close to the grid boundary. However, in the case of vmag here, we are only using a small subgrid, and we want to
+    ! make sure we use *all* points in that subgrid for searching, and that will occur if we set that calling argument
+    ! to 'global' as opposed to 'regional'.
+    !------------------------------------------------------------------------------------------------------------------
     call find_maxmin (imxnew, jmxnew, dell, dell, 'vmag', vmag, 'min', ist, uvgeslon, uvgeslat, rlonnew, rlatnew, lbi, &
          & trkrinfo, cflag, ctlon, ctlat, xval, grid_maxlat, grid_minlat, grid_maxlon, grid_minlon, 'global', ifmret)
     deallocate (vmag);    deallocate (lbi)
