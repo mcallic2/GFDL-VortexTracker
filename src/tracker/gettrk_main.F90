@@ -14503,6 +14503,13 @@ end program trakmain
                      '  Min   ', 'NOT USED', '  Min   ', '  Min   ', '  Min   ', &
                      '  Min   ', '  Max   ', '  Max   ', '  Max   ', '  Max   '/
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! We need to judge whether each parameter position is reasonable, so we'll check to make sure that the dist from
+    ! each parameter's estimate to the guess position is less than a maximum allowable error. If it's the first
+    ! forecast time, use the initial error max (defined as errinit in error_parms) as errmax. Otherwise, the max error
+    ! criterion is that the distance error must not exceed 3 times the previous forecast time's standard deviation
+    ! (after a small growth factor has been applied).
+    !------------------------------------------------------------------------------------------------------------------
     ifret = 0
     if (ifh == 1) then
       if (atcfname == 'GFSO' .or. atcfname == 'MRFO' .or. atcfname == 'GDAS' .or. atcfname == 'GFDT' .or. &
@@ -14567,6 +14574,12 @@ end program trakmain
     gt345_ct   = 0
     lt15_ct    = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! For each parm, check to see if the estimated center is within distance errmax of the guess center. If it's within
+    ! errmax, then use that parm for locating the center. If it's NOT within errmax, but IS within errpmax, then we
+    ! still use this in calculating the standard deviation of the parameters for helping to determine the errmax for
+    ! the next forecast hour.
+    !------------------------------------------------------------------------------------------------------------------
     do ip = 1, maxtp
 
       if (ip == 4 .or. ip == 6) then  ! parms 4 & 6 not defined.
@@ -14602,6 +14615,8 @@ end program trakmain
 
     if (iclose > 0) then
       if (gt345_ct > 0 .and. lt15_ct > 0) then
+        ! We have some parms left of the GM and some to the right, so we will add (360*lt15_ct) to the sum of the
+        ! lons (clonsum)
         clon_fguess = (clonsum + (360.0 * real(lt15_ct))) / real(iclose)
       else
         clon_fguess = clonsum / real(iclose)
@@ -14612,6 +14627,7 @@ end program trakmain
       clat_fguess = clatsum / real(iclose)
     endif
 
+    ! print out a table listing of the locations of the fixes for the individual parameters
     if (verb .ge. 3) then
       print *, ' '
       print *, '--------------------------------------------------'
@@ -14705,6 +14721,12 @@ end program trakmain
 95  format (1x, a33, 1x, i4, ':', i2.2, a2, a4, a1, a9)
 97  format (' Gen ID (if available): ', i10.10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1, '_', a3)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If number of parameter centers close enough (iclose) > 0, then calculate the center by taking an average of all
+    ! the parameter center positions that are within distance errmax from the guess position (geslon,geslat). Get a
+    ! first-guess mean position, and then re-calculate the position estimate by giving more weight to those positions
+    ! that are closer to the first-guess mean position.
+    !------------------------------------------------------------------------------------------------------------------
     dist_from_mean = 0.0
 
     if (iclose > 0.0) then
@@ -14774,6 +14796,14 @@ end program trakmain
         return
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now re-calculate the mean position by giving more weight to those position estimates that are closer to the
+      ! first guess mean position. Note that if stderr_close < 5.0, we force it to be 5.0; we do this to avoid getting
+      ! very large numbers for devia values, which could make the weights (wtpos) equal to 0. This occurred during
+      ! testing when only 2 parameters were valid, and so, of course, the standard deviation from the mean of those 2
+      ! parameters was close to 0, which gave devia values around 6000, and then wtpos values of 0, leading to a divide
+      ! by 0 crash later on in subroutine wtavrg.
+      !----------------------------------------------------------------------------------------------------------------
       kprm = 0
 
       if (stderr_close > 0.0) then
@@ -14809,6 +14839,12 @@ end program trakmain
                 f8.5, 2x, 4(2x, f7.2))
 
       else
+        !--------------------------------------------------------------------------------------------------------------
+        ! This next if statement is for the case in which only 1 parameter is valid, for which the 
+        ! stderr_close will = 0 (obviously), but as long as we have 1 valid parameter, continue processing, and set the
+        ! weight for that parm = 1. The else portion is for the case in which stderr_close = 0 with NO parms being
+        ! close.
+        !--------------------------------------------------------------------------------------------------------------
         if (iclose == 1) then
           do ip = 1, maxtp
             if (calcparm(ip,ist)) then
@@ -14908,6 +14944,11 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now calculate the average error of all the parms that are within a radius errpmax (defined in error_parms,
+    ! ~600km), and the std dev of those errors. This standard deviation will be used in calculating the maximum
+    ! allowable error for the next forecast time.
+    !------------------------------------------------------------------------------------------------------------------
     if (itot4next > 0 .and. ifret /= 95) then
       trkerr_avg = trkerr_avg / real(itot4next)
       call stdevcalc (errdist, maxtp, use4next, trkerr_avg, stderr(ist,ifh), isret)
