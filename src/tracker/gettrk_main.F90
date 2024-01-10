@@ -15327,8 +15327,17 @@ end program trakmain
          & uvgeslon, uvgeslat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igibret)
 
     if (grid_minlon > 330.0 .and. grid_maxlon < 30.0) then
+      !----------------------------------------------------------------------------------------------------------------
+      ! Our grid is straddling over the GM. This can happen either with a global grid or with a regional grid. How can
+      ! it happen for a global grid? Well, for the case in which this routine is called from subroutine get_uv_center,
+      ! where a smaller subgrid of data is passed in, and that smaller subgrid may straddle the GM. Anyway, we need a
+      ! workaround. This workaround will put the minimum longitude in terms of a negative number, e.g., as opposed to
+      ! being say, 354, it will be -6. You can then leave the grid_maxlon as is.
+      !----------------------------------------------------------------------------------------------------------------
       temp_grid_minlon = grid_minlon - 360.0
       if (uvgeslon > 330.0) then
+        ! If our grid is straddling the GM and we have adjusted the grid_minlon to be a negative number, then we also
+        ! need to check on the guesslon and adjust it if it is also to west of the GM.
         temp_guesslon = uvgeslon - 360.0
       else
         temp_guesslon = uvgeslon
@@ -15344,6 +15353,8 @@ end program trakmain
       grid_buffer = 0.0
     endif
 
+    ! For the wind circulation analysis, we will want to speed things up for finer resolution grids. We can do this by
+    ! skipping some of the points in the wind circulation analysis.
     if (dell > 0.20) then
       bskip1 = 1
       bskip2 = 1
@@ -15386,6 +15397,14 @@ end program trakmain
         iix   = iix + 1
         rlont = temp_guesslon + dell * real(i)
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! If any points in the search grid would extend beyond the grid boundaries, then check and see if this is
+        ! global grid. If it is, and the extension occurred in the i-direction, then adjust the longitude to allow for
+        ! grid wrapping. If it is a regional grid, then just cycle the iloop. In previous versions of the tracker, we
+        ! would exit with an error message, but doing it this way allows us to continue tracking some systems that may
+        ! be close to the grid boundary. Also, remember to factor in the grid_buffer discussed in the doc block above
+        ! for this subroutine.
+        !--------------------------------------------------------------------------------------------------------------
         if (rlont >= (grid_maxlon + dx - grid_buffer)) then
           if (trkrinfo%gridtype == 'global') then
             rlont = rlont - 360.0  ! GM-wrapped for the full, regular, global grid
@@ -15406,6 +15425,19 @@ end program trakmain
           cycle ! iloop1
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Make sure that the point being investigated here as a potential center has valid data at that point. That is,
+        ! for some hires regional grids that have been rotated/converted from a non-latlon grid to a latlon grid, there
+        ! can be locations within the (i,j) space that do not have valid data at them. It makes no sense to consider a
+        ! point such as this as a potential center.
+        ! There is another simpler case here that we are watching out for. This is simply the case, again for model
+        ! data where we only have the innermost nest. Depending on what we choose for the variable "rads" above, with
+        ! the way that "npts" is defined for these iloops and jloops that we're in, we may be searching over points
+        ! that are simply well off the grid. Therefore, it is critical to run through this check_valid_point subroutine
+        ! to make sure that we're not going to inadvertantly be performing an analysis at one of these "off-grid"
+        ! points. So, if the return code from check_valid_point comes back non-zero, simply cycle iloop and go to the
+        ! next point.
+        !--------------------------------------------------------------------------------------------------------------
         call check_valid_point (imax, jmax, dx, dy, u(1,1,nlev), maxmin, valid_pt, rlont, rlatt, grid_maxlat, &
              & grid_minlat, grid_maxlon, temp_grid_minlon, trkrinfo, icvpret)
 
@@ -15420,6 +15452,11 @@ end program trakmain
         call calcdist (rlont, rlatt, temp_guesslon, uvgeslat, dist, degrees)
         if (dist .gt. rads) cycle ! iloop1
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Now go through each radius, starting from inner and working to outer, and at each one, go around through all
+        ! of the 24 discrete azimuths, starting at 7.5 and adding 15 degrees clockwise each time, all the way up
+        ! through 352.5
+        !--------------------------------------------------------------------------------------------------------------
         vt_mean = 0.0
         vt      = 0.0
         vr      = 0.0
@@ -15429,6 +15466,8 @@ end program trakmain
         do idist = 1, numdist ! radiusloop1
           azimuth_ct    = 0
           vt_azim_sum   = 0.0
+          ! Compute the length of a 1/numazim arc at this radius, and be sure to multiply by 1000 to convert from
+          ! km to m for use in computing the circulation
           circumference = 2.0 * pi * rdist(idist) * 1000.0
           arclength     = circumference / real(numazim)
 
@@ -15439,13 +15478,16 @@ end program trakmain
 
             if (gm_wrap_flag == 'maxplus360') then
               if ((rlont > 330.0 .and. rlont <= 360.0) .and. targlon < 25.0) then
-                  targlon = targlon + 360.0
+                ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
+                targlon = targlon + 360.0
               endif
               if (rlont > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
                 targlon = targlon + 360.0
               endif
             endif
 
+            ! These calls to bilin_int_uneven pass a variable "level" that contains the vertical level to pull the wind
+            ! data from, either 850, 700 or surface (which will be indicated by a value/code of 1020).
             call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, 'u', &
                  & xintrp_u, valid_pt, bimct, ifh, ibiret1)
 
@@ -15466,6 +15508,8 @@ end program trakmain
           enddo ! azimloop1
 
           if (azimuth_ct > 0) then
+            ! Add the value for the circulation in this radial band (circul_band(idist)) to the "solid disk" 
+            ! circulation total. Also, compute azimuthally-averaged Vt at this distance
             circul_disk = circul_disk + circul_band(idist)
             vt_mean(idist) = vt_azim_sum / real(azimuth_ct)
           else
@@ -15531,6 +15575,8 @@ end program trakmain
 63  format (' After first run, Wind Circulation (SHEM) ctlon= ',f8.3,'E  (0-360E lon): ',f8.3,'E  ',f8.3, &
            'W  ctlat = ', f8.3, '  xmin_circul_disk = ', f15.1)
 
+    ! If nhalf is specified as 0, then don't go through any more iterations of this routine, just exit with the value
+    ! that we already got the first time through the loop, above.
     if (dell > 0.50) then
       nhalf = 4
     else if (dell > 0.20 .and. dell <= 0.50) then
@@ -15552,6 +15598,11 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If on our first pass through, we were dealing with a regional grid that straddled the GM, then it becomes (for
+    ! now) too much of a coding hassle to deal with in the rest of this routine (i.e., in all the nhalf iterations), so
+    ! we will just go with the first run through for the center fix and exit the routine.
+    !------------------------------------------------------------------------------------------------------------------
     if (grid_minlon > 330.0 .and. grid_maxlon < 30.0) then
       if (uvgeslat > 0.0) then
         fxval = xmax_circul_disk
@@ -15561,7 +15612,16 @@ end program trakmain
       return
     endif
 
+    ! Halve the grid spacing to refine the location and value of the max/min value, but restrict the area of the
+    ! new search grid.
     npts = max(npts, 1)
+    !------------------------------------------------------------------------------------------------------------------
+    ! First, recalculate the i and j beginning and ending points to be used in the barnes analysis subroutine. Only do
+    ! this once for this grid-refinement (even though the grid is redefined nhalf times in this subroutine), but make
+    ! sure to have the possible search grid be big enough to allow the possibility of the grid shifting way right or
+    ! way left each time through the loop (get_ij_bounds takes care of this). Cut the value of rads in half (only do
+    ! this once) so that any points beyond rads/2 are not considered as potential centers.
+    !------------------------------------------------------------------------------------------------------------------
     rads = 0.5 * rads
 
     call get_ij_bounds (npts, nhalf, ri, imax, jmax, dx, dy, grid_maxlat, grid_minlat, grid_maxlon, grid_minlon, &
@@ -15580,6 +15640,7 @@ end program trakmain
 
     bimct = 0
 
+    ! Now do the actual searching for the max/min value
     do k = 1, nhalf ! kloop
       call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
       if (verb .ge. 3) then
@@ -15639,6 +15700,8 @@ end program trakmain
             cycle ! iloop2
           endif
 
+          ! Again, check and make sure that the lat/lon point in question here has valid data (see the explanation
+          ! further up in this subroutine inside iloop).
           call check_valid_point (imax, jmax, dx, dy, u(1,1,nlev), maxmin, valid_pt, rlont, rlatt, grid_maxlat, &
                & grid_minlat, grid_maxlon, grid_minlon, trkrinfo, icvpret)
 
@@ -15655,10 +15718,17 @@ end program trakmain
           circul_band = 0.0
           circul_disk = 0.0
 
+          !------------------------------------------------------------------------------------------------------------
+          ! Now go through each radius, starting from inner and working to outer, and at each one, go around through
+          ! all of the 24 discrete azimuths, starting at 7.5 and adding 15 degrees clockwise each time, all the way
+          ! up through 352.5
+          !------------------------------------------------------------------------------------------------------------
           do idist = 1, numdist ! radiusloop2
             azimuth_ct  = 0
             vt_azim_sum = 0.0
 
+            ! Compute the length of a 1/numazim arc at this radius, and be sure to multiply by 1000 to convert from
+            ! km to m for use in computing the circulation
             circumference = 2.0 * pi * rdist(idist) * 1000.0
             arclength     = circumference / real(numazim)
 
@@ -15668,6 +15738,7 @@ end program trakmain
 
               if (gm_wrap_flag == 'maxplus360') then
                 if ((rlont > 330.0 .and. rlont <= 360.0) .and. targlon < 25.0) then
+                  ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
                   targlon = targlon + 360.0
                 endif
                 if (rlont > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -15696,6 +15767,8 @@ end program trakmain
             enddo ! azimloop2
 
             if (azimuth_ct > 0) then
+              ! Add the value for the circulation in this radial band (circul_band(idist)) to the "solid disk"
+              ! circulation total. Also, compute azimuthally-averaged Vt at this distance
               circul_disk    = circul_disk + circul_band(idist)
               vt_mean(idist) = vt_azim_sum / real(azimuth_ct)
             else
