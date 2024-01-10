@@ -16722,6 +16722,8 @@ end program trakmain
 
     npts = imax * jmax
 
+    ! First, call get_ij_bounds in order to get the (i,j) coordinates of the (fixlon,fixlat) position that we need to
+    ! search around. These (i,j) coordinates are returned as ilonfix and jlatfix.
     call get_ij_bounds (npts, 0, ridlm, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, fixlon(ist,ifh), &
          & fixlat(ist,ifh), trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
@@ -16803,6 +16805,8 @@ end program trakmain
 
       if (zeta(ilonfix,jlatfix,n) > -9990.0) then
 
+        ! We have valid zeta data for this level, so we first call  barnes now to get the mean zeta
+        ! surrounding our found center position.
         if (fixlat(ist,ifh) > 0.0) then
           cvort_maxmin = 'max'
         else
@@ -16828,11 +16832,11 @@ end program trakmain
             write (6,521)
             write (6,523)
           endif
-          ! if out of grid bounds at 850, then will also be out at 700
  519      format (1x, ' The call to get_smooth_value_at_pt in')
  520      format (1x, ' get_zeta_values returned a non-zero return')
  521      format (1x, ' code.  The search for zeta values will not')
  523      format (1x, ' be done.  Missing values will be assigned.')
+          ! if out of grid bounds at 850, then will also be out at 700
           exit  ! report_zeta_loop
         endif
       else
@@ -16847,10 +16851,11 @@ end program trakmain
         write (6,*) '  --- mean zeta raw = ', xsmoothval
       endif
 
+      ! call fix_latlon_to_ij to get the nearest actual raw (grid) zeta data values, not the mean value
       call fix_latlon_to_ij (imax, jmax, dx, dy, zeta(1,1,n), cvort_maxmin, valid_pt, fixlon(ist,ifh),          &
            & fixlat(ist,ifh), xsmoothval, idum, jdum, gridpoint_maxmin, 'tracker', 'xxxxxxx', glatmax, glatmin, &
            & glonmax, glonmin, trkrinfo, ifilret)
-      
+
       if (ifilret == 0) then
         igridzeta(n) = int((gridpoint_maxmin * 1.0E6) + 0.5)
       else
