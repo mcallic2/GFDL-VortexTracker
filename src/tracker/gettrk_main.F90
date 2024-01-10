@@ -17856,6 +17856,9 @@ end program trakmain
         if (defined_pt(i,j)) then
           if (lsmask(i,j) < 0.5) then
             if (fxy(i,j) > -999.01 .and. fxy(i,j) < -998.99) then
+              ! Even though this (i,j) is a valid point, its sst value has been set to -999 because a neighboring point
+              ! was found to be out of the grid boundaries. This also prevents -999 values for MSLP at grid edges in
+              ! HWRF from getting included in the mean calculation
               cycle
             endif
             seact = seact + 1
