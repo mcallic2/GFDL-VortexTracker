@@ -18362,6 +18362,9 @@ end program trakmain
 
     cosanga = (dcos(distlatb8) * dcos(distlatc8) + dsin(distlatb8) * dsin(distlatc8) * dcos(difflon8))
 
+    ! This next check of cosanga is needed since I have had ACOS crash when calculating the distance between 2
+    ! identical points (should = 0), but the input for ACOS was just slightly over 1 (e.g., 1.00000000007), due to
+    ! (I'm guessing) rounding errors.
     if (cosanga > 1.0) then
       cosanga = 1.0
     endif
@@ -18373,6 +18376,8 @@ end program trakmain
     xdist   = xdist8
     degrees = degrees8
 
+    ! Whether this subroutine returns the value of the distance in km or m depends on the scale of the parameter
+    ! ecircum. At the original writing of this subroutine (7/97), ecircum was given in km.
     return
 
   end subroutine calcdist
