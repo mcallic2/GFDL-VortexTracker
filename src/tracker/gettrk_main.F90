@@ -18268,6 +18268,7 @@ end program trakmain
       endif
     endif
 
+    ! eliminate tracking of storms within 5 degrees of the pole for global grids due to problems with array indicies
     if ((trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') .and. trkrinfo%gridtype == 'global') then
       if (guesslat > 85.0 .or. guesslat < -85.0) then
 
