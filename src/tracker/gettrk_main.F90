@@ -10128,6 +10128,12 @@ end program trakmain
       stop 95
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     conv_ms_knots = 1.9427
 
     if (outlon < -998.0 .or. outlat < -998.0) then
@@ -10156,6 +10162,11 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Unlike the regular atcfunix output, in which we  output a record at forecast time = 00h even if the storm cannot
+    ! be found, here we don't want to do that. So check the lat & lon positions and exit this subroutine now if
+    ! they're both zero.
+    !------------------------------------------------------------------------------------------------------------------
     if (intlat == 0 .and. intlon == 0) then
       if (verb .ge. 3) then
         print *, ' '
@@ -10174,12 +10185,30 @@ end program trakmain
       return
     endif
 
+    ! Initially, set all "gstm" components equal to the input "gstorm" components for this storm, then we will change
+    ! the specific components that we need to.
     gstm = gstorm(ist)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If the "gv_gen_date" for this storm does not equal 99999, then that means that a vitals was read in for this
+    ! storm in subroutine read_gen_vitals, so be sure to use the genesis date, genesis latitude and genesis longitude
+    ! for the storm identifier at the beginning of the modified atcfunix record.
+    !------------------------------------------------------------------------------------------------------------------
     if (gstm%gv_gen_date /= 99999) then
-      continue    ! use the info from the gstorm array, which
+      !----------------------------------------------------------------------------------------------------------------
+      ! Just use the info from the gstorm array, which comes either from the genesis vitals record or, for storms that
+      ! were found in the course of a forecast, come from basically the ELSE statement just below on a previous call to
+      ! output_atcf_gen after this storm was found and the output was written for the first lead time at which the 
+      ! storm was identified.
+      !----------------------------------------------------------------------------------------------------------------
+      continue 
 
     else
+      !----------------------------------------------------------------------------------------------------------------
+      ! This storm was found on the fly during this run and there was no previous vitals record for this system. The
+      ! information that will be used to identify the genesis location is the same exact info as the tracker-found
+      ! position for this time.
+      !----------------------------------------------------------------------------------------------------------------
       gstm%gv_gen_date  = inp%bcc * 100000000 + inp%byy * 1000000 + inp%bmm * 10000 + inp%bdd * 100 + inp%bhh
       gstm%gv_gen_fhr   = ifcsthour
       gstm%gv_gen_lat   = intlat
@@ -10187,7 +10216,11 @@ end program trakmain
       gstm%gv_gen_lon   = intlon
       gstm%gv_gen_lonew = clonew
       gstm%gv_gen_type  = 'FOF'
-
+      !----------------------------------------------------------------------------------------------------------------
+      ! Important! Transfer all this local "gstm" data back into the saved "gstorm" array for use in consistently
+      ! identifying this storm in future iterations of calling this output_atcf_gen routine for this same storm. Doing
+      ! this enables the same storm to have the same unique storm ID from one lead time to the next within a forecast.
+      !----------------------------------------------------------------------------------------------------------------
       gstorm(ist) = gstm
     endif
 
@@ -10344,6 +10377,8 @@ end program trakmain
     endif
 
     if (stcvtype(ist) == 'FOF') then
+      ! If this is a TC vitals-described storm (i.e., one that is numbered by JTWC or NHC), then leave the basinid as
+      ! is. Otherwise, we want to use the "basinid" location as a label to identify what type of run this is.
       if (trkrinfo%type == 'midlat') basinid = 'ML'
       if (trkrinfo%type == 'tcgen')  basinid = 'TG'
     endif
@@ -10422,6 +10457,7 @@ end program trakmain
            3(i4, ', '), 3(i6, ', '), a1,2(', ', i4), 4(', ', i6), ', SHR82, ', i4, ', ', i3, 3(', ', i4), ', ',   &
            i9, 4(', ', i4))
 
+    ! flush the output stream so it actually writes
     flush(66)
     return
 
