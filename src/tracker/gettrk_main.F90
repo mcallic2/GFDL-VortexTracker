@@ -15153,6 +15153,13 @@ end program trakmain
     if (ict > 0) then
       stdx = sqrt(stdx / real(ict))
       if (stdx == 0.0) then
+        !--------------------------------------------------------------------------------------------------------------
+        ! This can happen if you have just 2 points; The mean position will be exactly in the middle of the 2 points
+        ! and so the standard deviation around that mean point will be 0. And since the calling routine will quit if
+        ! the returned standard deviation is 0, we must force it to be 1 so the program continues running.
+        ! Theoretically, it could also happen with 3 or more points, but the likelihood of the distances working out to
+        ! exactly equidistant for 3 points is not that good.
+        !--------------------------------------------------------------------------------------------------------------
         stdx = 1.0
       endif
     else
