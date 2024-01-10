@@ -10741,6 +10741,11 @@ end program trakmain
 
     iovret = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Initially, set all "stm" components equal to the input "storm" components for this storm, then we will change the
+    ! specific components that we need to. Also, because the xlon value may be >360 due to GM wrapping, we need to mod
+    ! it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     stm = storm(ist)
     xlon = mod(xlon, 360.0)
     stm%tcv_center = 'AEAR'
@@ -10770,6 +10775,7 @@ end program trakmain
 21 format (a4, 1x, a3, 1x, a9, 1x, i8.8, 1x, i4.4, 1x, i3, a1, 1x, i4, a1, 1x, i3, 1x, i3, 3(1x, i4), 1x, &
            i2, 1x, i3, 1x, 4(i4, 1x), a1)
 
+    ! flush the output stream so it actually writes
     flush(65)
     return
 
