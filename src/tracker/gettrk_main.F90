@@ -11200,9 +11200,16 @@ end program trakmain
 
     ileadtime = nint(fhreal(ifh) * 100.0)
     ifcsthour = ileadtime / 100
+    ! For updating the first guess, if Method 1 and Method 2 are both able to be done, give the following weights
+    ! to the 2 methods.
     data barneswt /0.50/, extrapwt /0.50/
 
-
+    !-------------------------------------------------------------------------------------------------------------------
+    ! METHOD 1: LINEAR EXTRAPOLATION
+    !
+    ! First, just do a simple linear extrapolation from the previous fix position through the current fix position. If
+    ! it's the first time (vt=0), then use the storm motion vector and storm speed information from the TC Vitals card.
+    !-------------------------------------------------------------------------------------------------------------------
     dtkm = dtk * 1000.0
     dt   = (fhreal(ifh+1) - fhreal(ifh)) * 3600.0
 
@@ -11233,10 +11240,21 @@ end program trakmain
         if (avglat < -89.5) avglat = -89.0
         cosfac    = cos(avglat * dtr)
         xdeg      = xdist / (dtkm * cosfac)
+        ! All other updated lons computed in this subroutine below lons that can exceed 360, so do not mod the
+        ! extraplon to be 0-360.
         extraplon = fixlon(ist, ifh) + xdeg
       endif
 
     else
+      !----------------------------------------------------------------------------------------------------------------
+      ! Do a simple linear extrapolation of the current motion of the storm. Follow a line from the fix position from
+      ! the last fix through the current fix and extrapolate out. To figure out the new latitude, just see how many deg
+      ! lat the storm moved since last time and add it to the current fix latitude. To calculate the new fix longitude,
+      ! though, we need to see how many deg lon the storm moved since the last time, convert that to the distance (km)
+      ! the storm travelled in the x-direction (at an average latitude between the current and previous latitudes), and
+      ! then add that distance on to the current longitude and convert that distance to the num of degrees the storm
+      ! has travelled in the x-direction (at an average latitude between the current and next(extrap) latitudes).
+      !----------------------------------------------------------------------------------------------------------------
       print *, ' '
       print *, 'xxxx get_next_ges, prev fix lon = ', fixlon(ist,ifh-1)
       print *, 'xxxx get_next_ges, curr fix lon = ', fixlon(ist,ifh)
@@ -11422,6 +11440,14 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! METHOD 2: Barnes analysis
+    !
+    ! Do a barnes analysis on the u & v components of the wind near the storm to get an average u & v, then advect the
+    ! storm according to the average wind vector obtained. The call to get_ij_bounds is needed in order to restrict the
+    ! number of grid points that are searched in the barnes subroutine. See Abstract from this subroutine for further
+    ! details.
+    !------------------------------------------------------------------------------------------------------------------
     npts = ceiling(ridlm / (dtk * ((dx+dy) / 2))) ! CAITLYN - should 2 be 2.0?
 
     call get_ij_bounds (npts, 0, ridlm, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, &
@@ -11453,7 +11479,8 @@ end program trakmain
       print *, '           jbeg = ', jbeg,            '  jend = ',    jend
     endif
 
-    ! skip some points for speed
+    ! For the  barnes analysis, we will want to speed things up for finer resolution grids. We can do this by skipping
+    ! some of the points in the  barnes analysis.
     if ((dx+dy) / 2.0 > 0.20) then
       bskip = 1
     else if ((dx+dy) / 2.0 > 0.10 .and. (dx+dy) / 2.0 <= 0.20) then
@@ -11500,6 +11527,9 @@ end program trakmain
                & jend,v(1,1,n), valid_pt, bskip, re, ri, vavg, icount, ctype, trkrinfo, ivret)
 
           if (iuret /= 0 .or. ivret /= 0) then
+            ! Barnes probably tried to access a pt outside the grid domain. So, reduce by half the distance from the
+            ! center of the farthest pt that barnes tries to access, exit this loop, and try it again with the
+            ! smaller re and ri.
             iuret = 96; ivret = 96
             reold = re
             riold = ri
@@ -11563,6 +11593,11 @@ end program trakmain
           print *, '     dt       = ', dt,              ' dtkm = ',    dtkm, ' cosfac = ', cosfac
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! This next if statement says that if we've had to reduce the size of the barnes analysis domain twice already,
+        ! then we've only done the analysis on a much smaller area, and this doesn't give us as good a picture of the
+        ! average winds in the area of the storm, so reduce the emphasis we place on the barnes method.
+        !--------------------------------------------------------------------------------------------------------------
         if (icut >= 2) barneswt = barneswt / 2.0
 
       else
@@ -11572,27 +11607,43 @@ end program trakmain
       icut = icut + 1
     enddo ! radmaxloop
 
-    ! do a weighted average
+    ! now do a weighted average of the positions obtained from the linear extrapolation and the barnes analysis methods
     if (extrap_flag == 'y' .and. barnes_flag == 'y') then
       wt_total = barneswt + extrapwt
       slatfg(ist, ifh+1) = (barneswt * barnlat + extrapwt * extraplat) / wt_total
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Note that in any of these statements just below, in order for any of these to be > 360, the original fixlon
+      ! must be close to 360, i.e., in the far eastern part of the grid, as opposed to being in the far western part
+      ! (e.g., 0-2 deg East or so). Conversely, for any of these to be < 0, the original fixlon must be close to 0,
+      ! i.e., in the far *western* part of the grid.
+      !----------------------------------------------------------------------------------------------------------------
       if (fixlon(ist,ifh) > 330.0) then
 
+        ! In this part of the IF, we will make sure that the two guess lons (barnlon and extraplon) are consistent as
+        ! both being 330+, to be consistent with the fixlon for this time.
         if (extraplon > 330.0 .and. barnlon > 330.0) then
           continue  ! All lons will be in the 300+ range, so for consistency, we're ok.
         elseif (extraplon > 330.0 .and. (barnlon >= 0.0 .and. barnlon < 30.0)) then
+          ! extraplon > 330, but barnlon is in the 0-30 range, so we need to convert the barnlon value to be 360+
           barnlon = barnlon + 360.0
         elseif (extraplon > 330.0 .and. barnlon < 0.0) then
+          ! extraplon > 330, but barnlon is < 0, so we need to convert the barnlon value to be positive
           barnlon = barnlon + 360.0
         elseif (barnlon > 330.0 .and. (extraplon >= 0.0 .and. extraplon < 30.0)) then
+          ! barnlon > 330, but extraplon is in the 0-30 range, so we need to convert the extraplon value to be 360+
           extraplon = extraplon + 360.0
         elseif (barnlon > 330.0 .and. extraplon < 0.0) then
+          ! barnlon > 330, but extraplon is < 0, so we need to convert the extraplon value to be positive
           extraplon = extraplon + 360.0
         endif
 
       elseif (fixlon(ist,ifh) >= 0.0 .and. fixlon(ist,ifh) < 30.0) then
-
+        !--------------------------------------------------------------------------------------------------------------
+        ! In this part of the ELSEIF, we will make sure that the two guess lons (barnlon and extraplon) are consistent
+        ! as both being in the reference of >360 since that is what the code below this is expecting with the
+        ! computation of slonfg for the next lead time.
+        !--------------------------------------------------------------------------------------------------------------
         if ((extraplon >= 0.0 .and. extraplon < 60.0) .and. (barnlon >= 0.0 .and. barnlon < 60.0)) then
           extraplon = extraplon + 360.0
           barnlon   = barnlon + 360.0
@@ -11616,6 +11667,8 @@ end program trakmain
         endif
 
       else
+        ! extraplon and barnlon do not need to be modified since there should be no way that a storm currently east of
+        ! 30E and west of 30W could make it to the Greenwich Mer in one forecast interval
         continue
       endif
 
@@ -11627,8 +11680,9 @@ end program trakmain
       slonfg(ist, ifh+1) = (barneswt * barnlon + extrapwt * extraplon) / wt_total
 
       if (slonfg(ist,ifh+1) > 360.0) then
+        ! If we've GM-wrapped past 360, check for what to do with a guess that goes beyond 360
         if (gm_wrap_flag == 'maxplus360') then
-          continue ! leave it as is, since the longitudes on this grid are also going to go past 360.
+          continue ! leave it as is, since the longitudes on this grid are also going to go past 360
         else
           slonfg(ist, ifh+1) = mod(slonfg(ist, ifh+1), 360.0)
         endif
@@ -11814,10 +11868,10 @@ end program trakmain
 
     call calcdist (fixlon(ist,ifh), fixlat(ist,ifh), slonfg(ist,ifh+1), slatfg(ist,ifh+1), dist, degrees)
 
-    distm   = dist * 1000.0   ! km to m
-    stmspd  = distm / dt      ! m to m/s
+    distm   = dist * 1000.0   ! convert distance km to m
+    stmspd  = distm / dt      ! get speed in m/s
 
-    stmspdkts = stmspd * conv_ms_knots        ! m/s to knots * 10
+    stmspdkts = stmspd * conv_ms_knots    ! convert again, m/s to knots * 10
     istmspd = int((stmspdkts * 10.0) + 0.5)
 
     xincr = slonfg(ist, ifh+1) - fixlon(ist, ifh)
@@ -11830,8 +11884,12 @@ end program trakmain
     endif
 
     if (xincr < 0.0 .and. slonfg(ist,ifh+1) < 30.0 .and. fixlon(ist,ifh) > 300.0) then
+      ! This means we have a storm moving east across the GM, and so we are subtracting, for example, something like
+      ! 0.5 - 359.5, so redo xincr, but add 360 to slonfg first
       xincr = (slonfg(ist, ifh+1) + 360.0) - fixlon(ist, ifh)
     else if (xincr > 300.0) then
+      ! This means we have a storm moving west across the GM, and so we are  subtracting, for example, something like
+      ! 359.5 - 0.5, so redo xincr, but add 360 to fixlon first
       xincr = slonfg(ist, ifh+1) - (fixlon(ist, ifh) + 360.0)
     endif
 
