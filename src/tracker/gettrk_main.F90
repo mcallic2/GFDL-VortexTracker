@@ -14161,6 +14161,8 @@ end program trakmain
     axisymet_rmw_dist = -999.0
     axisymet_rmw_val  = -999.0
 
+    ! This rdistloop goes through at least one list of radii to search over (starting with the rdist1 array), and
+    ! perhaps up to four lists (ending with the rdist4 array), depending on whether or not an acceptable ARMW is found.
     do while (got_good_armw == 'n' .and. rdist_ix < 5) ! rdistloop
       azim_ave_wmag = -999.0
 
@@ -14181,6 +14183,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xcenlon > 330.0 .and. xcenlon <= 360.0) .and. targlon < 25.0) then
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
             if (xcenlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -14222,6 +14225,7 @@ end program trakmain
  105    format (1x, 5x, '  ix = ', i3, ' radius = ', f7.2, ' (km)    azim_ave_wmag = ', f7.2, ' (m/s)')
       endif
 
+      ! go through the array of azimuthally averaged wind values and find the max value
       maxrmw_wmag = -999.0
       maxrmw_dist = -999.0
       maxrmw_ix   =   -999
@@ -14241,11 +14245,22 @@ end program trakmain
         print *, '  maxrmw_ix   = ', maxrmw_ix
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now go through the array of azimuthally averaged wind values and ensure that the integral of dV/dr > 0 for
+      ! radii leading up to maxrmw_dist and the integral of dV/dr < 0 for radii extending outward from maxrmw_dist. For
+      ! this analysis, look at distances up to +/- 50 km from maxrmw_dist.
+      !----------------------------------------------------------------------------------------------------------------
       perform_rising_dvdr = 'y'
       integ_dvdr_thresh   = 0.10
 
       ! find the starting index for the search
       if (maxrmw_ix < 18) then
+        !--------------------------------------------------------------------------------------------------------------
+        ! maxrmw_ix is close to the low range of the rdist array. If less than 5, it is possible that this model might
+        ! not have a wind profile for this case that increases from a weaker value out to the RMW, so we will assume
+        ! that is the case and set a flag to not do the check of the integral of dV/dr and just give the test value a
+        ! nominal passing value so it will pass the check further below here.
+        !--------------------------------------------------------------------------------------------------------------
         if (maxrmw_ix < 5) then
           idv_start           = maxrmw_ix  ! needed for declining_sum loop
           perform_rising_dvdr = 'n'
@@ -14259,9 +14274,16 @@ end program trakmain
 
       ! find the ending index for the search
       if (maxrmw_ix > (numdist-17)) then
+        !--------------------------------------------------------------------------------------------------------------
+        ! maxrmw_ix is close to the upper range of the rdist array. If it is any closer than numdist-5 to the upper
+        ! range, then we will not have enough data points to do a proper integral of dV/dR, so we will cycle rdistloop
+        ! in order to start the scan all over again with the next set of rdist values.
+        !--------------------------------------------------------------------------------------------------------------
         if (maxrmw_ix > (numdist-5)) then
           if (rdist_ix < 4) then
 
+            ! Bump up rdist_ix by 1 in order to use the next set of rdist array values in the next loop
+            ! through rdistloop
             if (verb .ge. 3) then
               print *, ' '
               print *, ' In get_axisymet_rmw, the selected maxrmw_ix'
@@ -14290,12 +14312,16 @@ end program trakmain
             return
           endif
         else
+          ! The maxrmw_ix index is somewhere between numdist-17 and numdist-5, so we can calculate the integral of
+          ! dV/dr, and just use the max (numdist) as our ending index.
           idv_end = numdist
         endif
       else
         idv_end = maxrmw_ix + 17
       endif
 
+      ! Compute the integral of dV/dr on the rising part of the wind profile curve (leading up to the RMW). Start at
+      ! idv_start and go up to the index for where we found the maxrmw.
       if (perform_rising_dvdr == 'y') then
         rising_sum_dvdr    = 0.0
         rising_sum_dvdr_ct = 0
@@ -14308,6 +14334,8 @@ end program trakmain
         enddo
       endif
 
+      ! Compute the integral of dV/dr on the declining part of the wind profile curve (extending outward from the RMW).
+      ! Start at the index for where we found the maxrmw and go out to the index we calculated for idv_end.
       declining_sum_dvdr    = 0.0
       declining_sum_dvdr_ct = 0
 
@@ -14319,6 +14347,11 @@ end program trakmain
         endif
       enddo
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now check to see if rising_sum_dvdr (i.e., the integral of dV/dr on the rising side of the curve) is at least
+      ! equal to the value of integ_dvdr_thresh and also to see if declining_sum_dvdr (the integral of dV/dr on the
+      ! declining side of the curve) is at least equal to the negative value of integ_dvdr_thresh or lower.
+      !----------------------------------------------------------------------------------------------------------------
       if (rising_sum_dvdr >= integ_dvdr_thresh .and. declining_sum_dvdr <= (-1.0 * integ_dvdr_thresh)) then
         got_good_armw     = 'y'
         axisymet_rmw_dist = rdist(maxrmw_ix)
