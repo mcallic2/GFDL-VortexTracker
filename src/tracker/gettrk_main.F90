@@ -9907,6 +9907,12 @@ end program trakmain
     character(len=2) :: basinid
     character(len=1) :: clatns, clonew
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     conv_ms_knots = 1.9427
 
     if (outlon < -998.0 .or. outlat < -998.0) then
@@ -9965,6 +9971,7 @@ end program trakmain
 81 format (a2, ', ', a2, ', ', i10.10, ', 03, ', a4, ', ', i3.3, ', ', i3, a1, ', ', i4, a1, ', ', &
            i3, ', ', i4, ', ', a14, 3(',', i6))
 
+    ! flush the output stream so it actually writes
     flush(71)
     return
 
