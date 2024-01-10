@@ -16676,7 +16676,8 @@ end program trakmain
       xnew(2*i-1) = xold(i)
     enddo
 
-    ! interpolate to get the in-between points, and make the
+    ! interpolate to get the in-between points, and make the necessary adjustment when interpolating a longitude
+    ! between, for example, 359.5 and 0.0
     do i = 1, ioldmax-1
       if (xnew(2*i-1) > 350.0 .and. xnew(2*i+1) < 10.0) then
         xnew(2*i) = 0.5 * (xnew(2*i-1) + (360.0 + xnew(2*i+1)))
