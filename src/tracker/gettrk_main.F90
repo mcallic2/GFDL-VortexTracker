@@ -21376,7 +21376,7 @@ end program trakmain
         enddo
       enddo
     else
-      ! Input data is north to south; convert the data onto a 2-d grid, do not flip it
+      ! input data is north to south; convert the data onto a 2-d grid, do not flip it
       do ilat = 1, jmax
         do ilon = 1, imax
           lb2d(ilon, ilat) = lb1d(ilon + (ilat - 1) * imax)
@@ -21814,9 +21814,9 @@ end program trakmain
       print *, ' '
       print *, 'Values read in from netcdflist namelist: '
       print *, ' '
-      write (6,300) netcdfinfo%num_netcdf_vars   ! Total *possible* number of input NetCDF variables, including those
-                                                 ! that are included in the input file and those that are not.
-      write (6,370) netcdfinfo%netcdf_filename   ! full path filename
+      write (6,300) netcdfinfo%num_netcdf_vars     ! total *possible* number of input NetCDF variables, including those
+                                                   ! that are included in the input file and those that are not
+      write (6,370) netcdfinfo%netcdf_filename        ! full path filename
       write (6,372) netcdfinfo%netcdf_lsmask_filename ! full path of filename of optional, extra land-sea mask.
       write (6,301)
       write (6,302) netcdfinfo%rv850name    ! 850 mb rel vort
@@ -21852,8 +21852,8 @@ end program trakmain
       write (6,356) netcdfinfo%lon_name     ! longitudes
       write (6,358) netcdfinfo%lat_name     ! latitudes
       write (6,359) netcdfinfo%time_units   ! This will be either "days" or "hours".  If it's "hours", then all the time
-                                            ! data values are for hours since the initial time.  Same thing for "days",
-                                            ! however if it is "days", then know that a value of 0.25 will be the same 
+                                            ! data values are for hours since the initial time. Same thing for "days",
+                                            ! however if it is "days", then know that a value of 0.25 will be the same
                                             ! as a 6-hour lead time.
       write (6,531) netcdfinfo%sstname      ! SST
       write (6,533) netcdfinfo%q850name     ! 850 mb spec humidity
