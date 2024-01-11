@@ -22383,8 +22383,8 @@ end program trakmain
     numtcv = ii - 1
 
     if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
-      ! For the mid-latitude or tc genesis cases, the max number of storms (maxstorm) allowed 
-      ! to be tracked throughout a forecast is defined in module set_max_parms.
+      ! for the mid-latitude or tc genesis cases, the max number of storms (maxstorm) allowed to be tracked throughout
+      ! a forecast is defined in module set_max_parms.
       if (verb .ge. 3) then
         print *, ' '
         print *, 'In read_tcv_card, tracker type of "midlat" or '
@@ -22413,8 +22413,8 @@ end program trakmain
       endif
 
       slonfg      = 0.0; slatfg = 0.0
-      stcvtype    = 'FOF'   ! Found On the Fly by tracker (not on tcvitals)
-      stormswitch = 3       ! Initialize whole array to case of '3'
+      stcvtype    = 'FOF'   ! 'found on the fly' by tracker (not on tcvitals)
+      stormswitch = 3       ! initialize whole array to case of '3'
 
       if (numtcv > 0) then
         if (verb .ge. 3) then
@@ -22451,8 +22451,8 @@ end program trakmain
       iret = 0
       return
     else
-      ! For the  tracker cases, the max number of storms (maxstorm) allowed to be tracked throughout 
-      ! a forecast is defined by the number of vitals read in above.
+      ! for the tracker cases, the max number of storms (maxstorm) allowed to be tracked throughout a forecast is
+      ! defined by the number of vitals read in above.
       maxstorm = numtcv
 
       if (maxstorm > 0) then
@@ -22498,7 +22498,7 @@ end program trakmain
       endif
 
       slonfg   = 0.0; slatfg = 0.0
-      stcvtype = '   '  ! Not needed for regular tracker run
+      stcvtype = '   '  ! not needed for regular tracker run
       ict      = 0
 
       do i = 1, maxstorm
@@ -22510,8 +22510,8 @@ end program trakmain
           write (*,31) storm(i)
         endif
 
-        ! TC vitals contain positions in either a "W" or "E" framework.  Convert them here for 
-        ! the slonfg array so that they are in a uniform, 0-360E framework for all vitals.
+        ! TC vitals contain positions in either a "W" or "E" framework. Convert them here for the slonfg array so that
+        ! they are in a uniform, 0-360E framework for all vitals
         if (storm(i)%tcv_lonew == 'W') then
           slonfg(i, 1) =  360.0 - real(storm(i)%tcv_lon) / 10.0
         else
