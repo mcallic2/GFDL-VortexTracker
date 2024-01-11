@@ -20922,7 +20922,7 @@ end program trakmain
     if (allocated(readvar4)) deallocate (readvar4)
     if (allocated(readvar8)) deallocate (readvar8)
     status = nf_inq_varid(ncid, var1_name, var1id)
-    
+
     if (status .ne. nf_noerr) call handle_netcdf_err (status)
     status = nf_inq_vartype(ncid, var1id, xtype)
 
@@ -21088,7 +21088,7 @@ end program trakmain
 
     if (status /= nf_noerr) then
       print *, ' '
-      !print *, 'NOTE: Could not find variable ', var3_name, ' at time NetCDF file ID = ncid = ', ncid
+      print *, 'NOTE: Could not find variable ', var3_name, ' at time NetCDF file ID = ncid = ', ncid
       ignrret = 92
       return
     endif
