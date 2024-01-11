@@ -22646,7 +22646,7 @@ end program trakmain
   !*      slonfg      :: first guess array for longitude
   !*      slatfg      :: first guess array for latitude
   !*      storm       :: contains the tcvitals info
-  !*      
+  !*
   !*      (storm, stormswitch, slonfg and slatfg are allocatable and are
   !*      defined in module def_vitals)
   !*
@@ -22664,7 +22664,7 @@ end program trakmain
     integer           :: i, ii, lgvcard, numtcv, num_mod_vit, vitix, iga
 
 
-    ! check to see if the genesis TC Vitals file exists. If so, then open it using the unit specified in lgvcard.
+    ! check to see if the genesis TC Vitals file exists. If so, then open it using the unit specified in lgvcard
     inquire (file = "tcvit_genesis_storms.txt", exist = vit_file_exists)
 
     if (vit_file_exists) then
@@ -22680,7 +22680,8 @@ end program trakmain
       endif
     endif
 
-    ! read in all of the "genesis vitals" into a temp array
+    ! read in all of the "genesis vitals" into a temp array. The index for the first array member is one past the
+    ! number of tc vitals that were read in in subroutine read_tcv_card.
     ii = numtcv + 1
 
     if (vit_file_exists) then
@@ -22706,10 +22707,22 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Initialize all "genesis dates" to 99999. Any new genesis vitals that are read in below will bring in real dates,
+    ! and then we can test the date in output_gen_vitals to know if a storm was already defined or not at the beginning
+    ! of this executable or if it was a new storm that was found.
+    !------------------------------------------------------------------------------------------------------------------
     do i = 1, maxstorm_mg
       gstorm(i)%gv_gen_date = 99999
     enddo
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If there are any TC vitals (i.e., officially named TCs that are being numbered/tracked by either NHC or JTWC),
+    ! then we want to take the important information from those vitals and put that into genesis vitals. This will
+    ! enable us to output *all* of these systems in the "gen_vitals" or "gstorm" format. The one difference here is
+    ! that for the genesis date, we use the starting date of this forecast, not the time that the storm first formed.
+    ! Also, set the genesis forecast hour (gv_gen_fhr) to be 0 for TCs that have a TC vitals record.
+    !------------------------------------------------------------------------------------------------------------------
     if (numtcv > 0) then
       do i = 1, numtcv
         gstorm(i)%gv_gen_date  = storm(i)%tcv_ymd * 100 + storm(i)%tcv_hhmm / 100
@@ -22742,13 +22755,17 @@ end program trakmain
       do i = 1, num_mod_vit
         vitix = i + numtcv
         stormswitch(vitix) = 1
-        ! fill the array gstorm
+        ! On the following line we are filling the array gstorm, which is new in this subroutine. Note, however, that
+        ! we are not necessarily starting it at 1, but at the point in the array after any TC Vitals may have been
+        ! read in.
         gstorm(vitix) = tmpstorm(vitix)
 
         if (verb .ge. 3) then
           write (*,34) gstorm(vitix)
         endif
 
+        ! For the sake of consistency (and sanity!!), we need to also use the same "storm" array as was used in
+        ! read_tcv_card, since this "storm" array is used often throughout the rest of this executable.
         write (storm(vitix)%tcv_storm_id,'(i4.4)') vitix
         write (storm(vitix)%tcv_storm_name,'(i4.4)') vitix
 
@@ -22777,7 +22794,7 @@ end program trakmain
         else
           slatfg(vitix,1) = real(gstorm(vitix)%gv_obs_lat) / 10.0
         endif
-        stcvtype(vitix) = 'FOF' ! Storm "Found On the Fly" by tracker
+        stcvtype(vitix) = 'FOF' ! Storm 'found on the fly' by tracker
       enddo
     endif
 
