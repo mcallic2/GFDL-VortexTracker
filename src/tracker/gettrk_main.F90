@@ -18714,15 +18714,29 @@ end program trakmain
 
     readgenflag = .false.
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! For GRIB2, we will check to see if the MSLP being searched for is the standard MSLP (MSLP parm ID = 1) or if it
+    ! is the so-called "Eta" or "Membrane" MSLP reduction that is included in the output for some models (like GFS and
+    ! GDAS). Note that for 10m winds, with GRIB2, so far with all of the GRIB2 model data we've seen to this point,
+    ! they all have the same IDs for 10m winds for all models, so no need to break out by model like we do for GRIB v1
+    ! in the else portion of this if statement.
+    !------------------------------------------------------------------------------------------------------------------
     if (trkrinfo%gribver == 2) then
+      ! 1 = standard MSLP reduction, 192 = "Eta" or "Membrane" reduction used in GFS, GDAS and others
       ig2_parm_num(9) = trkrinfo%g2_mslp_parm_id
 
       if (verb .ge. 3) then
         print *, ' '
         print *, 'Before GRIB2 read, MSLP ID = ig2_parm_num(9) = ', ig2_parm_num(9)
       endif
-
+      !----------------------------------------------------------------------------------------------------------------
+      ! For GRIB1, do the same check as done just above in the IF part of this IF statement, but note that we need to
+      ! also check to see what the GRIB1 parm IDs are for the sfc wind level type and value. Most models list the level
+      ! type as 105 (which means height above the ground) and then a level value of 10. But ECMWF and UKMET use a level
+      ! type of 1 (which means ground or water surface) and a level value of 0.
+      !----------------------------------------------------------------------------------------------------------------
     else
+      ! 2 = standard MSLP reduction, 130 = "Eta" or "Membrane" reduction used in GFS, GDAS and others
       igparm(9)    = trkrinfo%g1_mslp_parm_id
       iglevtyp(10) = trkrinfo%g1_sfcwind_lev_typ ! 105 for most
       iglevtyp(11) = trkrinfo%g1_sfcwind_lev_typ ! 105 for most
@@ -18769,8 +18783,9 @@ end program trakmain
     endif
 
     if (trkrinfo%gribver == 2) then
-
+      ! GRIB2 Read for standard tracker diagnostics
       do ip = 1, nreadparms ! grib2_standard_parm_read_loop
+        ! initialize variables
         gfld%idsect     => NULL()
         gfld%local      => NULL()
         gfld%list_opt   => NULL()
@@ -18782,11 +18797,15 @@ end program trakmain
         gfld%fld        => NULL()
 
         if (ip == 17) then
-          jdisc = 2
+          ! set Product Discipline for the land-sea mask
+          jdisc = 2 ! land surface products; used only for the land-sea mask within the tracker
         elseif (ip == 20) then
+          ! Set Product Discipline for SST; for the GFS, SST is listed under the same product discipline as most
+          ! other variables, which is a value of 0, for meteorological variables (I had previously - erroneously -
+          ! listed SST with a product discipline value of 10 for oceanographic products).
           jdisc = 0
         else
-          jdisc = 0
+          jdisc = 0  ! meteorological products
         endif
 
         jids  = -9999
@@ -18799,6 +18818,17 @@ end program trakmain
         icount  = 0
         jskp    = 0
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Search for input parameter by production template 4.0. This tave program is used primarily for temperature,
+        ! but still we will leave that as a variable and not-hard wire it in case we choose to average something else
+        ! in the future.
+        !
+        ! We are looking for Temperature or GP Height here. This block of code, or even the smaller subset block of
+        ! code that contains the JPDT(1) and JPDT(2) assignments, can of course be modified if this program is to be
+        ! used for interpolating other variables
+        !
+        ! Set defaults for JPDT, then override in array assignments below
+        !--------------------------------------------------------------------------------------------------------------
         jpdt(1:15) = (/-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999/)
 
         jpdt(1) = ig2_parm_cat(ip)
@@ -18817,7 +18847,7 @@ end program trakmain
         if (jpdt(10) == 100) then   ! isobaric surface
           jpdt(12) = ig2_lev_val(ip) * 100  !  GRIB2 levels are in Pa
         else
-          jpdt(12) = ig2_lev_val(ip) ! going to be either mslp, SST, or 10m winds.
+          jpdt(12) = ig2_lev_val(ip) ! going to be either mslp, SST, or 10m winds
         endif
 
         if (verb_g2 .ge. 1) then
@@ -18882,6 +18912,7 @@ end program trakmain
             endif
           endif
 
+          ! determine packing information from GRIB2 file; the default packing is 40 JPEG 2000
           ipack = 40
 
           if (verb_g2 .ge. 1) then
@@ -18889,14 +18920,14 @@ end program trakmain
           endif
 
           ! set DRT info (packing info)
-          if (gfld%idrtnum .eq. 0) then      ! simple packing
+          if (gfld%idrtnum .eq. 0) then       ! simple packing
             ipack = 0
-          elseif (gfld%idrtnum .eq. 2) then  ! complex packing
+          elseif (gfld%idrtnum .eq. 2) then   ! complex packing
             ipack = 2
-          elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
+          elseif (gfld%idrtnum .eq. 3) then   ! complex & spatial packing
             ipack = 31
           elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
-            ipack = 40 ! JPEG 2000 packing
+            ipack = 40                        ! JPEG 2000 packing
           elseif (gfld%idrtnum .eq. 41) then  ! PNG packing
             ipack = 41
           endif
@@ -19001,7 +19032,7 @@ end program trakmain
               else if (jpdt(12) == 20000) then
                 call conv1d2d_real (imax, jmax, f, u(1,1,nlev200), need_to_flip_lats)
               else
-                ! Near-surface data
+                ! near-surface data
                 call conv1d2d_real (imax, jmax, f, u(1,1,levsfc), need_to_flip_lats)
               endif
             case ('vgrid')
@@ -19014,7 +19045,7 @@ end program trakmain
               else if (jpdt(12) == 20000) then
                 call conv1d2d_real (imax, jmax, f, v(1,1,nlev200), need_to_flip_lats)
               else
-                ! Near-surface data
+                ! near-surface data
                 call conv1d2d_real (imax, jmax, f, v(1,1,levsfc), need_to_flip_lats)
               endif
             case ('gphgt')
@@ -19057,6 +19088,13 @@ end program trakmain
         call gf_free (gfld)
       enddo ! grib2_standard_parm_read_loop
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! GRIB2 Read for Cyclone Phase Space diagnostics
+      !
+      ! If we are attempting to determine the cyclone phase space diagnostics, then read in the needed cps data now.
+      !
+      ! This is the GRIB2 reading section.
+      !----------------------------------------------------------------------------------------------------------------
       if (phaseflag == 'y') then
         if (phasescheme == 'cps' .or. phasescheme == 'both') then
           ! read in GP Height levels for cyclone phase space
@@ -19074,7 +19112,7 @@ end program trakmain
 
             jdisc = 0
             jids  = -9999
-            jpdtn = trkrinfo%g2_jpdtn ! 0 = analysis or forecast; 1 = ens fcst
+            jpdtn = trkrinfo%g2_jpdtn ! 0 = analysis or forecast, 1 = ens fcst
             jgdtn = 0
             jgdt  = -9999
             jpdt  = -9999
@@ -19104,7 +19142,7 @@ end program trakmain
 
             jpdt(10) = cpsig2_lev_typ(ip)
 
-            if (jpdt(10) == 100) then   ! isobaric surface
+            if (jpdt(10) == 100) then              ! isobaric surface
               jpdt(12) = cpsig2_lev_val(ip) * 100  ! GRIB2 levels are in Pa
             else
               if (verb .ge. 3) then
@@ -19159,15 +19197,14 @@ end program trakmain
               endif
 
               ! set DRT info ( packing info )
-              if (gfld%idrtnum .eq. 0) then      ! simple packing
+              if (gfld%idrtnum .eq. 0) then       ! simple packing
                 ipack = 0
-              elseif (gfld%idrtnum .eq. 2) then  ! complex packing
+              elseif (gfld%idrtnum .eq. 2) then   ! complex packing
                 ipack = 2
-              elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
+              elseif (gfld%idrtnum .eq. 3) then   ! complex & spatial packing
                 ipack = 31
               elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
-                  ! JPEG 2000 packing
-                  ipack = 40
+                  ipack = 40                      ! JPEG 2000 packing
               elseif (gfld%idrtnum .eq. 41) then  ! PNG packing
                 ipack = 41
               endif
@@ -19192,7 +19229,7 @@ end program trakmain
 
               call bitmapchk (kf, lb, f, dmin, dmax)
 
-              ! convert logical bitmap to 2-d array (only need to do this once since using same model for all variables)
+              ! convert logical bitmap to 2-d array (only need to do this once since using same model for all variables).
               if (lbrdflag .eq. 'n') then
                 call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
                 lbrdflag = 'y'
@@ -19265,11 +19302,29 @@ end program trakmain
         endif
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! GRIB2 Read for genesis diagnostics
+      !
+      ! If we are attempting to perform genesis diagnostics, then read in data now that will allow us to do that.
+      !
+      ! The order of the variables in the reads is set up so that, ideally, we will read in the first 8 fields and not
+      ! need anything else, e.g., q850, and then RH at these levels: 1000, 925, 800, 750, 700, 650, 600 mb. However,
+      ! some models, like SHiELD & T-SHiELD, do not have RH at these levels, but they do have T & q, so in those cases
+      ! we would have to compute RH, and therefore need to read in T & q at those levels.
+      !
+      ! This is the GRIB2 reading section.
+      !----------------------------------------------------------------------------------------------------------------
       if (genflag == 'y') then
         do ip = 1, nreadgenparms ! grib2_gen_parm_loop
           if (gen_read_rh_fields == 'y') then
-            
             if (ip == 9) then
+              !--------------------------------------------------------------------------------------------------------
+              ! The ip index is now at the point where we are past all of the reads for the different levels of RH.
+              ! Check the readgenflags for relative humidity. If not enough RH records were read in, then we have to
+              ! assume that RH was not included in the user data, so we will instead stay in this Genesis GRIB2 read
+              ! loop to read in q and T to compute RH later on. If enough RH records were read in, then exit this
+              ! read loop.
+              !--------------------------------------------------------------------------------------------------------
               igrhct = 0
               do igrh = 2, 8
                 if (readgenflag(igrh)) then
@@ -19302,6 +19357,8 @@ end program trakmain
           else
             need_to_compute_rh_from_q = 'y'
 
+            ! If the ip index is between 2 and 8 (which is for RH records) and the user has specified that RH will NOT
+            ! be read in, then skip over the read section for these by cycling.
             if (ip >= 2 .and. ip <= 8) then
               if (verb >= 3) then
                 print *, ' '
@@ -19340,7 +19397,6 @@ end program trakmain
           j    = 0
 
           ! set defaults for JPDT, then override in array assignments below
-
           jpdt(1:15) = (/-9999, -9999, -9999, -9999, -9999, -9999, -9999, &
                          -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999/)
 
@@ -19356,7 +19412,7 @@ end program trakmain
           endif
 
           jpdt(10) = gensig2_lev_typ(ip)
-          if (jpdt(10) == 100) then   ! isobaric surface
+          if (jpdt(10) == 100) then               ! isobaric surface
             jpdt(12) = gensig2_lev_val(ip) * 100  ! GRIB2 levels are in Pa
           endif
 
@@ -19409,8 +19465,7 @@ end program trakmain
             elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
               ipack = 31
             elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
-              ! JPEG 2000 packing
-              ipack = 40
+              ipack = 40                       ! JPEG 2000 packing
             elseif (gfld%idrtnum .eq. 41) then ! PNG packing
               ipack = 41
             endif
@@ -19436,6 +19491,11 @@ end program trakmain
             readgenflag(ip) = .true.
             call bitmapchk (kf, lb, f, dmin, dmax)
 
+            !----------------------------------------------------------------------------------------------------------
+            ! Convert logical bitmap to 2-d array (only need to do this once since using same model for all variables).
+            ! This should have already been done above in reading either the general tracking variables or, if they
+            ! were requested, the cyclone phase space variables.
+            !----------------------------------------------------------------------------------------------------------
             if (lbrdflag .eq. 'n') then
               call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
               lbrdflag = 'y'
@@ -19564,6 +19624,7 @@ end program trakmain
       endif
 
     else  !CAITLYN - i think there should be a comment here for what if loop this is which should be the very first if loop
+      ! GRIB1 Read for standard tracker diagnostics
       do ip = 1, nreadparms ! grib1_read_loop
         jpds = -1
         jgds = -1
@@ -19652,6 +19713,7 @@ end program trakmain
             print '(i4,2x,8i5,i8,2g12.4)', k, (kpds(i),i=5,11), kpds(14), kf, dmin, dmax
           endif
 
+          ! Convert logical bitmap to 2-d array (only need to do this once since using same model for all variables).
           if (lbrdflag .eq. 'n') then
             call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
             lbrdflag = 'y'
@@ -19729,6 +19791,13 @@ end program trakmain
         endif
       enddo  ! grib1_read_loop
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! GRIB1 Read for Cyclone Phase Space diagnostics
+      !
+      ! If we are attempting to determine the cyclone phase space diagnostics, then read in the needed cps data now.
+      ! 
+      ! This is the GRIB1 reading section.
+      !----------------------------------------------------------------------------------------------------------------
       if (phaseflag == 'y') then
         if (phasescheme == 'cps' .or. phasescheme == 'both') then
 
@@ -19799,11 +19868,30 @@ end program trakmain
         endif
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! GRIB1 Read for genesis diagnostics
+      !
+      ! If we are attempting to perform genesis diagnostics, then read in data now that will allow us to do that.
+      !
+      ! The order of the variables in the reads is set up so that, ideally, we will read in the first 9 fields and not
+      ! need anything else, e.g., SST, q850, and then RH at these levels: 1000, 925, 800, 750, 700, 650, 600 mb.
+      ! However, some models, like SHiELD & T-SHiELD, do not have RH at these levels, but they do have T & q, so in
+      ! those cases we would have to compute RH, and therefore need to read in T & q at those levels.
+      !
+      !  This is the GRIB1 reading section.
+      !----------------------------------------------------------------------------------------------------------------
       if (genflag == 'y') then
         do ip = 1, nreadgenparms ! grib1_gen_parm_loop
 
           if (gen_read_rh_fields == 'y' ) then
             if (ip == 9) then
+              !--------------------------------------------------------------------------------------------------------
+              ! The ip index is now at the point where we are past all of the reads for the different levels of RH.
+              ! Check the readgenflags for relative humidity. If not enough RH records were read in, then we have to
+              ! assume that RH was not included in the user data, so we will instead stay in this Genesis GRIB1 read
+              ! loop to read in q and T to compute RH later on. If enough RH records were read in, then exit this
+              ! read loop.
+              !--------------------------------------------------------------------------------------------------------
               igrhct = 0
 
               do igrh = 2, 8
@@ -19837,6 +19925,8 @@ end program trakmain
           else
             need_to_compute_rh_from_q = 'y'
 
+            ! If the ip index is between 3 and 9 (which is for RH records) and the user has specified that RH will NOT
+            ! be read in, then skip over the read section for these by cycling.
             if (ip >= 2 .and. ip <= 8) then
               if (verb >= 3) then
                 print *, ' '
