@@ -20196,7 +20196,7 @@ end program trakmain
 
     use tracked_parms; use level_parms;    use inparms;    use genesis_diags; use phase
     use netcdf_parms;  use verbose_output; use read_parms; use trkrparms
-      
+
 
     implicit none
 
@@ -20263,6 +20263,12 @@ end program trakmain
       STOP 91
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First go through the list of user-requested lead times that were read in from subroutine read_fhours and try to
+    ! match up the lead times that were read in with the lead times that we read in directly from the NetCDF file. Get
+    ! the index from the NetCDF file for that lead time and use that in the call to the read routine
+    ! (get_var3_tlev_double).
+    !------------------------------------------------------------------------------------------------------------------
     usertime = iftotalmins(ifh)
 
     match_check = 'n'
@@ -20291,11 +20297,16 @@ end program trakmain
       stop 99
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now go through and do the same thing *IF* the user has requested to use a land-sea mask and also requested to
+    ! read a separate land-sea mask file. For the separate land-sea mask file, there will only be an hour 0, so find
+    ! the index for that.
+    !------------------------------------------------------------------------------------------------------------------
     match_zero_check = 'n'
 
     if (trkrinfo%use_land_mask == 'y') then
       if (trkrinfo%read_separate_land_mask_file == 'y') then
-         
+
         do m = 1, ncfile_tmax  ! find_zero_index_loop
           if (nctotalmins(m) == 0) then
             nc_zero_ix = m
@@ -20323,6 +20334,13 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! NetCDF read for standard tracker diagnostics
+    !
+    ! Now go through the read loop for the list of parameters
+    !
+    ! This is the NetCDF reading section.
+    !------------------------------------------------------------------------------------------------------------------
     do ip = 1, nreadparms  ! netcdf_standard_parm_read_loop
       if (chparm(ip) == 'X' .or. chparm(ip) == 'x') then
         if (verb .ge. 3) then
@@ -20337,6 +20355,13 @@ end program trakmain
         endif
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Note that I am sending a 1-d array, "f", to the netcdf read routine. While that routine returns a 2-d array
+      ! (which we want), depending on the model & grid, we may need to flip the grid in the north-south direction. I
+      ! already have a routine for converting data from a 1-d to a 2-d array, and it has the functionality for flipping
+      ! a grid, so I programmed it as getting a 1-d array from the netcdf read routine and send that 1-d array to
+      ! conv1d2d_real.
+      !----------------------------------------------------------------------------------------------------------------
       if (ip == 17) then
         if (trkrinfo%use_land_mask == 'y') then
           if (trkrinfo%read_separate_land_mask_file == 'y') then
@@ -20391,6 +20416,16 @@ end program trakmain
         dmin = minval(f)
         dmax = maxval(f)
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! These next two nf function calls retrieve the value of the "missing_value" attribute from the list of
+        ! attributes for the given variable being read in. This is needed in order to know if a non-valid point is
+        ! being accessed, as for a regional grid, like the nested fvGFS. In GRIB1/GRIB2 files, such regions would be
+        ! bitmapped out, but in a NetCDF file, no such bitmap exists, so we have to check for missing values. In case
+        ! it's a moving grid, we need to do this for every lead time, since the "map of missing values" will shift with
+        ! lead time. Once we have those missing values, we can loop through them and fill the valid_pt logical array so
+        ! that, in the end, we will have the same logical bitmap for masking out missing data that we have
+        ! with GRIB1/GRIB2 data.
+        !--------------------------------------------------------------------------------------------------------------
         if (trkrinfo%read_separate_land_mask_file == 'y' .and. trkrinfo%use_land_mask == 'y' .and.  ip == 17) then
           nf_status = nf_inq_varid(nc_lsmask_file_id, chparm(ip), varid)
           print *, 'nf_status from nf_inq_varid call = ', nf_status
@@ -20431,6 +20466,12 @@ end program trakmain
   35      format ('   --- ', a30, ' missing value = ', g12.4)
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! This call to conv1d2d_logic_netcdf creates a logical bitmap, so that in case we have regional (non-global)
+        ! data and an irregular grid (e.g., the FV3 nested grid), we can mask out grid points that have missing values
+        ! as their data values. There is not actually a native logical bitmap in NetCDF, so we will create one by
+        ! examining the real data values and masking out grid points that have missing values.
+        !--------------------------------------------------------------------------------------------------------------
         if (lbrdflag .eq. 'n') then
           call conv1d2d_logic_netcdf (imax, jmax, f, valid_pt, xmissing_value, need_to_flip_lats)
           lbrdflag = 'y'
@@ -20486,6 +20527,16 @@ end program trakmain
       endif
     enddo ! netcdf_standard_parm_read_loop
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! NetCDF read for Cyclone Phase Space diagnostics
+    !
+    ! If we are attempting to determine the cyclone structure using Hart's cyclone phase space, then read in data now
+    ! that will allow us to do that. If we are instead just using the mid-level (300-500 mb) mean temperature to do
+    ! that with a simple warm-core check, then that mean temperature field was already read in above in the read loop
+    ! for the standard variables. The variables needed here for CPS are pretty straightforward: gp height every 50 mb
+    ! from 300 to 900 mb. keep in mind that we have already read in a few of these gp height records for selected
+    ! levels above.
+    !------------------------------------------------------------------------------------------------------------------
     if (phaseflag == 'y') then
       if (phasescheme == 'cps' .or. phasescheme == 'both') then
 
@@ -20531,13 +20582,20 @@ end program trakmain
             endif
             phaseflag = 'n'
             exit  ! netcdf_cps_parm_read_loop
-          
+
           else
             if (verb .ge. 3) then
               print *, '+++ NetCDF read requested for cps parm # ', ip, ' ... parm = ', chparm_cps(ip)
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! As above, we send a 1-d array, "f", to the netcdf read routine. While that routine returns a 2-d array
+          ! (which we want), depending on the model & grid, we may need to flip the grid in the north-south direction.
+          ! I already have a routine for converting data from a 1-d to a 2-d array, and it has the functionality for
+          ! flipping a grid, so I programmed it as getting a 1-d array from the netcdf read routine and send that 1-d
+          ! array to conv1d2d_real.
+          !------------------------------------------------------------------------------------------------------------
           call get_netcdf_real_type (ncfile_id, chparm_cps(ip), xtype, ignrret)
 
           if (xtype == 5) then
@@ -20583,6 +20641,16 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! NetCDF Read for genesis diagnostics
+    !
+    ! If we are attempting to perform genesis diagnostics, then read in data now that will allow us to do that.
+    !
+    ! The order of the variables in the reads is set up so that, ideally, we will read in the first 9 fields and not
+    ! need anything else, e.g., SST, q850, and then RH at these levels: 1000, 925, 800, 750, 700, 650, 600 mb. However,
+    ! some models, like SHiELD & T-SHiELD, do not have RH at these levels, but they do have T & q, so in those cases we
+    ! would have to compute RH, and therefore need to read in T & q at those levels.
+    !------------------------------------------------------------------------------------------------------------------
     if (genflag == 'y') then
 
       chparm_gen(1)  = netcdfinfo%q850name
@@ -20612,6 +20680,12 @@ end program trakmain
       do ip = 1, nreadgenparms ! netcdf_gen_parm_loop
 
         if (gen_read_rh_fields == 'y' ) then
+          !------------------------------------------------------------------------------------------------------------
+          ! The ip index is now at the point where we are past all of the reads for the different levels of RH. Check
+          ! the readgenflags for relative humidity. If not enough RH records were read in, then we have to assume that
+          ! RH was not included in the user data, so we will instead stay in this Genesis NetCDF read loop to read in
+          ! q and T to compute RH later on. If enough RH records were read in, then exit this read loop.
+          !------------------------------------------------------------------------------------------------------------
           if (ip == 9) then
             igrhct = 0
 
@@ -20631,7 +20705,7 @@ end program trakmain
               endif
               need_to_compute_rh_from_q = 'n'
               exit  ! netcdf_gen_parm_loop
-              
+
             else
               if (verb >= 3) then
                 print *, ' '
@@ -20645,6 +20719,8 @@ end program trakmain
           endif
 
         else
+          ! If the ip index is between 3 and 9 (which is for RH records) and the user has specified that RH will NOT be
+          ! read in, then skip over the read section for these by cycling.
           need_to_compute_rh_from_q = 'y'
           if (ip >= 2 .and. ip <= 8) then
             if (verb >= 3) then
@@ -20670,6 +20746,13 @@ end program trakmain
           endif
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! As above, we send a 1-d array, "f", to the netcdf read routine. While that routine returns a 2-d array (which
+        ! we want), depending on the model & grid, we may need to flip the grid in the north-south direction. I already
+        ! have a routine for converting data from a 1-d to a 2-d array, and it has the functionality for flipping a
+        ! grid, so I programmed it as getting a 1-d array from the netcdf read routine and send that 1-d array to
+        ! conv1d2d_real.
+        !--------------------------------------------------------------------------------------------------------------
         call get_netcdf_real_type (ncfile_id, chparm_gen(ip), xtype,ignrret)
 
         if (xtype == 5) then
