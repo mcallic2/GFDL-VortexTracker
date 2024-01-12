@@ -25249,6 +25249,7 @@ end program trakmain
       STOP 91
     endif
 
+    ! go through and sum up all of the data values on all of the vertical levels
     if (cvar == 'rh' .and. clevstr == '1000-925') then
       zstart = 1
       zend   = 2
@@ -25260,8 +25261,8 @@ end program trakmain
     point_ct = 0
 
     do z = zstart, zend ! zloop
-      do j = 1, jmax ! jloop
-        do i = 1, imax ! iloop
+      do j = 1, jmax    ! jloop
+        do i = 1, imax  ! iloop
 
           if (valid_pt(i,j) .and. rh(i,j,z) > -998.0) then
             xmean_arr(i, j) = xmean_arr(i, j) + rh(i, j, z)
@@ -25272,6 +25273,8 @@ end program trakmain
       enddo ! jloop
     enddo ! zloop
 
+    ! compute the multi-layer mean; this code should be able to be used no matter what variables & levels were being
+    ! processed above.
     xminrh = 999999.0
     xmaxrh = -999999.0
 
