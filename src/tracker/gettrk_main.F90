@@ -26643,12 +26643,17 @@ end program trakmain
 
     data rdist /10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 50.0, 60.0, 75.0, 100.0/
 
+    ! This is an input to bilin_int_uneven. In this case, the number does not really matter, since for MSLP it won't
+    ! make a difference in the bilin_int_uneven subroutine.
     ilevint = 1020
     bimct   = 0
     ifh99   = 99
     xcent_mslpval = fxy(ip, jp)
 
+    ! Ensure that the xmslp_thresh units, which are based on the user input trkrinfo%contint value, are in the same
+    ! units as the gridded mslp data
     if (fxy(ip,jp) > 50000.0) then
+      ! Gridded SLP data units are in Pa, we need to ensure that the MSLP threshold is also in Pa
       if (trkrinfo%contint < 20.0) then
         ! convert mb to Pa
         xmslp_thresh = trkrinfo%contint * 100.0
@@ -26659,6 +26664,7 @@ end program trakmain
       xmslp_noise = 0.0
 
     else
+      ! Gridded SLP data units are in mb, we need to ensure that the MSLP threshold is also in mb
       if (trkrinfo%contint < 20.0) then
         ! no conversion needed
         xmslp_thresh = trkrinfo%contint
@@ -26668,14 +26674,26 @@ end program trakmain
       xmslp_noise = 0.0
     endif
 
+    ! First get the lat & lon for the input (ip,jp) coordinates. Because these (ip,jp) coordinates come from a scan of
+    ! the original input grid, there should not be an issue with going off grid, i.e., in the case of GM wrapping, but
+    ! we will check.
     xmlat = glatmax - (jp - 1.0) * dy !CAITLYN - repeated code?
     xmlon = glonmin + (ip - 1.0) * dx
     iazim_good_depth_ct = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now go around this targeted (ip,jp) point, and at each azimuthal increment (likely every 45 degrees, but could be
+    ! changed), work outward starting at 5 or 10 km radius and go out to 100 km. At each point, check to see if the
+    ! user-specified pressure gradient has been satisfied. Additionally, check to see if the gradient continues sloping
+    ! up as you go outward, until you reach the final radius. If at any radius, you find an MSLP value that is lower
+    ! than the one immediately radially inward, then this gradient check will fail for the entire candidate point.
+    !------------------------------------------------------------------------------------------------------------------
     do iazim = 1, num_azim  ! azimloop1
       bear =  (real(iazim - 1) * 45.0) + 22.5
       one_radial_mslp_depth_flag = 'n'
       continuous_gradient_flag   = 'n'
+      ! reset xnext_radially_inward_mslpval to the central mslp value at the beginning of the search outward along
+      ! each radial
       xnext_radially_inward_mslpval = xcent_mslpval
 
       do idist = 1, distmax  ! distloop1
@@ -26683,6 +26701,7 @@ end program trakmain
 
         if (gm_wrap_flag == 'maxplus360') then
           if ((xmlon > 330.0 .and. xmlon <= 360.0) .and. targlon < 25.0) then
+            ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
             targlon = targlon + 360.0
           endif
           if (xmlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -26696,6 +26715,9 @@ end program trakmain
         if (ibiret1 == 0) then
           if (xintrp_mslp < (xcent_mslpval - xmslp_noise)) then
             if (rdist(idist) <= 25.0) then
+              ! This means that, along this radial, we have found a pressure that is lower than the central pressure
+              ! (even after allowing for noise with the xmslp_noise variable), and this occurred within a radial
+              ! distance of 25 km. Therefore, we will fail this entire point and return to the calling routine.
               icmrgret = 95
               return
             endif
@@ -26703,26 +26725,43 @@ end program trakmain
 
           if (one_radial_mslp_depth_flag == 'n') then
             if (xintrp_mslp >= (xcent_mslpval + xmslp_thresh)) then
+              !--------------------------------------------------------------------------------------------------------
+              ! We have success for this azimuth for one of the two checks, the one that checks for the depth of the
+              ! low, i.e., the one indicated by the user-inputted trkrinfo%contint. There is no need to evaluate this
+              ! check again along this radial, however we still need to perform the other check, which checks to see if
+              ! the gradient continues uninterrupted out to a specified distance (trying 100 km to start).
+              !--------------------------------------------------------------------------------------------------------
               one_radial_mslp_depth_flag = 'y'
             endif
           endif
 
           if ((xintrp_mslp + xmslp_noise) < xnext_radially_inward_mslpval) then
+            ! We have tripped a check here. Moving radially outward, we have hit a point that has a mslp value *lower*
+            ! than the next previous point radially inward. The code below decides how to deal with this.
             continuous_gradient_flag = 'n'
 
             if (rdist(idist) <= 25.0) then
+              !--------------------------------------------------------------------------------------------------------
+              ! While moving radially outward, we have hit an MSLP value that is lower than that of the previous point
+              ! radially inward, i.e., the gradient has now gone the wrong way. This has happened within a radial
+              ! distance of 25 km, so we will fail this entire candidate point.
+              !--------------------------------------------------------------------------------------------------------
               icmrgret = 96
               return
             else
+              ! this happened outside of 25 km, so we simply make a note of it for now
               if (idist > 1) then
                 max_radial_grad_dist(iazim) = rdist(idist - 1)
                 exit  ! distloop1
               else
+                ! there is no way this else statement should ever be reached, but out of good programming practice, I
+                ! need to allow for the possibility of idist = 1 here
                 max_radial_grad_dist(iazim) = 0.0
                 exit  ! distloop1
               endif
             endif
           else
+            ! the gradient is continuing in the expected direction as we move radially outward
             xnext_radially_inward_mslpval = xintrp_mslp
             continuous_gradient_flag      = 'y'
           endif
@@ -26730,16 +26769,33 @@ end program trakmain
       enddo  ! distloop1
 
       if (one_radial_mslp_depth_flag == 'y') then
+        ! this means that the MSLP depth requirement entered by the user was met at some point along this radial
         iazim_good_depth_ct = iazim_good_depth_ct + 1
         if (continuous_gradient_flag == 'y' ) then
+          !------------------------------------------------------------------------------------------------------------
+          ! By getting to this point in the code for this radial with the continuous_gradient_flag flag still having a
+          ! value of 'y', that means that the gradient was continuous out to the max distance, so enter that max
+          ! distance value here. If it was not continuous, then the actual distance it got to while being continuous
+          ! would have been entered in the IF statements just above.
+          !------------------------------------------------------------------------------------------------------------
           max_radial_grad_dist(iazim) = rdist(distmax)
         endif
       else
+        ! the MSLP depth requirement was not met along this radial, so fail this point
         icmrgret = 95
         return
       endif
     enddo  ! azimloop1
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now go through the azimuths and do a check for each one to see if a critical threshold of our criteria passes
+    ! or not.
+    !
+    ! This first one just checks to ensure that the MSLP depth requirement was satisfied along every radial. If even
+    ! one did not, then we fail and return to the calling routine. Keep in mind, this is only checking for the depth,
+    ! there is nothing in this first IF statement about how far out along the radial beyond 25 km that the gradients
+    ! along each radial were maintained.
+    !------------------------------------------------------------------------------------------------------------------
     if (iazim_good_depth_ct == num_azim) then
       write (6,97) jp, xmlat, ip, xmlon, 360.0-xmlon
 97    format (//, 1x, '  --> GOOD check_mslp depth at every radial, jp = ', i5, ' xmlat = ', f7.2, ' ip = ', &
@@ -26753,6 +26809,7 @@ end program trakmain
       return
     endif
 
+    ! count up the number of radials that maintained the MSLP gradient out to the max distance checked
     iazim_full_dist_ct = 0
     do iazim = 1, num_azim  ! azimloop2
       if (max_radial_grad_dist(iazim) == rdist(distmax)) then
@@ -26760,6 +26817,11 @@ end program trakmain
       endif
     enddo  ! azimloop2
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Check to see if the number of radials that maintained the MSLP gradient out to the max distance matched the total
+    ! number of radials. If not, check to see that this was satisfied in at least 3 of the 8 radials, which would mean
+    ! that it was satisfied in at least 2 quadrants.
+    !------------------------------------------------------------------------------------------------------------------
     if (iazim_full_dist_ct == num_azim) then
       if (verb >= 3) then
         print *, ' '
@@ -26779,6 +26841,8 @@ end program trakmain
       return
     endif
 
+    ! Now check to see if the number of radials on which the MSLP gradient was maintained over the max distance was
+    ! less than 2. If so, then fail this point and return to the calling routine.
     if (iazim_full_dist_ct < 2) then
       if (verb >= 3) then
         print *, ' '
@@ -26790,6 +26854,12 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If we are still in this subroutine, we are left with just one possibility, and that is that iazim_full_dist_ct=2,
+    ! which means that the MSLP gradient was maintained over the max distance for exactly 2 radials. We need to check
+    ! here to see if that occurred in 2 separate quadrants or in the same quadrant. If it was in the same quadrant,
+    ! then we FAIL this point. If they are in separate quadrants, then we assign a PASS to the point.
+    !------------------------------------------------------------------------------------------------------------------
     iquadct = 0
     if (max_radial_grad_dist(1) == rdist(distmax) .or. max_radial_grad_dist(2) == rdist(distmax)) then
       iquadct = iquadct + 1
