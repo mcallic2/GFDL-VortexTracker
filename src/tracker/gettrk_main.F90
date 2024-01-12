@@ -25435,6 +25435,7 @@ end program trakmain
       print *, '*-------------------------------------------------*'
     endif
 
+    ! check the user-supplied grid boundaries to see if we will scan the entire array or just a portion of it
     if (trkrinfo%northbd < -998.0 .or. trkrinfo%southbd < -998.0 .or. trkrinfo%westbd < -998.0  &
        .or. trkrinfo%eastbd < -998.0) then
       ! user did not specify a subgrid, so scan the whole domain
@@ -25448,13 +25449,15 @@ end program trakmain
           trkrinfo%northbd <-90.0 .or. trkrinfo%southbd > 90.0 .or.             &
           trkrinfo%southbd <-90.0 .or. trkrinfo%westbd  >= trkrinfo%eastbd .or. &
           trkrinfo%southbd >= trkrinfo%northbd) then
-        
+
         print *, 'FGC  ELSE IF B'
         if (trkrinfo%westbd  > trkrinfo%eastbd) then
           print *, 'FGC  ELSE IF IF C'
           if (trkrinfo%westbd < 360.0 .and. trkrinfo%eastbd >= 0.0)then
             print *, 'FGC  ELSE IF IF IF D'
 
+            ! In this special case, the user has specified that the western boundary be to the west of the Greenwich
+            ! meridian and the eastern boundary be to the east of it.
             if (verb .ge. 3) then
               print *, ' '
               print *, '++ NOTE: The user supplied grid lon boundaries'
@@ -25467,6 +25470,12 @@ end program trakmain
               print *, ' '
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! Calculate the beginning and ending i and j points for this case of spanning the Greenwich meridian. The
+            ! beginning and ending j points are, obviously, the same as for the regular case below in the else. The
+            ! i-beginning point will also be the same as for the regular case. However, the i-ending point will be
+            ! modified for the meridian wrap; it will be > imax.
+            !----------------------------------------------------------------------------------------------------------
             jbeg = int(((glatmax + dy - trkrinfo%northbd) / dy) + 0.5)
             jend = int(((glatmax + dy - trkrinfo%southbd) / dy) + 0.5)
             ibeg = int(((trkrinfo%westbd - glonmin + dx)  / dx) + 0.5)
@@ -25515,6 +25524,8 @@ end program trakmain
     print *, 'fgc trkrinfo%westbd  = ', trkrinfo%westbd
     print *, 'fgc trkrinfo%eastbd  = ', trkrinfo%eastbd
 
+    ! Scan the requested portion of the grid and pick out the max and min data values, figure out what the max and min
+    ! contour levels will be, and fill an array with the values of the various intermediate, incremental contour levels.
     if (trkrinfo%contint <= 0) then
       if (verb .ge. 1) then
         print *, ' '
@@ -25597,6 +25608,13 @@ end program trakmain
     if (ict > 0) then
       stdx = sqrt(stdx / real(ict))
       if (stdx == 0.0) then
+        !--------------------------------------------------------------------------------------------------------------
+        ! This can happen if you have just 2 points; The mean position will be exactly in the middle of the 2 points
+        ! and so the standard deviation around that mean point will be 0. And since the calling routine will quit if
+        ! the returned standard deviation is 0, we must force it to be 1 so the program continues running.
+        ! Theoretically, it could also happen with 3 or more points, but the likelihood of the distances working out
+        ! out to exactly equidistant for 3 points is not that good.
+        !--------------------------------------------------------------------------------------------------------------
         stdx = 1.0
       endif
     else
@@ -25620,6 +25638,8 @@ end program trakmain
 
     print *, 'ict from std deviation (stdx) calculation = ', ict
 
+    ! We want to allow for storms moving out of the sub-region, in which case we might hit slightly lower or higher
+    ! contours than were found in the sub-region, so allow for an extra buffer and modify dmin and dmax
     dbuffer = (dmax - dmin) / 2.0
     dmax    = dmax + dbuffer
     dmin    = dmin - dbuffer
@@ -25647,6 +25667,11 @@ end program trakmain
       print *, '                maxconts = ', maxconts
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! In the loop below, the contour_info%contvals array is now no longer used in subsequent subroutines. But we still
+    ! need to figure out the value of the contvals as we iterate the loop so we can know when we've surpassed dmax and
+    ! can stop incrementing contour_info%numcont, which we do need in subsequent subroutines.
+    !------------------------------------------------------------------------------------------------------------------
     contour_info%numcont = 0
     do n = 1, maxconts
       contour_info%numcont     = contour_info%numcont + 1
