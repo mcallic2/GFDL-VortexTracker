@@ -24139,6 +24139,7 @@ end program trakmain
     xplon = grid_minlon + (ipfix - 1.0) * dx
     yplat = grid_maxlat - (jpfix - 1.0) * dy
 
+    ! see abstract for explanation for this grdsp search
     grdspc = (dx+dy) * 0.5
     if (grdspc <= 0.025) then
       grfact = 20
