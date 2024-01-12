@@ -25931,6 +25931,13 @@ end program trakmain
     print *, 'ctm beg of find_all_maxmins,     ibeg = ', ibeg, ' iend = ', iend
     print *, 'ctm beg of find_all_maxmins,     jbeg = ', jbeg, ' jend = ', jend
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! We will use the mean and standard deviation info as part of our guideline for when to stop searching for maxes
+    ! & mins. We will set the search cut-off threshold at one standard deviation above the mean for min searches. So,
+    ! for the example of mslp, if the mean pressure over the whole domain is 1010 mb and the standard deviation is
+    ! 12 mb, then when we are searching, if the lowest available (i.e., hasn't been found in a previous iteration of
+    ! this loop) pressure is 1022, then it's time to stop searching.
+    !------------------------------------------------------------------------------------------------------------------
     if (verb .ge. 1) then
       print *, ' '
       print *, '+++ In find_all_maxmins, the mean and standard'
@@ -25953,6 +25960,13 @@ end program trakmain
       print *, ' '
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now begin the search process
+    !
+    ! STEP 1: For the first step, we will go over the entire domain and set a logical flag for whether or not each
+    ! point is eligible to be searched. We set this "eligibility" criteria according to the mslp value at each point as
+    ! compared to the "search_cutoff" value calculated just above.
+    !------------------------------------------------------------------------------------------------------------------
     pt_eligible  = .false.
     totpts       = 0
     eligible_pts = 0
@@ -26009,6 +26023,8 @@ end program trakmain
       print *, '       searchable points       = eligible_pts = ', eligible_pts
     endif
 
+    ! STEP 2: Check to see if we are going to smoothe the data, and if so, run through the algorithm to smoothe the
+    ! MSLP data.
     if (smoothe_mslp_for_gen_scan == 'y') then
       call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
       write (6,51) date_time(5), date_time(6), date_time(7)
@@ -26178,7 +26194,7 @@ end program trakmain
     endif
 
     if (smoothe_mslp_for_gen_scan == 'y') then
-      ! copy the smoothed MSLP data into the slp_array to smooth data
+      ! copy the smoothed MSLP data into the slp_array so that we use the smoothed data for the processing below
       slp_array    = mslp_smoothe
       slp_valid_pt = valid_smoothe
       slp          = mslp_smoothe
@@ -26214,6 +26230,14 @@ end program trakmain
       slp_valid_pt = valid_pt
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! STEP 3: Now go through the grid again and, for all eligible points that are not already masked out (due to there
+    ! being an already-existing storm from the previous lead time), call a routine to go out along 8 radials
+    ! surrounding each point to determine if there is a radial gradient of MSLP along each radial that is at least as
+    ! strong as that specified by the user. If that check passes, then call a routine that checks for a closed
+    ! low-level (10m) wind circulation. If both the MSLP radial gradient and low-level wind circulation checks pass,
+    ! then you can consider this as a candidate point.
+    !------------------------------------------------------------------------------------------------------------------
     candidate_ct = 0
     cmrg_fail_ct = 0
 
@@ -26310,6 +26334,8 @@ end program trakmain
       enddo ! iloop_g
     enddo ! jloop_g
 
+    !  STEP 4: Now sort the temporary pressure array that contains the pressures from the candidate points that were
+    ! identified in the previous step
     sortindex = 0
     call qsort (prstemp, sortindex, maxstorm)
 
@@ -26322,6 +26348,8 @@ end program trakmain
 
       do ist = 1, maxstorm
         if (prstemp(sortindex(ist)) < 999998.0) then
+          ! this means we have an actual value, since the value is less than the value (999999.0) that the entire array
+          ! was initialized with
           xmlat = glatmax - (real(jpos(sortindex(ist)) - 1)) * dy
           xmlon = glonmin + (real(ipos(sortindex(ist)) - 1)) * dx
           if (prstemp(sortindex(ist)) < 1500.0) then    ! pressure values are in mb
@@ -26338,6 +26366,13 @@ end program trakmain
               i5, '  Lon = ', f7.2, 'W   (', f7.2, 'E),  Lat = ', f7.2)
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! STEP 5: Now process through the candidates. We pass the (i,j) coordinates for each candidate point to a routine
+    ! to check for a closed contour. Then we mask out those points in the contour (or, if there is not a closed contour,
+    ! just the 8 points immediately surrounding the low center) and we do another iteration of search_loop to look for
+    ! more lows. We mask out points we have found so that on subsequent iterations of search_loop, we will not find the
+    ! same old center again and again and again.
+    !------------------------------------------------------------------------------------------------------------------
     dmin =  9.99E10
     dmax = -9.99E10
 
@@ -26400,6 +26435,8 @@ end program trakmain
 87      format (1x, 'Checking for a possible max/min at ix = ', i6, ' jx = ', i6, 3x, f8.2, 3x, f8.2, 3x, f8.2)
       endif
 
+      ! From the rough check we did above, we appear to have a gradient sloping in towards a center point. Now call a
+      ! subroutine to check whether or not there is in fact a closed contour surrounding this local maximum or minimum.
       get_last_isobar_flag = 'n'
       ccflag = 'n'
       yyct2  = yyct2 + 1
@@ -26409,6 +26446,13 @@ end program trakmain
 
       if (ccflag == 'y') then
         if (stormct < maxstorm) then
+          !------------------------------------------------------------------------------------------------------------
+          ! For a tcgen case, we will add in one additional check, and that is to ensure the point is (mostly) over
+          ! water. Only do this check if the user has requested it (some of the global models do not have a land-sea
+          ! mask included in the grib data files). Keep in mind that we only do this land-sea mask check at genesis
+          ! time in this subroutine, find_all_maxmins; Once a storm has formed, of course we will continue to track it
+          ! over land.
+          !------------------------------------------------------------------------------------------------------------
           cand_cc_good_ct = cand_cc_good_ct + 1
           point_is_over_water = 'u'
 
@@ -26465,6 +26509,8 @@ end program trakmain
         print *, ' '
       endif
 
+      ! Regardless of whether or not the found point turns out to have a closed contour, we don't want to find this
+      ! local minimum or its 8 surrounding points again in a search on a subsequent iteration of this loop.
       igicwret = 0
       call get_ijplus1_check_wrap (imax, jmax, ix, jx, ixp1, jxp1, ixm1, jxm1, trkrinfo, igicwret)
 
