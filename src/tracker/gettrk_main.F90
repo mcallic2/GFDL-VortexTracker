@@ -24643,7 +24643,7 @@ end program trakmain
     ! values to a missing value of -999. In place of this, the easiest thing to do is to simply assign a value of zero
     ! to the divergence. No, this is not correct, but it is the easiest workaround for this right now.
     !------------------------------------------------------------------------------------------------------------------
-    
+
     ! interior points
     if (verb .ge. 3) then
       print *, 'Just before inter divcal, dlon_inter = ', dlon_inter, ' dlat_inter = ', dlat_inter
@@ -24807,6 +24807,12 @@ end program trakmain
 
     xsmoothval = -9999.0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! We will do a barnes analysis on the data from the input array to this subroutine near the current fix location in
+    ! order to get one average value that will be returned to the calling routine. The call to get_ij_bounds is needed
+    ! in order to restrict the number of grid points that are searched in the barnes subroutine. See abstract of
+    ! subroutine get_next_ges for further details.
+    !------------------------------------------------------------------------------------------------------------------
     if (verb >= 3) then
       print *, ' '
       print *, ' --- Top of get_smooth_value_at_pt for '
@@ -24872,7 +24878,8 @@ end program trakmain
       print *, '     jbeg    = ',    jbeg, '  jend    = ',    jend
     endif
 
-    ! barnes analysis centered at one point; set bskip = 1
+    ! Since we are only doing the  barnes analysis centered at one point, there is no need to do a speedup in the
+    ! barnes analysis, so just set bskip = 1.
     bskip   = 1
     icut    = 0
     in_grid = 'n'
@@ -24910,6 +24917,8 @@ end program trakmain
         endif
 
       else
+        ! Barnes probably tried to access a pt outside the grid domain. So, reduce by half the distance from the center
+        ! of the farthest pt that barnes tries to access, exit this loop, and try it again with the smaller re and ri.
         ibret = 96
         reold = re
         riold = ri
