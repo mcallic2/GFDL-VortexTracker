@@ -24345,11 +24345,18 @@ end program trakmain
       ! z = 2 for 700 mb zeta, w = 2 for 700 mb winds
       w = nlev700
     else if (z == 3) then
-      ! z = 3 for sfc zeta, w = 5 for sfc (10m) winds
+      ! needed because 200 mb winds were added which are now in the #4 slot of the u & v arrays. So, to future-proof
+      ! this, use the level IDs from module level_parms instead of the hard-wired numbers.
       w = levsfc
     endif
 
-    ! calculate grid increments for interior and edge points
+    !------------------------------------------------------------------------------------------------------------------
+    ! Calculate grid increments for interior and edge points.
+    !
+    ! *Important: If dtk is defined in module trig_vals in km, then we need to multiply by 1000 here to get meters. If
+    ! it's defined as meters, just let it be. Since the wind values are given in meters, that's why we need the dlon
+    ! values to be in meters.
+    !------------------------------------------------------------------------------------------------------------------
     if (dtk < 750.0) then    ! if dtk was defined as km, then x1000
       dfix = 1000.0
     else                     ! dtk was already defined as meters
@@ -24361,12 +24368,20 @@ end program trakmain
     dlon_inter = dtk * dfix * 2.0 * dlon   ! Di dist over 2 grid pts
     dlat_inter = dtk * dfix * 2.0 * dlat   ! Dj dist over 2 grid pts
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Calculate required trig functions. These are functions of latitude. Remember that the grid must go from north to
+    ! south. This north-to-south requirement has already been checked in subroutine getgridinfo. If necessary, any
+    ! flipping of the latitudes was done there, and flipping of the data, again if necessary, was done in
+    ! subroutine getdata.
+    !------------------------------------------------------------------------------------------------------------------
     do j = 2, jmax-1
       rlat(j)   = glatmax - ((j-1) * dlat)
       cosfac(j) = cos(dtr * rlat(j))
       tanfac(j) = tan(dtr * rlat(j)) / erad
     enddo
 
+    ! Set trig factors at end points to closest interior point to avoid a singularity if the domain includes the poles,
+    ! which it will for the global grids (MRF, GDAS, GFS, UKMET, NCE)
     cosfac(1)    = cosfac(2)
     tanfac(1)    = tanfac(2)
     cosfac(jmax) = cosfac(jmax-1)
@@ -24375,6 +24390,30 @@ end program trakmain
     if (verb .ge. 3) then
       print *, 'Just before inter rvcalc, dlon_inter = ', dlon_inter, ' dlat_inter = ', dlat_inter
     endif
+
+    !------------------------------------------------------------------------------------------------------------------
+    ! These next bits of vorticity calculation code assume that the input grid is oriented so that point (1,1) is the
+    ! upper left-most (NW) and point (imax,jmax) is the lower right-most point. Any other grids will probably crash the
+    ! program due to array out of bounds errors.
+    !
+    ! Before each calculation is done, the logical array is checked to make sure that all the data points in this
+    ! calculation have valid data (ie., that the points are not outside a regional model's boundaries).
+    !
+    ! *Important note: While testing this, I uncovered a bug, which was that I had the "j+1" and "j-1" reversed. Just
+    ! from a physical understanding, the du/dy term at a point is calculated by taking the u value north of the point
+    ! minus the u value south of the point. Intuitively, this is u(j+1) - u(j-1). However, we have designed this
+    ! program to have the northernmost point as the beginning of the grid (i.e., for the global grids, j=1 at 90N, and
+    ! j increases southward). Thus, if you would do u(j+1) - u(j-1), you would actually be taking the u value south of
+    ! the point minus the u value north of the point, EXACTLY THE OPPOSITE OF WHAT YOU WANT. Therefore, the vorticity
+    ! calculations have been changed so that we now have u(j-1) - u(j+1).
+    !
+    ! With limited domain grids that have missing data on them (such as you would have for a grid that has been
+    ! converted from a non-lat/lon grid to a lat/lon grid), we were running into problems below with the setting of
+    ! zeta values to a missing value of -999. In place of this, the easiest thing to do is to simply assign a value of
+    ! the background coriolis value to that point. No, this is not correct, but it is the easiest workaround for this
+    ! right now. Setting it to zero would be too far off. Setting it to the coriolis component has a net effect of not
+    ! having much impact on the  barnes scheme result.
+    !------------------------------------------------------------------------------------------------------------------
 
     ! interior points
     do j = 2, jmax-1
