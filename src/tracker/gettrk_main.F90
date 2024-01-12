@@ -22943,7 +22943,7 @@ end program trakmain
         stop 95
       endif
 
-      ! determine packing information from GRIB2 file; The default packing is 40  JPEG 2000
+      ! determine packing information from GRIB2 file; the default packing is 40 JPEG 2000
       ipack = 40
       if (verb_g2 .ge. 1) then
         print *, ' '
@@ -22954,15 +22954,14 @@ end program trakmain
       endif
 
       ! set DRT info ( packing info )
-      if (gfld%idrtnum .eq. 0) then      ! simple packing
+      if (gfld%idrtnum .eq. 0) then       ! simple packing
         ipack = 0
-      elseif (gfld%idrtnum .eq. 2) then  ! complex packing
+      elseif (gfld%idrtnum .eq. 2) then   ! complex packing
         ipack = 2
-      elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
+      elseif (gfld%idrtnum .eq. 3) then   ! complex & spatial packing
         ipack = 31
       elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
-        ! JPEG 2000 packing
-        ipack = 40
+        ipack = 40                        ! JPEG 2000 packing
       elseif (gfld%idrtnum .eq. 41) then  ! PNG packing
         ipack = 41
       endif
@@ -23175,6 +23174,17 @@ end program trakmain
         print *, '  dx = ', dx,   '  dy  = ', dy
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Get boundaries of the data grid. Note: gds(4) is referred to in GRIB documenatation as the "Latitude of origin",
+      ! which might imply "minimum Latitude". However, for the grids that we'll be using in this program, the "Latitude
+      ! of origin" will be listed under gds(4) as the northernmost point (eg., in MRF, gds(4) = 90), so for this
+      ! program, use gds(4) as your max lat, and gds(7) as your min lat. However, in case NCEP, UKMET or ECMWF change
+      ! their convention and begin flipping their grids, a check is made to make sure that the max lat is not less than
+      ! the min lat.
+      ! It is possible to have an input grid which goes from south to north (such as NAVGEM). In this case, we flip the
+      ! data in subroutine conv1d2d_real. However, the max and min latitudes listed in the GRIB GDS will be confused,
+      ! so we need to check the value of the GRIB scanning mode flag here.
+      !----------------------------------------------------------------------------------------------------------------
       need_to_flip_lons = .false.
       iscanflag = igetgds(11)
 
@@ -23195,6 +23205,8 @@ end program trakmain
     endif
 
     if (glonmin >= 0.0 .and. glonmax >= 0.0) then
+      ! An example of this occurred for a case of HAFS-A, where the westernmost longitude (glonmin) was 351.5E and the
+      ! easternmost longitude (glonmax) was 92.3E for a case in the South Indian Ocean.
       if (glonmin > glonmax) then
         if (verb .ge. 3) then
           print *, ' '
@@ -23223,6 +23235,8 @@ end program trakmain
       endif
 
     elseif (glonmin < 0.0 .and. glonmax >= 0.0) then
+      ! An example of this is the MPAS data, which starts and ends at the dateline and is specified as
+      ! glonmin = -179.875, glonmax = 179.875. Convert to be positive and go from 180.125 to 539.875.
       if (verb .ge. 3) then
         print *, ' '
         print *, 'NOTE: glonmin is < 0, glonmax > 0, so glonmin'
@@ -23243,7 +23257,7 @@ end program trakmain
       endif
 
     elseif (glonmin < 0.0 .and. glonmax < 0.0) then
-      ! examples of this are GFDL and HWRF; In this case, make both glonmin and glonmax positive.
+      ! examples of this are GFDL and HWRF; in this case, make both glonmin and glonmax positive
       if (verb .ge. 3) then
         print *, ' '
         print *, 'NOTE: glonmin is < 0 and glonmax < 0, so both'
@@ -23263,6 +23277,8 @@ end program trakmain
       endif
 
     elseif (glonmin >= 0.0 .and. glonmax < 0.0) then
+      ! An example of this is the GFS data, which goes from glonmin = 0.0 to glonmax = -0.5. Convert it here to go
+      ! from glonmin = 0.0 to glonmax = 359.5
       if (verb .ge. 3) then
         print *, ' '
         print *, 'NOTE: glonmin is >= 0 and glonmax < 0, so'
@@ -23312,6 +23328,7 @@ end program trakmain
       print *, 'grid boundaries for regional models.'
     endif
 
+    ! Fill glat and glon with the lat & lon values for the grid. This info will be used in subroutine barnes
     if (allocated(glat)) deallocate(glat)
     if (allocated(glon)) deallocate(glon)
 
@@ -23358,6 +23375,12 @@ end program trakmain
       stop 98
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Finally, check to see if the requested boundary limits that the user input are contained within this grid (for
+    ! example, someone running this tracker on a regional grid may have forgotten to change the input grid bounds from
+    ! a global grid run). Modify the user-input bounds as needed.
+    ! Note: Only check these bounds for a genesis run on a regional grid, whether that be a 'midlat' or a 'tcgen' run.
+    !------------------------------------------------------------------------------------------------------------------
     if (trkrinfo%gridtype == 'regional' .and. trkrinfo%type /= 'tracker') then
 
       if (trkrinfo%eastbd > glonmax) then
