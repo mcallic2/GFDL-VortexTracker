@@ -25150,7 +25150,7 @@ end program trakmain
         do i = 1, imax  ! iloop
 
           if (valid_pt(i,j)) then
-            ! Teten's formula:
+            ! Teten's formula
             es = eo * exp((b * (temperature(i, j, z) - t1)) / (temperature(i, j, z) - t2))
             qs = (rd_over_rv * es) / penv
             rh(i, j, z) = (spfh(i, j, z) / qs) * 100.0
