@@ -27736,6 +27736,13 @@ end program trakmain
       print *, 'fxy(ix,jx) = ', fxy(ix,jx), ' xcentval = ', xcentval
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First, set up the contour intervals that will be used. In the original version of this code, we used preset
+    ! standard intervals (984,988,992,996,1000,1004....). But upon further review, it was decided that this was too
+    ! arbitrary. So instead, we consider the found min (max) value to be the bottom (top) of the list of contour
+    ! intervals. In this way, we can clearly specify and screen storms based on the "depth" of the pressure field as
+    ! compared to the surroundings.
+    !------------------------------------------------------------------------------------------------------------------
     i = 1
     do while (i <= maxconts)
       if (cmaxmin == 'min') then
@@ -27748,6 +27755,20 @@ end program trakmain
       endif
     enddo
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! This loop is the master loop
+    !
+    ! Find the contour interval in which the center value resides. Note that the lower bound is included for a min
+    ! check, while the upper bound is included for a max check. Note also that this subroutine can be used to find the
+    ! last closed contour, and part of that functionality shows up in the next while statement where we reference
+    ! "num_found_contours" in the array indeces for the contour values. Basically, the way we do this is, for example,
+    ! if our central value is 990.4 mb and our contour interval is 4 mb, then in the first run through 
+    ! successive_contours_loop we see if we have a closed contour in the interval 990.4-994.4. If yes, then the next
+    ! time through this loop, we see if we have a closed contour in the interval 994.4-998.4. If yes, then the next
+    ! loop check is for 998.4-1002.4, and so on. We stop searching if we find a value that is either below the xcentval
+    ! input into this subroutine or below the lower value of the current contour interval (this would mean a change in
+    ! the gradient and would indicate that, in the case of mslp, we are heading down towards another, different low).
+    !------------------------------------------------------------------------------------------------------------------
     do while (num_found_contours < num_requested_contours) ! successive_contours_loop
       isc_count = isc_count + 1
       point_is_already_in_next_contour = .false.
@@ -27788,6 +27809,11 @@ end program trakmain
         print *, '          xcentval = ', xcentval
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! This single_contour_scan_loop is the main loop for searching for one individual contour. If it is determined
+      ! that a contour exists, control is returned to the successive_contours_loop, and if more contours were requested
+      ! to be found, then the search continues onward & outward.
+      !----------------------------------------------------------------------------------------------------------------
       temp_mask_i_loc = 0
       temp_mask_j_loc = 0
 
@@ -27803,12 +27829,24 @@ end program trakmain
       do while (still_scanning)  ! single_contour_scan_loop
 
         if (iter == 1 .and. num_found_contours == 0) then
+          ! for the first iteration, we have only the first ring, which is centered on the input minimum/maximum point
           ringct = 1
           search_next_i(1) = ix
           search_next_j(1) = jx
 
         else if (iter == 1 .and. num_found_contours > 0) then
+          ! This is the first iteration in a *new* contour. That is, we have already found 1 or more previous contours
+          ! while in previous iterations of successive_contours_loop and we are now beginning to look for the
+          ! next contour.
           if (next_contour_ct == 0) then
+            !----------------------------------------------------------------------------------------------------------
+            ! This would be for the special case in which, for example, you've got a very intense, compact storm that
+            ! "skips" a contour. That is, suppose the min pressure of a storm is 982 mb, and we are utilizing a 4-mb
+            ! contour interval, but all surrounding data points are, say, 987 mb or higher. Then, next_contour_ct would
+            ! be 0 since no data points were found in the next contour interval of 982-986 mb, but we can continue
+            ! searching since the gradient is still sloping the correct way. The code in this if statement handles this
+            ! special case.
+            !----------------------------------------------------------------------------------------------------------
             if (verb .ge. 3) then
               print *, ' '
               print *, 'ALERT: next_contour_ct = 0 '
@@ -27823,6 +27861,8 @@ end program trakmain
                 jby = beyond_contour_j(nb)
 
                 if (.not. point_is_already_in_beyond_pool(ibx,jby)) then
+                  ! If this point is no longer in our pool of "beyond contour" points, then just cycle out of this
+                  ! iteration
                   cycle   ! bey_con_min_loop
                 endif
 
@@ -27830,6 +27870,9 @@ end program trakmain
                   next_contour_ct = next_contour_ct + 1
                   next_contour_i(next_contour_ct) = ibx
                   next_contour_j(next_contour_ct) = jby
+                  ! This point has now been identified as being in the "next" contour interval, i.e., no longer in the
+                  ! "beyond" contour pool. Therefore, set the logical flag to indicate that this point is no longer
+                  ! in the "beyond" contour pool.
                   point_is_already_in_beyond_pool(ibx, jby) = .false.
                 endif
               enddo  ! bey_con_min_loop
@@ -27843,6 +27886,8 @@ end program trakmain
                 jby = beyond_contour_j(nb)
 
                 if (.not. point_is_already_in_beyond_pool(ibx,jby)) then
+                  ! If this point is no longer in our pool of "beyond contour" points, then just cycle out of this
+                  ! iteration
                   cycle  ! bey_con_max_loop
                 endif
 
@@ -27850,6 +27895,9 @@ end program trakmain
                   next_contour_ct = next_contour_ct + 1
                   next_contour_i(next_contour_ct) = ibx
                   next_contour_j(next_contour_ct) = jby
+                  ! This point has now been identified as being in the "next" contour interval, i.e., no longer in
+                  ! the "beyond" contour pool. Therefore, set the logical flag to indicate that this point is no longer
+                  ! in the "beyond" contour pool.
                   point_is_already_in_beyond_pool(ibx,jby) = .false.
                 endif
               enddo  ! bey_con_max_loop
@@ -27870,6 +27918,16 @@ end program trakmain
                 print *, ' '
               endif
 
+              !--------------------------------------------------------------------------------------------------------
+              ! The number of rings that we have available to search in the next contour interval is 0, so cycle all
+              ! the way back to the top of the outer loop, which is successive_contours_loop, so that we can increase
+              ! the contour bounds and search inside those new bounds. Again, this is for the case in which we have an
+              ! intense, compact storm and we are using a small contour interval, such that we are essentially
+              ! over one of these intervals in one of the loop iterations. We need to bump up the num_found_contours by
+              ! one in order to increase the array index in the contvals array at the top of the
+              ! successive_contours_loop. It is kosher to do this since the reason we are cycling back to the top of
+              ! that loop is that we are skipping over a contour interval.
+              !--------------------------------------------------------------------------------------------------------
               num_found_contours = num_found_contours + 1
               cycle ! successive_contours_loop
             endif
@@ -27913,21 +27971,38 @@ end program trakmain
 
         next_ring_ct = 0
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! This next loop reviews the points that have been labelled for the "beyond_contour" pool. As we get further
+        ! into successive iterations of successive_contours_loop, some of these previously "beyond" points are now
+        ! within the contour interval range that we are checking, so we need to go through the list of "beyond" points
+        ! and remove any that are no longer in that "beyond" category.
+        !--------------------------------------------------------------------------------------------------------------
         do nb = 1, beyond_contour_ct  ! check_beyond_loop
           ibx = beyond_contour_i(nb)
           jby = beyond_contour_j(nb)
 
           if (.not. point_is_already_in_beyond_pool(ibx,jby)) then
+            ! This point may have been removed already in a previous iteration of successive_contours_loop. If this
+            ! point is no longer in our pool of "beyond contour" points, then just cycle out of this iteration.
             cycle   ! check_beyond_loop
           endif
 
           do nring = 1, ringct
+            ! Check to see if any of the points being searched in the upcoming multiple_ring_loop are points that had
+            ! previously been saved as "beyond_contour" points. If so, remove their status as "beyond_contour" points
+            ! by setting the logical flag to false.
             if (ibx == ringposi(nring) .and. jby == ringposj(nring)) then
               point_is_already_in_beyond_pool(ibx,jby) = .false.
             endif
           enddo
         enddo  ! check_beyond_loop
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! In each iteration of single_contour_scan_loop, we can have a different number of rings to analyze. In the
+        ! first iteration, we only have 1 ring, the initial ring around the local max/min that was input to this
+        ! subroutine. Subsequent iterations will have a variable number of rings, depending on how many new data points
+        ! within our contour interval were found in the previous iteration.
+        !--------------------------------------------------------------------------------------------------------------
         do mr = 1, ringct  ! multiple_ring_loop
           icenx = ringposi(mr)
           jcenx = ringposj(mr)
@@ -27963,6 +28038,12 @@ end program trakmain
             return
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! For each individual ring, we check all 8 points surrounding the center point. The points are numbered for
+          ! each ring as shown in the diagram to the right of the "select case" statement just below. REMEMBER: The j
+          ! in our grids increases from north to south, so that for a global grid, j = 1 is at 90N and j = jmax is
+          ! at 90S.
+          !------------------------------------------------------------------------------------------------------------
           do ir = 1, 9  ! individual_ring_loop
 
             select case (ir)
@@ -27977,6 +28058,8 @@ end program trakmain
               case (9); irx = icenx; jrx = jcenx;  ! = center pt of ring
             end select
 
+            ! Make sure the point we are looking at has valid data. This is an issue only on regional grids, where we
+            ! have a buffer of bitmapped (null) data points surrounding the real grid.
             if (.not. valid_pt(irx,jrx)) then
               if (verb .ge. 3) then
                 print *, ' '
@@ -28012,6 +28095,8 @@ end program trakmain
               return
             endif
 
+            ! Check to make sure that the point we are looking at is not considered under the influence of another
+            ! nearby low.
             if (masked_out(irx,jrx)) then
               if (verb .ge. 3) then
                 print *, ' '
@@ -28056,10 +28141,21 @@ end program trakmain
               return
             endif
 
+            ! if we have already hit this point on a previous ring check, then just ignore this point and cycle past it
             if (point_is_already_in_our_contour(irx,jrx)) then
               cycle   ! individual_ring_loop
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! For a MIN check, check to see if the data point is below the contour interval or is below the local
+            ! minimum value passed into this subroutine. In either case, exit and consider this to NOT be a closed
+            ! contour. For a MAX check, check to see if the data point is above the contour interval or is above the
+            ! local maximum value passed into this subroutine. In either case, exit and consider this to NOT be a
+            ! closed contour.
+            ! For example, for mslp, this would be as we're moving outward away from lower pressures to higher
+            ! pressures, and then all of a sudden we come upon a lower pressure. This probably means we're heading
+            ! toward another low pressure area, so mark the point and return to the calling routine.
+            !----------------------------------------------------------------------------------------------------------
             found_a_point_below_contour = 'n'
             found_a_point_above_contour = 'n'
             if (cmaxmin == 'min') then
@@ -28118,6 +28214,13 @@ end program trakmain
               return
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! If we've made it this far, then we at least know that the gradient is still heading in the right
+            ! direction. Do the check now to see if the value at this point is within our specific contour interval
+            ! (there is the possibility that the value is beyond our interval, which will be checked for just below,
+            ! and if that's the case, then that point will be processed in a subsequent iteration of this loop that
+            ! that encompasses that correct contour interval).
+            !----------------------------------------------------------------------------------------------------------
             found_a_point_in_our_contour = 'n'
             if (cmaxmin == 'min') then
               if (fxy(irx,jrx) >= contlo .and. fxy(irx,jrx) < conthi) then
@@ -28130,6 +28233,12 @@ end program trakmain
             endif
 
             if (found_a_point_in_our_contour == 'y') then
+              !--------------------------------------------------------------------------------------------------------
+              ! We've found a data point in our interval, something that is inside the closed contour, and it hasn't
+              ! been marked as being found in a previous iteration of this loop, so mark it now and store the (i,j)
+              ! location so that we can scan a ring around this point in a successive iteration of this loop for more
+              ! potential points within this interval
+              !--------------------------------------------------------------------------------------------------------
               point_is_already_in_our_contour(irx, jrx) = .true.
               next_ring_ct = next_ring_ct + 1
               search_next_i(next_ring_ct) = irx
@@ -28146,16 +28255,39 @@ end program trakmain
               endif
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! If we've made it this far AND the found_a_point_in_our_contour flag indicates that this point is not in
+            ! our contour interval, then by default that means that this point is for a contour interval beyond what
+            ! we're currently looking at. E.g., if we're looking at the contours around a 972 mb low and we're moving
+            ! outward and currently checking the 984-988 mb contour interval, it means that we found, say, a gridpoint
+            ! with 991 mb. So we want to mark that point for a future iteration of this loop that would be checking the
+            ! 988-992 mb contour interval.
+            !----------------------------------------------------------------------------------------------------------
             if (found_a_point_in_our_contour /= 'y' .and. .not. point_is_already_in_next_contour(irx,jrx)) then
+              !--------------------------------------------------------------------------------------------------------
+              ! We've found a data point that is beyond our interval, so this is not a concern for finding the bounds
+              ! of our current contour interval, but we want to mark these points and remember them for the next
+              ! iteration of successive_scan_loop. (For example, suppose we are currently searching for points in the
+              ! 984-988 mb range, and we find a point that is 990 -- mark it here to be remembered when we scan
+              ! for 988-992 mb).
+              !--------------------------------------------------------------------------------------------------------
               if (cmaxmin == 'min') then
                 contlo_next = conthi
                 conthi_next = conthi + trkrinfo%contint
+                ! Next contour; we've found a point that is in the very next contour interval
                 if (fxy(irx,jrx) >= contlo_next .and. fxy(irx,jrx) < conthi_next) then
                   next_contour_ct = next_contour_ct + 1
                   next_contour_i(next_contour_ct) = irx
                   next_contour_j(next_contour_ct) = jrx
                   point_is_already_in_next_contour(irx, jrx) = .true.
                 else if (fxy(irx,jrx) >= conthi_next) then
+                  !----------------------------------------------------------------------------------------------------
+                  ! Beyond contour; This point is at least 1 contour interval beyond the next contour interval. Dump
+                  ! the info into these i and j arrays. This info will be used if in the next iteration of,
+                  ! single_contour_scan_loop next_contour_ct = 0. That would mean that we have, e.g., an intensely deep
+                  ! low with a sharp mslp gradient that essentially "skips" over a contour interval. E.g., if using a
+                  ! 4 mb interval, we go from 947 to 953 AND there are NO intervening gridpoints in the 948-952 interval
+                  !----------------------------------------------------------------------------------------------------
                   beyond_contour_ct = beyond_contour_ct + 1
                   beyond_contour_i(beyond_contour_ct) = irx
                   beyond_contour_j(beyond_contour_ct) = jrx
@@ -28166,11 +28298,13 @@ end program trakmain
                 contlo_next = contlo - trkrinfo%contint
                 conthi_next = contlo
                 if (fxy(irx,jrx) >  contlo_next .and. fxy(irx,jrx) <= conthi_next) then
+                  ! see 'Next contour' comment above 
                   next_contour_ct = next_contour_ct + 1
                   next_contour_i(next_contour_ct) = irx
                   next_contour_j(next_contour_ct) = jrx
                   point_is_already_in_next_contour(irx, jrx) = .true.
                 else if (fxy(irx,jrx) <= contlo_next) then
+                  ! see 'Beyond contour' comment above
                   beyond_contour_ct = beyond_contour_ct + 1
                   beyond_contour_i(beyond_contour_ct) = irx
                   beyond_contour_j(beyond_contour_ct) = jrx
