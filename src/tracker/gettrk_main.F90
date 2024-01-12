@@ -27015,6 +27015,7 @@ end program trakmain
 
         if (gm_wrap_flag == 'maxplus360') then
           if ((xcandlon > 330.0 .and. xcandlon <= 360.0) .and. targlon < 25.0) then
+            ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
             targlon = targlon + 360.0
           endif
           if (xcandlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -27044,23 +27045,36 @@ end program trakmain
           vtct(iq, idist)  = vtct(iq, idist) + 1
 
           if ((hemisphere*vt) >= 8.75) then
-            ! increment counter by 1 if cyclonic Vt > 8.75 m/s (17 kts) @ this azimuth
+            ! if cyclonic Vt exceeds 8.75 m/s (17 kts) at this azimuth, then increment the counter for this quad by 1
             vt_exceed_17kts_ct(iq, idist) = vt_exceed_17kts_ct(iq, idist) + 1
           endif
         endif
       enddo ! azimloop
 
+      ! If the Vt at 2 out of 4 azimuths exceeds 17 kts (which is 50% of 34 kts), then give an automatic pass for that
+      ! quadrant without checking for the mean Vt in this quadrant.
       do nq = 1, numquad
         if (vt_exceed_17kts_ct(nq,idist) >= 2) then
           quad_pass_flag(nq) = 'y'
         endif
       enddo
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now check again, but this time check for the mean Vt averaged over the 4 azimuths in this quadrant. Yes, it can
+      ! be redundant and set the quad_pass_flag to 'y' again for this quadrant, but that's okay. What it is *not* able
+      ! to do here is take that 'y' setting away that may have just been set in the IF statement above with two
+      ! azimuths passing 17 kts.
+      !----------------------------------------------------------------------------------------------------------------
       do nq = 1, numquad
-        ! we need at least 2 valid azimuths in order to get a proper mean Vt.
+        ! we need at least 2 valid azimuths in order to get a proper mean Vt
         if (vtct(nq,idist) >= 2) then
           vtavg = vtsum(nq, idist) / vtct(nq, idist)
           if ((hemisphere * vtavg) >= full_vt_thresh) then
+            !----------------------------------------------------------------------------------------------------------
+            ! The mean Vt averaged over the number of azimuths in this quadrant (ideally, the max number of azimuths
+            ! per quadrant, which was 4 as of the writing of this routine) at this distance exceeds 7 m/s, which is
+            ! 13.6 kts, which is 40% of 34 kts.
+            !----------------------------------------------------------------------------------------------------------
             quad_pass_flag(nq) = 'y'
           elseif ((hemisphere * vtavg) >= half_vt_thresh) then
             quad_pass_half_vt_flag(nq) = 'y'
@@ -27069,7 +27083,7 @@ end program trakmain
           vtavg = -9999.0
         endif
 
-        ! Now check for the max average Vt in this quadrant
+        ! now check for the max average Vt in this quadrant
         if (vtavg > -9998.0) then
           if ((hemisphere * vtavg) > (hemisphere * vtquadmax(nq))) then
             vtquadmax(nq) = vtavg
@@ -27099,6 +27113,14 @@ end program trakmain
 71    format (1x, '   LL Wind Circ Vt mean quadmax value: ', a2, 2x, f8.2, ' kts')
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! In each quadrant, there will be 3 choices: The full Vt thresh was reached, the half-Vt thresh was reached, or
+    ! neither thresh was reached. i.e., the same quadrant cannot have both the full and half threshold flags be tripped
+    ! to y, based on how the IF statement above has been set up. So that is why we create the final_quad_sum_ct below.
+    ! And we will require that at least 2 of the quadrants reach the full Vt thresh, while up to 2 can just simply reach
+    ! the half threshold. Doing it this way still ensures a closed wind circulation, however it also allows for
+    ! asymmetric stucture often found in developing disturbances.
+    !------------------------------------------------------------------------------------------------------------------
     final_quad_full_vt_ct = 0
     final_quad_half_vt_ct = 0
     final_quad_sum_ct     = 0
