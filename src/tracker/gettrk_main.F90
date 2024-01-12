@@ -23834,6 +23834,8 @@ end program trakmain
       deallocate (temp_nc_time_vals_r8)
     endif
 
+    ! Now convert the NetCDF time values into minutes in order to be able to compare with the user-requested list of
+    ! lead times. Remember that the NetCDF lead times will be listed either as hours or as fractions of days.
     if (allocated(nctotalmins)) then
       deallocate (nctotalmins)
     endif
@@ -23869,6 +23871,9 @@ end program trakmain
 
 71  format (1x, i5, '  netcdf_file_time_values(k) = ', f8.4, '  nctotalmins(k) = ', i10)
 
+    ! Now go through the list of user-requested lead times that were read in from subroutine read_fhours and try to
+    ! match the two lists up. The big one to watch out for is whether or not the NetCDF file actually has an hour 0
+    ! lead time.
     do n = 1, ifhmax ! userloop
       usertime    = iftotalmins(n)
       match_check = 'n'
