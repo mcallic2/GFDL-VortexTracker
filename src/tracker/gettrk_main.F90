@@ -27243,6 +27243,7 @@ end program trakmain
 
         if (gm_wrap_flag == 'maxplus360') then
           if ((ctlon > 330.0 .and. ctlon <= 360.0) .and. targlon < 25.0) then
+            ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
             targlon = targlon + 360.0
           endif
           if (ctlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -27252,7 +27253,7 @@ end program trakmain
 
         if (targlon >= glonmax) then
           if (trkrinfo%gridtype == 'global') then
-            targlon = targlon - 360.0
+            targlon = targlon - 360.0 ! just GM-wrapped for the full, regular, global grid
           else
             xmax_rdist_reached = rdist
             exit  ! radial_loop
@@ -27261,7 +27262,7 @@ end program trakmain
 
         if (targlon < glonmin) then
           if (trkrinfo%gridtype == 'global') then
-            targlon = targlon + 360.0
+            targlon = targlon + 360.0 ! just GM-wrapped for the full, regular, global grid
           else
             xmax_rdist_reached = rdist
             exit  ! radial_loop
@@ -27273,6 +27274,8 @@ end program trakmain
           exit  ! radial_loop
         endif
 
+        ! These calls to bilin_int_uneven pass a variable, level, that contains the vertical level to pull the wind
+        ! data from, either 850, 700 or surface (which will be indicated by a value/code of 1020).
         call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, 'u', xintrp_u, &
              & valid_pt, bimct, -99, ibiret1)
         call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, 'v', xintrp_v, &
@@ -27283,6 +27286,8 @@ end program trakmain
           azimuth_ct = azimuth_ct + 1
           vt_azim_sum = vt_azim_sum + vt(iazim)
         else
+          ! If ibiret /= 0, then we have reached out too far (likely a regional grid). So, pull the plug and just set
+          ! the xmax_rdist_reached to the last diagnosed value of rdist.
           xmax_rdist_reached = rdist
           exit  ! radial_loop
         endif
@@ -27302,6 +27307,8 @@ end program trakmain
 
       if (ctlat >= 0.0) then
         if (vt_mean >= 3.0) then
+          ! For a NH storm, if the cyclonic mean Vt >= 3.0, increment rdist and cycle through to the next iteration of
+          ! radial_loop.
           rdist = rdist + 40.0
         else
           xmax_rdist_reached = rdist
@@ -27309,6 +27316,8 @@ end program trakmain
         endif
       else
         if (vt_mean <= -3.0 .and. vt_mean > -998.0) then
+          ! For a SH storm, if the cyclonic mean Vt <= -3.0, increment rdist and cycle through to the next iteration of
+          ! radial_loop.
           rdist = rdist + 40.0
         else
           xmax_rdist_reached = rdist
@@ -27333,6 +27342,13 @@ end program trakmain
       print *, 'mbow: After radial_loop, rdist = ', rdist, '    xmax_rdist_reached = ', xmax_rdist_reached
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! At this point, we are done searching radially outwards away from the storm center. The max radial distance we
+    ! reached is called xmax_rdist_reached. By getting to this spot in the subroutine, that means that we bumped out of
+    ! radial_loop above because the rdist being used in that loop got to a radius at which the mean cyclonic Vt no
+    ! longer was strong enough to continue the search outward, so we need to reduce it by 40 km here (back to the value
+    ! for the last successful search). At a minimum, we will mask to a radius of 80 km.
+    !------------------------------------------------------------------------------------------------------------------
     if (xmax_rdist_reached > 80.0) then
       xmax_rdist_reached = xmax_rdist_reached - 40.0
     else
@@ -27346,6 +27362,11 @@ end program trakmain
 
     do i = 1, 4  ! bearloop
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now find the values of the longitude for the farthest west and east points and find the values of the latitude
+      ! for the farthest north and south points. The i and j indices associated with these lons and lats will be used
+      ! to define the bounds of the grid over which we scan to find points that will update the mask.
+      !----------------------------------------------------------------------------------------------------------------
       select case (i)
         case (1); xbear =   0.0;
         case (2); xbear =  90.0;
@@ -27357,6 +27378,7 @@ end program trakmain
 
       if (gm_wrap_flag == 'maxplus360') then
         if ((ctlon > 330.0 .and. ctlon <= 360.0) .and. targlon < 25.0) then
+          ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
           targlon = targlon + 360.0
         endif
         if (ctlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -27371,7 +27393,7 @@ end program trakmain
 
       if (targlon >= glonmax) then
         if (trkrinfo%gridtype == 'global') then
-          targlon = targlon - 360.0
+          targlon = targlon - 360.0 ! just GM-wrapped for the full, regular. global grid
         else
           print *, ' '
           print *, 'WARNING: In subroutine mask_based_on_wind_circ,'
@@ -27386,7 +27408,7 @@ end program trakmain
 
       if (targlon < glonmin) then
         if (trkrinfo%gridtype == 'global') then
-          targlon = targlon + 360.0
+          targlon = targlon + 360.0 ! just GM-wrapped for the full, regular. global grid
         else
           print *, ' '
           print *, 'WARNING: In subroutine mask_based_on_wind_circ,'
@@ -27411,6 +27433,7 @@ end program trakmain
         cycle ! bearloop
       endif
 
+      ! get the i & j starting and ending points for our loop where we will update the mask
       if (i == 1) then
         ! get j for northern latitude; round targlat to the closest jpoint
         if (targlat >= 0.0) then    ! N. Hemisphere
