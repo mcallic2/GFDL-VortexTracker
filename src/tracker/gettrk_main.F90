@@ -23567,6 +23567,15 @@ end program trakmain
 113   format(1x, ' DY:  midj = ', i4, ' dy = ', f8.4)
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Get boundaries of the data grid. Note that it is possible to have an input grid which goes from south to north
+    ! (in fact, it appears that many NetCDF files are constructed this way). Keep in mind, however, that the tracker
+    ! has been written such that point (1,1) should be the upper-leftmost point on the grid, while point (imax,jmax)
+    ! should be the lower-rightmost point. If we check and find that we're dealing with data that instead starts from
+    ! the south and increases northward, we flip the data in subroutine conv1d2d_real. Similarly here, we make sure to
+    ! test so that when we are done in this routine, glatmax refers to the northernmost latitude and glatmin the
+    ! southernmost latitude.
+    !------------------------------------------------------------------------------------------------------------------
     if (tmplon(imax) > tmplon(1)) then
       glonmin = tmplon(1)
       glonmax = tmplon(imax)
@@ -23590,6 +23599,7 @@ end program trakmain
     write (6,83) glatmax,glonmax
 83  format (' Max Lat: ', f8.3, '  Max Lon: ', f8.3)
 
+    ! Fill glat and glon with the lat & lon values for the grid. This info will be used in subroutine barnes
     if (allocated(glon)) deallocate (glon)
     if (allocated(glat)) deallocate (glat)
     allocate (glat(jmax), stat = ija)
@@ -23603,6 +23613,9 @@ end program trakmain
       return
     endif
 
+    ! If the lat or lon grids are flipped (i.e., the lats increase from south to north, or the lons increase westward),
+    ! then we will need to flip both the data arrays as well as the arrays that are holding the values of the lats
+    ! and lons
     need_to_flip_lats = .false.
     need_to_flip_lons = .false.
 
@@ -23630,6 +23643,12 @@ end program trakmain
       need_to_flip_lons = .true.
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Finally, check to see if the requested boundary limits that the user input are contained within this grid (for
+    ! example, someone running this tracker on a regional grid may have forgotten to change the input grid bounds from
+    ! a global grid run). Modify the user-input bounds as needed.
+    ! Note: Only check these bounds for a genesis run on a regional grid, whether that be a 'midlat' or a 'tcgen' run.
+    !------------------------------------------------------------------------------------------------------------------
     if (trkrinfo%gridtype == 'regional' .and. trkrinfo%type /= 'tracker') then
       if (trkrinfo%eastbd > glonmax) then
         xhold = trkrinfo%eastbd
