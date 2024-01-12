@@ -28430,6 +28430,9 @@ end program trakmain
 
     iclmret = 0
 
+    ! First, calculate the longitude and latitude of the input ix and jx points. If the xplon value ends up being
+    ! > 360.0 (this can happen for basin-scale HWRF), don't worry about it. Just leave it be, as the trigonometry will
+    ! work out the same for lons > 360.
     xplon = glonmin + (real(ix) - 1.0) * dx
     yplat = glatmax - (real(jx) - 1.0) * dy
 
@@ -28437,6 +28440,8 @@ end program trakmain
 
     imct = 0
 
+    ! Now get the mask value for the point directly at this input point (we will next work our way around this point in
+    ! the following loop).
     xmask_sum = 0.0
 
     if (valid_pt(ix,jx)) then
@@ -28458,6 +28463,8 @@ end program trakmain
       return
     endif
 
+    ! Now go around the storm via azimloop and get interpolated values of the land-sea mask at each azimuth at a radial
+    ! distance of 75 km from the center point.
     bimct = 0
 
     do iazim = 1, numazim  ! azimloop CAITLYN - do some of these do loops do the same thing?
@@ -28466,6 +28473,7 @@ end program trakmain
 
       if (gm_wrap_flag == 'maxplus360') then
         if ((xplon > 330.0 .and. xplon <= 360.0) .and. targlon < 25.0) then
+          ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
           targlon = targlon + 360.0
         endif
         if (xplon > 360.0 .and.(targlon >= 0.0 .and. targlon < 180.0)) then
@@ -28473,6 +28481,9 @@ end program trakmain
         endif
       endif
 
+      ! These calls to bilin_int_uneven pass a variable, level, that is used for applications of interpolating wind
+      ! data. Here, we are instead interpolating the land-sea mask data, so we don't care about the level, so just
+      ! pass a dummy value of 850, which never gets used.
       call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, 850, 'm', xintrp_mask, &
            & valid_pt, bimct, -99, ibiret1)
 
