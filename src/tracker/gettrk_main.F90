@@ -127,8 +127,7 @@ program trakmain
 
 end program trakmain
 
-  subroutine tracker (inp, maxstorm, numtcv, ifhmax, trkrinfo, ncfile, &
-                     & ncfile_id, nc_lsmask_file, nc_lsmask_file_id,   &
+  subroutine tracker (inp, maxstorm, numtcv, ifhmax, trkrinfo, ncfile, ncfile_id, nc_lsmask_file, nc_lsmask_file_id, &
                      & netcdfinfo, ncfile_has_hour0, ncfile_tmax,  itret)
 
     use def_vitals;    use inparms;        use tracked_parms; use error_parms
@@ -3104,8 +3103,8 @@ end program trakmain
   !*      isiret     :: Return code for this subroutine.
   !*
   !********************************************************************************************************************
-  subroutine is_it_a_storm (imax, jmax, dx, dy, cparm, ist, defined_pt, parmlon, parmlat, &
-                           & parmval, trkrinfo, stormcheck, ifh, isiret)
+  subroutine is_it_a_storm (imax, jmax, dx, dy, cparm, ist, defined_pt, parmlon, parmlat, parmval, trkrinfo, &
+                           & stormcheck, ifh, isiret)
 
     use radii;     use grid_bounds;   use set_max_parms; use level_parms
     use trig_vals; use tracked_parms; use atcf;          use trkrparms
@@ -3399,8 +3398,8 @@ end program trakmain
   !*                            V850 circulation.
   !*
   !********************************************************************************************************************
-  subroutine probe_for_boundary (imax, jmax, dx, dy, ist, cparm, fxy, valid_pt, pfixlon, &
-                                 & pfixlat, trkrinfo, close_to_boundary, gm_wrap_flag, ipfbret)
+  subroutine probe_for_boundary (imax, jmax, dx, dy, ist, cparm, fxy, valid_pt, pfixlon, pfixlat, trkrinfo, &
+                                 & close_to_boundary, gm_wrap_flag, ipfbret)
 
     use def_vitals; use trkrparms; use grid_bounds; use verbose_output
 
@@ -3485,8 +3484,8 @@ end program trakmain
   !*      we will just have it use the Hart cyclone phase space (CPS) scheme.
   !*
   !********************************************************************************************************************
-  subroutine get_phase (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo, fixlon, &
-                       & fixlat, valid_pt, maxstorm, cps_vals, wcore_flag, igpret)
+  subroutine get_phase (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo, fixlon, fixlat, valid_pt, maxstorm, cps_vals, &
+                       & wcore_flag, igpret)
 
     use inparms;    use phase;     use set_max_parms; use tracked_parms
     use def_vitals; use trkrparms; use grid_bounds;   use verbose_output
@@ -3629,8 +3628,8 @@ end program trakmain
   !*      evaluate only those points that are within 500 km of the storm center.
   !*
   !********************************************************************************************************************
-  subroutine get_cps_paramb (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo, fixlon, &
-                            & fixlat, valid_pt, paramb, maxstorm, igcpret)
+  subroutine get_cps_paramb (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo, fixlon, fixlat, valid_pt, paramb, &
+                            & maxstorm, igcpret)
 
     use inparms;     use phase;         use set_max_parms; use trig_vals
     use grid_bounds; use tracked_parms; use def_vitals;    use trkrparms
@@ -3895,8 +3894,8 @@ end program trakmain
   !*      evaluate only those points that are within 500 km of the storm center.
   !*
   !********************************************************************************************************************
-  subroutine get_cps_vth (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo,fixlon, &
-                         & fixlat, valid_pt, clayer, vth_slope, maxstorm, igcvret)
+  subroutine get_cps_vth (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo,fixlon, fixlat, valid_pt, clayer, vth_slope, &
+                         & maxstorm, igcvret)
 
     use inparms;     use phase;         use set_max_parms; use trig_vals
     use grid_bounds; use tracked_parms; use def_vitals;    use trkrparms
@@ -4449,8 +4448,8 @@ end program trakmain
   !*                         core using barnes analysis.
   !*
   !********************************************************************************************************************
-  subroutine get_vtt_phase (inp, imax, jmax, dx, dy, ist, ifh, trkrinfo, fixlon, &
-                           & fixlat, valid_pt, maxstorm, wcore_flag, igvpret)
+  subroutine get_vtt_phase (inp, imax, jmax, dx, dy, ist, ifh, trkrinfo, fixlon, fixlat, valid_pt, maxstorm, &
+                           & wcore_flag, igvpret)
 
     use set_max_parms; use grid_bounds; use trkrparms;  use contours
     use tracked_parms; use gen_vitals;  use def_vitals; use inparms
@@ -4617,8 +4616,8 @@ end program trakmain
   !*      igscret  :: Return code from this subroutine
   !*
   !********************************************************************************************************************
-  subroutine get_sfc_center (xmeanlon, xmeanlat, clon, clat, ist, ifh, calcparm, &
-                            & xsfclon, xsfclat, maxstorm, igscret)
+  subroutine get_sfc_center (xmeanlon, xmeanlat, clon, clat, ist, ifh, calcparm, xsfclon, xsfclat, maxstorm, &
+                            & igscret)
 
     use set_max_parms; use verbose_output
 
@@ -4716,8 +4715,8 @@ end program trakmain
   !*      icqwret               :: return code from this subroutine
   !*
   !********************************************************************************************************************
-  subroutine check_quadrant_wind_circ (imax, jmax, dx, dy, ist, ifh, xclon, xclat, valid_pt, &
-                                      & vt_quad, trkrinfo, quad_wind_circ_check, gm_wrap_flag, icqwret)
+  subroutine check_quadrant_wind_circ (imax, jmax, dx, dy, ist, ifh, xclon, xclat, valid_pt, vt_quad, trkrinfo, &
+                                      & quad_wind_circ_check, gm_wrap_flag, icqwret)
 
     use set_max_parms; use tracked_parms; use trig_vals; use trkrparms; use verbose_output
 
@@ -4880,9 +4879,9 @@ end program trakmain
   !*      sr_vt     :: Quadrant tangential winds in storm-relative framework
   !*
   !********************************************************************************************************************
-  subroutine get_wind_structure (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, &
-                                & xsfclat, valid_pt, er_wind, sr_wind, er_vr, sr_vr, er_vt,  &
-                                & sr_vt, maxstorm, trkrinfo, gm_wrap_flag, igwsret)
+  subroutine get_wind_structure (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, xsfclat, valid_pt,   &
+                                & er_wind, sr_wind, er_vr, sr_vr, er_vt, sr_vt, maxstorm, trkrinfo, gm_wrap_flag, &
+                                & igwsret)
 
 
     use inparms;    use phase;     use set_max_parms; use tracked_parms
@@ -5147,9 +5146,8 @@ end program trakmain
   !*      rdist     :: Radii (km) at which the winds will be evaluated
   !*
   !********************************************************************************************************************
-  subroutine get_fract_wind_cov (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, &
-                                & xsfclat, valid_pt, calcparm, wfract_cov, pdf_ct_bin,       &
-                                & pdf_ct_tot, maxstorm, trkrinfo, igfwret)
+  subroutine get_fract_wind_cov (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, xsfclat, valid_pt, &
+                                & calcparm, wfract_cov, pdf_ct_bin, pdf_ct_tot, maxstorm, trkrinfo, igfwret)
 
     use inparms;    use phase;     use set_max_parms; use tracked_parms; use trkrparms
     use def_vitals; use trig_vals; use grid_bounds;   use level_parms;   use verbose_output
@@ -5612,8 +5610,8 @@ end program trakmain
   !*      sdp   :: Storm surge damage potential
   !*
   !********************************************************************************************************************
-  subroutine get_ike_stats (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, &
-                           & xsfclat, valid_pt, calcparm, ike, sdp, wdp, maxstorm, trkrinfo, igisret)
+  subroutine get_ike_stats (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, xsfclon, xsfclat, valid_pt, calcparm, &
+                           & ike, sdp, wdp, maxstorm, trkrinfo, igisret)
 
     use inparms;    use phase;     use set_max_parms; use tracked_parms
     use def_vitals; use trig_vals; use grid_bounds;   use level_parms
@@ -5902,8 +5900,8 @@ end program trakmain
   !*      variable. numlev=1 is for 850 mb, and numlev=2 is for 200 mb.
   !*
   !********************************************************************************************************************
-  subroutine get_shear (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, calcparm, &
-                       & maxstorm, trkrinfo, clon, clat, shear, gm_wrap_flag, igsret)
+  subroutine get_shear (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, calcparm, maxstorm, trkrinfo, &
+                       & clon, clat, shear, gm_wrap_flag, igsret)
 
     use grid_bounds; use tracked_parms; use trig_vals; use def_vitals; use verbose_output
     use level_parms; use trkrparms;     use inparms;   use set_max_parms
@@ -6291,8 +6289,8 @@ end program trakmain
   !*      trkrinfo    :: derived type detailing user-specified grid info
   !*
   !********************************************************************************************************************
-  subroutine get_sst (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag, &
-                     & maxstorm, trkrinfo, sst_smooth, igsstret)
+  subroutine get_sst (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag,  maxstorm, trkrinfo, &
+                     & sst_smooth, igsstret)
 
     use tracked_parms; use trkrparms;     use def_vitals
     use inparms;       use set_max_parms; use read_parms
@@ -6375,10 +6373,9 @@ end program trakmain
   !*      iggdret            :: return code from this subroutine
   !*
   !********************************************************************************************************************
-  subroutine get_gen_diags (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag,    &
-                           & readgenflag, calcparm, maxstorm, trkrinfo, clon, clat, divg, moist_divg, &
-                           & rh_800_600_smooth, rh_1000_925_smooth, omega500_smooth,                  &
-                           & already_computed_domain_wide_rh, iggdret)
+  subroutine get_gen_diags (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag, readgenflag,    &
+                           & calcparm, maxstorm, trkrinfo, clon, clat, divg, moist_divg, rh_800_600_smooth,        &
+                           & rh_1000_925_smooth, omega500_smooth, already_computed_domain_wide_rh, iggdret)
 
     use grid_bounds; use tracked_parms; use trig_vals; use read_parms;    use def_vitals;
     use level_parms; use trkrparms;     use inparms;   use set_max_parms; use verbose_output;
@@ -6516,8 +6513,8 @@ end program trakmain
   !*      divergence over the entire domain, and the second routine will compute the Barnes average of the divergence.
   !*
   !********************************************************************************************************************
-  subroutine get_divg (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, calcparm, &
-                      & maxstorm, trkrinfo, clon, clat, divg, igdret)
+  subroutine get_divg (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, calcparm, maxstorm, trkrinfo, &
+                      & clon, clat, divg, igdret)
 
     use grid_bounds;    use tracked_parms; use trig_vals; use set_max_parms
     use level_parms;    use trkrparms;     use inparms;
@@ -6685,8 +6682,8 @@ end program trakmain
   !*       (i,j+1)            (i+1,j+1)
   !*
   !********************************************************************************************************************
-  subroutine bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, &
-                              & cparm, xintrp_val, valid_pt, bimct, ifh, ibiret)
+  subroutine bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, cparm, xintrp_val, valid_pt, &
+                              & bimct, ifh, ibiret)
 
     use grid_bounds; use tracked_parms; use level_parms; use trkrparms; use verbose_output
 
@@ -7203,10 +7200,9 @@ end program trakmain
   !*      storm             :: An array of type tcvcard.  Use this for the storm ID
   !*
   !********************************************************************************************************************
-  subroutine output_atcfunix (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius,       &
-                             & maxstorm, trkrinfo, plastbar, rlastbar, rmax, cps_vals, wcore_flag,    &
-                             & istmspd, istmdir, shear_mag, shear_dir, sst_smooth, axisymet_rmw_dist, &
-                             & axisymet_rmw_val, ioaxret)
+  subroutine output_atcfunix (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius, maxstorm, trkrinfo, &
+                             & plastbar, rlastbar, rmax, cps_vals, wcore_flag, istmspd, istmdir, shear_mag,         &
+                             & shear_dir, sst_smooth, axisymet_rmw_dist, axisymet_rmw_val, ioaxret)
 
     use def_vitals; use inparms; use set_max_parms; use atcf;         use verbose_output
     use trkrparms;  use phase;   use shear_diags;   use genesis_diags
@@ -7566,11 +7562,10 @@ end program trakmain
   !*      storm              :: An array of type tcvcard. Use this for the storm ID
   !*
   !********************************************************************************************************************
-  subroutine output_aext (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius,             &
-                         & trkrinfo, plastbar, rlastbar, rmax, cps_vals, wcore_flag, istmspd, istmdir,  &
-                         & shear_mag, shear_dir, sst_smooth, axisymet_rmw_dist, axisymet_rmw_val, divg, &
-                         & moist_divg, rh_800_600_smooth, rh_1000_925_smooth, omega500_smooth,          &
-                         & imeanzeta, igridzeta)
+  subroutine output_aext (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius, trkrinfo, plastbar,      &
+                         & rlastbar, rmax, cps_vals, wcore_flag, istmspd, istmdir, shear_mag, shear_dir, sst_smooth, &
+                         & axisymet_rmw_dist, axisymet_rmw_val, divg, moist_divg, rh_800_600_smooth,                 &
+                         & rh_1000_925_smooth, omega500_smooth, imeanzeta, igridzeta)
 
     use def_vitals; use inparms; use set_max_parms; use atcf;          use verbose_output
     use trkrparms;  use phase;   use shear_diags;   use genesis_diags; use level_parms
@@ -8470,9 +8465,8 @@ end program trakmain
   !*      intlat      :: integer that holds the value of outlat*10
   !*
   !********************************************************************************************************************
-  subroutine output_fract_wind (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour,    &
-                               & vmaxwind, xminmslp, wfract_cov, wfract_type, pdf_ct_bin, &
-                               & pdf_ct_tot, maxstorm)
+  subroutine output_fract_wind (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour, vmaxwind, xminmslp, &
+                               & wfract_cov,wfract_type, pdf_ct_bin, pdf_ct_tot, maxstorm)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
 
@@ -8680,9 +8674,8 @@ end program trakmain
   !*      numdist   :: Number of discrete radii at which the winds will
   !*
   !********************************************************************************************************************
-  subroutine output_wind_structure (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour, &
-                                   & vmaxwind, xminmslp, er_wind, sr_wind, er_vr, sr_vr, er_vt, &
-                                   & sr_vt, maxstorm)
+  subroutine output_wind_structure (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour,  vmaxwind, xminmslp, &
+                                   & er_wind, sr_wind, er_vr, sr_vr, er_vt, sr_vt, maxstorm)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
     type (datecard)    :: inp
@@ -8934,8 +8927,8 @@ end program trakmain
   !*      intlat    :: integer that holds the value of outlat*10
   !*
   !********************************************************************************************************************
-  subroutine output_ike (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour, vmaxwind, &
-                        & xminmslp, ike, sdp, wdp, maxstorm)
+  subroutine output_ike (outlon, outlat, xsfclon, xsfclat, inp, ist, ifcsthour, vmaxwind, xminmslp, ike, sdp, &
+                        & wdp, maxstorm)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
     type (datecard)    :: inp
@@ -9070,8 +9063,7 @@ end program trakmain
   !*      intlat    :: integer that holds the value of outlat*10
   !*
   !********************************************************************************************************************
-  subroutine output_phase (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, &
-                          & paramb, vtl_slope, vtu_slope)
+  subroutine output_phase (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, paramb, vtl_slope, vtu_slope)
 
     use def_vitals; use inparms; use set_max_parms; use atcf; use verbose_output
     type (datecard)  :: inp
@@ -9218,10 +9210,9 @@ end program trakmain
   !*      storm             :: An array of type tcvcard. Use this for the storm ID
   !*
   !********************************************************************************************************************
-  subroutine output_atcf_gen (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius,  &
-                             & trkrinfo, istmspd, istmdir, plastbar, rlastbar, rmax,             &
-                             & cps_vals, wcore_flag, imeanzeta, igridzeta, shear_mag, shear_dir, &
-                             & divg, moist_divg, rh_800_600_smooth, rh_1000_925_smooth,          &
+  subroutine output_atcf_gen (outlon, outlat, inp, ist, ifcsthour, vmaxwind, xminmslp, vradius, trkrinfo, istmspd,  &
+                             & istmdir, plastbar, rlastbar, rmax, cps_vals, wcore_flag, imeanzeta, igridzeta,       &
+                             & shear_mag, shear_dir, divg, moist_divg, rh_800_600_smooth, rh_1000_925_smooth,       &
                              & omega500_smooth, sst_smooth, axisymet_rmw_dist, axisymet_rmw_val)
 
     use def_vitals;     use inparms;     use set_max_parms; use atcf
@@ -9597,8 +9588,8 @@ end program trakmain
   !*      ioapret   :: integer return code from this subroutine
   !*
   !********************************************************************************************************************
-  subroutine output_atcf_parms (xmeanlon, xmeanlat, inp, ist, ifh, ifcsthour, vmaxwind, &
-                               & xminmslp, maxstorm, trkrinfo, clon, clat, calcparm, xval, ioapret)
+  subroutine output_atcf_parms (xmeanlon, xmeanlat, inp, ist, ifh, ifcsthour, vmaxwind, xminmslp, maxstorm, &
+                               & trkrinfo, clon, clat, calcparm, xval, ioapret)
 
     use def_vitals; use inparms;    use set_max_parms; use atcf
     use trkrparms;  use gen_vitals; use verbose_output
@@ -10180,8 +10171,8 @@ end program trakmain
   !*      storm        :: Contains tcvitals information
   !*
   !********************************************************************************************************************
-  subroutine get_next_ges (fixlon, fixlat, ist, ifh, imax, jmax, dx, dy, modelid, valid_pt, &
-                          & readflag, maxstorm, istmspd, istmdir, ctype, trkrinfo, gm_wrap_flag, ignret)
+  subroutine get_next_ges (fixlon, fixlat, ist, ifh, imax, jmax, dx, dy, modelid, valid_pt, readflag, maxstorm, &
+                          & istmspd, istmdir, ctype, trkrinfo, gm_wrap_flag, ignret)
 
     use radii;         use def_vitals;  use set_max_parms; use grid_bounds; use gen_vitals
     use tracked_parms; use level_parms; use trig_vals;     use trkrparms;   use verbose_output
@@ -11810,10 +11801,10 @@ end program trakmain
   !*                      distances in each quadrant. (3,4) ==> (# of threshholds, # of quadrants)
   !*
   !********************************************************************************************************************
-  subroutine getradii_2 (xcenlon, xcenlat, imax, jmax, dx, dy, valid_pt, cstormid, ifh, ifcsthr, vmaxwind, &
-                        & vradius, trkrinfo, need_to_expand_r34, num_r34_bins, pctile_quad_bin_wind,       &
-                        & fp_pctile_quad_bin_wind, radmax, axi_rmw, ix_radii_beg, ix_radii_end,            &
-                        & n_r34_iter, ist, first_time_thru_getradii, igrct, gm_wrap_flag, igrret)
+  subroutine getradii_2 (xcenlon, xcenlat, imax, jmax, dx, dy, valid_pt, cstormid, ifh, ifcsthr, vmaxwind, vradius,   &
+                        & trkrinfo, need_to_expand_r34, num_r34_bins, pctile_quad_bin_wind, fp_pctile_quad_bin_wind,  &
+                        & radmax, axi_rmw, ix_radii_beg, ix_radii_end, n_r34_iter, ist, first_time_thru_getradii,     &
+                        & igrct, gm_wrap_flag, igrret)
 
     use grid_bounds; use tracked_parms; use trig_vals;  use level_parms
     use trkrparms;   use structure;     use def_vitals; use verbose_output
@@ -12755,8 +12746,8 @@ end program trakmain
   !*      rdist                  :: The radii (km) at which winds will be evaluated
   !*
   !********************************************************************************************************************
-  subroutine get_axisymet_rmw (xcenlon, xcenlat, imax, jmax, dx, dy, valid_pt, trkrinfo, &
-                              & axisymet_rmw_dist, axisymet_rmw_val, gm_wrap_flag, igarret)
+  subroutine get_axisymet_rmw (xcenlon, xcenlat, imax, jmax, dx, dy, valid_pt, trkrinfo, axisymet_rmw_dist, &
+                              & axisymet_rmw_val, gm_wrap_flag, igarret)
 
     use grid_bounds; use tracked_parms; use trig_vals; use trkrparms; use verbose_output
 
@@ -13067,8 +13058,8 @@ end program trakmain
   !*                        calculated for that parm.
   !*
   !********************************************************************************************************************
-  subroutine fixcenter (clon, clat, ist, ifh, calcparm, geslon, geslat, inp, stderr, &
-                       & fixlon, fixlat, xvalues, maxstorm, ifret)
+  subroutine fixcenter (clon, clat, ist, ifh, calcparm, geslon, geslat, inp, stderr, fixlon, fixlat, xvalues, &
+                       & maxstorm, ifret)
 
     use error_parms; use set_max_parms; use inparms;        use def_vitals
     use gen_vitals;  use tracked_parms; use verbose_output; use atcf;
@@ -13742,8 +13733,8 @@ end program trakmain
   !*      cmodel_type :: character, 'global' or 'regional'
   !*
   !********************************************************************************************************************
-  subroutine get_wind_circulation (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, level, valid_pt, cflag, &
-                                  & ctlon, ctlat, fxval, trkrinfo, cmodel_type, maxmin, ifh, gm_wrap_flag, igwcret)
+  subroutine get_wind_circulation (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, level, valid_pt, cflag, ctlon, ctlat, &
+                                  & fxval, trkrinfo, cmodel_type, maxmin, ifh, gm_wrap_flag, igwcret)
 
     use radii;       use grid_bounds; use tracked_parms; use trig_vals
     use level_parms; use trkrparms;   use verbose_output
@@ -14300,8 +14291,8 @@ end program trakmain
   !*      at the center.
   !*
   !********************************************************************************************************************
-  subroutine get_uv_center (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, level, valid_pt, &
-                           & cflag, ctlon, ctlat, xval, trkrinfo, igucret)
+  subroutine get_uv_center (uvgeslon, uvgeslat, imax, jmax, dx, dy, ist, level, valid_pt, cflag, ctlon, ctlat, xval, &
+                           & trkrinfo, igucret)
 
     use radii;       use grid_bounds; use tracked_parms; use trig_vals
     use level_parms; use trkrparms;   use verbose_output
@@ -14794,8 +14785,7 @@ end program trakmain
   !*      igugret   :: return code for this subroutine (0=normal)
   !*
   !********************************************************************************************************************
-  subroutine get_uv_guess (guesslon, guesslat, clon, clat, calcparm, ist, ifh, maxstorm, &
-                          & uvgeslon, uvgeslat, igugret)
+  subroutine get_uv_guess (guesslon, guesslat, clon, clat, calcparm, ist, ifh, maxstorm, uvgeslon, uvgeslat, igugret)
 
     use set_max_parms; use level_parms; use error_parms; use verbose_output
 
@@ -15049,8 +15039,8 @@ end program trakmain
   !*      a special, modified version of the atcfunix file (the "atcf_gen" file).
   !*
   !********************************************************************************************************************
-  subroutine get_zeta_values (fixlon, fixlat, imax, jmax, dx, dy, trkrinfo, imeanzeta, igridzeta, &
-                             & readflag, valid_pt, ist, ifh, maxstorm, inp, igzvret)
+  subroutine get_zeta_values (fixlon, fixlat, imax, jmax, dx, dy, trkrinfo, imeanzeta, igridzeta, readflag, valid_pt, &
+                             & ist, ifh, maxstorm, inp, igzvret)
 
     use tracked_parms; use radii;       use trig_vals;   use set_max_parms; use verbose_output
     use trkrparms;     use level_parms; use grid_bounds; use inparms;
@@ -15281,9 +15271,9 @@ end program trakmain
   !*      the center point. We add in a buffer (grid_buffer) here to prevent this from occurring.
   !*
   !********************************************************************************************************************
-  subroutine find_maxmin (imax, jmax, dx, dy, cparm, fxy, maxmin, ist, guesslon, guesslat, rlonv, &
-                         & rlatv, valid_pt, trkrinfo, compflag, ctlon, ctlat, xval, grid_maxlat,  &
-                         & grid_minlat, grid_maxlon, grid_minlon, cmodel_type, ifmret)
+  subroutine find_maxmin (imax, jmax, dx, dy, cparm, fxy, maxmin, ist, guesslon, guesslat, rlonv, rlatv, valid_pt, &
+                         & trkrinfo, compflag, ctlon, ctlat, xval, grid_maxlat,  grid_minlat, grid_maxlon,         &
+                         & grid_minlon, cmodel_type, ifmret)
     
     use radii;     use grid_bounds; use set_max_parms; use level_parms
     use trig_vals; use trkrparms;   use verbose_output
@@ -15893,8 +15883,8 @@ end program trakmain
   !*      iret       :: Return code from this subroutine
   !*
   !********************************************************************************************************************
-  subroutine barnes(flon, flat, rlon, rlat, iimax, jjmax, iibeg, jjbeg, iiend, jjend, fxy,  &
-                   & defined_pt, bskip, re, ri, favg, icount, ctype, trkrinfo, iret)
+  subroutine barnes(flon, flat, rlon, rlat, iimax, jjmax, iibeg, jjbeg, iiend, jjend, fxy, defined_pt, bskip, re, ri, &
+                   & favg, icount, ctype, trkrinfo, iret)
 
     use trkrparms; use verbose_output
 
@@ -16013,8 +16003,8 @@ end program trakmain
   !*      iret       :: Return code from this subroutine
   !*
   !********************************************************************************************************************
-  subroutine sst_barnes (flon, flat, rlon, rlat, iimax, jjmax, iibeg, jjbeg, iiend, jjend, fxy, &
-                        & defined_pt, bskip, re, ri, favg, icount, ctype, trkrinfo, iret)
+  subroutine sst_barnes (flon, flat, rlon, rlat, iimax, jjmax, iibeg, jjbeg, iiend, jjend, fxy, defined_pt, bskip, &
+                        & re, ri, favg, icount, ctype, trkrinfo, iret)
 
     use trkrparms; use verbose_output; use tracked_parms
 
@@ -21492,8 +21482,7 @@ end program trakmain
   !*                          an hour0 record in it or not.
   !*
   !********************************************************************************************************************
-  subroutine read_netcdf_hours (ncfile, ncfile_id, ncfile_tmax, ifhmax, &
-                               & ncfile_has_hour0, netcdfinfo, irnhret)
+  subroutine read_netcdf_hours (ncfile, ncfile_id, ncfile_tmax, ifhmax, ncfile_has_hour0, netcdfinfo, irnhret)
 
     use netcdf_parms; use tracked_parms; use verbose_output
 
@@ -22703,8 +22692,7 @@ end program trakmain
   !*      ichrret     :: integer return code from this routine
   !*
   !********************************************************************************************************************
-  subroutine compute_rh_from_q (ist, ifh, imax, jmax, dx, dy, ip, valid_pt, maxstorm, &
-                               & trkrinfo, readgenflag, ichrret)
+  subroutine compute_rh_from_q (ist, ifh, imax, jmax, dx, dy, ip, valid_pt, maxstorm, trkrinfo, readgenflag, ichrret)
 
     use def_vitals; use grid_bounds; use trig_vals; use tracked_parms; use read_parms; use trkrparms
 
