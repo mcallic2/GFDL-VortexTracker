@@ -32,7 +32,7 @@ program trakmain
 31 format (1x, 'TIMING: beginning ...  ', i2.2, ':', i2.2, ':', i2.2)
 
   pi = 4.0 * atan(1.0)    ! Both pi and dtr were declared in module
-  dtr = pi/180.0          ! trig_vals, but were not yet defined.
+  dtr = pi/180.0          ! trig_vals, but were not yet defined
   ncfile_has_hour0 = 'n'  ! Default value; set in read_netcdf_hours
 
   call read_nlists (inp, trkrinfo, netcdfinfo, lunml)
@@ -242,7 +242,7 @@ end program trakmain
     real              :: x999_moist_divg, x999_rh600_800, x999_rh1000_925
     real              :: x999_omega500, x999_imzeta, x999_igzeta
 
-    ! Define a bunch of missing values for variables to be sent to subroutines that write output
+    ! define a bunch of missing values for variables to be sent to subroutines that write output
     x999_lon         = -999.0
     x999_lat         = -999.0
     izero_fhr        =    0
@@ -280,8 +280,8 @@ end program trakmain
     allocate (closed_mslp_ctr_flag2(maxstorm, ifhmax), stat = icmc2f)
     allocate (quad_wind_circ_flag(maxstorm, ifhmax),   stat = iqwcf)
     allocate (vt850_flag(maxstorm, ifhmax),            stat = ivt8f)
-    ! Initialize flags to 'u', not 'n'.  That way, when we are evaluating its value back over recent past hours,
-    ! we can distinguish a "no" value from an initialized value of 'u' for which a storm hadn't yet been detected.
+    ! initialize flags to 'u', not 'n'; that way, when we are evaluating its value back over recent past hours,
+    ! we can distinguish a "no" value from an initialized value of 'u' for which a storm hadn't yet been detected
     closed_mslp_ctr_flag  = 'u'
     closed_mslp_ctr_flag2 = 'u'
     quad_wind_circ_flag   = 'u'
@@ -315,6 +315,12 @@ end program trakmain
       xmaxwind = 0.0
       stormct  = 0
 
+      ! It is critical to initialize the gridprs array to something
+      ! greater than normal atmospheric pressures (I've chosen 9999.99
+      ! mb). This is so that in the sort on pressure before stormloop,
+      ! the top of the  sorting index array will be filled with pressure
+      ! values from active storms, while those inactive 9999 storms
+      ! will fill the bottom of the sorting index array (prsindex).
       gridprs =  999999.0
       fixlon  =    -999.0
       fixlat  =    -999.0
@@ -329,7 +335,7 @@ end program trakmain
           lugb = 200
           lugi = 600  ! w3lib on Jet cannot handle unit #'s >999
         endif
-      else ! All lead times are included in one big file; these values for lugb and lugi will remain static for all taus.
+      else ! all lead times are included in one big file; these values for lugb and lugi will remain static for all taus
         lugb = 11
         lugi = 31
       endif
@@ -373,7 +379,7 @@ end program trakmain
             stop 91
           endif
 
-          ! Now check for existence of index file.  Use a separate max_wait time -- a much shorter one -- since once the
+          ! Now check for existence of index file. Use a separate max_wait time -- a much shorter one -- since once the
           ! grib file is there, the index file should appear within a matter of seconds.  Also, the index file is much
           ! smaller, so set the wait_min_size accordingly.
           wait_max_ifile_wait = 180
@@ -415,6 +421,14 @@ end program trakmain
         endif
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Within this next IF statement, we deal with writing out atcf records for storms for the case in which we have
+      ! netcdf data, but that netcdf data does not have hour0 data (as of Nov 2016, this is the case for FV3 data).
+      ! In this case, we write out missing values for the hour0 time, and then we update the guess for next lead time
+      ! by extrapolating data from TC Vitals. Note in the IF statement itself, "iftotalmins" is the array of
+      ! of *user-requested* lead times, meaning that the user has requested to look at hour0, but  the ncfile_has_hour0
+      ! flag indicates the hour0 time is not in the NetCDF data.
+      !----------------------------------------------------------------------------------------------------------------
       if (ifh == 1 .and. iftotalmins(ifh) == 0 .and. trkrinfo%inp_data_type == 'netcdf' .and. ncfile_has_hour0 == 'n') then
 
         do inctcv = 1, numtcv  ! null_netcdf_hour0_storm_loop
@@ -477,6 +491,11 @@ end program trakmain
         cycle ! ifhloop
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Make call to getgridinfo in order to get info on the imax, jmax, as well as the x- and y-increments, and also
+      ! to see if the grid is correctly oriented for the  tracker so that the data go north to south and west to east
+      ! or if we need to flip either the lats or the lons.
+      !----------------------------------------------------------------------------------------------------------------
       if (trkrinfo%inp_data_type == 'grib') then
         call getgridinfo_grib (imax, jmax, ifh, dx, dy, lugb, lugi, &
              & trkrinfo, need_to_flip_lats, need_to_flip_lons,      &
@@ -511,8 +530,9 @@ end program trakmain
       if (inp%modtyp == 'regional' .and. inp%nesttyp == 'moveable') then
         if (glatmax == prev_latmax .and. glatmin == prev_latmin .and. &
             glonmax == prev_lonmax .and. glonmin == prev_lonmin) then
-            ! The moveable, nested regional grid has not moved since the last lead time.  This could be an indication that the
-            ! model lost the storm and so the grid has not moved to stay with the cyclone center. Set a flag to indicate this.
+            ! The moveable, nested regional grid has not moved since the last lead time. This could be an indication
+            ! that the model lost the storm and so the grid has not moved to stay with the cyclone center.
+            ! Set a flag to indicate this.
           gridmove_status = 'stopped'
         else
           gridmove_status = 'moving'
@@ -612,14 +632,15 @@ end program trakmain
         return
       endif
 
-      masked_out  = .false.  ! Initialize all pts to false at each hr
-      masked_outc = .false.  ! Initialize all pts to false at each hr
+      masked_out  = .false.  ! initialize all pts to false at each hr
+      masked_outc = .false.  ! initialize all pts to false at each hr
 
       if (verb .ge. 3) then
         print *, 'in beginning of tracker, imax = ', imax, ' jmax = ', jmax
       endif
 
-      ! initialize all readflags to NOT FOUND for this forecast time, then call subroutine to read data for this forecast time.
+      ! initialize all readflags to NOT FOUND for this forecast time, then call subroutine to read data for
+      ! this forecast time
       zeta  = -9999.0
       u     = -9999.0
       hgt   = -9999.0
@@ -660,13 +681,23 @@ end program trakmain
  32     format (1x, 'TIMING: after getdata ... ', i2.2, ':', i2.2, ':', i2.2)
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Count how many parms were successfully read for this fcst time. Also, for right now, put the value of readflag
+      ! into all of the calcparms for parameters 3 through 9. Note that in getdata we read in 19 parms, but in this
+      ! next loop we only check the readflags up to maxtp (= 14 as of 7/2015). That's because read parms 12 & 13 are
+      ! for 500 mb u & v, which are not used for tracking (only for calculating the deep layer mean wind for the next
+      ! guess), parm 14 is the 300-500 mb mean temperature, which is used for determining storm phase, parms 15 & 16
+      ! are for 500 & 200 mb hgt, parm 17 is land-sea mask, and parms 18-19 are 200 mb u & v. Parms 10 & 11 are for
+      ! the near-surface winds, which are used in estimating surface winds near the storm, and will now also be used as
+      ! a parameter for position estimates.
+      !----------------------------------------------------------------------------------------------------------------
       idum = 0
 
       do irf = 1, nreadparms
         if (readflag(irf)) idum = idum + 1
 
         if (irf > 2 .and. irf < 10) then
-          ! calcparm for parms > 9 is done further below.
+          ! calcparm for parms > 9 is done further below
           do jj = 1, maxstorm
             calcparm(irf, jj) = readflag(irf)
           enddo
@@ -738,6 +769,8 @@ end program trakmain
         return
       endif
 
+      ! check the flags that were read in from the namelist for determining which parameters the user wants to track
+      ! check for z850, z700 and mslp
       if (user_wants_to_track_gph850 == 'n' .or. user_wants_to_track_gph850 == 'N') then
         do jj = 1, maxstorm
           calcparm(7, jj) = .false.
@@ -756,6 +789,12 @@ end program trakmain
         enddo
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Parameters 1 & 2 are abs vorticity at 850 & 700. If the data files had this parm at 850 & 700 (ECMWF & UKMET do
+      ! NOT), then we don't need to re-calculate relative vorticity, we just need to subtract out the Coriolis
+      ! component. If the files did not have vorticity, then we need to calculate relative vorticity. If we're able to
+      ! read vorticity or calculate it, then set the vorticity calcparms to TRUE for all storms for now.
+      !----------------------------------------------------------------------------------------------------------------
       do ivort = 1, 2  ! vortloop
         if (ivort == 1) then
           if (user_wants_to_track_zeta850 == 'n' .or. user_wants_to_track_zeta850 == 'N') then
@@ -807,8 +846,8 @@ end program trakmain
         endif
       enddo ! vortloop
 
-      !Check the flags that were read in from the namelist for determining which parameters the user wants to track.
-      !Here, check for user preferences for the wind circulation at 850 & 700
+      ! check the flags that were read in from the namelist for determining which parameters the user wants to track.
+      ! check for user preferences for the wind circulation at 850 & 700
 
       if (readflag(3) .and. readflag(4)) then
         if (user_wants_to_track_wcirc850 == 'n' .or. user_wants_to_track_wcirc850 == 'N') then
@@ -859,8 +898,8 @@ end program trakmain
             calcparm(11 ,jj) = .false.
           enddo
         else
-          ! The 3 in the next call to rvcal is to indicate the 3rd
-          ! level for the zeta array, which is for the surface (or 10m) data.
+          ! the 3 in the next call to rvcal is to indicate the 3rd level for the zeta array,
+          ! which is for the surface (or 10m) data
           call rvcal (imax, jmax, dx, dy, 3, valid_pt)
           do jj = 1, maxstorm
             calcparm(11, jj) = .true.
@@ -874,7 +913,8 @@ end program trakmain
         enddo
       endif
 
-      ! Compute the  thicknesses for 200-850, 200-500 and 500-850 mb if the gp hgt fields have been read in for 200, 500 and 850.
+      ! compute the thicknesses for 200-850, 200-500 and 500-850 mb if the gp hgt fields have been
+      ! read in for 200, 500 and 850
       if (readflag(7) .and. readflag(15) .and. readflag(16)) then
         call thickness_calc (imax, jmax, valid_pt)
       
@@ -968,6 +1008,16 @@ end program trakmain
         if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
 
           if (ist == (prevstormct + 1)) then
+            !----------------------------------------------------------------------------------------------------------
+            ! For the mid-latitude and tropical cyclogenesis cases, we need to scan the mslp field to find new storms.
+            ! If we are at this point inside the if statement in stormloop, then that means we have looped through and
+            ! attempted to track all storms that have already been found up to this point in the forecast, and we need
+            ! to scan the field for any new storms at this forecast hour. If this is for forecast hour = 0, then right
+            ! off the bat we may be scanning the field (if there were no tcvitals records read in for this forecast),
+            ! since ist = 1 and (prevstormct + 1) = 0 + 1 = 1.  All that the call just below to first_ges_center does
+            ! is return a rough idea of the location of new lows; more specific locations are obtained through the
+            ! barnes analysis tracking algorithm further below.
+            !----------------------------------------------------------------------------------------------------------
             if (readflag(9)) then
               masked_out = masked_outc
 
@@ -1045,7 +1095,7 @@ end program trakmain
           endif
 
           call check_bounds (slonfg(ist,ifh), slatfg(ist,ifh), ist, ifh, trkrinfo, icbret)
-          if (icbret == 95) then   ! Out of regional grid bounds
+          if (icbret == 95) then   ! out of regional grid bounds
             fixlon(ist, ifh) = -999.0
             fixlat(ist, ifh) = -999.0
             stormswitch(ist) = 2
@@ -1064,12 +1114,12 @@ end program trakmain
               print *, '         ---    ---    ---'
               print *, 'Now calling find_maxmin for zeta at 850 mb'
             endif
-
+            ! CAITLYN - matches comment from old code line 1884
             call find_maxmin (imax, jmax, dx, dy, 'zeta', zeta(1,1,1), cvort_maxmin,      &
                  & ist, slonfg(ist,ifh), slatfg(ist,ifh), glon, glat, valid_pt, trkrinfo, &
                  & calcparm(1,ist), clon(ist,ifh,1), clat(ist,ifh,1), xval(1), glatmax,   &
                  & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1169,7 +1219,7 @@ end program trakmain
                  & calcparm(11,ist), clon(ist,ifh,11), clat(ist,ifh,11), xval(11), glatmax, &
                  & glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1177,6 +1227,8 @@ end program trakmain
             endif
           endif
 
+          ! The array indices for the 3 different thickness layers are as follows:
+          ! 1: 500-850, 2: 200-500, 3: 200-850
           if (calcparm(12,ist)) then
             if (verb .ge. 3) then
               print *, ' '
@@ -1211,7 +1263,7 @@ end program trakmain
                  & calcparm(13,ist), clon(ist,ifh,13), clat(ist,ifh,13), xval(13),   &
                  & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1232,7 +1284,7 @@ end program trakmain
                  & calcparm(14,ist), clon(ist,ifh,14), clat(ist,ifh,14), xval(14),   &
                  & glatmax, glatmin, glonmax, glonmin, inp%modtyp, ifmret)
 
-            if (ifmret /= 0) then   ! Out of regional grid bounds
+            if (ifmret /= 0) then   ! out of regional grid bounds
               fixlon(ist, ifh) = -999.0
               fixlat(ist, ifh) = -999.0
               stormswitch(ist) = 2
@@ -1240,6 +1292,13 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! Now get centers for wind circulation at 700 & 850 mb and at 10m. First, get a modified guess lat/lon
+          ! position for wind circulation. Do this because we will be searching for this wind circulation center over a
+          ! smaller area and so it's more crucial to have a better first guess position. This modified guess position
+          ! will be an average of the first guess position for this time and the  fix positions for this time from some
+          ! of the other parameters.
+          !------------------------------------------------------------------------------------------------------------
           if (slatfg(ist,ifh) >= 0.0) then
             cmaxmin = 'max'
           else
@@ -1360,7 +1419,7 @@ end program trakmain
                 print *, 'surface (10m) level'
               endif
 
-              ! NOTE: The 1020 in the call here is just a number/code to indicate to the subroutine to process sfc winds.
+              ! NOTE: The 1020 in the call here is just a number/code to indicate to the subroutine to process sfc winds
               if (enable_timing /= 0) then
                 call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
                 write (6,145) date_time(5), date_time(6), date_time(7)
@@ -1387,6 +1446,12 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! All of the parameter center fixes have been done. Now average those positions together to get the best
+          ! guess fix position. If a center fix is able to be made, then call subroutine get_max_wind to get the
+          ! maximum near-surface wind near the center, and then call get_next_ges to get a guess position for the next
+          ! forecast hour.
+          !------------------------------------------------------------------------------------------------------------
           if (stormswitch(ist) == 1) then
 
             call fixcenter (clon, clat, ist, ifh, calcparm,slonfg(ist,ifh), slatfg(ist,ifh), &
@@ -1457,6 +1522,16 @@ end program trakmain
               stormswitch(ist) = 2
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! Just because we've found a center doesn't mean there is actually a storm there. I noticed in the first
+            ! year that for some decaying or just weak storms, the tracker would identify a center to follow, but it
+            ! may have only been a weak trough passing by, or something else that's not our storm. This next subroutine
+            ! checks to see that the surface pressure gradient and/or tangential winds at 850 mb resemble a storm. It
+            ! is called twice; the first time for MSLP, the 2nd time for 850 mb winds. We will apply these storm-
+            ! checking criteria if either the mslp or v850 check come back negative. Remember, there is the possibility
+            ! that centers could not be found for 1 or both of these parameters, in which case the isastorm flag will
+            ! have a value of 'U', for "undetermined".
+            !----------------------------------------------------------------------------------------------------------
             isiret1 = 0; isiret2 = 0; isiret3 = 0
             print *, ' ttest, ifret = ', ifret
 
@@ -1468,7 +1543,7 @@ end program trakmain
                 print *, ' Before call to is_it_a_storm for MSLP'
                 print *, '                clon(ist,ifh,9) = ', clon(ist,ifh,9)
                 print *, '       (0-360E clon(ist,ifh,9)) = ', mod(clon(ist,ifh,9),360.0)
-                print *, '                clat(ist,ifh,9) = ', clat(ist,ifh,9)
+                print *, '                clat(ist,ifh,9) = ', clat(ist,ifh,9)
                 print *, '                        xval(9) = ', xval(9)
 
                 call is_it_a_storm (imax, jmax, dx, dy, 'slp', ist, valid_pt, clon(ist,ifh,9), &
@@ -1502,6 +1577,12 @@ end program trakmain
                            & fixlat(ist,ifh), gridpoint_maxmin, trkrinfo, isastorm(1), ifh, isiret1)
 
                       if (isiret1 == 0) then
+                        !----------------------------------------------------------------------------------------------
+                        ! Even though calcparm(9) is FALSE and mslp will not be used for center-fixing purposes, we
+                        ! need to fill the clat and clon arrays just a few lines below so that calls to
+                        ! fix_latlon_to_ij below do not get screwed up. So, into the clat and clon arrays we put the
+                        ! mean fixlat and fixlon positions for this lead time.
+                        !----------------------------------------------------------------------------------------------
                         clat(ist, ifh, 9) = fixlat(ist, ifh)
                         clon(ist, ifh, 9) = fixlon(ist, ifh)
                         xval(9) = gridpoint_maxmin
@@ -1511,6 +1592,17 @@ end program trakmain
                 endif
               endif
 
+              !--------------------------------------------------------------------------------------------------------
+              ! If we have found a valid mslp gradient, then make a call to fix_latlon_to_ij to (1) get the actual
+              ! gridpoint value of the mslp (the value previously stored in xval(9) is an area-averaged value coming
+              ! from the  barnes analysis), and (2) to get the (i,j) indices for this gridpoint to be used in the call
+              ! to check_closed_contour below.
+              ! NOTE: If a mslp fix was not made, or if the mslp "isastorm" flag comes back as no, we make the same
+              ! call to fix_latlon_to_ij, but we use the mean fix position as our input to search around, and then
+              ! basically we just find the lowest mslp near that mean fix position. There is a check on the value of
+              ! xinp_fixlat and xinp_fixlon to make sure that they contain valid values and not just the
+              ! initialized -99 or -999 values.
+              !--------------------------------------------------------------------------------------------------------
               xinp_fixlat = -99.0
               xinp_fixlat = -990.0
 
@@ -1560,7 +1652,18 @@ end program trakmain
               endif
 
               print *, ' test at location F'
+              !--------------------------------------------------------------------------------------------------------
+              ! In this next IF block, we have the potential to call subroutine check_closed_contour for two different
+              ! cases of a type='tracker' run. First, if the input data are on a fixed regional grid, we check for a
+              ! closed contour for cases in which the storm is close to the grid boundary (this is to prevent the
+              ! tracker tracking along the boundary for a storm that has left the grid). Second, if the user has
+              ! requested to compute and write out the ROCI, then we make a call to check_closed_contour, being sure to
+              ! specify 999 as the number of levels to check
+              !--------------------------------------------------------------------------------------------------------
               if (isiret1 == 0 .and. isastorm(1) == 'Y' .and. trkrinfo%type == 'tracker') then
+                ! If the tests for MSLP gradient have come back okay, then use the tracker-derived MSLP center for the
+                ! closed-contour and ROCI checking. Otherwise, use the mean fix position for this hour, but only if
+                ! MSLP has been read in.
                 close_to_boundary = 'n'
 
                 if (trkrinfo%gridtype == 'regional' .and. inp%nesttyp == 'fixed') then
@@ -1598,7 +1701,10 @@ end program trakmain
                     contour_info%numcont = maxconts
                   endif
 
-                  ! MSLP contour interval for ROCI (if the user requests it) will always be 4 mb
+                  ! Note that the MSLP contour interval for ROCI (if the user requests it) will always be 4 mb, because
+                  ! that is what is used observationally and by forecasters. In this next IF statement, we are just
+                  ! making sure that the units of our ROCI threshold that we are setting match the units in the
+                  ! input data
                   if (xval(9) < 1100.0) then ! CAITLYN - repeating code?
                     ! pressure units are in mb
                     roci_prs_contint_thresh = 4.0
@@ -1620,6 +1726,12 @@ end program trakmain
                     stop 95
                   endif
 
+                  !----------------------------------------------------------------------------------------------------
+                  ! In the event that we have the case where both the user requests the ROCI and it's a fixed regional
+                  ! grid where the storm is close to a boundary and we need to check for a closed contour, then we have
+                  ! to call check_closed_contour two separate times, because the contour intervals used may be
+                  ! different, depending on what the user specified in the input namelist.
+                  !----------------------------------------------------------------------------------------------------
                   if (trkrinfo%want_oci) then
                     if (trkrinfo%contint < roci_prs_contint_thresh) then
                       hold_old_contint = trkrinfo%contint
@@ -1637,6 +1749,9 @@ end program trakmain
                       endif
                     endif
 
+                    ! Note that we are within an IF statement for type=tracker, so with this statement, we are *not*
+                    ! accidentally resetting this important masked_outc flag to false for anything
+                    ! that would be genesis-related.
                     masked_outc = .false.
                     get_last_isobar_flag = 'y'
                     dum1 = 0
@@ -1678,6 +1793,9 @@ end program trakmain
                     gb_check_trkrinfo%contint = contint_grid_bound_check  ! except use the grid bound check contour inteval
                                                                           ! specified by the user in the namelist
 
+                    ! Note that we are within an IF statement for type=tracker, so with this statement, we are *not*
+                    ! accidentally resetting this important masked_outc flag to false for anything
+                    ! that would be genesis-related.
                     masked_outc = .false.
                     get_last_isobar_flag = 'n'
                     dum1 = 0
@@ -1712,6 +1830,9 @@ end program trakmain
                       endif
                     else
                       if (close_to_boundary == 'y' .and. abs(xinp_fixlat) > 25.0) then
+                        ! Put this next line (setting flag to n) within the IF statement, since we only want this to be
+                        ! set for a case where the latitude is poleward of 25N/25S. For the 'y' part of the IF
+                        ! statement above, it doesn't matter, since it's a 'y'.
                         closed_mslp_ctr_flag2(ist, ifh) = 'n'
                         if (verb .ge. 3) then
                           print *, '!!! closed_mslp_ctr_flag2 FAIL'
@@ -1721,7 +1842,8 @@ end program trakmain
                     endif
 
                     if (close_to_boundary == 'y' .and. ifh > 1 .and. abs(xinp_fixlat) > 25.0) then
-                      ! CAITLYN - repeating code?
+                      ! The only way that close_to_boundary is set to y is if, above, the grid was detected as being
+                      ! a fixed regional grid *AND* the call to probe_for_boundary came back as 'y'
                       if (closed_mslp_ctr_flag2(ist,ifh) == 'n' .and. closed_mslp_ctr_flag2(ist,ifh-1) == 'n') then
                         if (verb .ge. 0) then
                           print *, ' '
@@ -1750,6 +1872,18 @@ end program trakmain
                 endif
               endif
 
+              !--------------------------------------------------------------------------------------------------------
+              ! For the midlat & tcgen cases, do a check to see if there is a closed mslp contour. The ifix and jfix
+              ! values passed into check_closed_contour are the values for the (i,j) at the gridpoint minimum, which
+              ! was obtained just above from the call to fix_latlon_to_ij.
+              ! A change was made to fix a hole in the logic. Previously, for a genesis run (type = midlat or tcgen),
+              ! if a fix was not made for mslp, then the isastorm(1) flag would not be 'Y', and so the call to
+              ! check_closed_contour in the following IF statement would not be made, and that would prevent the mask
+              ! from getting updated for this particular storm, allowing the same storm to be detected when the scan
+              ! for new storms takes place at this lead time (i.e., after all previously known storms from the last
+              ! lead time have been tracked). As a fix, if that isastorm(1) flag is not 'Y', then we call a new
+              ! subroutine which updates the mask based on the circulation at 850 mb.
+              !--------------------------------------------------------------------------------------------------------
               if (isastorm(1) == 'Y' .and. isiret1 == 0 .and. (trkrinfo%type == 'midlat' .or. &
                  & trkrinfo%type == 'tcgen')) then
 
@@ -1793,7 +1927,14 @@ end program trakmain
                   print *, ' '
                 endif
 
-                ! this next bit of code adds a second layer of closed contour checking
+                !------------------------------------------------------------------------------------------------------
+                ! This next bit of code adds a second layer of closed contour checking. This is to decrease the
+                ! occurrence of interrupted midlat and tcgen tracks, which usually happens when the closed contour
+                ! criterion is not met for one time period. So in this next code, we check to see if the ccflag was 'y'
+                ! for at least half the time over the last 24h. For time periods shorter than 24h (e.g., the storm was
+                ! just detected at 144h and we are now at 156h), the threshold is still that for at least half of the
+                ! time the system has been detected as a storm, it must have a ccflag value of 'y'.
+                !------------------------------------------------------------------------------------------------------
                 if (ccflag == 'y') then
                   closed_mslp_ctr_flag(ist, ifh) = 'y'
                 else
@@ -1922,6 +2063,15 @@ end program trakmain
 
                 if (calcparm(3,ist) .or. (had_to_try_backup_850_vt_check == 'y' .and. isiret3 == 0) ) then
                   if (trkrinfo%type == 'tcgen') then
+                    !--------------------------------------------------------------------------------------------------
+                    ! This next bit of code adds a second layer of 850 mb Vt magnitude checking. This is to decrease
+                    ! the occurrence of interrupted tcgen tracks, which occasionally happens for weak storms when this
+                    ! criterion is not met for one time period. So in this next code, we check to see if the vt850_flag
+                    ! was 'y' for at least 75% of the time over the last 24h. For time periods shorter than 24h (e.g.,
+                    ! the storm was just detected at 144h and we are now at 156h), the threshold is still that for at
+                    ! least 75% of the time the system has been detected as a storm, it must have a vt850_flag
+                    ! value of 'y'.
+                    !--------------------------------------------------------------------------------------------------
                     if (isastorm(3) == 'Y') then
                       vt850_flag(ist, ifh) = 'y'
                     else
@@ -1985,6 +2135,9 @@ end program trakmain
 
                 if (isiret3 == 0 .and. isastorm(3) == 'Y' .and. trkrinfo%type == 'tracker') then
 
+                  ! If the fix center for 850 mb wind circulation was okay and able to be used, then use the tracker-
+                  ! -derived 850 mb wind circulation center for the close-to-boundary closed circulation check.
+                  ! Otherwise, use the mean fix position for this hour, but only if u850 and v850 have been read in.
                   if (calcparm(3,ist)) then
                     xinp_fixlat = clat(ist, ifh, 3)
                     xinp_fixlon = clon(ist, ifh, 3)
@@ -2161,7 +2314,9 @@ end program trakmain
               stormswitch(ist)  = 2
             endif
 
-            ! now do another check for the tracker and tcgen cases
+            ! Now do another check for the  tracker and tcgen cases. If the isastorm flags for mslp gradient and v850
+            ! BOTH came back positive AND you have been able to locate an 850 mb vort center, just do a check to make
+            ! sure that the distance between the 850 vort center and the mslp center is not too great.
             if (trkrinfo%type == 'tracker' .or. trkrinfo%type == 'tcgen') then
               if (isastorm(1) == 'Y' .and. isastorm(3) == 'Y' .and. calcparm(1,ist) .and. stormswitch(ist) == 1) then
 
@@ -2198,6 +2353,14 @@ end program trakmain
               endif
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! Do one final check. Check the new fix position and the old fix position and calculate the speed that the
+            ! storm would have had to travel to get to this point. If that speed exceeds a certain threshold (~60 kt),
+            ! assume you're tracking the wrong thing and quit. Obviously, only do this for times > 00h. The check in
+            ! the if statement to see if the previous hour's lats and lons were > -999 is for the midlat and tcgen
+            ! cases -- remember, they can have genesis at any hour of the forecast, in which case the previous forecast
+            ! hour's lat & lon would be -999.
+            !----------------------------------------------------------------------------------------------------------
             if (ifh > 1 .and. stormswitch(ist) == 1) then
               if (fixlon(ist,ifh-1) > -999.0 .and. fixlat(ist,ifh-1) > -999.0) then
 
@@ -2248,6 +2411,11 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! DIAGNOSE MAX WIND
+          ! Now get the maximum near-surface wind speed near the storm center (get_max_wind). Also, call getradii to
+          ! get the radii in each storm quadrant of gale-force, storm-force and hurricane force winds.
+          !------------------------------------------------------------------------------------------------------------
           if (readflag(10) .and. readflag(11) .and. ifret == 0 .and. stormswitch(ist) == 1) then
             call get_max_wind (fixlon(ist,ifh), fixlat(ist,ifh), imax, jmax, dx, dy, valid_pt, &
                  & levsfc, xmaxwind(ist,ifh), trkrinfo, rmax, igmwret)
@@ -2274,13 +2442,25 @@ end program trakmain
               cycle ! stormloop
             endif
 
+            ! diagnose axisymmetric rmw
             call get_axisymet_rmw (fixlon(ist,ifh), fixlat(ist,ifh), imax, jmax, dx, dy, valid_pt, &
                  & trkrinfo, axisymet_rmw_dist, axisymet_rmw_val, gm_wrap_flag, igarret)
 
             ileadtime = nint(fhreal(ifh) * 100.0)
             ifcsthour = ileadtime / 100
 
+            !----------------------------------------------------------------------------------------------------------
             ! DIAGNOSE WIND RADII: R34, R50, R64
+            ! For the radii, we encountered a problem with radmax being too small. It was set at 650 km. Hurricane
+            ! Sandy exceeded this in the models, so the values returned from getradii were close to the default radmax
+            ! value of 650 km (350 nm), instead of higher. To fix it, we now use an iterative technique, where we start
+            ! with radmax as a small value (500 km). If getradii returns a value for R34 in a quadrant that does not
+            ! exceed 0.97*radmax, then that value is ok. If it does exceed 0.97*radmax, then we bump up radmax by 50 km
+            ! and call getradii again, looking to diagnose radii only in those quadrants where the need_to_expand_r34
+            ! flag = 'n'.
+            ! Note: the initial IF statement, we will only go into this routine if the max wind just diagnosed for this
+            ! lead time is at least 34 kts (17.5 m/s).
+            !-------------------------------------------------------
             if (xmaxwind(ist,ifh) >= 17.5) then
               vradius = 0
               first_time_thru_getradii = .true.
@@ -2288,7 +2468,8 @@ end program trakmain
               do ivr = 1, 4
                 need_to_expand_r34(ivr) = 'y'
               enddo
-              radmax       = 370.0
+              radmax       = 370.0  ! initial radmax, in km; for subsequent iterations that may be needed
+                                    ! radmax gets redefined in sub getradii_2 and bumped up by 50km each iteration
               n_r34_iter   = 0
               ix_radii_beg = 1
               ix_radii_end = -999
@@ -2365,6 +2546,11 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! COMPUTE CYCLONE PHASE SPACE PARAMETERS
+          ! If the user has requested so, then call a routine to determine the type of cyclone, using Bob Hart's 
+          ! cyclone phase space (CPS) algorithms.
+          !------------------------------------------------------------------------------------------------------------
           if (phaseflag == 'y' .and. stormswitch(ist) == 1) then
 
             if (verb .ge. 3) then
@@ -2383,7 +2569,13 @@ end program trakmain
             endif
           endif
 
-          if (structflag == 'y') then
+          !------------------------------------------------------------------------------------------------------------
+          ! COMPUTE SURFACE WIND STRUCTURE DIAGNOSTICS
+          ! If the user has requested so, then call a series of routines to calculate various surface wind structure
+          ! diagnostics and output them in a modified ATCF format that is output to a different unit number from the
+          ! standard ATCF output.
+          !------------------------------------------------------------------------------------------------------------
+          if (structflag == 'y') then  
             if (verb .ge. 3) then
               call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
               write (6,252) date_time(5), date_time(6), date_time(7)
@@ -2435,6 +2627,10 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! COMPUTE 200-850 mb VERTICAL SHEAR
+          ! If the user has requested so, then call a routine to compute the 200-850 mb vertical shear.
+          !------------------------------------------------------------------------------------------------------------
           if ((shearflag == 'y' .or. shearflag == 'Y') .and. stormswitch(ist) == 1) then
 
             if (verb .ge. 3) then
@@ -2452,11 +2648,20 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! COMPUTE AREA-AVERAGED SST
+          ! If the user has requested so, then call a routine to compute the area-averaged SST in the vicinity of the
+          ! tracker-diagnosed center fix.
+          !------------------------------------------------------------------------------------------------------------
           if ((sstflag == 'y' .or. sstflag == 'Y') .and. stormswitch(ist) == 1) then
             call get_sst (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, readflag, &
                  & maxstorm, trkrinfo, sst_smooth, igsstret)
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! COMPUTE GENESIS DIAGNOSTICS
+          ! If the user has requested so, then call a routine to compute a variety of genesis-related diagnostics.
+          !------------------------------------------------------------------------------------------------------------
           if ((genflag == 'y' .or. genflag == 'Y') .and. stormswitch(ist) == 1) then
 
             if (verb .ge. 3) then
@@ -2476,6 +2681,7 @@ end program trakmain
             endif
           endif
 
+          ! print out the current fix position and intensity (in knots) to std output
           if (verb .ge. 3) then
             print *, ' '
             print *, 'After call to fixcenter, fix positions at '
@@ -2511,8 +2717,8 @@ end program trakmain
  617            format (1x, '+++ RPT_STORM_MOTION: istmspd = ', i5, ' kts(*10)  istmdir = ', i5, ' rcc = ', i3)
               endif
 
-              ! Call a routine to find the mean & max relative vorticity at the mean fix positions of the
-              ! storm at 850 & 700.  These will be written out to the "atcf_gen" and "atcfunix_ext" files.
+              ! Call a routine to find the mean & max relative vorticity at the mean fix positions of the storm at
+              ! 850 & 700. These will be written out to the "atcf_gen" and "atcfunix_ext" files.
               imeanzeta = -99
               igridzeta = -99
               call get_zeta_values (fixlon, fixlat, imax, jmax, dx, dy, trkrinfo, imeanzeta, igridzeta, &
@@ -2549,8 +2755,8 @@ end program trakmain
               endif
             endif
 
-            ! The exception here is for the call to the output_hfip routine, 
-            ! which will be called for every lead time that is processed
+            ! exception here is for the call to the output_hfip routine, which will be called for every lead
+            ! time that is processed
             call output_hfip (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, ifh, xmaxwind(ist,ifh), &
                  & gridprs(ist,ifh), vradius, rmax)
           else
@@ -2580,6 +2786,11 @@ end program trakmain
               ifcsthour = ileadtime / 100
               print *, 'ctx inp%model = ', inp%model
               if (inp%model == 1 .or. inp%model == 8 .or. inp%model == 22) then
+                !------------------------------------------------------------------------------------------------------
+                ! For the vt=00h lead time, if the tracker failed to locate a position, we are going to write out an
+                ! atcfunix record that contains the position, intensity, mslp and 34-kt wind radii from TC Vitals for
+                ! this storm and initial time. Only do this for the GFS or GDAS runs of the tracker.
+                !------------------------------------------------------------------------------------------------------
                 tcv_max_wind_ms = real(storm(ist)%tcv_vmax)
                 tcv_mslp_pa     = real(storm(ist)%tcv_pcen) * 100.0
 
@@ -2652,7 +2863,8 @@ end program trakmain
                      & x999_omega500, imeanzeta, igridzeta)
 
               else
-                ! For all other models, we print out missing data values at tau=00h if the  tracker was unable to find the storm
+                ! for all other models, we print out missing data values at tau=00h if the tracker was
+                ! unable to find the storm
                 call output_atcfunix (x999_lon, x999_lat, inp, ist, ifcsthour, xzero_vmax, xzero_minslp, &
                      & vradius, maxstorm, trkrinfo, x99_pbar, x99_rbar, x99_rmax, cps_vals, wcore_flag,  &
                      & i999_stmspd, i999_stmdir, x999_shrmag, x999_shrdir, x999_sst, x999_axirmw_dist,   &
@@ -2679,6 +2891,12 @@ end program trakmain
               call output_hfip (x999_lon, x999_lat, inp, ist, ifh, xzero_vmax, xzero_minslp, vradius, x99_rmax)
 
               if (trkrinfo%type == 'tracker') then
+                !------------------------------------------------------------------------------------------------------
+                ! For a 'tracker' run, i.e., one in which we know that there is an observed storm in the area, we will
+                ! assume that there was some type of problem in the initialization that prevented the storm from being
+                ! found. In this case, even though we have written out zeroes for the 00h time, we want to at least try
+                ! tracking again at the next lead time.
+                !------------------------------------------------------------------------------------------------------
                 if (verb .ge. 3) then
                   print *, ' '
                   print *, '++ NOTE: Even though a fix could not be'
@@ -2707,7 +2925,13 @@ end program trakmain
             cycle ! stormloop
           endif
 
-          ! get first guess for next forecast time's position
+          !------------------------------------------------------------------------------------------------------------
+          ! Now get first guess for next forecast time's position. But first, if this is the first time level (ifh=1)
+          ! and the user has requested that storm vitals be output (this is usually only done for model analyses in
+          ! order to get an analysis position from one time to the next), we will write out a storm vitals record for
+          ! this time level. Note that we have already gotten the next guess position info just above for the case of
+          ! the repeated analysis data, so we'll just output the genesis vitals record.
+          !------------------------------------------------------------------------------------------------------------
           if (ifh <= ifhmax) then
             if (ifh == 1 .and. trkrinfo%out_vit == 'y') then
               call output_gen_vitals (fixlon(ist,ifh), fixlat(ist,ifh), inp, ist, istmspd, istmdir, iovret)
@@ -2794,6 +3018,13 @@ end program trakmain
       if (use_per_fcst_command == 'y') then
       ! user wants us to run a command per forecast time
         pfc_final = per_fcst_command
+        !--------------------------------------------------------------------------------------------------------------
+        ! Replace %[FHOUR] with forecast hour, %[FMIN] with forecast minute.
+        ! The %[] format is chosen to avoid shell syntax errors if someone includes unknown %[] constructs. A stray
+        ! <FYEAR>, for example, would generate syntax errors or unexpected results in some shells.
+        ! If an unrecognized %[xxx] sequence is used, it will be retained in the final command.  This allows the
+        ! underlying command to detect the unreplaced %[] and use suitable default values or abort, as appropriate.
+        !--------------------------------------------------------------------------------------------------------------
         call argreplace (pfc_final, pfc_cmd_len, '%[FHOUR]', ifhours(ifh))
         call argreplace (pfc_final, pfc_cmd_len, '%[FMIN]', iftotalmins(ifh))
 
@@ -3131,6 +3362,11 @@ end program trakmain
 
     dell = (dx+dy) / 2.0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First define the radius of influence, which depends on the grid spacing of the model data being used. The ceiling
+    ! statement for npts in the first if statement is needed in case the resolution of the grib files eventually goes
+    ! very low, down to say a half degree or less, in order to cover enough points in the search.
+    !------------------------------------------------------------------------------------------------------------------
     if (dell < 1.24) then      ! GFS, MRF, NAM, NGM, NAVGEM, GDAS,
                                ! GFDL, NCEP Ensemble & Ensemble
                                ! Relocation, SREF Ensemble
@@ -3175,9 +3411,19 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If the input cparm is slp, then check to see that the MSLP gradient in any direction from the MSLP center is at
+    ! least 1mb / 200km, or 0.003mb/km. This is based on discussions with  Morris & Bob, who have had good results
+    ! using a 2mb/200km requirement. Since their model has a much finer resolution than all of the models we run the
+    ! tracker on AND a much better depiction of the hurricane vortex, we do not use a requirement as strict as theirs,
+    ! and so make the requirement only half as strong as theirs.
+    ! If the input cparm is v850, then check to see that there is a circulation at 850 mb.  We will do this by
+    ! calculating the tangential wind of all points within a specified radius of the 850 minimum wind center, and
+    ! seeing if there is a net average tangential wind speed of at least 3 m/s.
+    !------------------------------------------------------------------------------------------------------------------
+
     ! We will want to speed things up for finer resolution grids.
     ! We can do this by skipping some of the points in the loop.
-
     if ((dx+dy) / 2.0 > 0.20) then
       bskip = 1
     else if ((dx+dy) / 2.0 > 0.10 .and. (dx+dy) / 2.0 <= 0.20) then
@@ -3441,8 +3687,7 @@ end program trakmain
 
       if (gm_wrap_flag == 'maxplus360') then
         if ((pfixlon > 330.0 .and. pfixlon <= 360.0) .and. targlon < 25.0) then
-          ! targlon returned from distbear is just east of the
-          ! GM with a non-360-adjusted value.  Adjust it:
+          ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
           targlon = targlon + 360.0
         endif
         if (pfixlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -3461,11 +3706,9 @@ end program trakmain
           return
         endif
 
-        ! This last check analyzes a grid point for invalid data, which
-        ! could happen for grids like HAFS-A, HAFS-B and T-SHiELD where
-        ! data from a different map projection are mapped onto a
-        ! lat/lon grid, leaving invalid data around the edges.
-
+        ! This last check analyzes a grid point for invalid data, which could happen for grids like HAFS-A, HAFS-B and
+        ! T-SHiELD where data from a different map projection are mapped onto a lat/lon grid, leaving invalid data
+        ! around the edges.
         call check_valid_point (imax, jmax, dx, dy, fxy, maxmin, valid_pt, targlon, targlat, &
              & glatmax, glatmin, glonmax, glonmin, trkrinfo, icvpret)
 
@@ -3522,6 +3765,13 @@ end program trakmain
     endif
 
     if (phasescheme == 'cps' .or. phasescheme == 'both') then
+      !----------------------------------------------------------------------------------------------------------------
+      ! This condition that ifh > 1 is so that we *not* do the cps stuff for fhour=0 if it's a tcgen or midlat case,
+      ! since we don't know the model storm motion direction for the analysis. For a regular case where type =
+      ! 'tracker', we have the observed storm's heading direction from tc vitals, so we can use that (even though the
+      ! model's storm direction may differ slightly from the observed storm). This current if statement and the ones
+      ! below carefully check for these various instances.
+      !----------------------------------------------------------------------------------------------------------------
       if (ifh > 1 .or. (ifh == 1 .and. trkrinfo%type == 'tracker')) then
         okay_to_call_cps_routines = 'n'
 
@@ -3556,6 +3806,11 @@ end program trakmain
           endif
         endif
 
+        !----------------------------------------------------------------------------------------------------------------
+        ! Similarly, these next two conditions (previous lat and previous lon > -999) are in there in case we're doing a
+        ! tcgen or midlat case and this is the *first* time level within a forecast that the storm has been detected
+        ! (again, we don't yet know the storm heading).
+        !----------------------------------------------------------------------------------------------------------------
         if (okay_to_call_cps_routines == 'y') then
 
           call get_cps_paramb (imax, jmax, inp, dx, dy, ist, ifh, trkrinfo, fixlon, fixlat, &
@@ -3660,6 +3915,10 @@ end program trakmain
 
     ricps = 500.0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First, determine the angle that the storm took getting from the last position to the current one. If this is for
+    ! ifh=1 for a regular type=tracker case, we will just use the storm direction as read from the tcvitals card.
+    !------------------------------------------------------------------------------------------------------------------
     if (ifh == 1) then
       st_heading = real(storm(ist)%tcv_stdir)
     else
@@ -3698,6 +3957,10 @@ end program trakmain
       print *, ' '
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now call get_ij_bounds to get the boundaries for a smaller subdomain, or subset of gridpoints, in which to
+    ! evaluate the parameter B statistic. We will only include points within 500 km of the storm center for evaluation.
+    !------------------------------------------------------------------------------------------------------------------
     npts = ceiling(ricps / (dtk * (dx+dy) / 2.0))
 
     call get_ij_bounds (npts, 0, ricps, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, &
@@ -3714,8 +3977,15 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now loop through all of the points of the subdomain. If the point is further than 500 km from the storm center,
+    ! discard it. Otherwise, evaluate the angle from the storm center to this point to determine the hemisphere of the
+    ! point, that is, if the point is to the left or the right of the storm track.
+    !------------------------------------------------------------------------------------------------------------------
+
    !CAITLYN - repeating code
-    ! now loop through all of the points of the subdomain
+    ! We will want to speed things up for finer resolution grids. We can do this by skipping some of the points in the
+    ! loop for the evaluation of parameter B.
     if ((dx+dy) / 2.0 > 0.20) then
       bskip = 1
     else if ((dx+dy) / 2.0 > 0.10 .and. (dx+dy) / 2.0 <= 0.20) then
@@ -3812,7 +4082,7 @@ end program trakmain
         return
       endif
 
-      ! Calculate angle from storm center to point, in a 0-360 framework, clockwise positive
+      ! calculate angle from storm center to point, in a 0-360 framework, clockwise positive
       rlonc = (360.0 - glon(ip)) * dtr ! CAITLYN - repeated code?
       rlatc = glat(j) * dtr
       rlonb = (360.0 - fixlon(ist, ifh)) * dtr
@@ -3827,7 +4097,7 @@ end program trakmain
             if (sin(rlonc-rlonb) < 0.0) then
               pt_dir_rad = acos(cosarg)
             else
-              pt_dir_rad = 2 * pi - acos(cosarg)
+              pt_dir_rad = 2 * pi - acos(cosarg) ! CAITLYN - that 2 needs to be 2.0, this is real math
             endif
 
           else
@@ -3836,8 +4106,10 @@ end program trakmain
 
           pt_dir = pt_dir_rad / dtr
 
-          ! Based on the angle that the point is from the storm center,
-          ! determine if the point is to the left or the right of the storm track.
+          !------------------------------------------------------------------------------------------------------------
+          ! Based on the angle that the point is from the storm center, determine if the point is to the left or the
+          ! right of the storm track.
+          !------------------------------------------------------------------------------------------------------------
           if (st_heading >= 180.0) then
             if ((st_heading - pt_dir) > 0.0 .and. (st_heading - pt_dir) <= 180.0) then
               hemis = 2
@@ -3856,16 +4128,19 @@ end program trakmain
             endif
           endif
 
-          ! Calculate the 600-900 mb thickness at this point and add
-          ! the thickness value to the array for the correct "storm hemisphere"
+          !------------------------------------------------------------------------------------------------------------
+          ! Calculate the 600-900 mb thickness at this point and add the thickness value to the array for the correct
+          ! "storm hemisphere"
+          !------------------------------------------------------------------------------------------------------------
           zthick = cpshgt(ip, j, 7) - cpshgt(ip, j, 1)
           zthicksum(hemis) = zthicksum(hemis) + zthick
         enddo ! i-loop
       enddo   ! j-loop
 
-     !Now calculate parameter B.  The hemval parameter = +1 for storms
-     !in the Northern Hemisphere and -1 for Southern Hemisphere storms.
-
+      !------------------------------------------------------------------------------------------------------------
+      ! Now calculate parameter B. The hemval parameter = +1 for storms in the Northern Hemisphere and -1 for
+      ! Southern Hemisphere storms.
+      !------------------------------------------------------------------------------------------------------------
       zthick_right_mean = zthicksum(1) / real(right_ct)
       zthick_left_mean  = zthicksum(2) / real(left_ct)
 
@@ -3943,6 +4218,11 @@ end program trakmain
 
     npts = ceiling(ricps / (dtk * (dx+dy) / 2.0)) !CAITLYN - repeated code? also does ceiling default ints or reals?
 
+    !------------------------------------------------------------------------------------------------------------
+    ! First, call  get_ij_bounds to get the boundaries for a smaller subdomain, or subset of gridpoints, in which
+    ! to evaluate the parameter B statistic. We will only include points within 500 km of the storm center for
+    ! evaluation.
+    !------------------------------------------------------------------------------------------------------------
     call get_ij_bounds (npts, 0, ricps, imax, jmax, dx, dy, glatmax, glatmin, glonmax, &
          & glonmin, fixlon(ist,ifh), fixlat(ist,ifh), trkrinfo, ilonfix, jlatfix,      &
          & ibeg, jbeg, iend, jend, igiret)
@@ -3959,6 +4239,12 @@ end program trakmain
       igcvret = 92
       return
     endif
+
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now loop through all of the points of the subdomain at each level. If a point is further than 500 km from the
+    ! storm center, discard it. Otherwise, evaluate the gp height at the point to determine if it is a max or a min for
+    ! the given level.  Store the max and min height at each level in an array.
+    !------------------------------------------------------------------------------------------------------------------
 
     ! We will want to speed things up for finer resolution grids.
     ! We can do this by skipping some of the points in the loop for the evaluation of parameter B.
@@ -4077,6 +4363,11 @@ end program trakmain
 
       enddo ! levloop
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now calculate the vertical derivative of the gp height, that is, d(dz)/d(ln(p)). Here, zdiff is the gp height
+      ! perturbation at a given level, calculated in the loop above; dz is the vertical change in that perturbation
+      ! from one level to the next.
+      !----------------------------------------------------------------------------------------------------------------
       dz     = 0.0
       dlnp   = 0.0
       dzdlnp = 0.0
@@ -4087,6 +4378,16 @@ end program trakmain
         dzdlnp(k) = dz(k) / dlnp(k)
       enddo
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now call a correlation routine to get the slope of a regression line. The independent variable that we input is
+      ! dlnp, the change in log of pressure with height. The dependent variable is dzdlnp, the vertical change in the
+      ! height perturbation with respect to the change in pressure. The slope that is returned defines whether we've
+      ! got a cold core or warm core system. See Hart (MWR, April 2003, Vol 131, pp. 585-616) for more details,
+      ! specifically his Fig. 3 and the discussion surrounding. Note that in the call to calccorr, we are sending only
+      ! 6 of the 7 elements of the dlnp and dzdlnp arrays, beginning with the 2nd element of each. That's because the
+      ! first array value for each of those arrays is empty, since in the loop just above, we start with kbeg+1,
+      ! not kbeg.
+      !----------------------------------------------------------------------------------------------------------------
       call calccorr (lnp(2), zdiff(2), 6, R2, vth_slope)
 
       if (verb .ge. 3) then
@@ -4299,16 +4600,19 @@ end program trakmain
     real    :: slope, sumxy, sumx2
     integer :: i, inum
 
+    ! sum up the xarr*yarr products
     sumxy = 0.0
     do i = 1, inum
       sumxy = sumxy + xarr(i) * yarr(i)
     enddo
 
+    ! sum up the x^2 terms
     sumx2 = 0.0
     do i = 1, inum
       sumx2 = sumx2 + xarr(i) * xarr(i)
     enddo
 
+    ! get slope
     slope = sumxy / sumx2
 
     return
@@ -4515,6 +4819,12 @@ end program trakmain
       print *, '      wcore_mean_val = ', wcore_mean_val
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Once  find_maxmin returns a value and a location for the barnes-averaged value of a warm core, then make a call
+    ! to fix_latlon_to_ij to (1) get the actual gridpoint value of the temperature (the value stored in wcore_mean_val
+    ! is an area-averaged value coming from the barnes analysis), and (2) to get the (i,j) indeces for this gridpoint
+    ! to be used in the call to check_closed_contour below.
+    !------------------------------------------------------------------------------------------------------------------
     if (wcore_mean_lat > -99.0 .and. wcore_mean_lon > -990.0) then
       call fix_latlon_to_ij (imax, jmax, dx, dy, tmean, 'max', valid_pt, wcore_mean_lon, &
            & wcore_mean_lat, wcore_mean_val, ifix, jfix, wcore_point_max, 'tracker',     &
@@ -4569,6 +4879,14 @@ end program trakmain
 106 format (1x, '    wcore: ', a4, 1x, i10.10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1,'_', a3,2x, i4, ':', &
             i2.2, '  ifix: ', i5, 2x, ' jfix: ', i5, 2x, 'wcore_point_max(K): ', f12.3)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! The Vitart scheme specifies that the temperature must decrease by at least 1.0C in all directions from the warm
+    ! core center within a distance of 8 deg.  A rigorous check of this criterion is performed here by utilizing the
+    ! check_closed_contour routine. If we have a closed contour in the temperature field surrounding the warm core
+    ! (using a 1 deg K interval), that criterion is satisfied. For diagnostic purposes, we set the value of
+    ! num_check_conts to 999 in order to keep searching for all contours surrounding the warm core, and this allows us
+    ! to get an idea of the "depth" or magnitude of the warm core when the tlastcont and rlastcont values are returned.
+    !------------------------------------------------------------------------------------------------------------------
     wcore_contour_info%numcont = maxconts
     num_check_conts = 999
 
@@ -4648,9 +4966,8 @@ end program trakmain
     xlonsum = 0.0
     xlatsum = 0.0
 
-    ! do NOT include MSLP for the surface center at this time.
     if (calcparm(10,ist)) then
-        ! Just use single weighting for the sfc wcirc fix
+        ! just use single weighting for the sfc wcirc fix
         ipct = ipct + 1
         xlonsum = xlonsum + clon(ist, ifh, 10)
         xlatsum = xlatsum + clat(ist, ifh, 10)
@@ -4772,8 +5089,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xclon > 330.0 .and. xclon <= 360.0) .and. targlon < 25.0) then
-              ! targlon returned from distbear is just east of the
-              ! GM with a non-360-adjusted value.  Adjust it:
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
 
@@ -4940,6 +5256,12 @@ end program trakmain
     sr_vr   = 0.0
     sr_vt   = 0.0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now determine the angle that the storm took getting from the last position to the current one. If this is the
+    ! initial time, use the observed direction of motion from the TC Vitals. This may not match up with the model
+    ! storm's initial direction of motion, but it is all we have available to us in order to get a heading estimate for
+    ! he initial time. This storm heading information will be used for the storm-relative profiles.
+    !------------------------------------------------------------------------------------------------------------------
     if (ifh == 1) then
       st_heading = real(storm(ist)%tcv_stdir)
 
@@ -4973,6 +5295,12 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Get the profiles for the earth-relative coordinate system. Start with NE, then SE, SW, and NW. First go through
+    ! radiusloop, which goes from one radial distance to the next, then do the quadloop, which goes through each
+    ! quadrant, and then within each quadrant, the qtr_azimloop goes through for six points along an arc, spaced 15
+    ! degrees apart, starting at 7.5 degrees clockwise from the north.
+    !------------------------------------------------------------------------------------------------------------------
     if (verb .ge. 3) then
       print *, ' '
       print *, ' *****************************************************'
@@ -5013,8 +5341,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xsfclon > 330.0 .and. xsfclon <= 360.0) .and. targlon < 25.0) then
-              ! targlon returned from distbear is just east of the
-              ! GM with a non-360-adjusted value.  Adjust it:
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
             if (xsfclon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -5030,7 +5357,6 @@ end program trakmain
           endif
 
           ! NOTE: The 1020 in the call here is just a number/code to indicate to the subroutine to process sfc winds
-
           call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, 1020, 'u', xintrp_u, &
                & valid_pt, bimct, -99, ibiret1)
 
@@ -5079,6 +5405,10 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Get the profiles for the storm-relative coordinate system. Start with the front-right quadrant and go clockwise
+    ! through back-right, back-left and front-left.
+    !------------------------------------------------------------------------------------------------------------------
     bimct = 0
 
     do idist = 1, numdist ! radiusloop2
@@ -5096,7 +5426,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xsfclon > 330.0 .and. xsfclon <= 360.0) .and. targlon < 25.0) then
-              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value. Adjust it:
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
             if (xsfclon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -5303,7 +5633,27 @@ end program trakmain
       endif
     endif
 
-    ! CAITLYN - i think this could be its own subroutine
+    !------------------------------------------------------------------------------------------------------------------
+    ! When evaluating the winds at a gridpoint, keep in mind that each gridpoint represents area around it. There are 2
+    ! special cases we need to watch out for. The first is for cases in which the area of a gridpoint straddles across
+    ! a distance threshold, so that some of the gridpoint's area is in the "<200" bin, while some is in the "<100" bin.
+    ! The other is for the case in which the area of a gridpoint straddles between 2 adjacent quadrants (e.g., a
+    ! gridpoint exactly to the north of the center would have half its area in the NW quadrant and half in the NE
+    ! quadrant).
+    ! To properly "partition" and assign gridpoint areas, we need to interpolate the current grid down to a fine
+    ! resolution.
+    ! This next if statement determines how many times to interpolate the input grid to a smaller grid. Here are the
+    ! guidelines that will be used, keeping in mind that we want the final grid spacing to be on the order of between
+    ! 0.05 and 0.10 degree (finer than 0.05 deg is superfluous, and coarser than 0.10 deg is too coarse).
+    !
+    !  Original grid size (deg)     # of interps
+    ! -------------------------    ------------
+    !       0.8 <= g                    4
+    !     0.4 <= g < 0.8                3
+    !     0.2 <= g < 0.4                2
+    !     0.1 <= g < 0.2                1
+    !            g < 0.1                0
+    !------------------------------------------------------------------------------------------------------------------
     if ((dx+dy) / 2.0 >= 0.8) then !CAITLYN - reapeating code
       numinterp = 4
     else if ((dx+dy) / 2.0 < 0.8 .and. (dx+dy) / 2.0 >= 0.4) then
@@ -5321,6 +5671,11 @@ end program trakmain
       grdintincr = 0.5 * grdintincr
     enddo
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now loop through the points in this subdomain, determine if any are within 500 km of the center, and then
+    ! determine what quadrant the point is in relative to the center, and then calculate the fractional area coverage
+    ! for winds.
+    !------------------------------------------------------------------------------------------------------------------
     pdf_ct_tot = 0
     pdf_ct_bin = 0
 
@@ -5381,15 +5736,27 @@ end program trakmain
         call calcdist (glon(ii), glat(j), xsfclon, xsfclat, xdist, degrees)
 
         if (xdist > (rads + (0.75 * ((dx+dy) / 2.0) * dtk * cos(glat(j) * dtr)))) then
+          !------------------------------------------------------------------------------------------------------------
+          ! If the distance is greater than "rads" (500 km at initial writing) plus another 3/4 of a gridpoint, then
+          ! cycle. The extra 3/4 of a gridpoint is to allow for the case of some portion of the area around a gridpoint
+          ! (whose center point > 500 km) being within the 500 km arc, although that is only factored in for grids with
+          ! spacing >= 0.1 deg. For smaller grids, where no interpolation is done in this subroutine, then the distance
+          ! to that point is considered representative and the point is ignored if it is not less than 500 km from
+          ! the center.
+          !------------------------------------------------------------------------------------------------------------
           cycle ! iloop
 
         else
 
+          !------------------------------------------------------------------------------------------------------------
+          ! First interpolate the area surrounding each grid point to get fine resolution of lats & lons for
+          ! determining how to partition the area of a gridpoint among quadrants as welL as among distance thresholds.
+          !------------------------------------------------------------------------------------------------------------
           vmag    = sqrt(u(ii, j, levsfc)**2 + v(ii, j, levsfc)**2)
           vmagkts = vmag * conv_ms_knots
 
           if (numinterp > 0) then
-            grdintincr = ((dx+dy) / 2.0) / 2**numinterp  ! "grid spacing" of interpolated grid !CAITLYN - should the exponent be a real?
+            grdintincr = ((dx+dy) / 2.0) / 2**numinterp  ! "grid spacing" of interpolated grid
             ngridint = (2**numinterp) / 2
             got_pdf = 'notyet'
 
@@ -5401,6 +5768,10 @@ end program trakmain
                 call calcdist (xintlon, xintlat, xsfclon, xsfclat, xdist, degrees)
 
                 if (xdist <= 350.0 .and. got_pdf == 'notyet') then
+                  !----------------------------------------------------------------------------------------------------
+                  ! The got_pdf flag is needed because in these loops for niloop & njloop, we are actually looking at
+                  ! tiny areas around the same grid point. So we want to make sure we only count each gridpoint once.
+                  !----------------------------------------------------------------------------------------------------
                   ipdfbin = min((int(vmagkts / 10.0) + 1), 16)
                   pdf_ct_bin(ipdfbin) = pdf_ct_bin(ipdfbin) + 1
                   pdf_ct_tot = pdf_ct_tot + 1
@@ -5412,6 +5783,14 @@ end program trakmain
                   xarea = (grdintincr * 111195.0) * (grdintincr * 111195.0 * cos(xintlat * dtr))
                   idistbin = int(xdist / 100.0) + 1
 
+                  !----------------------------------------------------------------------------------------------------
+                  ! Go through a loop of the bins. The purpose of this is that these "bins" all go from the center out
+                  ! to a specified radius, they are NOT 100-km wide bins. So if we are dealing with a point at
+                  ! r =250 km, then that falls in the 0-300 km bin, but it also falls in the 0-400 and 0-500 km bins as
+                  ! well. So we need to run through this binloop multiple times to get the area data into multiple
+                  ! bins. Here are the bins & indices:
+                  ! 1: 0-100 km, 2: 0-200 km, 3: 0-300 km, 4: 0-400 km, 5: 0-500 km
+                  !----------------------------------------------------------------------------------------------------
                   do ib = idistbin, numbin ! binloop
                     if (xintlon >= xsfclon .and. xintlat >= xsfclat) then
                       ! NE quadrant
@@ -5474,8 +5853,11 @@ end program trakmain
               enddo ! niloop
             enddo ! njloop
 
-            else  ! case for a grid whose resolution so no further interpolation
+          else
 
+            ! In this else statement is the case for a grid whose resolution is already fine enough that we don't need
+            ! to interpolate any further. For example, we will have the H*Wind data on a 0.05 degree grid, so that's
+            ! already fine enough.
             call calcdist (glon(ii), glat(j), xsfclon, xsfclat, xdist, degrees)
 
             if (xdist <= 350.0) then
@@ -5554,7 +5936,6 @@ end program trakmain
     enddo ! jloop
 
     ! compute the fractional wind coverage for all different quadrants, bins and thresholds
-
     if (verb .ge. 0) then
       write (6,109) '                                 ',     &
                     '                                 ',     &
@@ -5584,8 +5965,7 @@ end program trakmain
 117 format (5x, a2, 5x, a5, 7x, a2, 13x, f6.2, 10x, f16.1, 2x, f16.1)
 
     ! compute the fractional wind coverage for all different bins and thresholds, but for the
-    ! entire "disc" of the storm, that is, summing all quadrants together.
-
+    ! entire "disc" of the storm, that is, summing all quadrants together
     do it = 1, numthresh
       do ib = 1, numbin
         do iq = 1, numquad
@@ -5662,7 +6042,7 @@ end program trakmain
     dell = (dx+dy) / 2.0
     npts = rads / (dtk * dell)
 
-    ! call get_ij_bounds in order to get the dimensions for a smaller subdomain of grid points to search over.
+    ! call get_ij_bounds in order to get the dimensions for a smaller subdomain of grid points to search over
     call get_ij_bounds (npts, 0, ri, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, xsfclon, &
          & xsfclat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
@@ -5752,6 +6132,10 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Search a grid of points near the storm center, evaluate if the storm is within the "rads" distance threshold. If
+    ! so, compute the IKE values for all applicable thresholds (10, 18, 33 m/s).
+    !------------------------------------------------------------------------------------------------------------------
     do j = jbeg, jend
       do i = ibeg, iend
 
@@ -5976,6 +6360,12 @@ end program trakmain
     u_cart_sum_ct = 0
     v_cart_sum_ct = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First, get the fix position to use for calculating the shear. For now, the same position will be used for both
+    ! 850 and 200 mb (we may consider at some point using a separate center fix for 200 mb to account for vortex tilt).
+    ! But for now, we will first look to use the center for the 850 mb wind circulation fix, but if that fix could not
+    ! be made for this current lead time, then we will use the mean fix position for this lead time.
+    !------------------------------------------------------------------------------------------------------------------
     if (calcparm(3,ist)) then
       xcenlon = clon(ist, ifh, 3)
       xcenlat = clat(ist, ifh, 3)
@@ -6010,6 +6400,14 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now compute the azimuthally averaged Vt and Vr in radial bands at distance increments as defined in the rdist
+    ! array. Those distance increments are in units of km. Iterate through each radius, starting from inner and working
+    ! to outer, and at each one, go around clockwise through all of the 24 discrete azimuths, starting at 7.5 and
+    ! adding 15 degrees clockwise each time, all the way up through 352.5. Note that the outer loop of this process is
+    ! for vertical level ("levelloop1"), where we will first do all of the analysis for 850 mb, and then next
+    ! for 200 mb.
+    !------------------------------------------------------------------------------------------------------------------
     do ilev = 1, 2 ! levelloop1
 
       if (ilev == 1) then
@@ -6041,7 +6439,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xcenlon > 330.0 .and. xcenlon <= 360.0) .and. targlon < 25.0) then
-              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value.  Adjust it:
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
             if (xcenlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -6093,6 +6491,12 @@ end program trakmain
       enddo ! radiusloop1
     enddo  ! levelloop1
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now loop through again, first at 850 mb then at 200 mb, and check to see at what radius the last azimuthally
+    ! average cyclonic tangential wind of at least 1 m/s occurs. Do this the same way as I did for getting the 34-kt
+    ! radii in subroutine  getradii, that is, start out at the outermost radius and work inward until finding the first
+    ! radius at which the cyclonic mean Vt >= 1 m/s. Be sure to account for northern hemisphere vs. southern hemisphere
+    !------------------------------------------------------------------------------------------------------------------
     do ilev = 1, 2 ! levelloop2
 
       if (ilev == 1) then
@@ -6110,12 +6514,18 @@ end program trakmain
           ! NHEM storm, cyclonic storm has Vt > 0.
           if (vt_mean(idist,ilev) >= 1.0) then
             if (idist == numdist) then
-              ! We found this at the max radius, so just set the
-              ! max_dist_index to this max radius and then exit the loop.
+              ! We found this at the max radius, so just set the max_dist_index to this max radius and then 
+              ! exit the loop
               max_dist_index(ilev) = numdist
               found_vt_ge_1_flag = 'y'
               exit  ! inverse_radius_loop
             else
+              !--------------------------------------------------------------------------------------------------------
+              ! To this point, each iteration of the loop has shown a cyclonic mean Vt < 1.0 m/s. We have hit a
+              ! Vt >= 1.0, so the radius where the mean Vt = 1.0 is somewhere between here and the next outer radius,
+              ! so we will just assign it to that next outer radius, which is fine since our resolution for converting
+              ! to cylindrical coordinates is fairly fine, at 25 km.
+              !--------------------------------------------------------------------------------------------------------
               max_dist_index(ilev) = idist + 1
               found_vt_ge_1_flag = 'y'
               exit  ! inverse_radius_loop
@@ -6125,12 +6535,18 @@ end program trakmain
           ! SHEM storm, cyclonic storm has Vt < 0.
           if (vt_mean(idist,ilev) <= -1.0) then
             if (idist == numdist) then
-              ! We found this at the max radius, so just set the
-              ! max_dist_index to this max radius and then exit the loop.
+              ! We found this at the max radius, so just set the max_dist_index to this max radius and then
+              ! exit the loop
               max_dist_index(ilev) = numdist
               found_vt_ge_1_flag = 'y'
               exit  ! inverse_radius_loop
             else
+              !--------------------------------------------------------------------------------------------------------
+              ! To this point, each iteration of the loop has shown a cyclonic mean Vt weaker than -1.0 m/s. We have
+              ! hit a Vt <= -1.0, so the radius where the mean Vt = -1.0 is somewhere between here and the next outer
+              ! radius, so we will just assign it to that next outer radius, which is fine since our resolution for
+              ! converting to cylindrical coordinates is fairly fine, at 25 km.
+              !--------------------------------------------------------------------------------------------------------
               max_dist_index(ilev) = idist + 1
               found_vt_ge_1_flag = 'y'
               exit  ! inverse_radius_loop
@@ -6140,27 +6556,34 @@ end program trakmain
       enddo ! inverse_radius_loop
 
       if (found_vt_ge_1_flag == 'n') then
+        ! We did *not* find a mean cyclonic Vt that exceeded 1 m/s at any radius, so set max_dist_index to a missing
+        ! value. For this case, we will not remove any winds and we will just use the raw winds as they are.
         max_dist_index(ilev) = -999
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now go through the radii and the azimuths again, and this time subtract the mean Vt from every point at each
+      ! radius for which the mean cyclonic Vt exceeds 1.0 m/s. Where it does not exceed 1.0 m/s, just use the
+      ! original Vt.
+      !----------------------------------------------------------------------------------------------------------------
       do idist = 1, numdist ! radiusloop2
         if (vt_mean(idist,ilev) > -998.0) then
 
-          ! We were able to compute a vt_mean at this radius.
+          ! we were able to compute a vt_mean at this radius
           do iazim = 1, numazim ! azimloop2
             if (idist > max_dist_index(ilev) .or. max_dist_index(ilev) == -999) then
-              ! If we are either beyond the radius at which the
-              ! cyclonic mean Vt has dropped to less than 1 m/s, or
-              ! if we did not find a mean cyclonic Vt that exceeded
-              ! 1 m/s at any radius, just use the original Vt and
+              !--------------------------------------------------------------------------------------------------------
+              ! If we are either beyond the radius at which the cyclonic mean Vt has dropped to less than 1 m/s, or if
+              ! we did not find a mean cyclonic Vt that exceeded 1 m/s at any radius, just use the original Vt and
               ! Vr as they are.
+              !--------------------------------------------------------------------------------------------------------
               vt_prime(iazim, idist, ilev) = vt(iazim, idist, ilev)
               vr_prime(iazim, idist, ilev) = vr(iazim, idist, ilev)
             elseif (idist <= max_dist_index(ilev)) then
-              ! We are still at a radius where our earlier analysis
-              ! above indicated the mean cyclonic Vt > 1 m/s, so we
-              ! should subtract out the azimuthally averaged mean Vt
-              ! and Vr.
+              !--------------------------------------------------------------------------------------------------------
+              ! We are still at a radius where our earlier analysis above indicated the mean cyclonic Vt > 1 m/s, so we
+              ! should subtract out the azimuthally averaged mean Vt and Vr.
+              !--------------------------------------------------------------------------------------------------------
               vt_prime(iazim, idist, ilev) = vt(iazim, idist, ilev) - vt_mean(idist, ilev)
               vr_prime(iazim, idist, ilev) = vr(iazim, idist, ilev) - vr_mean(idist, ilev)
             endif
@@ -6174,6 +6597,10 @@ end program trakmain
         endif
       enddo ! radiusloop2
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now go through and convert all of the Vt & Vr values back to Cartesian wind components. Remember that there are
+      ! contributions to u and v from both Vt and Vr.
+      !----------------------------------------------------------------------------------------------------------------
       do idist = 1, numdist ! radiusloop3
         do iazim = 1, numazim ! azimloop3
           bear = ((real(iazim) - 1.0) * 15.0) + 7.5
@@ -6183,13 +6610,16 @@ end program trakmain
             u_from_vr(iazim, idist) = sin(bear * dtr) * vr_prime(iazim, idist, ilev)
             v_from_vt(iazim, idist) = sin(bear * dtr) * vt_prime(iazim, idist, ilev)
             v_from_vr(iazim, idist) = cos(bear * dtr) * vr_prime(iazim, idist, ilev)
-            ! Create the Cartesian u-component for this point by combining the u contribution
-            ! from the 2 separate cylindrical components.
+
+            ! create the Cartesian u-component for this point by combining the u contribution from the 2 separate
+            ! cylindrical components.
             u_cart(iazim, idist, ilev) = u_from_vt(iazim, idist) + u_from_vr(iazim, idist)
-            ! Create the Cartesian v-component for this point by combining the v contribution
-            ! from the 2 separate cylindrical components.
+
+            ! create the Cartesian v-component for this point by combining the v contribution from the 2 separate
+            ! cylindrical components.
             v_cart(iazim, idist, ilev) = v_from_vt(iazim, idist) + v_from_vr(iazim, idist)
-            ! Add to the sum arrays for the Cartesian u- and v-arrays for this level....
+
+            ! add to the sum arrays for the Cartesian u- and v-arrays for this level
             u_cart_sum(ilev) = u_cart_sum(ilev) + u_cart(iazim, idist, ilev)
             u_cart_sum_ct(ilev) = u_cart_sum_ct(ilev) + 1
             v_cart_sum(ilev) = v_cart_sum(ilev) + v_cart(iazim, idist, ilev)
@@ -6199,10 +6629,10 @@ end program trakmain
       enddo ! radiusloop3
     enddo ! levelloop2
 
-    ! Compute the u- and v-components of the vertical wind shear.
-    ! Remember that vertical level 1 is 850 mb, and level 2 is 200 mb.
-    ! From these, compute the shear magnitude.
-
+    !------------------------------------------------------------------------------------------------------------------
+    ! Compute the u- and v-components of the vertical wind shear. Remember that vertical level 1 is 850 mb, and level 2
+    ! is 200 mb. From these, compute the shear magnitude.
+    !------------------------------------------------------------------------------------------------------------------
     if (u_cart_sum_ct(1) > 0 .and. v_cart_sum_ct(1) > 0 .and. u_cart_sum_ct(2) > 0 .and. v_cart_sum_ct(2) > 0) then
 
       u_cart_mean(1) = u_cart_sum(1) / real(u_cart_sum_ct(1))
@@ -6228,11 +6658,10 @@ end program trakmain
 
     shear(ist, ifh, 1) = shear_mag
 
-    ! Now compute the shear direction (i.e., the direction that the
-    ! shear is coming from).  With the methods below, we will initially
-    ! derive a direction that the shear is pointing to, so we will need
-    ! to adjust by 180 degrees.
-
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now compute the shear direction (i.e., the direction that the shear is coming from). With the methods below, we
+    ! will initially derive a direction that the shear is pointing to, so we will need to adjust by 180 degrees.
+    !------------------------------------------------------------------------------------------------------------------
     if (ushear > -998.0 .and. vshear > -998.0) then
       if (ushear == 0.0 .and. vshear >= 0.0) then
         shear_dir_point_to = 0.0
@@ -6247,7 +6676,11 @@ end program trakmain
         shear_dir_point_to = 90.0
         shear_dir_from     = 270.0
       else
-        ! first get the local angle
+        !--------------------------------------------------------------------------------------------------------------
+        ! First get the local angle, that is, for the atan2 function, use the absolute value of the ushear & vshear
+        ! components, and then adjust to the 0-360 value in the if statement after that by checking the sign of the
+        ! original ushear & vshear to get the actual quadrant.
+        !--------------------------------------------------------------------------------------------------------------
         local_angle = atan2(abs(vshear), abs(ushear)) / dtr
 
         if (ushear > 0.0 .and. vshear > 0.0) then
@@ -6274,6 +6707,12 @@ end program trakmain
       shear_dir_point_to = -999.0
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Per discussion with Mark DeMaria, SHIPS uses the shear *heading* for the shear direction, *not* the direction
+    ! that the shear is coming from. So, for a case of strong, pure easterly shear (i.e., no v-shear, and say
+    ! u_cart_mean(200) = -50 m/s and u_cart_mean(850) = +5 m/s), the shear direction would be coming *from* 90 degrees,
+    ! but the shear "heading" (variable shear_dir_point_to) would be 270 degrees.
+    !------------------------------------------------------------------------------------------------------------------
     shear(ist, ifh, 2) = shear_dir_point_to
 
     if (verb >= 1) then
@@ -6331,10 +6770,10 @@ end program trakmain
     logical(1) :: valid_pt(imax,jmax)
     logical(1) :: readflag(nreadparms)
 
-    ! Now get a smoothed, barnes-averaged value of SST at the center
-    ! point.  Only do this if we have *both* the  SST and the
-    ! land-sea mask, otherwise set to missing for this time.
-
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now get a smoothed, barnes-averaged value of SST at the center point. Only do this if we have *both* the SST and
+    ! the land-sea mask, otherwise set to missing for this time.
+    !------------------------------------------------------------------------------------------------------------------
     if (readflag(17) .and. readflag(20)) then
       re      = 125.0
       ri      = 250.0
@@ -6434,6 +6873,11 @@ end program trakmain
 
     divg = -9999.0
     if (readflag(3) .and. readflag(4)) then
+      !----------------------------------------------------------------------------------------------------------------
+      ! Call get_divg, which will call a routine to compute divergence over the whole domain and then compute just a
+      ! barnes-averaged value at the center point, returned in the variable "divg". In get_divg, I'll be doing this
+      ! analysis only at 850 mb.
+      !----------------------------------------------------------------------------------------------------------------
       call get_divg (imax, jmax, inp, dx, dy, ist, ifh, fixlon, fixlat, valid_pt, calcparm, &
            & maxstorm, trkrinfo, clon, clat, divg, igdret)
     endif
@@ -6444,6 +6888,10 @@ end program trakmain
  122  format (1x, 'TIMING: gen_diag after divg 850 ... ', i2.2, ':', i2.2, ':', i2.2)
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now get a smoothed, barnes-averaged value of q850 at the center point. Then multiply the 850 mb divg we just
+    ! calculated by the smoothed q850 to get the 850 mb moisture convergence (q850conv).
+    !------------------------------------------------------------------------------------------------------------------
     if (readgenflag(1)) then
       re      = 125.0
       ri      = 250.0
@@ -6477,10 +6925,10 @@ end program trakmain
       q850conv = -9999.0
     endif
 
-    ! Now get a smoothed, barnes-averaged value of RH at the center
-    ! point.  We will do this for a level that averages 1000 & 925 mb,
-    ! and also for a level that averages 800,750,700,650 & 600 mb.
-
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now get a smoothed, barnes-averaged value of RH at the center point. We will do this for a level that averages
+    ! 1000 & 925 mb, and also for a level that averages 800, 750, 700, 650 & 600 mb.
+    !------------------------------------------------------------------------------------------------------------------
     if (verb .ge. 3) then
       call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
       write (6,128) date_time(5), date_time(6), date_time(7)
@@ -6500,8 +6948,9 @@ end program trakmain
  130  format (1x, 'TIMING: gen_diag after get_rh ... ', i2.2, ':', i2.2, ':', i2.2)
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
     ! Now get a smoothed, barnes-averaged value of 500 mb omega at the center point
-
+    !------------------------------------------------------------------------------------------------------------------
     if (readgenflag(23)) then
       if (verb .ge. 3) then
         call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
@@ -6729,23 +7178,25 @@ end program trakmain
     ibiret = 0
     tmp_targlon = targlon
 
-    ! convert the lat/lon values into i- and j-indices
-    ! find the j-indices for the points just to the north and the south of targlat
+    !------------------------------------------------------------------------------------------------------------------
+    ! For the latitudes and longitudes surrounding our target lat/lon location, convert the lat/lon values into i- and
+    ! j-indices.
+    ! Find the j-indices for the points just to the north and the south of targlat
+    !------------------------------------------------------------------------------------------------------------------
     if (targlat >= 0.0) then
-      ! For a northern hemisphere storm, jn is the j-index for the
-      ! point just to the *NORTH* (poleward) of targlat.
+      ! for a northern hemisphere storm, jn is the j-index for the point just to the *NORTH* (poleward) of targlat
       jn = int((glatmax - targlat) / dy + 1.0)
       js = jn + 1
     else
-      ! For a southern hemisphere storm, js is the j-index for the
-      ! point just to the *SOUTH* (poleward) of targlat.
+      ! for a southern hemisphere storm, js is the j-index for the point just to the *SOUTH* (poleward) of targlat
       js = ceiling((glatmax - targlat) / dy + 1.0)
       jn = js - 1
     endif
 
-    ! Check to make sure that points are not being requested beyond
-    ! the northern or southern boundaries of the grid.  This is most
-    ! likely to happen for a smaller, regional grid.
+    !------------------------------------------------------------------------------------------------------------------
+    ! Check to make sure that points are not being requested beyond the northern or southern boundaries of the grid.
+    ! This is most likely to happen for a smaller, regional grid.
+    !------------------------------------------------------------------------------------------------------------------
     if (jn > jmax .or. js > jmax) then
       if (verb .ge. 1 .and. bimct == 0) then
         print *, ' '
@@ -6783,6 +7234,11 @@ end program trakmain
     ie_hold = ie
     iw_hold = iw
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Check for GM wrapping. Check "ie" to see if it is between the most eastward gridpoint and the GM (i.e., on a
+    ! 1-deg global grid (360x181), it would be if targlon was between 359.0 (i=360) and the GM (i=1, not i=361)).
+    ! Similarly then, if we adjust ie to then be 1, then we have a problem with iw, since iw = 1 - 1 = 0.
+    !------------------------------------------------------------------------------------------------------------------
     if (ie > imax) then
       if (trkrinfo%gridtype == 'global') then
         ie = ie - imax
@@ -6823,6 +7279,12 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Calculate the longitude (to) and latitude (ta) location ratios. Check for GM wrapping, as we can run into a
+    ! problem here if interpolating for points that are just west of the GM, since we would be interpolating using
+    ! values of longitude just west of GM (say, glon(iw)=359.5) and the GM (glon(ie) = 0.0). This makes for an
+    ! incorrect "to" ratio below, with 0-359.5 in the denominator. We have to account for this
+    !------------------------------------------------------------------------------------------------------------------
     if (glon(iw) > 300.0 .and. (glon(ie) < 10.0 .and. glon(ie) >= 0.0)) then
       eastlon = 360.0 + glon(ie)
       if (tmp_targlon < 10.0 .and. tmp_targlon >= 0.0) then
@@ -6835,6 +7297,7 @@ end program trakmain
     to = (tmp_targlon - glon(iw)) / (eastlon - glon(iw))
     ta = (targlat - glat(jn)) / (glat(js) - glat(jn))
 
+    ! copy the data values at the 4 known points into simple scalar variables
     if (valid_pt(iw,jn) .and. valid_pt(iw,js) .and. valid_pt(ie,jn) .and. valid_pt(ie,js)) then
       continue
     else
@@ -6889,6 +7352,7 @@ end program trakmain
       stop 95
     endif
 
+    ! compute the interpolated value
     z = 1.9427
     xintrp_val = (1.0-to) * (1.0-ta) * d1 + to * (1.0-ta) * d2 + to * ta * d3 + (1.0-to) * ta * d4
 
@@ -7041,12 +7505,20 @@ end program trakmain
     tmpxlon    = xlon
     tmpcentlon = centlon
 
-    ! multiple GM-wrapping scenarios
+    !------------------------------------------------------------------------------------------------------------------
+    ! Multiple GM-wrapping scenarios. We just simply need to make sure that both centlon (or tmpcentlon) and xlon (or
+    ! tmpxlon) are in the same 0-360 reference frame surrounding the GM.
+    !------------------------------------------------------------------------------------------------------------------
     if (tmpcentlon > 330.0) then
       if (xlon > 360.0) then
         tmpxlon = xlon  ! all lons will be in the 300+ range
 
       elseif (xlon < 30.0) then
+        !--------------------------------------------------------------------------------------------------------------
+        ! In this case, the fix center is just to the west of the GM with a lon (centlon) > 330, while the point being
+        ! evaluated (xlon) is just east of the GM, but with a lon (centlon) < 30. Need to adjust here to get the xlon
+        ! in the 330+ frame of reference.
+        !--------------------------------------------------------------------------------------------------------------
         tmpxlon = xlon + 360.0
       endif
 
@@ -7057,7 +7529,7 @@ end program trakmain
         tmpxlon = xlon - 360.0
 
         elseif (xlon > 330.0 .and. xlon < 360.0) then
-          ! Convert centlon to match xlon in the 360+ reference frame
+          ! convert centlon to match xlon in the 360+ reference frame
           tmpcentlon = 360.0 + tmpcentlon
           tmpxlon    = xlon
 
@@ -7115,6 +7587,13 @@ end program trakmain
 
     else
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! This next part figures out the angle from the center point (centlon,centlat) to the data point (tmpxlon,xlat).
+      ! It does this by setting up a triangle and then using inverse trig functions to get the angle. Since this is a
+      ! kludgy way to do it that doesn't account for the curvature of the earth, we'll do it 2 ways; using asin and
+      ! acos, then take the average of those 2 for the angle.
+      ! hyp_dist, calculated just above, is the distance from the center pt to the data pt.
+      !----------------------------------------------------------------------------------------------------------------
       opp_dist  = xlatdiff / 360.0 * ecircum
       sin_value = opp_dist / hyp_dist
 
@@ -7306,6 +7785,12 @@ end program trakmain
 
     conv_ms_knots = 1.9427
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     if (outlon < -998.0 .or. outlat < -998.0) then
       intlon = 0
       intlat = 0
@@ -7461,10 +7946,8 @@ end program trakmain
 
     if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
       if (stcvtype(ist) == 'FOF') then
-        ! If this is a TC vitals-described storm (i.e., one that is
-        ! numbered by JTWC or NHC), then leave the basinid as is.
-        ! Otherwise, we want to use the "basinid" location as a
-        ! label to identify what type of run this is.
+        ! If this is a TC vitals-described storm (i.e., one that is numbered by JTWC or NHC), then leave the basinid as
+        ! is. Otherwise, we want to use the "basinid" location as a label to identify what type of run this is.
         if (trkrinfo%type == 'midlat') basinid = 'ML'
         if (trkrinfo%type == 'tcgen')  basinid = 'TG'
       endif
@@ -7533,7 +8016,7 @@ end program trakmain
             i4, ', ', a12, 4(', ', i4.4), 2(', ', i4), ', ', i3, a25, 2(', ', i3), a44, ',       THERMO PARAMS', &
             3(', ', i7), ', ', a1, ', ', i2, ', DT, -999, SHR82, ', i4, ', ', i3, ', SST, ', i4, ', ARMW' , 2(', ', i3)', ', a3)
 
-    !flush the output stream so it actually writes
+    ! flush the output stream so it actually writes
     flush(64)
 
     return
@@ -7658,6 +8141,12 @@ end program trakmain
 
     conv_ms_knots = 1.9427  ! CAITLYN - repeating, conversions could be on program level
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     if (outlon < -998.0 .or. outlat < -998.0) then
       intlon = 0
       intlat = 0
@@ -7857,10 +8346,8 @@ end program trakmain
     if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
 
       if (stcvtype(ist) == 'FOF') then
-        ! If this is a TC vitals-described storm (i.e., one that is
-        ! numbered by JTWC or NHC), then leave the basinid as is.
-        ! Otherwise, we want to use the "basinid" location as a
-        ! label to identify what type of run this is.
+        ! If this is a TC vitals-described storm (i.e., one that is numbered by JTWC or NHC), then leave the basinid as
+        ! is. Otherwise, we want to use the "basinid" location as a label to identify what type of run this is.
         if (trkrinfo%type == 'midlat') basinid = 'ML'
         if (trkrinfo%type == 'tcgen')  basinid = 'TG'
       endif
@@ -7872,8 +8359,8 @@ end program trakmain
       print *, 'atcfymdh            = ', atcfymdh,   ' atcfname   = ', adjustr(atcfname)
       print *, 'output_fhr          = ', output_fhr
       print *, 'intlat              = ', intlat,     ' clatns     = ', clatns
-      print *, 'intlon              = ', intlon,     ' clonew     = ', clonew
-      print *, 'int_wind_kts        = ', int((vmaxwind*conv_ms_knots) + 0.5)
+      print *, 'intlon              = ', intlon,     ' clonew     = ', clonew
+      print *, 'int_wind_kts        = ', int((vmaxwind*conv_ms_knots) + 0.5)
       print *, 'int_mslp            = ', int(xminmslp/mslp_outp_adj + 0.5)
       print *, 'filler              = ','XX,  34, NEQ'
       print *, 'vradius(1-4)        = ', vradius(1,1), vradius(1,2), vradius(1,3), vradius(1,4)
@@ -7966,7 +8453,7 @@ end program trakmain
       print *, 'isst                                = ', isst
       print *, 'irmw_dist                           = ', irmw_dist
       print *, 'irmw_val                            = ', irmw_val
-      print *, 'idivg                               = ', idivg
+      print *, 'idivg                               = ', idivg
       print *, 'imoistdivg                          = ', imoistdivg
       print *, 'irh_800_600                         = ', irh_800_600
       print *, 'irh_1000_925                        = ', irh_1000_925
@@ -8052,6 +8539,12 @@ end program trakmain
     integer          :: intlon(maxtime), intlat(maxtime)
     character(len=4) :: modelchar(maxmodel)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0 - 360, increasing
+    ! westward. Also, because the fixlon value may be >360 due to GM wrapping, we need to mod it to get it in a
+    ! 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     print *, 'top of output_all'
     print *, ' ifhmax   = ', ifhmax
     print *, ' maxtime  = ', maxtime
@@ -8161,6 +8654,12 @@ end program trakmain
     integer          :: intlon(maxtime), intlat(maxtime)
     character(len=4) :: modelchar(maxmodel), basinid
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0 - 360, increasing
+    ! westward. Also, because the fixlon value may be >360 due to GM wrapping, we need to mod it to get it in a
+    ! 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     conv_ms_knots = 1.9427
 
     do ist = 1, maxstorm  ! stormloop
@@ -8346,6 +8845,12 @@ end program trakmain
     character(len=2) :: basinid
     character(len=1) :: clatns, clonew
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     if (xminmslp == 999999.0) xminmslp = 0.0
 
     if (xminmslp < 1100.0) then
@@ -8443,6 +8948,7 @@ end program trakmain
 81 format (a2, ', ', a2, ', ', i10.10, ', 03, ', a4, ', ', i5.5, ', ', i3, a1, ', ', i4, a1, ', ', i3, ', ', &
            i4, ', ', a12,4(', ', i4.4), ',    0,    0, ', i3)
 
+    ! flush the output stream so it actually writes
     flush(69)
     return !CAITLYN: are these returns needed?
 
@@ -8535,6 +9041,12 @@ end program trakmain
     character(len=2)   :: basinid, cquad
     character(len=5)   :: wfract_type
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     conv_ms_knots = 1.9427
 
     if (outlon < -998.0 .or. outlat < -998.0) then
@@ -8628,7 +9140,6 @@ end program trakmain
             a6, i3.3, ', ', i3.3, ', ', i3, ', ', a2, a1, 4(', ', i4), ', ', i4, a1, ', ', i5, a1)
 
     ! compute and write out the pdf values for the wind magnitude
-
     do ip = 1, 16
       pdfval = real(pdf_ct_bin(ip)) / real(pdf_ct_tot)
       write (76,85) atcfymdh, basinid, storm(ist)%tcv_storm_id(1:2), output_fhr, 10*(ip-1), 10*ip, &
@@ -8753,7 +9264,12 @@ end program trakmain
     character(len=2)   :: cquad(4) = (/'NE','SE','SW','NW'/)
     character(len=2)   :: crel(4) = (/'FR','BR','BL','FL'/)
 
-
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     conv_ms_knots = 1.9427
 
     if (outlon < -998.0 .or. outlat < -998.0) then
@@ -8910,6 +9426,7 @@ end program trakmain
 81 format (a2, ', ', a2, ', ', i10.10, ', 03, ', a4, ', ', i3.3, ', ', i3, a1, ', ', i4, a1, ', ', i3, ', ', &
            i4, a10, a2, a1, 14(', ', i4), ', ', i4, a1, ', ', i5, a1)
 
+    ! flush the output stream so it actually writes
     flush(72)
     return
 
@@ -8999,6 +9516,12 @@ end program trakmain
     character(len=2)   :: basinid, cquad
     character(len=5)   :: wfract_type
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     conv_ms_knots = 1.9427 !CAITLYN - this should be a program parameter because its used a bunch and thats where the repeating comment can go
 
     if (outlon < -998.0 .or. outlat < -998.0) then
@@ -9064,6 +9587,7 @@ end program trakmain
 81 format (a2, ', ', a2, ', ', i10.10, ', 03, ', a4, ', ', i3.3, ', ', i3, a1, ', ', i4, a1, ', ', i3, ', ', &
            i4, a14, 8(',',i5), ', ', i4, a1, ', ', i5, a1)
 
+    ! flush the output stream so it actually writes
     flush(74)
     return
 
@@ -9133,6 +9657,12 @@ end program trakmain
     character(len=2) :: basinid
     character(len=1) :: clatns, clonew
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     conv_ms_knots = 1.9427
 
     if (outlon < -998.0 .or. outlat < -998.0) then
@@ -9191,6 +9721,7 @@ end program trakmain
 81 format (a2, ', ', a2, ', ', i10.10, ', 03, ', a4, ', ', i3.3, ', ', i3, a1, ', ', i4, a1, ', ', &
            i3, ', ', i4, ', ', a14, 3(',', i6))
 
+    ! flush the output stream so it actually writes
     flush(71)
     return
 
@@ -9323,6 +9854,12 @@ end program trakmain
       stop 95
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 10x their real
+    ! value (eg. 125.4 will be written out as 1254). Convert the lon values so that they go from 0-180E or 0-180W, and
+    ! convert the lat values so that they are positive and use 'N' or 'S' to differentiate hemispheres. Also, because
+    ! the outlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     conv_ms_knots = 1.9427
 
     if (outlon < -998.0 .or. outlat < -998.0) then
@@ -9351,6 +9888,11 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Unlike the regular atcfunix output, in which we  output a record at forecast time = 00h even if the storm cannot
+    ! be found, here we don't want to do that. So check the lat & lon positions and exit this subroutine now if
+    ! they're both zero.
+    !------------------------------------------------------------------------------------------------------------------
     if (intlat == 0 .and. intlon == 0) then
       if (verb .ge. 3) then
         print *, ' '
@@ -9369,12 +9911,30 @@ end program trakmain
       return
     endif
 
+    ! Initially, set all "gstm" components equal to the input "gstorm" components for this storm, then we will change
+    ! the specific components that we need to.
     gstm = gstorm(ist)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If the "gv_gen_date" for this storm does not equal 99999, then that means that a vitals was read in for this
+    ! storm in subroutine read_gen_vitals, so be sure to use the genesis date, genesis latitude and genesis longitude
+    ! for the storm identifier at the beginning of the modified atcfunix record.
+    !------------------------------------------------------------------------------------------------------------------
     if (gstm%gv_gen_date /= 99999) then
-      continue    ! use the info from the gstorm array, which
+      !----------------------------------------------------------------------------------------------------------------
+      ! Just use the info from the gstorm array, which comes either from the genesis vitals record or, for storms that
+      ! were found in the course of a forecast, come from basically the ELSE statement just below on a previous call to
+      ! output_atcf_gen after this storm was found and the output was written for the first lead time at which the 
+      ! storm was identified.
+      !----------------------------------------------------------------------------------------------------------------
+      continue 
 
     else
+      !----------------------------------------------------------------------------------------------------------------
+      ! This storm was found on the fly during this run and there was no previous vitals record for this system. The
+      ! information that will be used to identify the genesis location is the same exact info as the tracker-found
+      ! position for this time.
+      !----------------------------------------------------------------------------------------------------------------
       gstm%gv_gen_date  = inp%bcc * 100000000 + inp%byy * 1000000 + inp%bmm * 10000 + inp%bdd * 100 + inp%bhh
       gstm%gv_gen_fhr   = ifcsthour
       gstm%gv_gen_lat   = intlat
@@ -9382,7 +9942,11 @@ end program trakmain
       gstm%gv_gen_lon   = intlon
       gstm%gv_gen_lonew = clonew
       gstm%gv_gen_type  = 'FOF'
-
+      !----------------------------------------------------------------------------------------------------------------
+      ! Important! Transfer all this local "gstm" data back into the saved "gstorm" array for use in consistently
+      ! identifying this storm in future iterations of calling this output_atcf_gen routine for this same storm. Doing
+      ! this enables the same storm to have the same unique storm ID from one lead time to the next within a forecast.
+      !----------------------------------------------------------------------------------------------------------------
       gstorm(ist) = gstm
     endif
 
@@ -9539,6 +10103,8 @@ end program trakmain
     endif
 
     if (stcvtype(ist) == 'FOF') then
+      ! If this is a TC vitals-described storm (i.e., one that is numbered by JTWC or NHC), then leave the basinid as
+      ! is. Otherwise, we want to use the "basinid" location as a label to identify what type of run this is.
       if (trkrinfo%type == 'midlat') basinid = 'ML'
       if (trkrinfo%type == 'tcgen')  basinid = 'TG'
     endif
@@ -9617,6 +10183,7 @@ end program trakmain
            3(i4, ', '), 3(i6, ', '), a1,2(', ', i4), 4(', ', i6), ', SHR82, ', i4, ', ', i3, 3(', ', i4), ', ',   &
            i9, 4(', ', i4))
 
+    ! flush the output stream so it actually writes
     flush(66)
     return
 
@@ -9696,6 +10263,12 @@ end program trakmain
       stop 95
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First convert all of the lat/lon values from reals into integers. These integer values must be 100x their real
+    ! value (eg. 125.42 be written out as 12542).  Leave longitudes in original 0-360E format ('W' and 'E' will not be
+    ! printed out). Also, because the xmeanlon value may be >360 due to GM wrapping, we need to mod it to get it in a
+    ! 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     conv_ms_knots = 1.9427
 
     if (xmeanlon < -998.0 .or. xmeanlat < -998.0) then
@@ -9732,6 +10305,11 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Unlike the regular atcfunix output, in which we  output a record at forecast time = 00h even if the storm cannot
+    ! be found, here we don't want to do that. So check the lat & lon positions and exit this subroutine now if
+    ! they're both zero.
+    !------------------------------------------------------------------------------------------------------------------
     if (intmeanlat == 0 .and. intmeanlon == 0) then
       if (verb .ge. 3) then
         print *, ' '
@@ -9750,12 +10328,22 @@ end program trakmain
       return
     endif
 
+    ! Initially, set all "gstm" components equal to the input "gstorm" components for this storm, then we will change
+    ! the specific components that we need to.
     gstm = gstorm(ist)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If the "gv_gen_date" for this storm does not equal 99999, then that means that a vitals was read in for this
+    ! storm in subroutine read_gen_vitals, so be sure to use the genesis date, genesis latitude and genesis longitude
+    ! for the storm identifier at the beginning of the modified atcfunix record.
+    !------------------------------------------------------------------------------------------------------------------
     if (gstm%gv_gen_date /= 99999) then
       continue    ! just use the info off the genesis vitals record
 
     else  !CAITLYN - there are some reapeated comments, work on that
+      ! This storm was found on the fly during this run and there was no previous vitals record for this system. The
+      ! information that will be used to identify the genesis location is the same exact info as the tracker-found
+      ! position for this time.
       gstm%gv_gen_date  = inp%bcc * 100000000 + inp%byy * 1000000 + inp%bmm * 10000 + inp%bdd * 100 + inp%bhh
       gstm%gv_gen_fhr   = ifcsthour
       gstm%gv_gen_lat   = intlatns
@@ -9789,6 +10377,8 @@ end program trakmain
     endif
 
     if (stcvtype(ist) == 'FOF') then
+      ! If this is a TC vitals-described storm (i.e., one that is numbered by JTWC or NHC), then leave the basinid as
+      ! is. Otherwise, we want to use the "basinid" location as a label to identify what type of run this is.
       if (trkrinfo%type == 'midlat') basinid = 'ML'
       if (trkrinfo%type == 'tcgen')  basinid = 'TG'
     endif
@@ -9836,6 +10426,7 @@ end program trakmain
 87  format (a2, ', ', a4, ', ', i10.10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1, '_', a3, ', ', i10.10, ', 03, ', &
             a4, ', ', i3.3, ', ', i5, ', ', i5, ', ', i3, ', ', i4, 9(', ', a1, ', ', i5, ', ', i5, ', ', i6))
 
+    ! flush the output stream so it actually writes
     flush(81)
     return
 
@@ -9872,6 +10463,11 @@ end program trakmain
 
     iovret = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Initially, set all "stm" components equal to the input "storm" components for this storm, then we will change the
+    ! specific components that we need to. Also, because the xlon value may be >360 due to GM wrapping, we need to mod
+    ! it to get it in a 0-360 framework.
+    !------------------------------------------------------------------------------------------------------------------
     stm = storm(ist)
     xlon = mod(xlon, 360.0)
     stm%tcv_center = 'AEAR'
@@ -9901,6 +10497,7 @@ end program trakmain
 21 format (a4, 1x, a3, 1x, a9, 1x, i8.8, 1x, i4.4, 1x, i3, a1, 1x, i4, a1, 1x, i3, 1x, i3, 3(1x, i4), 1x, &
            i2, 1x, i3, 1x, 4(i4, 1x), a1)
 
+    ! flush the output stream so it actually writes
     flush(65)
     return
 
@@ -9958,15 +10555,30 @@ end program trakmain
     integer         :: ist, iovret, istmspd, istmdir
 
     iovret = 0
+    ! Because the xlon value may be >360 due to GM wrapping, we need to mod it to get it in a 0-360 framework.
     xlon   = mod(xlon, 360.0)
+    ! Initially, set all "stm" components equal to the input "gstorm" components for this storm, then we will change
+    ! the specific components that we need to.
     gstm   = gstorm(ist)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If the "gv_gen_date" for this storm does not equal 99999, then that means that a vitals was read in for this
+    ! storm in subroutine read_gen_vitals, so be sure to use the genesis date, genesis latitude and genesis longitude
+    ! for the storm identifier at the beginning of the vitals record.
+    !------------------------------------------------------------------------------------------------------------------
     if (gstm%gv_gen_date /= 99999) then
       if (gstm%gv_gen_type /= 'FOF') then
+        ! If this is not a 'FOF' storm (found on the fly storm), then it must be a TC vitals storm, or a tropical cyclone,
+        ! and we don't want to create a vitals record for a tropical cyclone, since we will rely on reading them from the
+        ! TC Vitals database instead.
         return
       endif
 
     else
+      !----------------------------------------------------------------------------------------------------------------
+      ! This storm is new in this forecast/analysis and was found on the fly in the first time level for this run and
+      ! there was no previous vitals record for this system
+      !----------------------------------------------------------------------------------------------------------------
       gstm%gv_gen_date = inp%bcc * 100000000 + inp%byy * 1000000 + inp%bmm * 10000 + inp%bdd * 100 + inp%bhh
       gstm%gv_gen_fhr = 0
       gstm%gv_gen_lat = int(abs(xlat) * 10.0 + 0.5)
@@ -10022,6 +10634,7 @@ end program trakmain
 21 format (i10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1, '_', a3, 1x, i8, 1x, i4.4, 1x, i3.3, a1, 1x, i4.4, a1, &
            1x, i3, 1x, i3, 3(1x, i4), 1x, i2, 1x, i3, 4(1x, i4), 1x, a1)
 
+    ! flush the output stream so it actually writes
     flush(67)
     return
 
@@ -10273,9 +10886,16 @@ end program trakmain
 
     ileadtime = nint(fhreal(ifh) * 100.0)
     ifcsthour = ileadtime / 100
+    ! For updating the first guess, if Method 1 and Method 2 are both able to be done, give the following weights
+    ! to the 2 methods.
     data barneswt /0.50/, extrapwt /0.50/
 
-
+    !-------------------------------------------------------------------------------------------------------------------
+    ! METHOD 1: LINEAR EXTRAPOLATION
+    !
+    ! First, just do a simple linear extrapolation from the previous fix position through the current fix position. If
+    ! it's the first time (vt=0), then use the storm motion vector and storm speed information from the TC Vitals card.
+    !-------------------------------------------------------------------------------------------------------------------
     dtkm = dtk * 1000.0
     dt   = (fhreal(ifh+1) - fhreal(ifh)) * 3600.0
 
@@ -10306,10 +10926,21 @@ end program trakmain
         if (avglat < -89.5) avglat = -89.0
         cosfac    = cos(avglat * dtr)
         xdeg      = xdist / (dtkm * cosfac)
+        ! All other updated lons computed in this subroutine below lons that can exceed 360, so do not mod the
+        ! extraplon to be 0-360.
         extraplon = fixlon(ist, ifh) + xdeg
       endif
 
     else
+      !----------------------------------------------------------------------------------------------------------------
+      ! Do a simple linear extrapolation of the current motion of the storm. Follow a line from the fix position from
+      ! the last fix through the current fix and extrapolate out. To figure out the new latitude, just see how many deg
+      ! lat the storm moved since last time and add it to the current fix latitude. To calculate the new fix longitude,
+      ! though, we need to see how many deg lon the storm moved since the last time, convert that to the distance (km)
+      ! the storm travelled in the x-direction (at an average latitude between the current and previous latitudes), and
+      ! then add that distance on to the current longitude and convert that distance to the num of degrees the storm
+      ! has travelled in the x-direction (at an average latitude between the current and next(extrap) latitudes).
+      !----------------------------------------------------------------------------------------------------------------
       print *, ' '
       print *, 'xxxx get_next_ges, prev fix lon = ', fixlon(ist,ifh-1)
       print *, 'xxxx get_next_ges, curr fix lon = ', fixlon(ist,ifh)
@@ -10495,6 +11126,14 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! METHOD 2: Barnes analysis
+    !
+    ! Do a barnes analysis on the u & v components of the wind near the storm to get an average u & v, then advect the
+    ! storm according to the average wind vector obtained. The call to get_ij_bounds is needed in order to restrict the
+    ! number of grid points that are searched in the barnes subroutine. See Abstract from this subroutine for further
+    ! details.
+    !------------------------------------------------------------------------------------------------------------------
     npts = ceiling(ridlm / (dtk * ((dx+dy) / 2))) ! CAITLYN - should 2 be 2.0?
 
     call get_ij_bounds (npts, 0, ridlm, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, &
@@ -10526,7 +11165,8 @@ end program trakmain
       print *, '           jbeg = ', jbeg,            '  jend = ',    jend
     endif
 
-    ! skip some points for speed
+    ! For the  barnes analysis, we will want to speed things up for finer resolution grids. We can do this by skipping
+    ! some of the points in the  barnes analysis.
     if ((dx+dy) / 2.0 > 0.20) then
       bskip = 1
     else if ((dx+dy) / 2.0 > 0.10 .and. (dx+dy) / 2.0 <= 0.20) then
@@ -10573,6 +11213,9 @@ end program trakmain
                & jend,v(1,1,n), valid_pt, bskip, re, ri, vavg, icount, ctype, trkrinfo, ivret)
 
           if (iuret /= 0 .or. ivret /= 0) then
+            ! Barnes probably tried to access a pt outside the grid domain. So, reduce by half the distance from the
+            ! center of the farthest pt that barnes tries to access, exit this loop, and try it again with the
+            ! smaller re and ri.
             iuret = 96; ivret = 96
             reold = re
             riold = ri
@@ -10636,6 +11279,11 @@ end program trakmain
           print *, '     dt       = ', dt,              ' dtkm = ',    dtkm, ' cosfac = ', cosfac
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! This next if statement says that if we've had to reduce the size of the barnes analysis domain twice already,
+        ! then we've only done the analysis on a much smaller area, and this doesn't give us as good a picture of the
+        ! average winds in the area of the storm, so reduce the emphasis we place on the barnes method.
+        !--------------------------------------------------------------------------------------------------------------
         if (icut >= 2) barneswt = barneswt / 2.0
 
       else
@@ -10645,27 +11293,43 @@ end program trakmain
       icut = icut + 1
     enddo ! radmaxloop
 
-    ! do a weighted average
+    ! now do a weighted average of the positions obtained from the linear extrapolation and the barnes analysis methods
     if (extrap_flag == 'y' .and. barnes_flag == 'y') then
       wt_total = barneswt + extrapwt
       slatfg(ist, ifh+1) = (barneswt * barnlat + extrapwt * extraplat) / wt_total
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Note that in any of these statements just below, in order for any of these to be > 360, the original fixlon
+      ! must be close to 360, i.e., in the far eastern part of the grid, as opposed to being in the far western part
+      ! (e.g., 0-2 deg East or so). Conversely, for any of these to be < 0, the original fixlon must be close to 0,
+      ! i.e., in the far *western* part of the grid.
+      !----------------------------------------------------------------------------------------------------------------
       if (fixlon(ist,ifh) > 330.0) then
 
+        ! In this part of the IF, we will make sure that the two guess lons (barnlon and extraplon) are consistent as
+        ! both being 330+, to be consistent with the fixlon for this time.
         if (extraplon > 330.0 .and. barnlon > 330.0) then
           continue  ! All lons will be in the 300+ range, so for consistency, we're ok.
         elseif (extraplon > 330.0 .and. (barnlon >= 0.0 .and. barnlon < 30.0)) then
+          ! extraplon > 330, but barnlon is in the 0-30 range, so we need to convert the barnlon value to be 360+
           barnlon = barnlon + 360.0
         elseif (extraplon > 330.0 .and. barnlon < 0.0) then
+          ! extraplon > 330, but barnlon is < 0, so we need to convert the barnlon value to be positive
           barnlon = barnlon + 360.0
         elseif (barnlon > 330.0 .and. (extraplon >= 0.0 .and. extraplon < 30.0)) then
+          ! barnlon > 330, but extraplon is in the 0-30 range, so we need to convert the extraplon value to be 360+
           extraplon = extraplon + 360.0
         elseif (barnlon > 330.0 .and. extraplon < 0.0) then
+          ! barnlon > 330, but extraplon is < 0, so we need to convert the extraplon value to be positive
           extraplon = extraplon + 360.0
         endif
 
       elseif (fixlon(ist,ifh) >= 0.0 .and. fixlon(ist,ifh) < 30.0) then
-
+        !--------------------------------------------------------------------------------------------------------------
+        ! In this part of the ELSEIF, we will make sure that the two guess lons (barnlon and extraplon) are consistent
+        ! as both being in the reference of >360 since that is what the code below this is expecting with the
+        ! computation of slonfg for the next lead time.
+        !--------------------------------------------------------------------------------------------------------------
         if ((extraplon >= 0.0 .and. extraplon < 60.0) .and. (barnlon >= 0.0 .and. barnlon < 60.0)) then
           extraplon = extraplon + 360.0
           barnlon   = barnlon + 360.0
@@ -10689,6 +11353,8 @@ end program trakmain
         endif
 
       else
+        ! extraplon and barnlon do not need to be modified since there should be no way that a storm currently east of
+        ! 30E and west of 30W could make it to the Greenwich Mer in one forecast interval
         continue
       endif
 
@@ -10700,8 +11366,9 @@ end program trakmain
       slonfg(ist, ifh+1) = (barneswt * barnlon + extrapwt * extraplon) / wt_total
 
       if (slonfg(ist,ifh+1) > 360.0) then
+        ! If we've GM-wrapped past 360, check for what to do with a guess that goes beyond 360
         if (gm_wrap_flag == 'maxplus360') then
-          continue ! leave it as is, since the longitudes on this grid are also going to go past 360.
+          continue ! leave it as is, since the longitudes on this grid are also going to go past 360
         else
           slonfg(ist, ifh+1) = mod(slonfg(ist, ifh+1), 360.0)
         endif
@@ -10887,10 +11554,10 @@ end program trakmain
 
     call calcdist (fixlon(ist,ifh), fixlat(ist,ifh), slonfg(ist,ifh+1), slatfg(ist,ifh+1), dist, degrees)
 
-    distm   = dist * 1000.0   ! km to m
-    stmspd  = distm / dt      ! m to m/s
+    distm   = dist * 1000.0   ! convert distance km to m
+    stmspd  = distm / dt      ! get speed in m/s
 
-    stmspdkts = stmspd * conv_ms_knots        ! m/s to knots * 10
+    stmspdkts = stmspd * conv_ms_knots    ! convert again, m/s to knots * 10
     istmspd = int((stmspdkts * 10.0) + 0.5)
 
     xincr = slonfg(ist, ifh+1) - fixlon(ist, ifh)
@@ -10903,8 +11570,12 @@ end program trakmain
     endif
 
     if (xincr < 0.0 .and. slonfg(ist,ifh+1) < 30.0 .and. fixlon(ist,ifh) > 300.0) then
+      ! This means we have a storm moving east across the GM, and so we are subtracting, for example, something like
+      ! 0.5 - 359.5, so redo xincr, but add 360 to slonfg first
       xincr = (slonfg(ist, ifh+1) + 360.0) - fixlon(ist, ifh)
     else if (xincr > 300.0) then
+      ! This means we have a storm moving west across the GM, and so we are  subtracting, for example, something like
+      ! 359.5 - 0.5, so redo xincr, but add 360 to fixlon first
       xincr = slonfg(ist, ifh+1) - (fixlon(ist, ifh) + 360.0)
     endif
 
@@ -10990,6 +11661,11 @@ end program trakmain
     ileadtime = nint(fhreal(ifh) * 100.0)
     ifcsthour = ileadtime / 100
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Using the storm motion vector and storm translation speed as read from the TC Vitals card, do a simple linear
+    ! extrapolation from the current observed (TC Vitals) position and advect the storm to a position at the next
+    ! lead time.
+    !------------------------------------------------------------------------------------------------------------------
     iatret = 0
 
     dtkm = dtk * 1000.0
@@ -11211,6 +11887,13 @@ end program trakmain
 
     igrret  = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! PART 1: Define the maximum radius for which you'll search for the wind values, and then get the beginning and
+    ! ending i and j points for that sub-region to search. Define this maximum radius (radmax) in terms of km.
+    !
+    ! Roughly fix xcenlat to the grid point just poleward of xcenlat, and fix xcenlon to the grid point just eastward
+    ! of xcenlon.
+    !------------------------------------------------------------------------------------------------------------------
     if (xcenlat >= 0.0) then
       jlatfix = int((glatmax - xcenlat) / dy + 1.0)
     else
@@ -11293,6 +11976,7 @@ end program trakmain
       endif
     endif
 
+    ! calculate number of grid points to have surrounding the storm so that we are sure radmax is within those points
     cosfac  = cos(xcenlat * dtr)
     numipts = ceiling((radmax / (dtk * dx)) / cosfac)
     numjpts = ceiling(radmax / (dtk * dy))
@@ -11305,6 +11989,8 @@ end program trakmain
     if (ibeg < 1) then
 
       if (trkrinfo%gridtype == 'global') then
+        ! If wrapping past GM, there is code below in this getradii routine that can modify the indices appropriately; 
+        ! do nothing here
         continue
       else
 
@@ -11373,6 +12059,8 @@ end program trakmain
 
     if (iend > imax) then
       if (trkrinfo%gridtype == 'global') then
+        ! If wrapping past GM, there is code below in this getradii routine that can modify the indices appropriately;
+        ! do nothing here.
         continue
       else
 
@@ -11419,6 +12107,11 @@ end program trakmain
       print *, '          ilonfix = ', ilonfix, ' jlatfix = ', jlatfix
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! PART 2: Within the area of grid points defined by jbeg, jend, ibeg and iend, (1) calculate all the wind speeds at
+    ! each grid point, (2) calculate all of the distances from each grid point to the storm center, (3) assign each
+    ! grid point to one of the 4 quadrants (NE, NW, SE, SW), (4) in each quadrant, sort the points, based on windspeed.
+    !------------------------------------------------------------------------------------------------------------------
     jnum = jend - jbeg + 1
     inum = iend - ibeg + 1
     numalloc = jnum * inum + inum/2 + jnum/2
@@ -11457,6 +12150,8 @@ end program trakmain
       return
     endif
 
+    ! Calculate the distances and wind speeds at each grid point. If the distance is < radmax, include that wind info
+    ! in the appropriate quadinfo array location for that quadrant.
     quadct  = 0
     quadmax = 0.0
 
@@ -11612,6 +12307,8 @@ end program trakmain
               ' radius: ', f7.2, ' nm', 2x, ' vmag: ', f6.2, ' kts')
     endif
 
+    ! Now go through each quadrant and put the wind speed distance info into a temporary array (dtemp), sort that
+    ! array, and then scan through that array to find the various thresholds.
     do k = 1, 4 ! quadrantloop
 
       if (need_to_expand_r34(k) == 'y') then
@@ -11686,12 +12383,28 @@ end program trakmain
         cycle   ! quadrantloop
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Within this quadrant, go through the sorted array of wind magnitudes and compare those wind values against the
+      ! set wind thresholds to get the wind radii. The array has been sorted by distance from the storm center in order
+      ! of closest (ipoint=1) to farthest (ipoint=quadct(k)). We analyze these wind values by starting at the farthest
+      ! point and moving inward until we hit a point that has a wind value of at least 34-knot winds (17.5 m/s). When
+      ! we find that point, we interpolate between that point and the next farthest out point to get the distance that
+      ! would be for the exact 17.5 m/s value. We then continue searching through the wind values down closer to the
+      ! storm center to see if we can find values for the 50- and 64-knot winds.
+      !----------------------------------------------------------------------------------------------------------------
       iwindix = 1
       ipoint  = quadct(k) + 1
 
       do while (iwindix <= 3 .and. ipoint > 1) ! threshloop
         if (iwindix > 1) then
           if (first_time_thru_getradii) then
+            !----------------------------------------------------------------------------------------------------------
+            ! We are only doing the wind radii for 50 and 64 kts on the first time through subroutine getradii (we only
+            ! need to do the multiple call iterations for 34 kts).
+            ! Make sure vmax for this lead time exceeds the radii threshold being diagnosed. The check below avoids,
+            ! for example, reporting 50-kt wind radii when the max wind diagnosed was only 44 kts. This can happen
+            ! since the radius for searching for radii is larger than the radius for searching for the max wind.
+            !----------------------------------------------------------------------------------------------------------
             if (vmaxwind >= windthresh(iwindix)) then
               if (verb >= 3) then
                 continue
@@ -11735,7 +12448,11 @@ end program trakmain
 
             vradius(iwindix, k) = int(((quadinfo(k, isortix(ipoint), 2) * 0.5396) / 5.0) + 0.5) * 5
           else
-           
+            !----------------------------------------------------------------------------------------------------------
+            ! Interpolate between the 2 closest distances to each wind threshold to get "exact" distance to that wind
+            ! threshold radius, convert from km to nm, and then round to the nearest 5 nm (since TPC uses this
+            ! precision).
+            !----------------------------------------------------------------------------------------------------------
             exactdistkm = quadinfo(k, isortix(ipoint), 2) + ((quadinfo(k, isortix(ipoint), 1) - windthresh(iwindix)) / &
                          (quadinfo(k, isortix(ipoint), 1) - quadinfo(k, isortix(ipoint+1), 1)) * &
                         ((quadinfo(k, isortix(ipoint+1), 2) - quadinfo(k, isortix(ipoint), 2)) ) )
@@ -11749,6 +12466,14 @@ end program trakmain
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! The possibility exists, especially for coarse output grids, that there could be a jump over more than 1
+          ! wind- thresh category when going from 1 grid point to the next, so we need to account for this. For
+          ! example, if 1 point has vmag = 15 m/s and the next point closer in has vmag = 28 m/s, then between those 2
+          ! points you have the thresholds for gale force AND storm force winds, so to be safe, we actually need to add
+          ! 1 to ipoint and re-check the current point, if the wind value at that point is found to be greater than a
+          ! wind threshold value (which it has if you've gotten to this point in threshloop).
+          !------------------------------------------------------------------------------------------------------------
           ipoint  = ipoint + 1
           iwindix = iwindix + 1
         endif
@@ -11928,6 +12653,8 @@ end program trakmain
     character(len=1)   :: free_pass
     character(len=*)   :: gm_wrap_flag
 
+    ! Fill the rdist array, initially using an r34_bin_width of every 3 km, starting from 3 km from the center and
+    ! going out to 1059 km max radius (num_r34_bins = 353)
     igrret  = 0
 
     do i = 1, num_r34_bins
@@ -11938,7 +12665,20 @@ end program trakmain
       ix_radii_beg = 1
       ix_radii_end = int((radmax / r34_bin_width) + 0.5)
     else
+      !----------------------------------------------------------------------------------------------------------------
+      ! For any iterations beyond the first one (i.e., when n_r34_iter > 1), the value of ix_radii_beg will be passed
+      ! into this routine, and it will essentially hold the value of the ix_radii_end from the last call to getradii_2.
+      ! Then we need to simply calculate the new ix_radii_end for this current iteration, which will be for an
+      ! additional 50 km out.
+      !----------------------------------------------------------------------------------------------------------------
       ix_radii_end = ix_radii_beg + int((50.0 / r34_bin_width) + 0.5)
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now for this iteration through, we need to bump up the value of ix_radii_beg by 1. The reason is that, coming
+      ! into this routine, ix_radii_beg held the value of ix_radii_end from the last call to getradii_2. So in the
+      ! statement just above, we correctly use that as the point to start from when adding on an additional 50 km for
+      ! the search radius. However, we have already calculated the wind in the bins for that radius. So now we need to
+      ! move one further radius out to start computing the wind in the bins for additional radii extending outward.
+      !----------------------------------------------------------------------------------------------------------------
       ix_radii_beg = ix_radii_beg + 1
     endif
 
@@ -11952,6 +12692,16 @@ end program trakmain
       print *, '    radmax = ',       radmax
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! In this series of loops, we are computing the wind values that will be considered representative of the wind
+    ! value in each quadrant radial band. Work through each radius, and for each radius process each quadrant, and then
+    ! within each quadrant work your way around through the azimuths, one by one degree, in order to "generate" a large
+    ! sample of wind data points in each quadrant radial band.
+    ! Important note: The pctile_quad_bin_wind and fp_pctile_quad_bin_wind arrays are passed back & forth to the calling
+    ! routine with each iteration through this subroutine. This is done so that, for each iteration through as we
+    ! iteratively add 50 km on to our search radius for R34, we don't need to re-compute all the values in the radial
+    ! bins up to the point that we already computed on the last run through this subroutine.
+    !------------------------------------------------------------------------------------------------------------------
     bimct   =    0
     ifh99   =  -99
     ilevint = 1020
@@ -11993,6 +12743,8 @@ end program trakmain
         azimuth_ct = 0
         radii_wmag_bucket = -999.0
 
+        ! At this distance and in this quadrant, run through 90 points along an arc and evaluate the winds in this
+        ! quadrant bin.
         do iazim = 1, num_qtr_azim  ! qtr_azimloop1
           bear = (real(iquad - 1)) * 90.0 + real(iazim)
 
@@ -12000,6 +12752,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xcenlon > 330.0 .and. xcenlon <= 360.0) .and. targlon < 25.0) then
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
             if (xcenlon > 360.0 .and.(targlon >= 0.0 .and. targlon < 180.0)) then
@@ -12007,6 +12760,8 @@ end program trakmain
             endif
           endif
 
+          ! The 1020 in the ilevint variable in the calling arguments here is just a number/code to indicate to the
+          ! interpolation subroutine to process near-sfc winds
           call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, ilevint, 'u', &
                & xintrp_u, valid_pt, bimct, ifh99, ibiret1)
 
@@ -12055,9 +12810,21 @@ end program trakmain
           mean_radii_vt(iquad, idist)   = -999.0
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Now sort the values in radii_wmag_bucket so that we have them sorted into increasing order to then determine
+        ! the XXth percentile wind value for the radial band we just processed (where the value of "XX" for that
+        ! percentile wind value is input by the user in the radii_pctile variable in the input namelist).
+        !--------------------------------------------------------------------------------------------------------------
         isortix = 0
         call qsort (radii_wmag_bucket, isortix, num_qtr_azim)
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! If run on regional nests, there is a possibility that there could be -999 values in this bin if we run up
+        ! against a grid boundary in the call to bilin_int_uneven above. So run through the sorted array (qsort sorts
+        ! in increasing order, with the missing -999 values being at the beginning of the sorted index) and make note
+        ! of the first array position that has valid data. Also count the number of data points in the bin with valid
+        ! wind data.
+        !--------------------------------------------------------------------------------------------------------------
         first_valid_ix = -99
         valid_wind_ct  = 0
         do n = 1, num_qtr_azim ! find_valid_wind_loop
@@ -12069,6 +12836,27 @@ end program trakmain
           endif
         enddo  ! find_valid_wind_loop
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! In this next section, we are determining the wind value in representative of the radial bin, using the
+        ! radii_percentile that the user entered in the namelist as our guideline. I.e., if the user set
+        ! radii_percentile = 95% in the namelist, then we look through all of those 90 interpolated wind values that we
+        ! just created above and we select the 95th percentile wind. And because that 95th percentile may actually fall
+        ! in between two points, there is some interpolation that we have to do (described more below).
+        !
+        ! Only continue with the radii calculation for this quadrant if ALL of the points in this radial band have
+        ! valid wind data.
+        !
+        ! Interpolate to get the value at the exact threshold that was requested.
+        !
+        ! radii_pctile = Percentile wind threshold value in a radial bin that the user has requested.
+        ! target_slot = The spot in the order of wind values that will be used for the percentile wind value. For
+        ! example, if the user wants the 95th percentile wind value, we have (assuming no points lost to running into a
+        ! regional boundary) 0.95 * 90 (because 90 points in each quadrant radial band) = 85.5 and point 85.5 in the
+        ! array is our target_slot, meaning that we have to interpolate in between sorted array positions 85 and 86 to
+        ! get our representative 95th percentile wind value for this radial band.
+        ! target_ix = The INTEGER array index that is actually *below* the REAL value of target_slot, and then for the
+        ! interpolation we bracket this with target_ix+1 as the upper value
+        !--------------------------------------------------------------------------------------------------------------
         if (radii_pctile > 0.0 .and. radii_pctile <= 100.0) then
           continue
         else
@@ -12083,16 +12871,23 @@ end program trakmain
 
         target_slot = (radii_pctile / 100.0) * real(valid_wind_ct)
 
+        ! The first line in this next IF statement ensures that we will only continue the processing of this radial bin
+        ! if the number of valid points in a radial bin is equal to the expected maximum number of points for that bin.
         if (valid_wind_ct == num_qtr_azim) then
 
           if (int(target_slot) == num_qtr_azim) then
+            ! Just use the value at the highest array position. This would only happen if radii_pctile = 100% and so
+            ! that is unlikely that someone will choose 100%.
             pctile_quad_bin_wind(iquad, idist) = radii_wmag_bucket(isortix(num_qtr_azim))
           elseif (nint(target_slot + 0.49) == first_valid_ix) then
+            ! This would be a weird case, but I have to code for it. It would be if someone selected a
+            ! radii_pctile = 1%.
             pctile_quad_bin_wind(iquad,idist) = radii_wmag_bucket(isortix(first_valid_ix))
           else
             target_ix        = int(target_slot)
             target_remainder = mod(target_slot, 1.0)
             if (target_remainder == 0.0) then
+              ! This is for a case where the requested percentile exactly hits a whole number for the target slot.
               pctile_quad_bin_wind(iquad,idist) = radii_wmag_bucket(isortix(target_ix))
             else
               one_minus_target_remainder = 1.0 - target_remainder
@@ -12113,18 +12908,29 @@ end program trakmain
           pctile_quad_bin_wind(iquad, idist) = -999.0
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Now also compute the "free pass" wind value that can be used later on in this subroutine such that, if we
+        ! have found an R34 at a given radius, *AND* the XXth percentile wind at this same radius is also > 34 kts,
+        ! then we get a "free pass" and can skip over the Holland profile checking since we will assume that we have a
+        ! high enough concentration of winds exceeding 34 kts in this bin.
+        !--------------------------------------------------------------------------------------------------------------
         free_pass_slot = (radii_free_pass_pctile / 100.0) * real(valid_wind_ct)
 
         if (valid_wind_ct == num_qtr_azim) then
 
           if (int(free_pass_slot) == num_qtr_azim) then
+            ! Just use the value at the highest array position. This would only happen if radii_free_pass_pctile = 100%
+            ! and so that is unlikely that someone will choose 100%.
             fp_pctile_quad_bin_wind(iquad, idist) = radii_wmag_bucket(isortix(num_qtr_azim))
           elseif (nint(free_pass_slot + 0.49) == first_valid_ix) then
+            ! This would be a weird case, but I have to code for it. It would be if someone selected a
+            ! radii_free_pass_pctile = 1%.
             fp_pctile_quad_bin_wind(iquad, idist) = radii_wmag_bucket(isortix(first_valid_ix))
           else
             free_pass_ix        = int(free_pass_slot)
             free_pass_remainder = mod(free_pass_slot, 1.0)
             if (free_pass_remainder == 0.0) then
+              ! This is for a case where the requested percentile exactly hits a whole number for the free_pass slot.
               fp_pctile_quad_bin_wind(iquad, idist) = radii_wmag_bucket(isortix(free_pass_ix))
             else
               one_minus_free_pass_remainder = 1.0 - free_pass_remainder
@@ -12171,6 +12977,13 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now go through the array of pctile_quad_bin_wind values and compare those wind values against the set wind
+    ! thresholds to get the wind radii. We analyze these wind values by starting at the farthest point (ix_radii_end)
+    ! and moving inward until we hit a point that has a wind value of at least 34-knot winds (17.5 m/s). We then
+    ! continue searching through the wind values increasingly closer to the storm center to see if we can find values
+    ! for the 50- and 64-knot winds.
+    !------------------------------------------------------------------------------------------------------------------
     if (xcenlat >= 0.0) then
       hemisphere = 1.0
     else
@@ -12189,9 +13002,18 @@ end program trakmain
       iwindix = 1
       idist   = ix_radii_end + 1
 
+      ! Within this quadrant, go through the 3 different windix values to search for the values of R34, R50 and R64.
+      ! iwindix=1: R34, iwindix=2: R50, iwindix=3: R64
       do while (iwindix <= 3 .and. idist > 1) ! threshloop
         if (iwindix > 1) then
           if (first_time_thru_getradii) then
+            !----------------------------------------------------------------------------------------------------------
+            ! We are only doing the wind radii for 50 and 64 kts on the first time through subroutine getradii_2 (we
+            ! only need to do the multiple call iterations for 34 kts).
+            ! Make sure vmax for this lead time exceeds the radii threshold being diagnosed. The check below avoids,
+            ! for example, reporting 50-kt wind radii when the max wind diagnosed was only 44 kts. This can happen
+            ! since the radius for searching for radii is larger than the radius for searching for the max wind.
+            !----------------------------------------------------------------------------------------------------------
             if (vmaxwind >= windthresh(iwindix)) then
 
               if (verb >= 3) then
@@ -12227,17 +13049,50 @@ end program trakmain
         print *, ' '
 
         if (pctile_quad_bin_wind(iquad,idist) < windthresh(iwindix)) then
+          ! For this wind threshold (determined by the value of iwindix: 1=R34, 2=R50, 3=R64), the pctile_quad_bin_wind
+          ! does NOT meet or exceed the wind speed threshold, so just cycle through to the next iteration of threshloop.
           cycle   ! threshloop
         else
 
+          !------------------------------------------------------------------------------------------------------------
+          ! We are at the index for R34 (iwindix=1) and we have detected a pctile bin wind value >= 34 kts (17.5 m/s),
+          ! but we first need to do additional checking to ensure this wind value is part of the mean circulation and
+          ! not just a wind gust from an isolated convective cell. We will check both the 4-quadrant mean cyclonic Vt
+          ! and also the mean cyclonic Vt for just this quadrant; the check for only 1 of the 2 needs to pass. Check #2
+          ! has a more stringent threshold (65% vs the 50% from Check #1) with the idea that the axisymmetric,
+          ! 4-quadrant average check from Check #1 failed, and this may be due to the model storm having asymmetric
+          ! structure. So we consider that one quadrant may have a larger R34 and we check for just this quadrant but
+          ! require that it has a higher bar to get over, with that 65% threshold.
+          !
+          ! Check #1: If r34c is the candidate selected R34 distance, then the mean cyclonic Vt must be at least 50%
+          ! of the Holland profile value over a range of distances from r34c - X, where X ~ 10% of the r34c value
+          ! (e.g., if r34c was found at 190 km, then that threshold would have to be met from ~171-190 km).
+          !
+          ! Check #2: Very similar to Check #1, but in this one the check is only done in the quadrant in question,
+          ! however the threshold is higher: the mean cyclonic Vt must be at least 65% of the Holland profile value
+          ! instead of the 50% that was used in Check #1.
+          ! 
+          ! NOTE: We do NOT do this checking for R50 or R64, only for R34 (i.e., when iwindix = 1).
+          !
+          ! Do a first "free-pass" check, whereby if this check is satisfied, then we can skip the more detailed checks.
+          ! In this first one, we check to see if the mean Vt in the diagnosed R34 bin in this quadrant is >= 34 kts,
+          ! and if it is, then we are done, and no further checking is required for this bin.
+          !------------------------------------------------------------------------------------------------------------
           if (iwindix == 1) then
             free_pass = 'n'
 
             if ((hemisphere * mean_radii_vt(iquad,idist)) >= 17.5) then
+              ! If the mean cyclonic Vt in this bin >= 17.5 m/s, then give a free pass
               free_pass = 'y'
             endif
 
             if (fp_pctile_quad_bin_wind(iquad,idist) >= 17.5) then
+              !--------------------------------------------------------------------------------------------------------
+              ! If the free-pass percentile wind, using the value for radii_free_pass_pctile entered by the user in the
+              ! namelist, exceeds 17.5 m/s, then give a free pass. For example, if the user enters 67.0 (for 67%), then
+              ! if the 67th percentile wind value in this radial band exceeds 17.5 m/s (i.e., if at least roughly 1/3
+              ! of the wind values in this band exceed 17.5 m/s), then give a free pass.
+              !--------------------------------------------------------------------------------------------------------
               free_pass = 'y'
             endif
 
@@ -12248,12 +13103,17 @@ end program trakmain
               b = 2.0
 
               if (axi_rmw <= 0.0) then
+                ! If axi_rmw is undefined, then set holl_rmw to some middle-of-the-road value just so that we can get a
+                ! wind value from the Holland wind profile equation.
                 holl_rmw = 50.0
               else
+                ! The value of axi_rmw is defined and valid, so set the value of RMW to be used for the Holland wind
+                ! profile (holl_rmw) to that axi_rmw value.
                 holl_rmw = axi_rmw
               endif
 
               v_holland = vmaxwind * sqrt((holl_rmw / rdist(idist))**b * exp(1 - ((rdist(idist) / holl_rmw)**(-1.0*b))))
+              ! Set check_dist to be the value that a user enters in the namelist. The units for this are in km.
               check_dist = radii_width_thresh
               num_bins_to_check = nint(check_dist / r34_bin_width)
 
@@ -12319,8 +13179,10 @@ end program trakmain
               else
                 pct_holland_good_1 = 0.0
               endif
-                
+
               if (pct_holland_good_1 >= 0.60) then
+                ! This means that at least 60% of the radial bins near this candidate R34 had a mean Vt value of at
+                ! least 50% of the Holland profile value for that radius.
                 holland_good_1_flag = 'y'
                 if (verb >= 3) then
                   print *, ' '
@@ -12337,6 +13199,11 @@ end program trakmain
                 endif
               endif
 
+              !--------------------------------------------------------------------------------------------------------
+              ! If the result from the first check of the 4-quadrant mean Vt was good (i.e.,holland_good_1_flag == 'y'),
+              ! then skip thru this. Otherwise, now do a check for just this quadrant, but with a more stringent
+              ! threshold criterion.
+              !--------------------------------------------------------------------------------------------------------
               holland_good_2_flag = 'n'
 
               if (holland_good_1_flag == 'y') then
@@ -12390,6 +13257,8 @@ end program trakmain
                 endif
 
                 if (pct_holland_good_2 >= 0.60) then
+                  ! This means that at least 60% of the radial bins near this candidate R34 -- IN THIS QUADRANT -- had
+                  ! a mean Vt value of at least 65% of the Holland profile value for that radius.
                   holland_good_2_flag = 'y'
                   if (verb >= 3) then
                     print *, ' '
@@ -12408,6 +13277,8 @@ end program trakmain
             endif
           endif
 
+          ! Check to see if a radii was found at the distance with the last array index. If so, then we will print a
+          ! message indicating that is the case, and then this subroutine will be called again.
           if (iwindix > 1 .or. (iwindix == 1 .and. (holland_good_1_flag == 'y' .or. holland_good_2_flag == 'y'))) then
             if (idist == ix_radii_end) then
 
@@ -12421,7 +13292,7 @@ end program trakmain
                 print *, '!!! Currently, radmax (km) = ', radmax
                 print *, '!!! iwindix = ', iwindix, ' quadrant = ', iquad
               endif
-                
+
               vradius(iwindix, iquad) = nint(radmax * 0.5396)
             else
 
@@ -12436,6 +13307,16 @@ end program trakmain
               endif
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! Check for invalid R34 values due to model storm approaching the boundary of a regional grid.
+            !
+            ! Check to see if the value of pctile_quad_bin_wind in the very next bin radially outward from the one
+            ! where we just found R34 has an undefined value of -999. If so, this is likely due to the fact that we are
+            ! on a regional grid and if the R34 was found at this radius, then it's an indication that the storm is
+            ! pushing up against the boundary and the real R34 may actually exist beyond the grid boundary. If this is
+            ! the case, then set the radii for ALL thresholds (34, 50, 64) in this quadrant to 0 (as missing).
+            ! Only do this check for regional grids
+            !----------------------------------------------------------------------------------------------------------
             if (trkrinfo%gridtype == 'regional') then
               if (idist <  ix_radii_end) then
                 if (pctile_quad_bin_wind(iquad,idist+1) < -998.0) then
@@ -12467,6 +13348,14 @@ end program trakmain
               endif
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! The possibility exists, especially for coarse output grids, that there could be a jump over more than 1
+            ! wind-thresh category when going from 1 grid point to the next, so we need to account for this. For
+            ! example, if 1 point has vmag = 15 m/s and the next point closer in has vmag = 28 m/s, then between those
+            ! 2 points you have the thresholds for gale force AND storm force winds, so to be safe, we actually need to
+            ! add 1 to ipoint and re-check the current point, if the wind value at that point is found to be greater
+            ! than a wind threshold value (which it has if you've gotten to this point in threshloop).
+            !----------------------------------------------------------------------------------------------------------
             idist   = idist + 1
             iwindix = iwindix + 1
           endif
@@ -12534,6 +13423,8 @@ end program trakmain
       radmaxwind = 500.0
     endif
 
+    ! roughly fix xcenlat to the grid point just poleward of xcenlat, and fix xcenlon to the grid point just
+    ! eastward of xcenlon
     if (xcenlat >= 0.0) then
       jlatfix = int((glatmax - xcenlat) / dy + 1.0)
     else
@@ -12597,6 +13488,8 @@ end program trakmain
       endif
     endif
 
+    ! calculate number of grid points to have surrounding the storm so that we are sure radmaxwind is within
+    ! those points
     cosfac  = cos(xcenlat * dtr)
     numipts = ceiling((radmaxwind / (dtk * dx)) / cosfac)
     numjpts = ceiling(radmaxwind / (dtk * dy))
@@ -12622,6 +13515,9 @@ end program trakmain
     endif
 
     if (jbeg < 1) then
+      ! Storm is close to southern boundary of grid. Set jbeg=1, but check to make sure that this point is still south
+      ! of jlatfix. If it's not, then this makes no sense, as it would mean that the center of the storm is off
+      ! the grid
       jbeg_hold = jbeg
       jbeg      = 1
       if (jbeg >= jlatfix) then
@@ -12659,6 +13555,9 @@ end program trakmain
     endif
 
     if (jend > jmax) then
+      ! Storm is close to northern boundary of grid. Set jend=jmax, but check to make sure that this point is still
+      ! north of jlatfix. If it's not, then this makes no sense, as it would mean that the center of the storm is
+      ! off the grid
       jend_hold = jend
       jend      = jmax
       if (jend <= jlatfix) then
@@ -12882,6 +13781,8 @@ end program trakmain
     axisymet_rmw_dist = -999.0
     axisymet_rmw_val  = -999.0
 
+    ! This rdistloop goes through at least one list of radii to search over (starting with the rdist1 array), and
+    ! perhaps up to four lists (ending with the rdist4 array), depending on whether or not an acceptable ARMW is found.
     do while (got_good_armw == 'n' .and. rdist_ix < 5) ! rdistloop
       azim_ave_wmag = -999.0
 
@@ -12902,6 +13803,7 @@ end program trakmain
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xcenlon > 330.0 .and. xcenlon <= 360.0) .and. targlon < 25.0) then
+              ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
               targlon = targlon + 360.0
             endif
             if (xcenlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -12943,6 +13845,7 @@ end program trakmain
  105    format (1x, 5x, '  ix = ', i3, ' radius = ', f7.2, ' (km)    azim_ave_wmag = ', f7.2, ' (m/s)')
       endif
 
+      ! go through the array of azimuthally averaged wind values and find the max value
       maxrmw_wmag = -999.0
       maxrmw_dist = -999.0
       maxrmw_ix   =   -999
@@ -12962,11 +13865,22 @@ end program trakmain
         print *, '  maxrmw_ix   = ', maxrmw_ix
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now go through the array of azimuthally averaged wind values and ensure that the integral of dV/dr > 0 for
+      ! radii leading up to maxrmw_dist and the integral of dV/dr < 0 for radii extending outward from maxrmw_dist. For
+      ! this analysis, look at distances up to +/- 50 km from maxrmw_dist.
+      !----------------------------------------------------------------------------------------------------------------
       perform_rising_dvdr = 'y'
       integ_dvdr_thresh   = 0.10
 
       ! find the starting index for the search
       if (maxrmw_ix < 18) then
+        !--------------------------------------------------------------------------------------------------------------
+        ! maxrmw_ix is close to the low range of the rdist array. If less than 5, it is possible that this model might
+        ! not have a wind profile for this case that increases from a weaker value out to the RMW, so we will assume
+        ! that is the case and set a flag to not do the check of the integral of dV/dr and just give the test value a
+        ! nominal passing value so it will pass the check further below here.
+        !--------------------------------------------------------------------------------------------------------------
         if (maxrmw_ix < 5) then
           idv_start           = maxrmw_ix  ! needed for declining_sum loop
           perform_rising_dvdr = 'n'
@@ -12980,9 +13894,16 @@ end program trakmain
 
       ! find the ending index for the search
       if (maxrmw_ix > (numdist-17)) then
+        !--------------------------------------------------------------------------------------------------------------
+        ! maxrmw_ix is close to the upper range of the rdist array. If it is any closer than numdist-5 to the upper
+        ! range, then we will not have enough data points to do a proper integral of dV/dR, so we will cycle rdistloop
+        ! in order to start the scan all over again with the next set of rdist values.
+        !--------------------------------------------------------------------------------------------------------------
         if (maxrmw_ix > (numdist-5)) then
           if (rdist_ix < 4) then
 
+            ! Bump up rdist_ix by 1 in order to use the next set of rdist array values in the next loop
+            ! through rdistloop
             if (verb .ge. 3) then
               print *, ' '
               print *, ' In get_axisymet_rmw, the selected maxrmw_ix'
@@ -13011,12 +13932,16 @@ end program trakmain
             return
           endif
         else
+          ! The maxrmw_ix index is somewhere between numdist-17 and numdist-5, so we can calculate the integral of
+          ! dV/dr, and just use the max (numdist) as our ending index.
           idv_end = numdist
         endif
       else
         idv_end = maxrmw_ix + 17
       endif
 
+      ! Compute the integral of dV/dr on the rising part of the wind profile curve (leading up to the RMW). Start at
+      ! idv_start and go up to the index for where we found the maxrmw.
       if (perform_rising_dvdr == 'y') then
         rising_sum_dvdr    = 0.0
         rising_sum_dvdr_ct = 0
@@ -13029,6 +13954,8 @@ end program trakmain
         enddo
       endif
 
+      ! Compute the integral of dV/dr on the declining part of the wind profile curve (extending outward from the RMW).
+      ! Start at the index for where we found the maxrmw and go out to the index we calculated for idv_end.
       declining_sum_dvdr    = 0.0
       declining_sum_dvdr_ct = 0
 
@@ -13040,6 +13967,11 @@ end program trakmain
         endif
       enddo
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now check to see if rising_sum_dvdr (i.e., the integral of dV/dr on the rising side of the curve) is at least
+      ! equal to the value of integ_dvdr_thresh and also to see if declining_sum_dvdr (the integral of dV/dr on the
+      ! declining side of the curve) is at least equal to the negative value of integ_dvdr_thresh or lower.
+      !----------------------------------------------------------------------------------------------------------------
       if (rising_sum_dvdr >= integ_dvdr_thresh .and. declining_sum_dvdr <= (-1.0 * integ_dvdr_thresh)) then
         got_good_armw     = 'y'
         axisymet_rmw_dist = rdist(maxrmw_ix)
@@ -13171,6 +14103,13 @@ end program trakmain
                      '  Min   ', 'NOT USED', '  Min   ', '  Min   ', '  Min   ', &
                      '  Min   ', '  Max   ', '  Max   ', '  Max   ', '  Max   '/
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! We need to judge whether each parameter position is reasonable, so we'll check to make sure that the dist from
+    ! each parameter's estimate to the guess position is less than a maximum allowable error. If it's the first
+    ! forecast time, use the initial error max (defined as errinit in error_parms) as errmax. Otherwise, the max error
+    ! criterion is that the distance error must not exceed 3 times the previous forecast time's standard deviation
+    ! (after a small growth factor has been applied).
+    !------------------------------------------------------------------------------------------------------------------
     ifret = 0
     if (ifh == 1) then
       if (atcfname == 'GFSO' .or. atcfname == 'MRFO' .or. atcfname == 'GDAS' .or. atcfname == 'GFDT' .or. &
@@ -13235,6 +14174,12 @@ end program trakmain
     gt345_ct   = 0
     lt15_ct    = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! For each parm, check to see if the estimated center is within distance errmax of the guess center. If it's within
+    ! errmax, then use that parm for locating the center. If it's NOT within errmax, but IS within errpmax, then we
+    ! still use this in calculating the standard deviation of the parameters for helping to determine the errmax for
+    ! the next forecast hour.
+    !------------------------------------------------------------------------------------------------------------------
     do ip = 1, maxtp
 
       if (ip == 4 .or. ip == 6) then  ! parms 4 & 6 not defined.
@@ -13270,6 +14215,8 @@ end program trakmain
 
     if (iclose > 0) then
       if (gt345_ct > 0 .and. lt15_ct > 0) then
+        ! We have some parms left of the GM and some to the right, so we will add (360*lt15_ct) to the sum of the
+        ! lons (clonsum)
         clon_fguess = (clonsum + (360.0 * real(lt15_ct))) / real(iclose)
       else
         clon_fguess = clonsum / real(iclose)
@@ -13280,6 +14227,7 @@ end program trakmain
       clat_fguess = clatsum / real(iclose)
     endif
 
+    ! print out a table listing of the locations of the fixes for the individual parameters
     if (verb .ge. 3) then
       print *, ' '
       print *, '--------------------------------------------------'
@@ -13373,6 +14321,12 @@ end program trakmain
 95  format (1x, a33, 1x, i4, ':', i2.2, a2, a4, a1, a9)
 97  format (' Gen ID (if available): ', i10.10, '_F', i3.3, '_', i3.3, a1, '_', i4.4, a1, '_', a3)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If number of parameter centers close enough (iclose) > 0, then calculate the center by taking an average of all
+    ! the parameter center positions that are within distance errmax from the guess position (geslon,geslat). Get a
+    ! first-guess mean position, and then re-calculate the position estimate by giving more weight to those positions
+    ! that are closer to the first-guess mean position.
+    !------------------------------------------------------------------------------------------------------------------
     dist_from_mean = 0.0
 
     if (iclose > 0.0) then
@@ -13442,6 +14396,14 @@ end program trakmain
         return
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now re-calculate the mean position by giving more weight to those position estimates that are closer to the
+      ! first guess mean position. Note that if stderr_close < 5.0, we force it to be 5.0; we do this to avoid getting
+      ! very large numbers for devia values, which could make the weights (wtpos) equal to 0. This occurred during
+      ! testing when only 2 parameters were valid, and so, of course, the standard deviation from the mean of those 2
+      ! parameters was close to 0, which gave devia values around 6000, and then wtpos values of 0, leading to a divide
+      ! by 0 crash later on in subroutine wtavrg.
+      !----------------------------------------------------------------------------------------------------------------
       kprm = 0
 
       if (stderr_close > 0.0) then
@@ -13477,6 +14439,12 @@ end program trakmain
                 f8.5, 2x, 4(2x, f7.2))
 
       else
+        !--------------------------------------------------------------------------------------------------------------
+        ! This next if statement is for the case in which only 1 parameter is valid, for which the 
+        ! stderr_close will = 0 (obviously), but as long as we have 1 valid parameter, continue processing, and set the
+        ! weight for that parm = 1. The else portion is for the case in which stderr_close = 0 with NO parms being
+        ! close.
+        !--------------------------------------------------------------------------------------------------------------
         if (iclose == 1) then
           do ip = 1, maxtp
             if (calcparm(ip,ist)) then
@@ -13576,6 +14544,11 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now calculate the average error of all the parms that are within a radius errpmax (defined in error_parms,
+    ! ~600km), and the std dev of those errors. This standard deviation will be used in calculating the maximum
+    ! allowable error for the next forecast time.
+    !------------------------------------------------------------------------------------------------------------------
     if (itot4next > 0 .and. ifret /= 95) then
       trkerr_avg = trkerr_avg / real(itot4next)
       call stdevcalc (errdist, maxtp, use4next, trkerr_avg, stderr(ist,ifh), isret)
@@ -13716,6 +14689,8 @@ end program trakmain
     enddo
 
     if (gt345_ct > 0 .and. lt15_ct > 0) then
+      ! We have some lons that are in the 300's (west of the GM), and some that are in the 0's (east of the GM). We
+      ! need to standardize these if we want to get a meaningful average.
       do i = 1, kmax
         if (xlon(i) < 15.0) then
           xlon(i) = xlon(i) + 360.0
@@ -13773,6 +14748,13 @@ end program trakmain
     if (ict > 0) then
       stdx = sqrt(stdx / real(ict))
       if (stdx == 0.0) then
+        !--------------------------------------------------------------------------------------------------------------
+        ! This can happen if you have just 2 points; The mean position will be exactly in the middle of the 2 points
+        ! and so the standard deviation around that mean point will be 0. And since the calling routine will quit if
+        ! the returned standard deviation is 0, we must force it to be 1 so the program continues running.
+        ! Theoretically, it could also happen with 3 or more points, but the likelihood of the distances working out to
+        ! exactly equidistant for 3 points is not that good.
+        !--------------------------------------------------------------------------------------------------------------
         stdx = 1.0
       endif
     else
@@ -13928,8 +14910,17 @@ end program trakmain
          & uvgeslon, uvgeslat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igibret)
 
     if (grid_minlon > 330.0 .and. grid_maxlon < 30.0) then
+      !----------------------------------------------------------------------------------------------------------------
+      ! Our grid is straddling over the GM. This can happen either with a global grid or with a regional grid. How can
+      ! it happen for a global grid? Well, for the case in which this routine is called from subroutine get_uv_center,
+      ! where a smaller subgrid of data is passed in, and that smaller subgrid may straddle the GM. Anyway, we need a
+      ! workaround. This workaround will put the minimum longitude in terms of a negative number, e.g., as opposed to
+      ! being say, 354, it will be -6. You can then leave the grid_maxlon as is.
+      !----------------------------------------------------------------------------------------------------------------
       temp_grid_minlon = grid_minlon - 360.0
       if (uvgeslon > 330.0) then
+        ! If our grid is straddling the GM and we have adjusted the grid_minlon to be a negative number, then we also
+        ! need to check on the guesslon and adjust it if it is also to west of the GM.
         temp_guesslon = uvgeslon - 360.0
       else
         temp_guesslon = uvgeslon
@@ -13945,6 +14936,8 @@ end program trakmain
       grid_buffer = 0.0
     endif
 
+    ! For the wind circulation analysis, we will want to speed things up for finer resolution grids. We can do this by
+    ! skipping some of the points in the wind circulation analysis.
     if (dell > 0.20) then
       bskip1 = 1
       bskip2 = 1
@@ -13987,6 +14980,14 @@ end program trakmain
         iix   = iix + 1
         rlont = temp_guesslon + dell * real(i)
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! If any points in the search grid would extend beyond the grid boundaries, then check and see if this is
+        ! global grid. If it is, and the extension occurred in the i-direction, then adjust the longitude to allow for
+        ! grid wrapping. If it is a regional grid, then just cycle the iloop. In previous versions of the tracker, we
+        ! would exit with an error message, but doing it this way allows us to continue tracking some systems that may
+        ! be close to the grid boundary. Also, remember to factor in the grid_buffer discussed in the doc block above
+        ! for this subroutine.
+        !--------------------------------------------------------------------------------------------------------------
         if (rlont >= (grid_maxlon + dx - grid_buffer)) then
           if (trkrinfo%gridtype == 'global') then
             rlont = rlont - 360.0  ! GM-wrapped for the full, regular, global grid
@@ -14007,6 +15008,19 @@ end program trakmain
           cycle ! iloop1
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Make sure that the point being investigated here as a potential center has valid data at that point. That is,
+        ! for some hires regional grids that have been rotated/converted from a non-latlon grid to a latlon grid, there
+        ! can be locations within the (i,j) space that do not have valid data at them. It makes no sense to consider a
+        ! point such as this as a potential center.
+        ! There is another simpler case here that we are watching out for. This is simply the case, again for model
+        ! data where we only have the innermost nest. Depending on what we choose for the variable "rads" above, with
+        ! the way that "npts" is defined for these iloops and jloops that we're in, we may be searching over points
+        ! that are simply well off the grid. Therefore, it is critical to run through this check_valid_point subroutine
+        ! to make sure that we're not going to inadvertantly be performing an analysis at one of these "off-grid"
+        ! points. So, if the return code from check_valid_point comes back non-zero, simply cycle iloop and go to the
+        ! next point.
+        !--------------------------------------------------------------------------------------------------------------
         call check_valid_point (imax, jmax, dx, dy, u(1,1,nlev), maxmin, valid_pt, rlont, rlatt, grid_maxlat, &
              & grid_minlat, grid_maxlon, temp_grid_minlon, trkrinfo, icvpret)
 
@@ -14021,6 +15035,11 @@ end program trakmain
         call calcdist (rlont, rlatt, temp_guesslon, uvgeslat, dist, degrees)
         if (dist .gt. rads) cycle ! iloop1
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Now go through each radius, starting from inner and working to outer, and at each one, go around through all
+        ! of the 24 discrete azimuths, starting at 7.5 and adding 15 degrees clockwise each time, all the way up
+        ! through 352.5
+        !--------------------------------------------------------------------------------------------------------------
         vt_mean = 0.0
         vt      = 0.0
         vr      = 0.0
@@ -14030,6 +15049,8 @@ end program trakmain
         do idist = 1, numdist ! radiusloop1
           azimuth_ct    = 0
           vt_azim_sum   = 0.0
+          ! Compute the length of a 1/numazim arc at this radius, and be sure to multiply by 1000 to convert from
+          ! km to m for use in computing the circulation
           circumference = 2.0 * pi * rdist(idist) * 1000.0
           arclength     = circumference / real(numazim)
 
@@ -14040,13 +15061,16 @@ end program trakmain
 
             if (gm_wrap_flag == 'maxplus360') then
               if ((rlont > 330.0 .and. rlont <= 360.0) .and. targlon < 25.0) then
-                  targlon = targlon + 360.0
+                ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
+                targlon = targlon + 360.0
               endif
               if (rlont > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
                 targlon = targlon + 360.0
               endif
             endif
 
+            ! These calls to bilin_int_uneven pass a variable "level" that contains the vertical level to pull the wind
+            ! data from, either 850, 700 or surface (which will be indicated by a value/code of 1020).
             call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, 'u', &
                  & xintrp_u, valid_pt, bimct, ifh, ibiret1)
 
@@ -14067,6 +15091,8 @@ end program trakmain
           enddo ! azimloop1
 
           if (azimuth_ct > 0) then
+            ! Add the value for the circulation in this radial band (circul_band(idist)) to the "solid disk" 
+            ! circulation total. Also, compute azimuthally-averaged Vt at this distance
             circul_disk = circul_disk + circul_band(idist)
             vt_mean(idist) = vt_azim_sum / real(azimuth_ct)
           else
@@ -14132,6 +15158,8 @@ end program trakmain
 63  format (' After first run, Wind Circulation (SHEM) ctlon= ',f8.3,'E  (0-360E lon): ',f8.3,'E  ',f8.3, &
            'W  ctlat = ', f8.3, '  xmin_circul_disk = ', f15.1)
 
+    ! If nhalf is specified as 0, then don't go through any more iterations of this routine, just exit with the value
+    ! that we already got the first time through the loop, above.
     if (dell > 0.50) then
       nhalf = 4
     else if (dell > 0.20 .and. dell <= 0.50) then
@@ -14153,6 +15181,11 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If on our first pass through, we were dealing with a regional grid that straddled the GM, then it becomes (for
+    ! now) too much of a coding hassle to deal with in the rest of this routine (i.e., in all the nhalf iterations), so
+    ! we will just go with the first run through for the center fix and exit the routine.
+    !------------------------------------------------------------------------------------------------------------------
     if (grid_minlon > 330.0 .and. grid_maxlon < 30.0) then
       if (uvgeslat > 0.0) then
         fxval = xmax_circul_disk
@@ -14162,7 +15195,16 @@ end program trakmain
       return
     endif
 
+    ! Halve the grid spacing to refine the location and value of the max/min value, but restrict the area of the
+    ! new search grid.
     npts = max(npts, 1)
+    !------------------------------------------------------------------------------------------------------------------
+    ! First, recalculate the i and j beginning and ending points to be used in the barnes analysis subroutine. Only do
+    ! this once for this grid-refinement (even though the grid is redefined nhalf times in this subroutine), but make
+    ! sure to have the possible search grid be big enough to allow the possibility of the grid shifting way right or
+    ! way left each time through the loop (get_ij_bounds takes care of this). Cut the value of rads in half (only do
+    ! this once) so that any points beyond rads/2 are not considered as potential centers.
+    !------------------------------------------------------------------------------------------------------------------
     rads = 0.5 * rads
 
     call get_ij_bounds (npts, nhalf, ri, imax, jmax, dx, dy, grid_maxlat, grid_minlat, grid_maxlon, grid_minlon, &
@@ -14181,6 +15223,7 @@ end program trakmain
 
     bimct = 0
 
+    ! Now do the actual searching for the max/min value
     do k = 1, nhalf ! kloop
       call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
       if (verb .ge. 3) then
@@ -14240,6 +15283,8 @@ end program trakmain
             cycle ! iloop2
           endif
 
+          ! Again, check and make sure that the lat/lon point in question here has valid data (see the explanation
+          ! further up in this subroutine inside iloop).
           call check_valid_point (imax, jmax, dx, dy, u(1,1,nlev), maxmin, valid_pt, rlont, rlatt, grid_maxlat, &
                & grid_minlat, grid_maxlon, grid_minlon, trkrinfo, icvpret)
 
@@ -14256,10 +15301,17 @@ end program trakmain
           circul_band = 0.0
           circul_disk = 0.0
 
+          !------------------------------------------------------------------------------------------------------------
+          ! Now go through each radius, starting from inner and working to outer, and at each one, go around through
+          ! all of the 24 discrete azimuths, starting at 7.5 and adding 15 degrees clockwise each time, all the way
+          ! up through 352.5
+          !------------------------------------------------------------------------------------------------------------
           do idist = 1, numdist ! radiusloop2
             azimuth_ct  = 0
             vt_azim_sum = 0.0
 
+            ! Compute the length of a 1/numazim arc at this radius, and be sure to multiply by 1000 to convert from
+            ! km to m for use in computing the circulation
             circumference = 2.0 * pi * rdist(idist) * 1000.0
             arclength     = circumference / real(numazim)
 
@@ -14269,6 +15321,7 @@ end program trakmain
 
               if (gm_wrap_flag == 'maxplus360') then
                 if ((rlont > 330.0 .and. rlont <= 360.0) .and. targlon < 25.0) then
+                  ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
                   targlon = targlon + 360.0
                 endif
                 if (rlont > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -14297,6 +15350,8 @@ end program trakmain
             enddo ! azimloop2
 
             if (azimuth_ct > 0) then
+              ! Add the value for the circulation in this radial band (circul_band(idist)) to the "solid disk"
+              ! circulation total. Also, compute azimuthally-averaged Vt at this distance
               circul_disk    = circul_disk + circul_band(idist)
               vt_mean(idist) = vt_azim_sum / real(azimuth_ct)
             else
@@ -14403,6 +15458,14 @@ end program trakmain
     logical(1)              :: cflag, valid_pt(imax,jmax)
     logical(1), allocatable :: lbi(:,:)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Interpolate input grid to smaller grid
+    !
+    ! Get beginning and ending j points (on the input grid) for a smaller array that surrounds the storm. It is this
+    ! smaller array that we will interpolate to a finer grid.
+    !
+    ! Calculate number of pts to either side of this j to search
+    !------------------------------------------------------------------------------------------------------------------
     gotlat = 'n'
     npts   = ceiling(rads_vmag / (dtk * ((dx+dy) / 2.0)))
 
@@ -14501,6 +15564,16 @@ end program trakmain
       case (1020); nlev = levsfc
     end select
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! This next if statement determines how many times to interpolate the input grid to a smaller grid. Here are the
+    ! grid sizes for some of the typical grids that will be used:
+    !
+    !   Original grid size     # of interps        Final grid size
+    !  --------------------    ------------     ---------------------
+    !  1.00 deg (111.19 km)        3             0.125 deg (13.9 km)
+    !  1.25 deg (138.99 km)        3             0.156 deg (17.4 km)
+    !  2.50 deg (277.99 km)        4             0.156 deg (17.4 km)
+    !------------------------------------------------------------------------------------------------------------------
     if ((dx+dy) / 2.0 > 1.2) then
       numinterp = 4
     else if ((dx+dy) / 2.0 > 0.50 .and. (dx+dy) / 2.0 <= 1.2) then
@@ -14517,6 +15590,12 @@ end program trakmain
     imxold = iend - ibeg + 1
     jmxold = jend - jbeg + 1
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Before interpolating, make sure that all the original points have valid data. If they don't then exit the
+    ! subroutine. 
+    ! This is NOT checking to see if ALL the pts on the complete & full input grid have valid data; it only checks
+    ! those points that are within the box returned from get_ij_bounds.
+    !------------------------------------------------------------------------------------------------------------------
     do i = ibeg, iend
       if (i > imax) then
 
@@ -14563,6 +15642,7 @@ end program trakmain
       enddo
     enddo
 
+    ! begin the interpolation process
     allocate (uold(imxold, jmxold), stat = iuo)
     allocate (vold(imxold, jmxold), stat = ivo)
     allocate (rlonold(imxold),      stat = iloo)
@@ -14682,6 +15762,9 @@ end program trakmain
 
     if (numinterp == 0) then
 
+      ! No interpolations were done for this fine mesh grid, but we need to fill some of these arrays and define
+      ! variables for subsequent subroutine calls just below here that require the variables imxnew, jmxnew, and the
+      ! arrays unew and vnew.
       if (iend > imax) then
         if (trkrinfo%gridtype == 'global') then
           continue
@@ -14725,9 +15808,13 @@ end program trakmain
         ip = i
 
         if (i > imax) then
+          ! This has to be a global, wrapping grid, or else the if statement a few lines up would have caught
+          ! this already.
           ip = i - imax  ! wrapping past GM
         endif
         if (i < 1) then
+          ! This has to be a global, wrapping grid, or else the if statement a few lines up would have caught
+          ! this already.
           ip = i + imax  ! wrapping past GM
         endif
         rlonnew(i-ibeg+1) = glon(ip)
@@ -14770,6 +15857,13 @@ end program trakmain
  171  format (' dell = ', f7.3, ' uvgeslon = ', f8.3, 'E  (', f8.3, 'W)  uvgeslat = ', f8.3)
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Note that in the next call, I pass the 'global' argument to find_maxmin. This defines what type of grid it is, so
+    ! that the proper grid_buffer can be chosen. This grid_buffer is designed to avoid having a center be chosen too
+    ! close to the grid boundary. However, in the case of vmag here, we are only using a small subgrid, and we want to
+    ! make sure we use *all* points in that subgrid for searching, and that will occur if we set that calling argument
+    ! to 'global' as opposed to 'regional'.
+    !------------------------------------------------------------------------------------------------------------------
     call find_maxmin (imxnew, jmxnew, dell, dell, 'vmag', vmag, 'min', ist, uvgeslon, uvgeslat, rlonnew, rlatnew, lbi, &
          & trkrinfo, cflag, ctlon, ctlat, xval, grid_maxlat, grid_minlat, grid_maxlon, grid_minlon, 'global', ifmret)
     deallocate (vmag);    deallocate (lbi)
@@ -14900,6 +15994,14 @@ end program trakmain
     gt345_ct = 0
     lt15_ct  = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! We need to be careful in this routine when averaging the longitudes together, in case we cross the greenwich
+    ! meridian, because then we may be averaging 345+ lons with lons that are less than 15, giving incorrect results.
+    ! Therefore, check for this, and if it occurs, add 360 onto any of the <15 lons (add it twice for those lons being
+    ! counted twice (guesslon and the vorticity centers)).
+    !
+    ! Weight the uv guess position by counting the storm's guess position twice.
+    !------------------------------------------------------------------------------------------------------------------
     sumlon = sumlon + 2.0 * guesslon
     sumlat = sumlat + 2.0 * guesslat
     ict    = ict + 2
@@ -14913,12 +16015,13 @@ end program trakmain
 
     do ip = 1, maxtp
       if ((ip > 2 .and. ip < 7) .or. ip == 10) then
-        cycle   ! because 3-6 are for 850 & 700 u & v and 10 is for surface wind magnitude.
+        cycle   ! because 3-6 are for 850 & 700 u & v and 10 is for surface wind magnitude
       else
         if (calcparm(ip,ist)) then
           call calcdist (guesslon, guesslat, clon(ist,ifh,ip), clat(ist,ifh,ip), dist, degrees)
           if (dist < uverrmax) then
 
+            ! give the vorticity centers 2x weighting as well
             if (ip == 1 .or. ip == 2 .or. ip == 11) then
               sumlon = sumlon + 2.0 * clon(ist, ifh, ip)
               sumlat = sumlat + 2.0 * clat(ist, ifh, ip)
@@ -14949,6 +16052,8 @@ end program trakmain
     if (ict > 0) then
 
       if (gt345_ct > 0 .and. lt15_ct > 0) then
+        ! We have some parms left of the GM and some to the right, so we will add (360*lt15_ct) to the sum of the
+        ! lons (sumlon)
         uvgeslon = (sumlon + (360.0 * real(lt15_ct))) / real(ict)
       else
         uvgeslon = sumlon / real(ict)
@@ -15133,7 +16238,8 @@ end program trakmain
       xnew(2*i-1) = xold(i)
     enddo
 
-    ! interpolate to get the in-between points, and make the
+    ! interpolate to get the in-between points, and make the necessary adjustment when interpolating a longitude
+    ! between, for example, 359.5 and 0.0
     do i = 1, ioldmax-1
       if (xnew(2*i-1) > 350.0 .and. xnew(2*i+1) < 10.0) then
         xnew(2*i) = 0.5 * (xnew(2*i-1) + (360.0 + xnew(2*i+1)))
@@ -15176,6 +16282,8 @@ end program trakmain
 
     npts = imax * jmax
 
+    ! First, call get_ij_bounds in order to get the (i,j) coordinates of the (fixlon,fixlat) position that we need to
+    ! search around. These (i,j) coordinates are returned as ilonfix and jlatfix.
     call get_ij_bounds (npts, 0, ridlm, imax, jmax, dx, dy, glatmax, glatmin, glonmax, glonmin, fixlon(ist,ifh), &
          & fixlat(ist,ifh), trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
@@ -15257,6 +16365,8 @@ end program trakmain
 
       if (zeta(ilonfix,jlatfix,n) > -9990.0) then
 
+        ! We have valid zeta data for this level, so we first call  barnes now to get the mean zeta
+        ! surrounding our found center position.
         if (fixlat(ist,ifh) > 0.0) then
           cvort_maxmin = 'max'
         else
@@ -15282,11 +16392,11 @@ end program trakmain
             write (6,521)
             write (6,523)
           endif
-          ! if out of grid bounds at 850, then will also be out at 700
  519      format (1x, ' The call to get_smooth_value_at_pt in')
  520      format (1x, ' get_zeta_values returned a non-zero return')
  521      format (1x, ' code.  The search for zeta values will not')
  523      format (1x, ' be done.  Missing values will be assigned.')
+          ! if out of grid bounds at 850, then will also be out at 700
           exit  ! report_zeta_loop
         endif
       else
@@ -15301,10 +16411,11 @@ end program trakmain
         write (6,*) '  --- mean zeta raw = ', xsmoothval
       endif
 
+      ! call fix_latlon_to_ij to get the nearest actual raw (grid) zeta data values, not the mean value
       call fix_latlon_to_ij (imax, jmax, dx, dy, zeta(1,1,n), cvort_maxmin, valid_pt, fixlon(ist,ifh),          &
            & fixlat(ist,ifh), xsmoothval, idum, jdum, gridpoint_maxmin, 'tracker', 'xxxxxxx', glatmax, glatmin, &
            & glonmax, glonmin, trkrinfo, ifilret)
-      
+
       if (ifilret == 0) then
         igridzeta(n) = int((gridpoint_maxmin * 1.0E6) + 0.5)
       else
@@ -15415,7 +16526,14 @@ end program trakmain
     ifmret = 0
     nhalf = 5
 
+    ! Set initial parms for use in find_maxmin. Different radii used for V magnitude than for other parms,
+    ! see discussion in module radii for more details.
     if (cparm == 'vmag') then
+      !----------------------------------------------------------------------------------------------------------------
+      ! The maxvgrid variable determines what size grid to send to subroutine barnes. e.g., maxvgrid = 8 means send an
+      ! 8x8 grid; maxvgrid = 12 means send a 12x12 grid. For ultra-fine mesh grids (finer than 0.04 deg, or 1/25 deg),
+      ! we expand to 12 in order to sample a few more points around each grid point.
+      !----------------------------------------------------------------------------------------------------------------
       if ((dx+dy) / 2.0 > 0.04) then
         maxvgrid = 8
       else
@@ -15423,6 +16541,9 @@ end program trakmain
       endif
 
       rads = rads_vmag; re = retrk_vmag; ri = ritrk_vmag
+      ! Basically, this sets re equal to half the distance from the gridpoint in question to the farthest point that
+      ! will be sampled when the (maxvgrid x maxvgrid) grid is passed on to subroutine barnes. Thus, just ignore the 
+      ! parameter retrk_vmag, and use this instead.
       re   = (real(maxvgrid) / 4.0) * ((dx+dy) / 2.0 * dtk)
 
     else if ((dx+dy) / 2.0 < 1.26 .and. (dx+dy) / 2.0 >= 0.40) then
@@ -15451,6 +16572,8 @@ end program trakmain
 
     if (npts == 0) npts = 1
 
+    ! For the  barnes analysis, we will want to speed things up for finer resolution grids. We can do this by skipping
+    ! some of the points in the barnes analysis.
     if (dell > 0.20) then
       bskip1 = 2
       bskip2 = 1
@@ -15473,6 +16596,12 @@ end program trakmain
       bskip2 = 1
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If input parm is vmag, we've already done the minimizing by interpolating to the fine mesh grid, so we'll simply
+    ! send the bounds that were input to this subroutine to barnes as boundaries for the array to search. For all other
+    ! parms, however, no minimizing has been done yet, so we need to call get_ij_bounds to set the boundaries for a
+    ! much smaller grid that surrounds the storm (as opposed to having subroutine barnes search the entire global grid).
+    !------------------------------------------------------------------------------------------------------------------
     if (cparm == 'vmag') then
 
       if (verb .ge. 3) then
@@ -15551,8 +16680,17 @@ end program trakmain
     ibarnes_loopct = 0
 
     if (grid_minlon > 330.0 .and. grid_maxlon < 30.0) then
+      !----------------------------------------------------------------------------------------------------------------
+      ! Our grid is straddling over the GM. This can happen either with a global grid or with a regional grid. How can
+      ! it happen for a global grid? Well, for the case in which this routine is called from subroutine get_uv_center,
+      ! where a smaller subgrid of data is passed in, and that smaller subgrid may straddle the GM. Anyway, we need a
+      ! workaround. This workaround will put the minimum longitude in terms of a negative number, e.g., as opposed to
+      ! being say, 354, it will be -6. You can then leave the grid_maxlon as is.
+      !----------------------------------------------------------------------------------------------------------------
       temp_grid_minlon = grid_minlon - 360.0
       if (guesslon > 330.0) then
+        ! If our grid is straddling the GM and we have adjusted the grid_minlon to be a negative number, then we also
+        ! need to check on the guesslon and adjust it if it is also to west of the GM.
         temp_guesslon = guesslon - 360.0
       else
         temp_guesslon = guesslon
@@ -15579,10 +16717,17 @@ end program trakmain
         iix   = iix + 1
         rlont = temp_guesslon + dell * real(i)
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! If any points in the search grid would extend beyond the grid boundaries,then check and see if this is global
+        ! grid. If it is, and the extension occurred in the i-direction, then adjust the longitude to allow for grid
+        ! wrapping. If it is a regional grid, then just cycle the iloop. In previous versions of the tracker, we would
+        ! exit with an error message, but doing it this way allows us to continue tracking some systems that may be
+        ! close to the grid boundary.  Also, remember to factor in the grid_buffer discussed in the doc block above for
+        ! this subroutine.
         if (rlont >= (grid_maxlon + dx - grid_buffer)) then
           if (trkrinfo%gridtype == 'global') then
             if (cparm == 'vmag') then
-              cycle ! iloop  ! We are off the small vmag subgrid
+              cycle ! iloop  ! we are off the small vmag subgrid
             else
               rlont = rlont - 360.0  ! GM-wrapped for the full, regular, global grid
             endif
@@ -15607,6 +16752,19 @@ end program trakmain
           cycle ! iloop
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Make sure that the point being investigated here as a potential center has valid data at that point. That is,
+        ! for some hires regional grids that have been rotated/converted from a non-latlon grid to a latlon grid, there
+        ! can be locations within the (i,j) space that do not have valid data at them. It makes no sense to consider a
+        ! point such as this as a potential center.
+        ! There is another simpler case here that we are watching out for. This is simply the case, again for model
+        ! data where we only have the innermost nest. Depending on what we choose for the variable "rads" above, with
+        ! the way that "npts" is defined for these iloops and jloops that we're in, we may be searching over points
+        ! that are simply well off the grid. Therefore, it is critical to run through this check_valid_point subroutine
+        ! to make sure that we're not going to inadvertantly be performing an analysis at one of these "off-grid"
+        ! points. So, if the return code from check_valid_point comes back non-zero, simply cycle iloop and go to the
+        ! next point.
+        !--------------------------------------------------------------------------------------------------------------
         call check_valid_point (imax, jmax, dx, dy, fxy, maxmin, valid_pt, rlont, rlatt, grid_maxlat, &
              & grid_minlat, grid_maxlon, temp_grid_minlon, trkrinfo, icvpret)
 
@@ -15621,6 +16779,16 @@ end program trakmain
         if (dist .gt. rads) cycle ! iloop
 
         if (cparm == 'vmag') then
+          !------------------------------------------------------------------------------------------------------------
+          ! This next bit of code gets the ij coordinates for an 8x8 box around the current point under consideration.
+          ! These ij coordinates are sent to barnes so that barnes only loops 64 times, as opposed to nearly 10,000 if
+          ! the whole 97x97 array were sent. So, fix rlatt to the grid point just northward of rlatt and fix rlont to
+          ! the grid point just eastward of rlont. Note that this makes for a modified barnes analysis in that we're
+          ! sort of specifying ahead of time exactly which grid points will be included and we'll be excluding some
+          ! points that would be near the periphery of each (rlont,rlatt)'s range, but as long as we're consistent and
+          ! do it this way for each point, it's well worth the trade-off in cpu time. Parameter maxvgrid determines
+          ! what size array to send to barnes (maxvgrid=8 means 8x8)
+          !------------------------------------------------------------------------------------------------------------
           jvlatfix = int((vmag_latmax - rlatt) / dy + 1.0)
           ivlonfix = int((rlont - temp_grid_minlon) / dx + 2.0)
 
@@ -15633,6 +16801,8 @@ end program trakmain
 
             if (ibeg < 1) then
               if (trkrinfo%gridtype == 'global') then
+                ! If wrapping past GM, there is code below in this find_maxmin routine that can modify the indices
+                ! appropriately; do nothing here
                 continue
               else
                 if (verb .ge. 1) then
@@ -15658,6 +16828,8 @@ end program trakmain
 
             if (iend > imax) then
               if (trkrinfo%gridtype == 'global') then
+                ! If wrapping past GM, there is code below in this find_maxmin routine that can modify the indices
+                ! appropriately; do nothing here
                continue
               else
                 if (verb .ge. 1) then
@@ -15741,6 +16913,8 @@ end program trakmain
 56  format ('k = ', i3, ' i = ', i3, ' j = ', i3, '  rln = ', f7.3, '  rlt = ', f7.3, '  barnval = ', f11.5)
 
     if (ctlon < 0.0) then
+      ! We have grid-wrapped to find the ctlon, which was found to be < 0, so for reporting purposes and for the start
+      ! of the next loop, set ctlon to positive degress east.
       ctlon = ctlon + 360.0
     endif
 
@@ -15765,6 +16939,8 @@ end program trakmain
 64  format (' After first run in find_maxmin, fmax = ',e16.3,' fmin = ', e16.3)
 111 format (i2, '  rlont = ', f7.2, 'W   rlatt = ', f7.2, '  zeta = ', f13.8)
 
+    ! Through interpolation, the grid for vmag has already been minimized considerably, we don't need to go through the
+    ! 2nd part of this subroutine, which halves the grid spacing.
     if (nhalf < 1 .or. cparm == 'vmag') then
       if (maxmin == 'max') then
         xval = fmax
@@ -15774,6 +16950,11 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If on our first pass through, we were dealing with a regional grid that straddled the GM, then it becomes
+    ! (for now) too much of a coding hassle to deal with in the rest of this routine (i.e., in all the nhalf
+    ! iterations), so we will just go with the first run through for the center fix and exit the routine.
+    !------------------------------------------------------------------------------------------------------------------
     if (grid_minlon > 330.0 .and. grid_maxlon < 30.0) then
       if (maxmin == 'max') then
         xval = fmax
@@ -15783,6 +16964,11 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If the grid spacing is fine enough (I've chosen 0.2-deg as a min threshold), there is no need to halve the grid
+    ! more than 3 times, as halving a 0.2-deg grid 3 times gives a resolution of 0.025-deg (2.7 km), or a max error in
+    ! the position estimate of 2.7/2 = 1.35 km.
+    !------------------------------------------------------------------------------------------------------------------
     if ((dx+dy) / 2.0 <= 0.2) then
       if ((dx+dy) / 2.0 <= 0.05) then
         nhalf = 1
@@ -15791,9 +16977,17 @@ end program trakmain
       endif
     endif
 
+    ! Halve the grid spacing to refine the location and value of the max/min value, but restrict the area of the
+    ! new search grid.
     npts = npts / 2
     npts = max(npts, 1)
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First, recalculate the i and j beginning and ending points to be used in the barnes analysis subroutine. Only do
+    ! this once for this grid-refinement (even though the grid is redefined 3 times in this subroutine), but make sure
+    ! to have the possible search grid be big enough to allow the possibility of the grid shifting way right or way
+    ! left each time through the loop (get_ij_bounds takes care of this).
+    !------------------------------------------------------------------------------------------------------------------
     call get_ij_bounds (npts, nhalf, ri, imax, jmax, dx, dy, grid_maxlat, grid_minlat, grid_maxlon, &
          &  grid_minlon, ctlon, ctlat, trkrinfo, ilonfix, jlatfix, ibeg, jbeg, iend, jend, igiret)
 
@@ -15808,6 +17002,7 @@ end program trakmain
       return
     endif
 
+    ! do the actual searching for the max/min value 
     if (verb .ge. 3) then
       print *, ' '  !CAITLYN - does this have a purpose?
     endif
@@ -15881,6 +17076,8 @@ end program trakmain
             cycle ! iloop2
           endif
 
+          ! Again, check and make sure that the lat/lon point in question here has valid data (see the explanation
+          ! further up in this subroutine inside iloop).
           call check_valid_point (imax, jmax, dx, dy, fxy, maxmin, valid_pt, rlont, rlatt, grid_maxlat, &
                & grid_minlat, grid_maxlon, grid_minlon, trkrinfo, icvpret)
 
@@ -16060,6 +17257,9 @@ end program trakmain
 
         if (defined_pt(i,j)) then
           if (fxy(i,j) > -999.01 .and. fxy(i,j) < -998.99) then
+            ! Even though this (i,j) is a valid point, its zeta value has been set to -999 because a neighboring point
+            ! in subroutine rvcal was found to be out of the grid boundaries. This also prevents -999 values for MSLP
+            ! at grid edges in HWRF from getting included in the mean calculation
             cycle
           endif
           wt   = exp(-1.0 * dist * dist / res)
@@ -16187,6 +17387,9 @@ end program trakmain
         if (defined_pt(i,j)) then
           if (lsmask(i,j) < 0.5) then
             if (fxy(i,j) > -999.01 .and. fxy(i,j) < -998.99) then
+              ! Even though this (i,j) is a valid point, its sst value has been set to -999 because a neighboring point
+              ! was found to be out of the grid boundaries. This also prevents -999 values for MSLP at grid edges in
+              ! HWRF from getting included in the mean calculation
               cycle
             endif
             seact = seact + 1
@@ -16325,6 +17528,14 @@ end program trakmain
 
     igiret = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Get beginning and ending j points
+    !
+    ! (1) Calculate number of searchable, max/min pts, that is, the pts from x to the edge of Grid B.
+    ! (2) Calculate number of pts beyond the last search point in Grid B, but are within the bounds of Grid R and thus
+    ! can be included in the  barnes analysis.
+    ! (3) Add (1) and (2) to get the max number of pts to subtract/add to x to get jbeg and jend.
+    !------------------------------------------------------------------------------------------------------------------
     if (verb .ge. 4) then
       print *, ' '
       print *, 'Beginning of get_ij_bounds...'
@@ -16332,6 +17543,7 @@ end program trakmain
       print *, ' '
     endif
 
+    ! see abstract for more details about nhalf
     if (nhalf > 0) then
       rdeg = 0.0
       do i = 1, nhalf
@@ -16344,6 +17556,7 @@ end program trakmain
       jbmaxlatpts = npts * 2.0 + 2.0
     endif
 
+    ! roughly fix geslat to the grid point just poleward of geslat
     if (verb .ge. 4) then
       print *, ' '
       print *, ' +++ Near top of get_ij_bounds, '
@@ -16395,7 +17608,7 @@ end program trakmain
       igiret = igiret + 1
       return
     endif
-      
+
     if (jbeg < 1) jbeg = 1
     if (jend > jmax) jend = jmax
 
@@ -16403,7 +17616,7 @@ end program trakmain
       print *, ' +++ jbeg = ', jbeg, ' jend = ', jend
     endif
 
-    ! if using a global grid, avoid using the pole points, or else you'll get a cosfac = 0
+    ! if using a global grid, avoid using the pole points, or else you'll get a cosfac = 0 and then divide by 0
     if (jend == jmax .and. rglatmin == -90.0) then
       jend = jmax - 2
     endif
@@ -16411,6 +17624,19 @@ end program trakmain
       jbeg = 3
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now get beginning and ending i points
+    !
+    ! Using the map factor (cos lat), figure out, based on ri, the max distance beyond the last search point in
+    ! x-direction (in degrees) that could be searched at this guess latitude (geslat) (i.e., in the diagram above, the
+    ! max num pts from pt. e eastward to the edge of Grid R). Calculate how many grid points that is, add 2 to it for a
+    ! cushion, & add the number of points (npts) within the defined search grid (Grid B) to get ibmaxlonpts.
+    !
+    ! A min statement was put on the calculation to derive dlon, since with that cosine in there, the values of of dlon
+    ! could get pretty ridiculous as you approach the poles. Also, the cosine factor (cosfac) used to be computed at
+    ! the most poleward latitude possible given the jend here. For similar concerns with cosines near the poles, I've
+    ! scrapped this to instead compute the cosine factor at the input guess latitude.
+    !------------------------------------------------------------------------------------------------------------------
     cosfac   = cos(geslat * dtr)
     tmpangle = cosfac * dtk
     dlon     = min((ri / tmpangle ), 20.0)
@@ -16558,6 +17784,7 @@ end program trakmain
       endif
     endif
 
+    ! eliminate tracking of storms within 5 degrees of the pole for global grids due to problems with array indicies
     if ((trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') .and. trkrinfo%gridtype == 'global') then
       if (guesslat > 85.0 .or. guesslat < -85.0) then
 
@@ -16646,6 +17873,9 @@ end program trakmain
 
     cosanga = (dcos(distlatb8) * dcos(distlatc8) + dsin(distlatb8) * dsin(distlatc8) * dcos(difflon8))
 
+    ! This next check of cosanga is needed since I have had ACOS crash when calculating the distance between 2
+    ! identical points (should = 0), but the input for ACOS was just slightly over 1 (e.g., 1.00000000007), due to
+    ! (I'm guessing) rounding errors.
     if (cosanga > 1.0) then
       cosanga = 1.0
     endif
@@ -16657,6 +17887,8 @@ end program trakmain
     xdist   = xdist8
     degrees = degrees8
 
+    ! Whether this subroutine returns the value of the distance in km or m depends on the scale of the parameter
+    ! ecircum. At the original writing of this subroutine (7/97), ecircum was given in km.
     return
 
   end subroutine calcdist
@@ -16719,6 +17951,8 @@ end program trakmain
     character(len=10) :: cymdh
     integer           :: ifh, nlen1, nlen2, nlen3, nlen4, nlen5
 
+    ! Convert integer minutes to 5-position character, with leading zeroes, and convert 10-digit integer date into
+    ! 10-position character. Then trim the various input variables and combine all into the file name.
     write (cfmin, '(i5.5)')   iftotalmins(ifh)
     write (cymdh, '(i10.10)') atcfymdh
 
@@ -16732,12 +17966,16 @@ end program trakmain
     nlen3     = len_trim(atcfdescr)
     nlen4     = len_trim(gfilename)
 
+    ! If an extension to the name with the ATCF or storm name descriptor was included, then add it to the name now.
+    ! Otherwise, just add the starting date and the lead time in minutes.
     if (nlen3 > 0) then
       gfilename = trim(gfilename(1:nlen4))//'.'//trim(atcfdescr(1:nlen3))//'.'//cymdh//'.f'//cfmin
     else
       gfilename = trim(gfilename(1:nlen4))//'.'//cymdh//'.f'//cfmin
     endif
 
+    ! Create the name for the grib index file, which is just the name of the grib file, with "ix" added to the
+    ! end of it.
     nlen5     = len_trim(gfilename)
     ifilename = trim(gfilename(1:nlen5))//'.ix'
 
@@ -16961,15 +18199,29 @@ end program trakmain
 
     readgenflag = .false.
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! For GRIB2, we will check to see if the MSLP being searched for is the standard MSLP (MSLP parm ID = 1) or if it
+    ! is the so-called "Eta" or "Membrane" MSLP reduction that is included in the output for some models (like GFS and
+    ! GDAS). Note that for 10m winds, with GRIB2, so far with all of the GRIB2 model data we've seen to this point,
+    ! they all have the same IDs for 10m winds for all models, so no need to break out by model like we do for GRIB v1
+    ! in the else portion of this if statement.
+    !------------------------------------------------------------------------------------------------------------------
     if (trkrinfo%gribver == 2) then
+      ! 1 = standard MSLP reduction, 192 = "Eta" or "Membrane" reduction used in GFS, GDAS and others
       ig2_parm_num(9) = trkrinfo%g2_mslp_parm_id
 
       if (verb .ge. 3) then
         print *, ' '
         print *, 'Before GRIB2 read, MSLP ID = ig2_parm_num(9) = ', ig2_parm_num(9)
       endif
-
+      !----------------------------------------------------------------------------------------------------------------
+      ! For GRIB1, do the same check as done just above in the IF part of this IF statement, but note that we need to
+      ! also check to see what the GRIB1 parm IDs are for the sfc wind level type and value. Most models list the level
+      ! type as 105 (which means height above the ground) and then a level value of 10. But ECMWF and UKMET use a level
+      ! type of 1 (which means ground or water surface) and a level value of 0.
+      !----------------------------------------------------------------------------------------------------------------
     else
+      ! 2 = standard MSLP reduction, 130 = "Eta" or "Membrane" reduction used in GFS, GDAS and others
       igparm(9)    = trkrinfo%g1_mslp_parm_id
       iglevtyp(10) = trkrinfo%g1_sfcwind_lev_typ ! 105 for most
       iglevtyp(11) = trkrinfo%g1_sfcwind_lev_typ ! 105 for most
@@ -17016,8 +18268,9 @@ end program trakmain
     endif
 
     if (trkrinfo%gribver == 2) then
-
+      ! GRIB2 Read for standard tracker diagnostics
       do ip = 1, nreadparms ! grib2_standard_parm_read_loop
+        ! initialize variables
         gfld%idsect     => NULL()
         gfld%local      => NULL()
         gfld%list_opt   => NULL()
@@ -17029,11 +18282,15 @@ end program trakmain
         gfld%fld        => NULL()
 
         if (ip == 17) then
-          jdisc = 2
+          ! set Product Discipline for the land-sea mask
+          jdisc = 2 ! land surface products; used only for the land-sea mask within the tracker
         elseif (ip == 20) then
+          ! Set Product Discipline for SST; for the GFS, SST is listed under the same product discipline as most
+          ! other variables, which is a value of 0, for meteorological variables (I had previously - erroneously -
+          ! listed SST with a product discipline value of 10 for oceanographic products).
           jdisc = 0
         else
-          jdisc = 0
+          jdisc = 0  ! meteorological products
         endif
 
         jids  = -9999
@@ -17046,6 +18303,17 @@ end program trakmain
         icount  = 0
         jskp    = 0
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! Search for input parameter by production template 4.0. This tave program is used primarily for temperature,
+        ! but still we will leave that as a variable and not-hard wire it in case we choose to average something else
+        ! in the future.
+        !
+        ! We are looking for Temperature or GP Height here. This block of code, or even the smaller subset block of
+        ! code that contains the JPDT(1) and JPDT(2) assignments, can of course be modified if this program is to be
+        ! used for interpolating other variables
+        !
+        ! Set defaults for JPDT, then override in array assignments below
+        !--------------------------------------------------------------------------------------------------------------
         jpdt(1:15) = (/-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999/)
 
         jpdt(1) = ig2_parm_cat(ip)
@@ -17064,7 +18332,7 @@ end program trakmain
         if (jpdt(10) == 100) then   ! isobaric surface
           jpdt(12) = ig2_lev_val(ip) * 100  !  GRIB2 levels are in Pa
         else
-          jpdt(12) = ig2_lev_val(ip) ! going to be either mslp, SST, or 10m winds.
+          jpdt(12) = ig2_lev_val(ip) ! going to be either mslp, SST, or 10m winds
         endif
 
         if (verb_g2 .ge. 1) then
@@ -17129,6 +18397,7 @@ end program trakmain
             endif
           endif
 
+          ! determine packing information from GRIB2 file; the default packing is 40 JPEG 2000
           ipack = 40
 
           if (verb_g2 .ge. 1) then
@@ -17136,14 +18405,14 @@ end program trakmain
           endif
 
           ! set DRT info (packing info)
-          if (gfld%idrtnum .eq. 0) then      ! simple packing
+          if (gfld%idrtnum .eq. 0) then       ! simple packing
             ipack = 0
-          elseif (gfld%idrtnum .eq. 2) then  ! complex packing
+          elseif (gfld%idrtnum .eq. 2) then   ! complex packing
             ipack = 2
-          elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
+          elseif (gfld%idrtnum .eq. 3) then   ! complex & spatial packing
             ipack = 31
           elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
-            ipack = 40 ! JPEG 2000 packing
+            ipack = 40                        ! JPEG 2000 packing
           elseif (gfld%idrtnum .eq. 41) then  ! PNG packing
             ipack = 41
           endif
@@ -17248,7 +18517,7 @@ end program trakmain
               else if (jpdt(12) == 20000) then
                 call conv1d2d_real (imax, jmax, f, u(1,1,nlev200), need_to_flip_lats)
               else
-                ! Near-surface data
+                ! near-surface data
                 call conv1d2d_real (imax, jmax, f, u(1,1,levsfc), need_to_flip_lats)
               endif
             case ('vgrid')
@@ -17261,7 +18530,7 @@ end program trakmain
               else if (jpdt(12) == 20000) then
                 call conv1d2d_real (imax, jmax, f, v(1,1,nlev200), need_to_flip_lats)
               else
-                ! Near-surface data
+                ! near-surface data
                 call conv1d2d_real (imax, jmax, f, v(1,1,levsfc), need_to_flip_lats)
               endif
             case ('gphgt')
@@ -17304,6 +18573,13 @@ end program trakmain
         call gf_free (gfld)
       enddo ! grib2_standard_parm_read_loop
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! GRIB2 Read for Cyclone Phase Space diagnostics
+      !
+      ! If we are attempting to determine the cyclone phase space diagnostics, then read in the needed cps data now.
+      !
+      ! This is the GRIB2 reading section.
+      !----------------------------------------------------------------------------------------------------------------
       if (phaseflag == 'y') then
         if (phasescheme == 'cps' .or. phasescheme == 'both') then
           ! read in GP Height levels for cyclone phase space
@@ -17321,7 +18597,7 @@ end program trakmain
 
             jdisc = 0
             jids  = -9999
-            jpdtn = trkrinfo%g2_jpdtn ! 0 = analysis or forecast; 1 = ens fcst
+            jpdtn = trkrinfo%g2_jpdtn ! 0 = analysis or forecast, 1 = ens fcst
             jgdtn = 0
             jgdt  = -9999
             jpdt  = -9999
@@ -17351,7 +18627,7 @@ end program trakmain
 
             jpdt(10) = cpsig2_lev_typ(ip)
 
-            if (jpdt(10) == 100) then   ! isobaric surface
+            if (jpdt(10) == 100) then              ! isobaric surface
               jpdt(12) = cpsig2_lev_val(ip) * 100  ! GRIB2 levels are in Pa
             else
               if (verb .ge. 3) then
@@ -17406,15 +18682,14 @@ end program trakmain
               endif
 
               ! set DRT info ( packing info )
-              if (gfld%idrtnum .eq. 0) then      ! simple packing
+              if (gfld%idrtnum .eq. 0) then       ! simple packing
                 ipack = 0
-              elseif (gfld%idrtnum .eq. 2) then  ! complex packing
+              elseif (gfld%idrtnum .eq. 2) then   ! complex packing
                 ipack = 2
-              elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
+              elseif (gfld%idrtnum .eq. 3) then   ! complex & spatial packing
                 ipack = 31
               elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
-                  ! JPEG 2000 packing
-                  ipack = 40
+                  ipack = 40                      ! JPEG 2000 packing
               elseif (gfld%idrtnum .eq. 41) then  ! PNG packing
                 ipack = 41
               endif
@@ -17439,7 +18714,7 @@ end program trakmain
 
               call bitmapchk (kf, lb, f, dmin, dmax)
 
-              ! convert logical bitmap to 2-d array (only need to do this once since using same model for all variables)
+              ! convert logical bitmap to 2-d array (only need to do this once since using same model for all variables).
               if (lbrdflag .eq. 'n') then
                 call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
                 lbrdflag = 'y'
@@ -17512,11 +18787,29 @@ end program trakmain
         endif
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! GRIB2 Read for genesis diagnostics
+      !
+      ! If we are attempting to perform genesis diagnostics, then read in data now that will allow us to do that.
+      !
+      ! The order of the variables in the reads is set up so that, ideally, we will read in the first 8 fields and not
+      ! need anything else, e.g., q850, and then RH at these levels: 1000, 925, 800, 750, 700, 650, 600 mb. However,
+      ! some models, like SHiELD & T-SHiELD, do not have RH at these levels, but they do have T & q, so in those cases
+      ! we would have to compute RH, and therefore need to read in T & q at those levels.
+      !
+      ! This is the GRIB2 reading section.
+      !----------------------------------------------------------------------------------------------------------------
       if (genflag == 'y') then
         do ip = 1, nreadgenparms ! grib2_gen_parm_loop
           if (gen_read_rh_fields == 'y') then
-            
             if (ip == 9) then
+              !--------------------------------------------------------------------------------------------------------
+              ! The ip index is now at the point where we are past all of the reads for the different levels of RH.
+              ! Check the readgenflags for relative humidity. If not enough RH records were read in, then we have to
+              ! assume that RH was not included in the user data, so we will instead stay in this Genesis GRIB2 read
+              ! loop to read in q and T to compute RH later on. If enough RH records were read in, then exit this
+              ! read loop.
+              !--------------------------------------------------------------------------------------------------------
               igrhct = 0
               do igrh = 2, 8
                 if (readgenflag(igrh)) then
@@ -17549,6 +18842,8 @@ end program trakmain
           else
             need_to_compute_rh_from_q = 'y'
 
+            ! If the ip index is between 2 and 8 (which is for RH records) and the user has specified that RH will NOT
+            ! be read in, then skip over the read section for these by cycling.
             if (ip >= 2 .and. ip <= 8) then
               if (verb >= 3) then
                 print *, ' '
@@ -17587,7 +18882,6 @@ end program trakmain
           j    = 0
 
           ! set defaults for JPDT, then override in array assignments below
-
           jpdt(1:15) = (/-9999, -9999, -9999, -9999, -9999, -9999, -9999, &
                          -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999/)
 
@@ -17603,7 +18897,7 @@ end program trakmain
           endif
 
           jpdt(10) = gensig2_lev_typ(ip)
-          if (jpdt(10) == 100) then   ! isobaric surface
+          if (jpdt(10) == 100) then               ! isobaric surface
             jpdt(12) = gensig2_lev_val(ip) * 100  ! GRIB2 levels are in Pa
           endif
 
@@ -17656,8 +18950,7 @@ end program trakmain
             elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
               ipack = 31
             elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
-              ! JPEG 2000 packing
-              ipack = 40
+              ipack = 40                       ! JPEG 2000 packing
             elseif (gfld%idrtnum .eq. 41) then ! PNG packing
               ipack = 41
             endif
@@ -17683,6 +18976,11 @@ end program trakmain
             readgenflag(ip) = .true.
             call bitmapchk (kf, lb, f, dmin, dmax)
 
+            !----------------------------------------------------------------------------------------------------------
+            ! Convert logical bitmap to 2-d array (only need to do this once since using same model for all variables).
+            ! This should have already been done above in reading either the general tracking variables or, if they
+            ! were requested, the cyclone phase space variables.
+            !----------------------------------------------------------------------------------------------------------
             if (lbrdflag .eq. 'n') then
               call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
               lbrdflag = 'y'
@@ -17811,6 +19109,7 @@ end program trakmain
       endif
 
     else  !CAITLYN - i think there should be a comment here for what if loop this is which should be the very first if loop
+      ! GRIB1 Read for standard tracker diagnostics
       do ip = 1, nreadparms ! grib1_read_loop
         jpds = -1
         jgds = -1
@@ -17899,6 +19198,7 @@ end program trakmain
             print '(i4,2x,8i5,i8,2g12.4)', k, (kpds(i),i=5,11), kpds(14), kf, dmin, dmax
           endif
 
+          ! Convert logical bitmap to 2-d array (only need to do this once since using same model for all variables).
           if (lbrdflag .eq. 'n') then
             call conv1d2d_logic (imax, jmax, lb, valid_pt, need_to_flip_lats)
             lbrdflag = 'y'
@@ -17976,6 +19276,13 @@ end program trakmain
         endif
       enddo  ! grib1_read_loop
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! GRIB1 Read for Cyclone Phase Space diagnostics
+      !
+      ! If we are attempting to determine the cyclone phase space diagnostics, then read in the needed cps data now.
+      ! 
+      ! This is the GRIB1 reading section.
+      !----------------------------------------------------------------------------------------------------------------
       if (phaseflag == 'y') then
         if (phasescheme == 'cps' .or. phasescheme == 'both') then
 
@@ -18046,11 +19353,30 @@ end program trakmain
         endif
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! GRIB1 Read for genesis diagnostics
+      !
+      ! If we are attempting to perform genesis diagnostics, then read in data now that will allow us to do that.
+      !
+      ! The order of the variables in the reads is set up so that, ideally, we will read in the first 9 fields and not
+      ! need anything else, e.g., SST, q850, and then RH at these levels: 1000, 925, 800, 750, 700, 650, 600 mb.
+      ! However, some models, like SHiELD & T-SHiELD, do not have RH at these levels, but they do have T & q, so in
+      ! those cases we would have to compute RH, and therefore need to read in T & q at those levels.
+      !
+      !  This is the GRIB1 reading section.
+      !----------------------------------------------------------------------------------------------------------------
       if (genflag == 'y') then
         do ip = 1, nreadgenparms ! grib1_gen_parm_loop
 
           if (gen_read_rh_fields == 'y' ) then
             if (ip == 9) then
+              !--------------------------------------------------------------------------------------------------------
+              ! The ip index is now at the point where we are past all of the reads for the different levels of RH.
+              ! Check the readgenflags for relative humidity. If not enough RH records were read in, then we have to
+              ! assume that RH was not included in the user data, so we will instead stay in this Genesis GRIB1 read
+              ! loop to read in q and T to compute RH later on. If enough RH records were read in, then exit this
+              ! read loop.
+              !--------------------------------------------------------------------------------------------------------
               igrhct = 0
 
               do igrh = 2, 8
@@ -18084,6 +19410,8 @@ end program trakmain
           else
             need_to_compute_rh_from_q = 'y'
 
+            ! If the ip index is between 3 and 9 (which is for RH records) and the user has specified that RH will NOT
+            ! be read in, then skip over the read section for these by cycling.
             if (ip >= 2 .and. ip <= 8) then
               if (verb >= 3) then
                 print *, ' '
@@ -18342,7 +19670,7 @@ end program trakmain
 
     use tracked_parms; use level_parms;    use inparms;    use genesis_diags; use phase
     use netcdf_parms;  use verbose_output; use read_parms; use trkrparms
-      
+
 
     implicit none
 
@@ -18409,6 +19737,12 @@ end program trakmain
       STOP 91
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First go through the list of user-requested lead times that were read in from subroutine read_fhours and try to
+    ! match up the lead times that were read in with the lead times that we read in directly from the NetCDF file. Get
+    ! the index from the NetCDF file for that lead time and use that in the call to the read routine
+    ! (get_var3_tlev_double).
+    !------------------------------------------------------------------------------------------------------------------
     usertime = iftotalmins(ifh)
 
     match_check = 'n'
@@ -18437,11 +19771,16 @@ end program trakmain
       stop 99
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now go through and do the same thing *IF* the user has requested to use a land-sea mask and also requested to
+    ! read a separate land-sea mask file. For the separate land-sea mask file, there will only be an hour 0, so find
+    ! the index for that.
+    !------------------------------------------------------------------------------------------------------------------
     match_zero_check = 'n'
 
     if (trkrinfo%use_land_mask == 'y') then
       if (trkrinfo%read_separate_land_mask_file == 'y') then
-         
+
         do m = 1, ncfile_tmax  ! find_zero_index_loop
           if (nctotalmins(m) == 0) then
             nc_zero_ix = m
@@ -18469,6 +19808,13 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! NetCDF read for standard tracker diagnostics
+    !
+    ! Now go through the read loop for the list of parameters
+    !
+    ! This is the NetCDF reading section.
+    !------------------------------------------------------------------------------------------------------------------
     do ip = 1, nreadparms  ! netcdf_standard_parm_read_loop
       if (chparm(ip) == 'X' .or. chparm(ip) == 'x') then
         if (verb .ge. 3) then
@@ -18483,6 +19829,13 @@ end program trakmain
         endif
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Note that I am sending a 1-d array, "f", to the netcdf read routine. While that routine returns a 2-d array
+      ! (which we want), depending on the model & grid, we may need to flip the grid in the north-south direction. I
+      ! already have a routine for converting data from a 1-d to a 2-d array, and it has the functionality for flipping
+      ! a grid, so I programmed it as getting a 1-d array from the netcdf read routine and send that 1-d array to
+      ! conv1d2d_real.
+      !----------------------------------------------------------------------------------------------------------------
       if (ip == 17) then
         if (trkrinfo%use_land_mask == 'y') then
           if (trkrinfo%read_separate_land_mask_file == 'y') then
@@ -18537,6 +19890,16 @@ end program trakmain
         dmin = minval(f)
         dmax = maxval(f)
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! These next two nf function calls retrieve the value of the "missing_value" attribute from the list of
+        ! attributes for the given variable being read in. This is needed in order to know if a non-valid point is
+        ! being accessed, as for a regional grid, like the nested fvGFS. In GRIB1/GRIB2 files, such regions would be
+        ! bitmapped out, but in a NetCDF file, no such bitmap exists, so we have to check for missing values. In case
+        ! it's a moving grid, we need to do this for every lead time, since the "map of missing values" will shift with
+        ! lead time. Once we have those missing values, we can loop through them and fill the valid_pt logical array so
+        ! that, in the end, we will have the same logical bitmap for masking out missing data that we have
+        ! with GRIB1/GRIB2 data.
+        !--------------------------------------------------------------------------------------------------------------
         if (trkrinfo%read_separate_land_mask_file == 'y' .and. trkrinfo%use_land_mask == 'y' .and.  ip == 17) then
           nf_status = nf_inq_varid(nc_lsmask_file_id, chparm(ip), varid)
           print *, 'nf_status from nf_inq_varid call = ', nf_status
@@ -18577,6 +19940,12 @@ end program trakmain
   35      format ('   --- ', a30, ' missing value = ', g12.4)
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! This call to conv1d2d_logic_netcdf creates a logical bitmap, so that in case we have regional (non-global)
+        ! data and an irregular grid (e.g., the FV3 nested grid), we can mask out grid points that have missing values
+        ! as their data values. There is not actually a native logical bitmap in NetCDF, so we will create one by
+        ! examining the real data values and masking out grid points that have missing values.
+        !--------------------------------------------------------------------------------------------------------------
         if (lbrdflag .eq. 'n') then
           call conv1d2d_logic_netcdf (imax, jmax, f, valid_pt, xmissing_value, need_to_flip_lats)
           lbrdflag = 'y'
@@ -18632,6 +20001,16 @@ end program trakmain
       endif
     enddo ! netcdf_standard_parm_read_loop
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! NetCDF read for Cyclone Phase Space diagnostics
+    !
+    ! If we are attempting to determine the cyclone structure using Hart's cyclone phase space, then read in data now
+    ! that will allow us to do that. If we are instead just using the mid-level (300-500 mb) mean temperature to do
+    ! that with a simple warm-core check, then that mean temperature field was already read in above in the read loop
+    ! for the standard variables. The variables needed here for CPS are pretty straightforward: gp height every 50 mb
+    ! from 300 to 900 mb. keep in mind that we have already read in a few of these gp height records for selected
+    ! levels above.
+    !------------------------------------------------------------------------------------------------------------------
     if (phaseflag == 'y') then
       if (phasescheme == 'cps' .or. phasescheme == 'both') then
 
@@ -18677,13 +20056,20 @@ end program trakmain
             endif
             phaseflag = 'n'
             exit  ! netcdf_cps_parm_read_loop
-          
+
           else
             if (verb .ge. 3) then
               print *, '+++ NetCDF read requested for cps parm # ', ip, ' ... parm = ', chparm_cps(ip)
             endif
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! As above, we send a 1-d array, "f", to the netcdf read routine. While that routine returns a 2-d array
+          ! (which we want), depending on the model & grid, we may need to flip the grid in the north-south direction.
+          ! I already have a routine for converting data from a 1-d to a 2-d array, and it has the functionality for
+          ! flipping a grid, so I programmed it as getting a 1-d array from the netcdf read routine and send that 1-d
+          ! array to conv1d2d_real.
+          !------------------------------------------------------------------------------------------------------------
           call get_netcdf_real_type (ncfile_id, chparm_cps(ip), xtype, ignrret)
 
           if (xtype == 5) then
@@ -18729,6 +20115,16 @@ end program trakmain
       endif
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! NetCDF Read for genesis diagnostics
+    !
+    ! If we are attempting to perform genesis diagnostics, then read in data now that will allow us to do that.
+    !
+    ! The order of the variables in the reads is set up so that, ideally, we will read in the first 9 fields and not
+    ! need anything else, e.g., SST, q850, and then RH at these levels: 1000, 925, 800, 750, 700, 650, 600 mb. However,
+    ! some models, like SHiELD & T-SHiELD, do not have RH at these levels, but they do have T & q, so in those cases we
+    ! would have to compute RH, and therefore need to read in T & q at those levels.
+    !------------------------------------------------------------------------------------------------------------------
     if (genflag == 'y') then
 
       chparm_gen(1)  = netcdfinfo%q850name
@@ -18758,6 +20154,12 @@ end program trakmain
       do ip = 1, nreadgenparms ! netcdf_gen_parm_loop
 
         if (gen_read_rh_fields == 'y' ) then
+          !------------------------------------------------------------------------------------------------------------
+          ! The ip index is now at the point where we are past all of the reads for the different levels of RH. Check
+          ! the readgenflags for relative humidity. If not enough RH records were read in, then we have to assume that
+          ! RH was not included in the user data, so we will instead stay in this Genesis NetCDF read loop to read in
+          ! q and T to compute RH later on. If enough RH records were read in, then exit this read loop.
+          !------------------------------------------------------------------------------------------------------------
           if (ip == 9) then
             igrhct = 0
 
@@ -18777,7 +20179,7 @@ end program trakmain
               endif
               need_to_compute_rh_from_q = 'n'
               exit  ! netcdf_gen_parm_loop
-              
+
             else
               if (verb >= 3) then
                 print *, ' '
@@ -18791,6 +20193,8 @@ end program trakmain
           endif
 
         else
+          ! If the ip index is between 3 and 9 (which is for RH records) and the user has specified that RH will NOT be
+          ! read in, then skip over the read section for these by cycling.
           need_to_compute_rh_from_q = 'y'
           if (ip >= 2 .and. ip <= 8) then
             if (verb >= 3) then
@@ -18816,6 +20220,13 @@ end program trakmain
           endif
         endif
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! As above, we send a 1-d array, "f", to the netcdf read routine. While that routine returns a 2-d array (which
+        ! we want), depending on the model & grid, we may need to flip the grid in the north-south direction. I already
+        ! have a routine for converting data from a 1-d to a 2-d array, and it has the functionality for flipping a
+        ! grid, so I programmed it as getting a 1-d array from the netcdf read routine and send that 1-d array to
+        ! conv1d2d_real.
+        !--------------------------------------------------------------------------------------------------------------
         call get_netcdf_real_type (ncfile_id, chparm_gen(ip), xtype,ignrret)
 
         if (xtype == 5) then
@@ -18981,7 +20392,7 @@ end program trakmain
     if (allocated(readvar4)) deallocate (readvar4)
     if (allocated(readvar8)) deallocate (readvar8)
     status = nf_inq_varid(ncid, var1_name, var1id)
-    
+
     if (status .ne. nf_noerr) call handle_netcdf_err (status)
     status = nf_inq_vartype(ncid, var1id, xtype)
 
@@ -19144,7 +20555,7 @@ end program trakmain
 
     if (status /= nf_noerr) then
       print *, ' '
-      !print *, 'NOTE: Could not find variable ', var3_name, ' at time NetCDF file ID = ncid = ', ncid
+      print *, 'NOTE: Could not find variable ', var3_name, ' at time NetCDF file ID = ncid = ', ncid
       ignrret = 92
       return
     endif
@@ -19407,7 +20818,7 @@ end program trakmain
         enddo
       enddo
     else
-      ! Input data is north to south; convert the data onto a 2-d grid, do not flip it
+      ! input data is north to south; convert the data onto a 2-d grid, do not flip it
       do ilat = 1, jmax
         do ilon = 1, imax
           lb2d(ilon, ilat) = lb1d(ilon + (ilat - 1) * imax)
@@ -19819,9 +21230,9 @@ end program trakmain
       print *, ' '
       print *, 'Values read in from netcdflist namelist: '
       print *, ' '
-      write (6,300) netcdfinfo%num_netcdf_vars   ! Total *possible* number of input NetCDF variables, including those
-                                                 ! that are included in the input file and those that are not.
-      write (6,370) netcdfinfo%netcdf_filename   ! full path filename
+      write (6,300) netcdfinfo%num_netcdf_vars     ! total *possible* number of input NetCDF variables, including those
+                                                   ! that are included in the input file and those that are not
+      write (6,370) netcdfinfo%netcdf_filename        ! full path filename
       write (6,372) netcdfinfo%netcdf_lsmask_filename ! full path of filename of optional, extra land-sea mask.
       write (6,301)
       write (6,302) netcdfinfo%rv850name    ! 850 mb rel vort
@@ -19857,8 +21268,8 @@ end program trakmain
       write (6,356) netcdfinfo%lon_name     ! longitudes
       write (6,358) netcdfinfo%lat_name     ! latitudes
       write (6,359) netcdfinfo%time_units   ! This will be either "days" or "hours".  If it's "hours", then all the time
-                                            ! data values are for hours since the initial time.  Same thing for "days",
-                                            ! however if it is "days", then know that a value of 0.25 will be the same 
+                                            ! data values are for hours since the initial time. Same thing for "days",
+                                            ! however if it is "days", then know that a value of 0.25 will be the same
                                             ! as a 6-hour lead time.
       write (6,531) netcdfinfo%sstname      ! SST
       write (6,533) netcdfinfo%q850name     ! 850 mb spec humidity
@@ -20380,8 +21791,8 @@ end program trakmain
     numtcv = ii - 1
 
     if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen') then
-      ! For the mid-latitude or tc genesis cases, the max number of storms (maxstorm) allowed 
-      ! to be tracked throughout a forecast is defined in module set_max_parms.
+      ! for the mid-latitude or tc genesis cases, the max number of storms (maxstorm) allowed to be tracked throughout
+      ! a forecast is defined in module set_max_parms.
       if (verb .ge. 3) then
         print *, ' '
         print *, 'In read_tcv_card, tracker type of "midlat" or '
@@ -20410,8 +21821,8 @@ end program trakmain
       endif
 
       slonfg      = 0.0; slatfg = 0.0
-      stcvtype    = 'FOF'   ! Found On the Fly by tracker (not on tcvitals)
-      stormswitch = 3       ! Initialize whole array to case of '3'
+      stcvtype    = 'FOF'   ! 'found on the fly' by tracker (not on tcvitals)
+      stormswitch = 3       ! initialize whole array to case of '3'
 
       if (numtcv > 0) then
         if (verb .ge. 3) then
@@ -20448,8 +21859,8 @@ end program trakmain
       iret = 0
       return
     else
-      ! For the  tracker cases, the max number of storms (maxstorm) allowed to be tracked throughout 
-      ! a forecast is defined by the number of vitals read in above.
+      ! for the tracker cases, the max number of storms (maxstorm) allowed to be tracked throughout a forecast is
+      ! defined by the number of vitals read in above.
       maxstorm = numtcv
 
       if (maxstorm > 0) then
@@ -20495,7 +21906,7 @@ end program trakmain
       endif
 
       slonfg   = 0.0; slatfg = 0.0
-      stcvtype = '   '  ! Not needed for regular tracker run
+      stcvtype = '   '  ! not needed for regular tracker run
       ict      = 0
 
       do i = 1, maxstorm
@@ -20507,8 +21918,8 @@ end program trakmain
           write (*,31) storm(i)
         endif
 
-        ! TC vitals contain positions in either a "W" or "E" framework.  Convert them here for 
-        ! the slonfg array so that they are in a uniform, 0-360E framework for all vitals.
+        ! TC vitals contain positions in either a "W" or "E" framework. Convert them here for the slonfg array so that
+        ! they are in a uniform, 0-360E framework for all vitals
         if (storm(i)%tcv_lonew == 'W') then
           slonfg(i, 1) =  360.0 - real(storm(i)%tcv_lon) / 10.0
         else
@@ -20641,7 +22052,7 @@ end program trakmain
     integer           :: i, ii, lgvcard, numtcv, num_mod_vit, vitix, iga
 
 
-    ! check to see if the genesis TC Vitals file exists. If so, then open it using the unit specified in lgvcard.
+    ! check to see if the genesis TC Vitals file exists. If so, then open it using the unit specified in lgvcard
     inquire (file = "tcvit_genesis_storms.txt", exist = vit_file_exists)
 
     if (vit_file_exists) then
@@ -20657,7 +22068,8 @@ end program trakmain
       endif
     endif
 
-    ! read in all of the "genesis vitals" into a temp array
+    ! read in all of the "genesis vitals" into a temp array. The index for the first array member is one past the
+    ! number of tc vitals that were read in in subroutine read_tcv_card.
     ii = numtcv + 1
 
     if (vit_file_exists) then
@@ -20683,10 +22095,22 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Initialize all "genesis dates" to 99999. Any new genesis vitals that are read in below will bring in real dates,
+    ! and then we can test the date in output_gen_vitals to know if a storm was already defined or not at the beginning
+    ! of this executable or if it was a new storm that was found.
+    !------------------------------------------------------------------------------------------------------------------
     do i = 1, maxstorm_mg
       gstorm(i)%gv_gen_date = 99999
     enddo
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If there are any TC vitals (i.e., officially named TCs that are being numbered/tracked by either NHC or JTWC),
+    ! then we want to take the important information from those vitals and put that into genesis vitals. This will
+    ! enable us to output *all* of these systems in the "gen_vitals" or "gstorm" format. The one difference here is
+    ! that for the genesis date, we use the starting date of this forecast, not the time that the storm first formed.
+    ! Also, set the genesis forecast hour (gv_gen_fhr) to be 0 for TCs that have a TC vitals record.
+    !------------------------------------------------------------------------------------------------------------------
     if (numtcv > 0) then
       do i = 1, numtcv
         gstorm(i)%gv_gen_date  = storm(i)%tcv_ymd * 100 + storm(i)%tcv_hhmm / 100
@@ -20719,13 +22143,17 @@ end program trakmain
       do i = 1, num_mod_vit
         vitix = i + numtcv
         stormswitch(vitix) = 1
-        ! fill the array gstorm
+        ! On the following line we are filling the array gstorm, which is new in this subroutine. Note, however, that
+        ! we are not necessarily starting it at 1, but at the point in the array after any TC Vitals may have been
+        ! read in.
         gstorm(vitix) = tmpstorm(vitix)
 
         if (verb .ge. 3) then
           write (*,34) gstorm(vitix)
         endif
 
+        ! For the sake of consistency (and sanity!!), we need to also use the same "storm" array as was used in
+        ! read_tcv_card, since this "storm" array is used often throughout the rest of this executable.
         write (storm(vitix)%tcv_storm_id,'(i4.4)') vitix
         write (storm(vitix)%tcv_storm_name,'(i4.4)') vitix
 
@@ -20754,7 +22182,7 @@ end program trakmain
         else
           slatfg(vitix,1) = real(gstorm(vitix)%gv_obs_lat) / 10.0
         endif
-        stcvtype(vitix) = 'FOF' ! Storm "Found On the Fly" by tracker
+        stcvtype(vitix) = 'FOF' ! Storm 'found on the fly' by tracker
       enddo
     endif
 
@@ -20900,7 +22328,7 @@ end program trakmain
         stop 95
       endif
 
-      ! determine packing information from GRIB2 file; The default packing is 40  JPEG 2000
+      ! determine packing information from GRIB2 file; the default packing is 40 JPEG 2000
       ipack = 40
       if (verb_g2 .ge. 1) then
         print *, ' '
@@ -20911,15 +22339,14 @@ end program trakmain
       endif
 
       ! set DRT info ( packing info )
-      if (gfld%idrtnum .eq. 0) then      ! simple packing
+      if (gfld%idrtnum .eq. 0) then       ! simple packing
         ipack = 0
-      elseif (gfld%idrtnum .eq. 2) then  ! complex packing
+      elseif (gfld%idrtnum .eq. 2) then   ! complex packing
         ipack = 2
-      elseif (gfld%idrtnum .eq. 3) then  ! complex & spatial packing
+      elseif (gfld%idrtnum .eq. 3) then   ! complex & spatial packing
         ipack = 31
       elseif (gfld%idrtnum .eq. 40 .or. gfld%idrtnum .eq. 15) then
-        ! JPEG 2000 packing
-        ipack = 40
+        ipack = 40                        ! JPEG 2000 packing
       elseif (gfld%idrtnum .eq. 41) then  ! PNG packing
         ipack = 41
       endif
@@ -21132,6 +22559,17 @@ end program trakmain
         print *, '  dx = ', dx,   '  dy  = ', dy
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Get boundaries of the data grid. Note: gds(4) is referred to in GRIB documenatation as the "Latitude of origin",
+      ! which might imply "minimum Latitude". However, for the grids that we'll be using in this program, the "Latitude
+      ! of origin" will be listed under gds(4) as the northernmost point (eg., in MRF, gds(4) = 90), so for this
+      ! program, use gds(4) as your max lat, and gds(7) as your min lat. However, in case NCEP, UKMET or ECMWF change
+      ! their convention and begin flipping their grids, a check is made to make sure that the max lat is not less than
+      ! the min lat.
+      ! It is possible to have an input grid which goes from south to north (such as NAVGEM). In this case, we flip the
+      ! data in subroutine conv1d2d_real. However, the max and min latitudes listed in the GRIB GDS will be confused,
+      ! so we need to check the value of the GRIB scanning mode flag here.
+      !----------------------------------------------------------------------------------------------------------------
       need_to_flip_lons = .false.
       iscanflag = igetgds(11)
 
@@ -21152,6 +22590,8 @@ end program trakmain
     endif
 
     if (glonmin >= 0.0 .and. glonmax >= 0.0) then
+      ! An example of this occurred for a case of HAFS-A, where the westernmost longitude (glonmin) was 351.5E and the
+      ! easternmost longitude (glonmax) was 92.3E for a case in the South Indian Ocean.
       if (glonmin > glonmax) then
         if (verb .ge. 3) then
           print *, ' '
@@ -21180,6 +22620,8 @@ end program trakmain
       endif
 
     elseif (glonmin < 0.0 .and. glonmax >= 0.0) then
+      ! An example of this is the MPAS data, which starts and ends at the dateline and is specified as
+      ! glonmin = -179.875, glonmax = 179.875. Convert to be positive and go from 180.125 to 539.875.
       if (verb .ge. 3) then
         print *, ' '
         print *, 'NOTE: glonmin is < 0, glonmax > 0, so glonmin'
@@ -21200,7 +22642,7 @@ end program trakmain
       endif
 
     elseif (glonmin < 0.0 .and. glonmax < 0.0) then
-      ! examples of this are GFDL and HWRF; In this case, make both glonmin and glonmax positive.
+      ! examples of this are GFDL and HWRF; in this case, make both glonmin and glonmax positive
       if (verb .ge. 3) then
         print *, ' '
         print *, 'NOTE: glonmin is < 0 and glonmax < 0, so both'
@@ -21220,6 +22662,8 @@ end program trakmain
       endif
 
     elseif (glonmin >= 0.0 .and. glonmax < 0.0) then
+      ! An example of this is the GFS data, which goes from glonmin = 0.0 to glonmax = -0.5. Convert it here to go
+      ! from glonmin = 0.0 to glonmax = 359.5
       if (verb .ge. 3) then
         print *, ' '
         print *, 'NOTE: glonmin is >= 0 and glonmax < 0, so'
@@ -21269,6 +22713,7 @@ end program trakmain
       print *, 'grid boundaries for regional models.'
     endif
 
+    ! Fill glat and glon with the lat & lon values for the grid. This info will be used in subroutine barnes
     if (allocated(glat)) deallocate(glat)
     if (allocated(glon)) deallocate(glon)
 
@@ -21315,6 +22760,12 @@ end program trakmain
       stop 98
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Finally, check to see if the requested boundary limits that the user input are contained within this grid (for
+    ! example, someone running this tracker on a regional grid may have forgotten to change the input grid bounds from
+    ! a global grid run). Modify the user-input bounds as needed.
+    ! Note: Only check these bounds for a genesis run on a regional grid, whether that be a 'midlat' or a 'tcgen' run.
+    !------------------------------------------------------------------------------------------------------------------
     if (trkrinfo%gridtype == 'regional' .and. trkrinfo%type /= 'tracker') then
 
       if (trkrinfo%eastbd > glonmax) then
@@ -21498,6 +22949,15 @@ end program trakmain
 113   format(1x, ' DY:  midj = ', i4, ' dy = ', f8.4)
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Get boundaries of the data grid. Note that it is possible to have an input grid which goes from south to north
+    ! (in fact, it appears that many NetCDF files are constructed this way). Keep in mind, however, that the tracker
+    ! has been written such that point (1,1) should be the upper-leftmost point on the grid, while point (imax,jmax)
+    ! should be the lower-rightmost point. If we check and find that we're dealing with data that instead starts from
+    ! the south and increases northward, we flip the data in subroutine conv1d2d_real. Similarly here, we make sure to
+    ! test so that when we are done in this routine, glatmax refers to the northernmost latitude and glatmin the
+    ! southernmost latitude.
+    !------------------------------------------------------------------------------------------------------------------
     if (tmplon(imax) > tmplon(1)) then
       glonmin = tmplon(1)
       glonmax = tmplon(imax)
@@ -21521,6 +22981,7 @@ end program trakmain
     write (6,83) glatmax,glonmax
 83  format (' Max Lat: ', f8.3, '  Max Lon: ', f8.3)
 
+    ! Fill glat and glon with the lat & lon values for the grid. This info will be used in subroutine barnes
     if (allocated(glon)) deallocate (glon)
     if (allocated(glat)) deallocate (glat)
     allocate (glat(jmax), stat = ija)
@@ -21534,6 +22995,9 @@ end program trakmain
       return
     endif
 
+    ! If the lat or lon grids are flipped (i.e., the lats increase from south to north, or the lons increase westward),
+    ! then we will need to flip both the data arrays as well as the arrays that are holding the values of the lats
+    ! and lons
     need_to_flip_lats = .false.
     need_to_flip_lons = .false.
 
@@ -21561,6 +23025,12 @@ end program trakmain
       need_to_flip_lons = .true.
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Finally, check to see if the requested boundary limits that the user input are contained within this grid (for
+    ! example, someone running this tracker on a regional grid may have forgotten to change the input grid bounds from
+    ! a global grid run). Modify the user-input bounds as needed.
+    ! Note: Only check these bounds for a genesis run on a regional grid, whether that be a 'midlat' or a 'tcgen' run.
+    !------------------------------------------------------------------------------------------------------------------
     if (trkrinfo%gridtype == 'regional' .and. trkrinfo%type /= 'tracker') then
       if (trkrinfo%eastbd > glonmax) then
         xhold = trkrinfo%eastbd
@@ -21737,6 +23207,8 @@ end program trakmain
       deallocate (temp_nc_time_vals_r8)
     endif
 
+    ! Now convert the NetCDF time values into minutes in order to be able to compare with the user-requested list of
+    ! lead times. Remember that the NetCDF lead times will be listed either as hours or as fractions of days.
     if (allocated(nctotalmins)) then
       deallocate (nctotalmins)
     endif
@@ -21772,6 +23244,9 @@ end program trakmain
 
 71  format (1x, i5, '  netcdf_file_time_values(k) = ', f8.4, '  nctotalmins(k) = ', i10)
 
+    ! Now go through the list of user-requested lead times that were read in from subroutine read_fhours and try to
+    ! match the two lists up. The big one to watch out for is whether or not the NetCDF file actually has an hour 0
+    ! lead time.
     do n = 1, ifhmax ! userloop
       usertime    = iftotalmins(n)
       match_check = 'n'
@@ -22006,6 +23481,7 @@ end program trakmain
     xplon = grid_minlon + (ipfix - 1.0) * dx
     yplat = grid_maxlat - (jpfix - 1.0) * dy
 
+    ! see abstract for explanation for this grdsp search
     grdspc = (dx+dy) * 0.5
     if (grdspc <= 0.025) then
       grfact = 20
@@ -22205,11 +23681,18 @@ end program trakmain
       ! z = 2 for 700 mb zeta, w = 2 for 700 mb winds
       w = nlev700
     else if (z == 3) then
-      ! z = 3 for sfc zeta, w = 5 for sfc (10m) winds
+      ! needed because 200 mb winds were added which are now in the #4 slot of the u & v arrays. So, to future-proof
+      ! this, use the level IDs from module level_parms instead of the hard-wired numbers.
       w = levsfc
     endif
 
-    ! calculate grid increments for interior and edge points
+    !------------------------------------------------------------------------------------------------------------------
+    ! Calculate grid increments for interior and edge points.
+    !
+    ! *Important: If dtk is defined in module trig_vals in km, then we need to multiply by 1000 here to get meters. If
+    ! it's defined as meters, just let it be. Since the wind values are given in meters, that's why we need the dlon
+    ! values to be in meters.
+    !------------------------------------------------------------------------------------------------------------------
     if (dtk < 750.0) then    ! if dtk was defined as km, then x1000
       dfix = 1000.0
     else                     ! dtk was already defined as meters
@@ -22221,12 +23704,20 @@ end program trakmain
     dlon_inter = dtk * dfix * 2.0 * dlon   ! Di dist over 2 grid pts
     dlat_inter = dtk * dfix * 2.0 * dlat   ! Dj dist over 2 grid pts
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Calculate required trig functions. These are functions of latitude. Remember that the grid must go from north to
+    ! south. This north-to-south requirement has already been checked in subroutine getgridinfo. If necessary, any
+    ! flipping of the latitudes was done there, and flipping of the data, again if necessary, was done in
+    ! subroutine getdata.
+    !------------------------------------------------------------------------------------------------------------------
     do j = 2, jmax-1
       rlat(j)   = glatmax - ((j-1) * dlat)
       cosfac(j) = cos(dtr * rlat(j))
       tanfac(j) = tan(dtr * rlat(j)) / erad
     enddo
 
+    ! Set trig factors at end points to closest interior point to avoid a singularity if the domain includes the poles,
+    ! which it will for the global grids (MRF, GDAS, GFS, UKMET, NCE)
     cosfac(1)    = cosfac(2)
     tanfac(1)    = tanfac(2)
     cosfac(jmax) = cosfac(jmax-1)
@@ -22235,6 +23726,30 @@ end program trakmain
     if (verb .ge. 3) then
       print *, 'Just before inter rvcalc, dlon_inter = ', dlon_inter, ' dlat_inter = ', dlat_inter
     endif
+
+    !------------------------------------------------------------------------------------------------------------------
+    ! These next bits of vorticity calculation code assume that the input grid is oriented so that point (1,1) is the
+    ! upper left-most (NW) and point (imax,jmax) is the lower right-most point. Any other grids will probably crash the
+    ! program due to array out of bounds errors.
+    !
+    ! Before each calculation is done, the logical array is checked to make sure that all the data points in this
+    ! calculation have valid data (ie., that the points are not outside a regional model's boundaries).
+    !
+    ! *Important note: While testing this, I uncovered a bug, which was that I had the "j+1" and "j-1" reversed. Just
+    ! from a physical understanding, the du/dy term at a point is calculated by taking the u value north of the point
+    ! minus the u value south of the point. Intuitively, this is u(j+1) - u(j-1). However, we have designed this
+    ! program to have the northernmost point as the beginning of the grid (i.e., for the global grids, j=1 at 90N, and
+    ! j increases southward). Thus, if you would do u(j+1) - u(j-1), you would actually be taking the u value south of
+    ! the point minus the u value north of the point, EXACTLY THE OPPOSITE OF WHAT YOU WANT. Therefore, the vorticity
+    ! calculations have been changed so that we now have u(j-1) - u(j+1).
+    !
+    ! With limited domain grids that have missing data on them (such as you would have for a grid that has been
+    ! converted from a non-lat/lon grid to a lat/lon grid), we were running into problems below with the setting of
+    ! zeta values to a missing value of -999. In place of this, the easiest thing to do is to simply assign a value of
+    ! the background coriolis value to that point. No, this is not correct, but it is the easiest workaround for this
+    ! right now. Setting it to zero would be too far off. Setting it to the coriolis component has a net effect of not
+    ! having much impact on the  barnes scheme result.
+    !------------------------------------------------------------------------------------------------------------------
 
     ! interior points
     do j = 2, jmax-1
@@ -22399,6 +23914,13 @@ end program trakmain
     print *, 'top of divcal, imax = ',  imax, ' jmax = ', jmax
     print *, 'dlon = ', dlon, ' dlat = ', dlat
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Calculate grid increments for interior and edge points.
+    !
+    ! *Important: If dtk is defined in module trig_vals in km, then we need to multiply by 1000 here to get meters. If
+    ! it's defined as meters, just let it be. Since the wind values are given in meters, that's why we need the dlon
+    ! values to be in meters.
+    !------------------------------------------------------------------------------------------------------------------
     if (dtk < 750.0) then    ! dtk was defined as km, x1000
       dfix = 1000.0
     else                     ! dtk was already defined as meters
@@ -22410,16 +23932,46 @@ end program trakmain
     dlon_inter = dtk * dfix * 2.0 * dlon   ! Di dist over 2 grid pts
     dlat_inter = dtk * dfix * 2.0 * dlat   ! Dj dist over 2 grid pts
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Calculate required trig functions. These are functions of latitude. Remember that the grid must go from north to
+    ! south. This north-to-south requirement has already been checked in subroutine  getgridinfo. If necessary, any
+    ! flipping of the latitudes was done there, and flipping of the data, again if necessary, was done in
+    ! subroutine getdata.
+    !------------------------------------------------------------------------------------------------------------------
     do j = 2, jmax-1
       rlat(j)   = glatmax - ((j-1) * dlat)
       cosfac(j) = cos(dtr * rlat(j))
       tanfac(j) = tan(dtr * rlat(j)) / erad
     enddo
 
-      cosfac(1)    = cosfac(2)
-      tanfac(1)    = tanfac(2)
-      cosfac(jmax) = cosfac(jmax-1)
-      tanfac(jmax) = tanfac(jmax-1)
+    ! Set trig factors at end points to closest interior point to avoid a singularity if the domain includes the poles,
+    ! which it will for the global grids (MRF, GDAS, GFS, UKMET, NCE)
+    cosfac(1)    = cosfac(2)
+    tanfac(1)    = tanfac(2)
+    cosfac(jmax) = cosfac(jmax-1)
+    tanfac(jmax) = tanfac(jmax-1)
+
+    !------------------------------------------------------------------------------------------------------------------
+    ! These next bits of divergence calculation code assume that the input grid is oriented so that point (1,1) is the
+    ! upper left-most (NW) and point (imax,jmax) is the lower right-most point. Any other grids will probably crash the
+    ! program due to array out of bounds errors.
+    !
+    ! Before each calculation is done, the logical array is checked to make sure that all the data points in this 
+    ! calculation have valid data (ie., that the points are not outside a regional model's boundaries).
+    !
+    ! *Important note: While testing this, I uncovered a bug, which was that I had the "j+1" and "j-1" reversed. Just
+    ! from a physical understanding, the du/dy term at a point is calculated by taking the u value north of the point
+    ! minus the u value south of the point. Intuitively, this is u(j+1) - u(j-1). However, we have designed this
+    ! program to have the northernmost point as the beginning of the grid (i.e., for the global grids, j=1 at 90N, and
+    ! j increases southward). Thus, if you would do u(j+1) - u(j-1), you would actually be taking the u value south of
+    ! the point minus the u value north of the point, EXACTLY THE OPPOSITE OF WHAT YOU WANT. Therefore, the divergence
+    ! calculations have been changed so that we now have u(j-1) - u(j+1).
+    !
+    ! With limited domain grids that have missing data on them (such as you would have for a grid that has been
+    ! converted from a non-lat/lon grid to a lat/lon grid), we were running into problems below with the setting of div
+    ! values to a missing value of -999. In place of this, the easiest thing to do is to simply assign a value of zero
+    ! to the divergence. No, this is not correct, but it is the easiest workaround for this right now.
+    !------------------------------------------------------------------------------------------------------------------
 
     ! interior points
     if (verb .ge. 3) then
@@ -22581,6 +24133,12 @@ end program trakmain
 
     xsmoothval = -9999.0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! We will do a barnes analysis on the data from the input array to this subroutine near the current fix location in
+    ! order to get one average value that will be returned to the calling routine. The call to get_ij_bounds is needed
+    ! in order to restrict the number of grid points that are searched in the barnes subroutine. See abstract of
+    ! subroutine get_next_ges for further details.
+    !------------------------------------------------------------------------------------------------------------------
     if (verb >= 3) then
       print *, ' '
       print *, ' --- Top of get_smooth_value_at_pt for '
@@ -22646,7 +24204,8 @@ end program trakmain
       print *, '     jbeg    = ',    jbeg, '  jend    = ',    jend
     endif
 
-    ! barnes analysis centered at one point; set bskip = 1
+    ! Since we are only doing the  barnes analysis centered at one point, there is no need to do a speedup in the
+    ! barnes analysis, so just set bskip = 1.
     bskip   = 1
     icut    = 0
     in_grid = 'n'
@@ -22684,6 +24243,8 @@ end program trakmain
         endif
 
       else
+        ! Barnes probably tried to access a pt outside the grid domain. So, reduce by half the distance from the center
+        ! of the farthest pt that barnes tries to access, exit this loop, and try it again with the smaller re and ri.
         ibret = 96
         reold = re
         riold = ri
@@ -22906,7 +24467,7 @@ end program trakmain
         do i = 1, imax  ! iloop
 
           if (valid_pt(i,j)) then
-            ! Teten's formula:
+            ! Teten's formula
             es = eo * exp((b * (temperature(i, j, z) - t1)) / (temperature(i, j, z) - t2))
             qs = (rd_over_rv * es) / penv
             rh(i, j, z) = (spfh(i, j, z) / qs) * 100.0
@@ -23004,6 +24565,7 @@ end program trakmain
       STOP 91
     endif
 
+    ! go through and sum up all of the data values on all of the vertical levels
     if (cvar == 'rh' .and. clevstr == '1000-925') then
       zstart = 1
       zend   = 2
@@ -23015,8 +24577,8 @@ end program trakmain
     point_ct = 0
 
     do z = zstart, zend ! zloop
-      do j = 1, jmax ! jloop
-        do i = 1, imax ! iloop
+      do j = 1, jmax    ! jloop
+        do i = 1, imax  ! iloop
 
           if (valid_pt(i,j) .and. rh(i,j,z) > -998.0) then
             xmean_arr(i, j) = xmean_arr(i, j) + rh(i, j, z)
@@ -23027,6 +24589,8 @@ end program trakmain
       enddo ! jloop
     enddo ! zloop
 
+    ! compute the multi-layer mean; this code should be able to be used no matter what variables & levels were being
+    ! processed above.
     xminrh = 999999.0
     xmaxrh = -999999.0
 
@@ -23180,6 +24744,7 @@ end program trakmain
       print *, '*-------------------------------------------------*'
     endif
 
+    ! check the user-supplied grid boundaries to see if we will scan the entire array or just a portion of it
     if (trkrinfo%northbd < -998.0 .or. trkrinfo%southbd < -998.0 .or. trkrinfo%westbd < -998.0  &
        .or. trkrinfo%eastbd < -998.0) then
       ! user did not specify a subgrid, so scan the whole domain
@@ -23193,13 +24758,15 @@ end program trakmain
           trkrinfo%northbd <-90.0 .or. trkrinfo%southbd > 90.0 .or.             &
           trkrinfo%southbd <-90.0 .or. trkrinfo%westbd  >= trkrinfo%eastbd .or. &
           trkrinfo%southbd >= trkrinfo%northbd) then
-        
+
         print *, 'FGC  ELSE IF B'
         if (trkrinfo%westbd  > trkrinfo%eastbd) then
           print *, 'FGC  ELSE IF IF C'
           if (trkrinfo%westbd < 360.0 .and. trkrinfo%eastbd >= 0.0)then
             print *, 'FGC  ELSE IF IF IF D'
 
+            ! In this special case, the user has specified that the western boundary be to the west of the Greenwich
+            ! meridian and the eastern boundary be to the east of it.
             if (verb .ge. 3) then
               print *, ' '
               print *, '++ NOTE: The user supplied grid lon boundaries'
@@ -23212,6 +24779,12 @@ end program trakmain
               print *, ' '
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! Calculate the beginning and ending i and j points for this case of spanning the Greenwich meridian. The
+            ! beginning and ending j points are, obviously, the same as for the regular case below in the else. The
+            ! i-beginning point will also be the same as for the regular case. However, the i-ending point will be
+            ! modified for the meridian wrap; it will be > imax.
+            !----------------------------------------------------------------------------------------------------------
             jbeg = int(((glatmax + dy - trkrinfo%northbd) / dy) + 0.5)
             jend = int(((glatmax + dy - trkrinfo%southbd) / dy) + 0.5)
             ibeg = int(((trkrinfo%westbd - glonmin + dx)  / dx) + 0.5)
@@ -23260,6 +24833,8 @@ end program trakmain
     print *, 'fgc trkrinfo%westbd  = ', trkrinfo%westbd
     print *, 'fgc trkrinfo%eastbd  = ', trkrinfo%eastbd
 
+    ! Scan the requested portion of the grid and pick out the max and min data values, figure out what the max and min
+    ! contour levels will be, and fill an array with the values of the various intermediate, incremental contour levels.
     if (trkrinfo%contint <= 0) then
       if (verb .ge. 1) then
         print *, ' '
@@ -23342,6 +24917,13 @@ end program trakmain
     if (ict > 0) then
       stdx = sqrt(stdx / real(ict))
       if (stdx == 0.0) then
+        !--------------------------------------------------------------------------------------------------------------
+        ! This can happen if you have just 2 points; The mean position will be exactly in the middle of the 2 points
+        ! and so the standard deviation around that mean point will be 0. And since the calling routine will quit if
+        ! the returned standard deviation is 0, we must force it to be 1 so the program continues running.
+        ! Theoretically, it could also happen with 3 or more points, but the likelihood of the distances working out
+        ! out to exactly equidistant for 3 points is not that good.
+        !--------------------------------------------------------------------------------------------------------------
         stdx = 1.0
       endif
     else
@@ -23365,6 +24947,8 @@ end program trakmain
 
     print *, 'ict from std deviation (stdx) calculation = ', ict
 
+    ! We want to allow for storms moving out of the sub-region, in which case we might hit slightly lower or higher
+    ! contours than were found in the sub-region, so allow for an extra buffer and modify dmin and dmax
     dbuffer = (dmax - dmin) / 2.0
     dmax    = dmax + dbuffer
     dmin    = dmin - dbuffer
@@ -23392,6 +24976,11 @@ end program trakmain
       print *, '                maxconts = ', maxconts
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! In the loop below, the contour_info%contvals array is now no longer used in subsequent subroutines. But we still
+    ! need to figure out the value of the contvals as we iterate the loop so we can know when we've surpassed dmax and
+    ! can stop incrementing contour_info%numcont, which we do need in subsequent subroutines.
+    !------------------------------------------------------------------------------------------------------------------
     contour_info%numcont = 0
     do n = 1, maxconts
       contour_info%numcont     = contour_info%numcont + 1
@@ -23642,6 +25231,13 @@ end program trakmain
     print *, 'ctm beg of find_all_maxmins,     ibeg = ', ibeg, ' iend = ', iend
     print *, 'ctm beg of find_all_maxmins,     jbeg = ', jbeg, ' jend = ', jend
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! We will use the mean and standard deviation info as part of our guideline for when to stop searching for maxes
+    ! & mins. We will set the search cut-off threshold at one standard deviation above the mean for min searches. So,
+    ! for the example of mslp, if the mean pressure over the whole domain is 1010 mb and the standard deviation is
+    ! 12 mb, then when we are searching, if the lowest available (i.e., hasn't been found in a previous iteration of
+    ! this loop) pressure is 1022, then it's time to stop searching.
+    !------------------------------------------------------------------------------------------------------------------
     if (verb .ge. 1) then
       print *, ' '
       print *, '+++ In find_all_maxmins, the mean and standard'
@@ -23664,6 +25260,13 @@ end program trakmain
       print *, ' '
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now begin the search process
+    !
+    ! STEP 1: For the first step, we will go over the entire domain and set a logical flag for whether or not each
+    ! point is eligible to be searched. We set this "eligibility" criteria according to the mslp value at each point as
+    ! compared to the "search_cutoff" value calculated just above.
+    !------------------------------------------------------------------------------------------------------------------
     pt_eligible  = .false.
     totpts       = 0
     eligible_pts = 0
@@ -23720,6 +25323,8 @@ end program trakmain
       print *, '       searchable points       = eligible_pts = ', eligible_pts
     endif
 
+    ! STEP 2: Check to see if we are going to smoothe the data, and if so, run through the algorithm to smoothe the
+    ! MSLP data.
     if (smoothe_mslp_for_gen_scan == 'y') then
       call date_and_time (big_ben(1), big_ben(2), big_ben(3), date_time)
       write (6,51) date_time(5), date_time(6), date_time(7)
@@ -23889,7 +25494,7 @@ end program trakmain
     endif
 
     if (smoothe_mslp_for_gen_scan == 'y') then
-      ! copy the smoothed MSLP data into the slp_array to smooth data
+      ! copy the smoothed MSLP data into the slp_array so that we use the smoothed data for the processing below
       slp_array    = mslp_smoothe
       slp_valid_pt = valid_smoothe
       slp          = mslp_smoothe
@@ -23925,6 +25530,14 @@ end program trakmain
       slp_valid_pt = valid_pt
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! STEP 3: Now go through the grid again and, for all eligible points that are not already masked out (due to there
+    ! being an already-existing storm from the previous lead time), call a routine to go out along 8 radials
+    ! surrounding each point to determine if there is a radial gradient of MSLP along each radial that is at least as
+    ! strong as that specified by the user. If that check passes, then call a routine that checks for a closed
+    ! low-level (10m) wind circulation. If both the MSLP radial gradient and low-level wind circulation checks pass,
+    ! then you can consider this as a candidate point.
+    !------------------------------------------------------------------------------------------------------------------
     candidate_ct = 0
     cmrg_fail_ct = 0
 
@@ -24021,6 +25634,8 @@ end program trakmain
       enddo ! iloop_g
     enddo ! jloop_g
 
+    !  STEP 4: Now sort the temporary pressure array that contains the pressures from the candidate points that were
+    ! identified in the previous step
     sortindex = 0
     call qsort (prstemp, sortindex, maxstorm)
 
@@ -24033,6 +25648,8 @@ end program trakmain
 
       do ist = 1, maxstorm
         if (prstemp(sortindex(ist)) < 999998.0) then
+          ! this means we have an actual value, since the value is less than the value (999999.0) that the entire array
+          ! was initialized with
           xmlat = glatmax - (real(jpos(sortindex(ist)) - 1)) * dy
           xmlon = glonmin + (real(ipos(sortindex(ist)) - 1)) * dx
           if (prstemp(sortindex(ist)) < 1500.0) then    ! pressure values are in mb
@@ -24049,6 +25666,13 @@ end program trakmain
               i5, '  Lon = ', f7.2, 'W   (', f7.2, 'E),  Lat = ', f7.2)
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! STEP 5: Now process through the candidates. We pass the (i,j) coordinates for each candidate point to a routine
+    ! to check for a closed contour. Then we mask out those points in the contour (or, if there is not a closed contour,
+    ! just the 8 points immediately surrounding the low center) and we do another iteration of search_loop to look for
+    ! more lows. We mask out points we have found so that on subsequent iterations of search_loop, we will not find the
+    ! same old center again and again and again.
+    !------------------------------------------------------------------------------------------------------------------
     dmin =  9.99E10
     dmax = -9.99E10
 
@@ -24111,6 +25735,8 @@ end program trakmain
 87      format (1x, 'Checking for a possible max/min at ix = ', i6, ' jx = ', i6, 3x, f8.2, 3x, f8.2, 3x, f8.2)
       endif
 
+      ! From the rough check we did above, we appear to have a gradient sloping in towards a center point. Now call a
+      ! subroutine to check whether or not there is in fact a closed contour surrounding this local maximum or minimum.
       get_last_isobar_flag = 'n'
       ccflag = 'n'
       yyct2  = yyct2 + 1
@@ -24120,6 +25746,13 @@ end program trakmain
 
       if (ccflag == 'y') then
         if (stormct < maxstorm) then
+          !------------------------------------------------------------------------------------------------------------
+          ! For a tcgen case, we will add in one additional check, and that is to ensure the point is (mostly) over
+          ! water. Only do this check if the user has requested it (some of the global models do not have a land-sea
+          ! mask included in the grib data files). Keep in mind that we only do this land-sea mask check at genesis
+          ! time in this subroutine, find_all_maxmins; Once a storm has formed, of course we will continue to track it
+          ! over land.
+          !------------------------------------------------------------------------------------------------------------
           cand_cc_good_ct = cand_cc_good_ct + 1
           point_is_over_water = 'u'
 
@@ -24176,6 +25809,8 @@ end program trakmain
         print *, ' '
       endif
 
+      ! Regardless of whether or not the found point turns out to have a closed contour, we don't want to find this
+      ! local minimum or its 8 surrounding points again in a search on a subsequent iteration of this loop.
       igicwret = 0
       call get_ijplus1_check_wrap (imax, jmax, ix, jx, ixp1, jxp1, ixm1, jxm1, trkrinfo, igicwret)
 
@@ -24298,12 +25933,17 @@ end program trakmain
 
     data rdist /10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 50.0, 60.0, 75.0, 100.0/
 
+    ! This is an input to bilin_int_uneven. In this case, the number does not really matter, since for MSLP it won't
+    ! make a difference in the bilin_int_uneven subroutine.
     ilevint = 1020
     bimct   = 0
     ifh99   = 99
     xcent_mslpval = fxy(ip, jp)
 
+    ! Ensure that the xmslp_thresh units, which are based on the user input trkrinfo%contint value, are in the same
+    ! units as the gridded mslp data
     if (fxy(ip,jp) > 50000.0) then
+      ! Gridded SLP data units are in Pa, we need to ensure that the MSLP threshold is also in Pa
       if (trkrinfo%contint < 20.0) then
         ! convert mb to Pa
         xmslp_thresh = trkrinfo%contint * 100.0
@@ -24314,6 +25954,7 @@ end program trakmain
       xmslp_noise = 0.0
 
     else
+      ! Gridded SLP data units are in mb, we need to ensure that the MSLP threshold is also in mb
       if (trkrinfo%contint < 20.0) then
         ! no conversion needed
         xmslp_thresh = trkrinfo%contint
@@ -24323,14 +25964,26 @@ end program trakmain
       xmslp_noise = 0.0
     endif
 
+    ! First get the lat & lon for the input (ip,jp) coordinates. Because these (ip,jp) coordinates come from a scan of
+    ! the original input grid, there should not be an issue with going off grid, i.e., in the case of GM wrapping, but
+    ! we will check.
     xmlat = glatmax - (jp - 1.0) * dy !CAITLYN - repeated code?
     xmlon = glonmin + (ip - 1.0) * dx
     iazim_good_depth_ct = 0
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now go around this targeted (ip,jp) point, and at each azimuthal increment (likely every 45 degrees, but could be
+    ! changed), work outward starting at 5 or 10 km radius and go out to 100 km. At each point, check to see if the
+    ! user-specified pressure gradient has been satisfied. Additionally, check to see if the gradient continues sloping
+    ! up as you go outward, until you reach the final radius. If at any radius, you find an MSLP value that is lower
+    ! than the one immediately radially inward, then this gradient check will fail for the entire candidate point.
+    !------------------------------------------------------------------------------------------------------------------
     do iazim = 1, num_azim  ! azimloop1
       bear =  (real(iazim - 1) * 45.0) + 22.5
       one_radial_mslp_depth_flag = 'n'
       continuous_gradient_flag   = 'n'
+      ! reset xnext_radially_inward_mslpval to the central mslp value at the beginning of the search outward along
+      ! each radial
       xnext_radially_inward_mslpval = xcent_mslpval
 
       do idist = 1, distmax  ! distloop1
@@ -24338,6 +25991,7 @@ end program trakmain
 
         if (gm_wrap_flag == 'maxplus360') then
           if ((xmlon > 330.0 .and. xmlon <= 360.0) .and. targlon < 25.0) then
+            ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
             targlon = targlon + 360.0
           endif
           if (xmlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -24351,6 +26005,9 @@ end program trakmain
         if (ibiret1 == 0) then
           if (xintrp_mslp < (xcent_mslpval - xmslp_noise)) then
             if (rdist(idist) <= 25.0) then
+              ! This means that, along this radial, we have found a pressure that is lower than the central pressure
+              ! (even after allowing for noise with the xmslp_noise variable), and this occurred within a radial
+              ! distance of 25 km. Therefore, we will fail this entire point and return to the calling routine.
               icmrgret = 95
               return
             endif
@@ -24358,26 +26015,43 @@ end program trakmain
 
           if (one_radial_mslp_depth_flag == 'n') then
             if (xintrp_mslp >= (xcent_mslpval + xmslp_thresh)) then
+              !--------------------------------------------------------------------------------------------------------
+              ! We have success for this azimuth for one of the two checks, the one that checks for the depth of the
+              ! low, i.e., the one indicated by the user-inputted trkrinfo%contint. There is no need to evaluate this
+              ! check again along this radial, however we still need to perform the other check, which checks to see if
+              ! the gradient continues uninterrupted out to a specified distance (trying 100 km to start).
+              !--------------------------------------------------------------------------------------------------------
               one_radial_mslp_depth_flag = 'y'
             endif
           endif
 
           if ((xintrp_mslp + xmslp_noise) < xnext_radially_inward_mslpval) then
+            ! We have tripped a check here. Moving radially outward, we have hit a point that has a mslp value *lower*
+            ! than the next previous point radially inward. The code below decides how to deal with this.
             continuous_gradient_flag = 'n'
 
             if (rdist(idist) <= 25.0) then
+              !--------------------------------------------------------------------------------------------------------
+              ! While moving radially outward, we have hit an MSLP value that is lower than that of the previous point
+              ! radially inward, i.e., the gradient has now gone the wrong way. This has happened within a radial
+              ! distance of 25 km, so we will fail this entire candidate point.
+              !--------------------------------------------------------------------------------------------------------
               icmrgret = 96
               return
             else
+              ! this happened outside of 25 km, so we simply make a note of it for now
               if (idist > 1) then
                 max_radial_grad_dist(iazim) = rdist(idist - 1)
                 exit  ! distloop1
               else
+                ! there is no way this else statement should ever be reached, but out of good programming practice, I
+                ! need to allow for the possibility of idist = 1 here
                 max_radial_grad_dist(iazim) = 0.0
                 exit  ! distloop1
               endif
             endif
           else
+            ! the gradient is continuing in the expected direction as we move radially outward
             xnext_radially_inward_mslpval = xintrp_mslp
             continuous_gradient_flag      = 'y'
           endif
@@ -24385,16 +26059,33 @@ end program trakmain
       enddo  ! distloop1
 
       if (one_radial_mslp_depth_flag == 'y') then
+        ! this means that the MSLP depth requirement entered by the user was met at some point along this radial
         iazim_good_depth_ct = iazim_good_depth_ct + 1
         if (continuous_gradient_flag == 'y' ) then
+          !------------------------------------------------------------------------------------------------------------
+          ! By getting to this point in the code for this radial with the continuous_gradient_flag flag still having a
+          ! value of 'y', that means that the gradient was continuous out to the max distance, so enter that max
+          ! distance value here. If it was not continuous, then the actual distance it got to while being continuous
+          ! would have been entered in the IF statements just above.
+          !------------------------------------------------------------------------------------------------------------
           max_radial_grad_dist(iazim) = rdist(distmax)
         endif
       else
+        ! the MSLP depth requirement was not met along this radial, so fail this point
         icmrgret = 95
         return
       endif
     enddo  ! azimloop1
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Now go through the azimuths and do a check for each one to see if a critical threshold of our criteria passes
+    ! or not.
+    !
+    ! This first one just checks to ensure that the MSLP depth requirement was satisfied along every radial. If even
+    ! one did not, then we fail and return to the calling routine. Keep in mind, this is only checking for the depth,
+    ! there is nothing in this first IF statement about how far out along the radial beyond 25 km that the gradients
+    ! along each radial were maintained.
+    !------------------------------------------------------------------------------------------------------------------
     if (iazim_good_depth_ct == num_azim) then
       write (6,97) jp, xmlat, ip, xmlon, 360.0-xmlon
 97    format (//, 1x, '  --> GOOD check_mslp depth at every radial, jp = ', i5, ' xmlat = ', f7.2, ' ip = ', &
@@ -24408,6 +26099,7 @@ end program trakmain
       return
     endif
 
+    ! count up the number of radials that maintained the MSLP gradient out to the max distance checked
     iazim_full_dist_ct = 0
     do iazim = 1, num_azim  ! azimloop2
       if (max_radial_grad_dist(iazim) == rdist(distmax)) then
@@ -24415,6 +26107,11 @@ end program trakmain
       endif
     enddo  ! azimloop2
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! Check to see if the number of radials that maintained the MSLP gradient out to the max distance matched the total
+    ! number of radials. If not, check to see that this was satisfied in at least 3 of the 8 radials, which would mean
+    ! that it was satisfied in at least 2 quadrants.
+    !------------------------------------------------------------------------------------------------------------------
     if (iazim_full_dist_ct == num_azim) then
       if (verb >= 3) then
         print *, ' '
@@ -24434,6 +26131,8 @@ end program trakmain
       return
     endif
 
+    ! Now check to see if the number of radials on which the MSLP gradient was maintained over the max distance was
+    ! less than 2. If so, then fail this point and return to the calling routine.
     if (iazim_full_dist_ct < 2) then
       if (verb >= 3) then
         print *, ' '
@@ -24445,6 +26144,12 @@ end program trakmain
       return
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! If we are still in this subroutine, we are left with just one possibility, and that is that iazim_full_dist_ct=2,
+    ! which means that the MSLP gradient was maintained over the max distance for exactly 2 radials. We need to check
+    ! here to see if that occurred in 2 separate quadrants or in the same quadrant. If it was in the same quadrant,
+    ! then we FAIL this point. If they are in separate quadrants, then we assign a PASS to the point.
+    !------------------------------------------------------------------------------------------------------------------
     iquadct = 0
     if (max_radial_grad_dist(1) == rdist(distmax) .or. max_radial_grad_dist(2) == rdist(distmax)) then
       iquadct = iquadct + 1
@@ -24589,6 +26294,7 @@ end program trakmain
 
         if (gm_wrap_flag == 'maxplus360') then
           if ((xcandlon > 330.0 .and. xcandlon <= 360.0) .and. targlon < 25.0) then
+            ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
             targlon = targlon + 360.0
           endif
           if (xcandlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -24618,23 +26324,36 @@ end program trakmain
           vtct(iq, idist)  = vtct(iq, idist) + 1
 
           if ((hemisphere*vt) >= 8.75) then
-            ! increment counter by 1 if cyclonic Vt > 8.75 m/s (17 kts) @ this azimuth
+            ! if cyclonic Vt exceeds 8.75 m/s (17 kts) at this azimuth, then increment the counter for this quad by 1
             vt_exceed_17kts_ct(iq, idist) = vt_exceed_17kts_ct(iq, idist) + 1
           endif
         endif
       enddo ! azimloop
 
+      ! If the Vt at 2 out of 4 azimuths exceeds 17 kts (which is 50% of 34 kts), then give an automatic pass for that
+      ! quadrant without checking for the mean Vt in this quadrant.
       do nq = 1, numquad
         if (vt_exceed_17kts_ct(nq,idist) >= 2) then
           quad_pass_flag(nq) = 'y'
         endif
       enddo
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now check again, but this time check for the mean Vt averaged over the 4 azimuths in this quadrant. Yes, it can
+      ! be redundant and set the quad_pass_flag to 'y' again for this quadrant, but that's okay. What it is *not* able
+      ! to do here is take that 'y' setting away that may have just been set in the IF statement above with two
+      ! azimuths passing 17 kts.
+      !----------------------------------------------------------------------------------------------------------------
       do nq = 1, numquad
-        ! we need at least 2 valid azimuths in order to get a proper mean Vt.
+        ! we need at least 2 valid azimuths in order to get a proper mean Vt
         if (vtct(nq,idist) >= 2) then
           vtavg = vtsum(nq, idist) / vtct(nq, idist)
           if ((hemisphere * vtavg) >= full_vt_thresh) then
+            !----------------------------------------------------------------------------------------------------------
+            ! The mean Vt averaged over the number of azimuths in this quadrant (ideally, the max number of azimuths
+            ! per quadrant, which was 4 as of the writing of this routine) at this distance exceeds 7 m/s, which is
+            ! 13.6 kts, which is 40% of 34 kts.
+            !----------------------------------------------------------------------------------------------------------
             quad_pass_flag(nq) = 'y'
           elseif ((hemisphere * vtavg) >= half_vt_thresh) then
             quad_pass_half_vt_flag(nq) = 'y'
@@ -24643,7 +26362,7 @@ end program trakmain
           vtavg = -9999.0
         endif
 
-        ! Now check for the max average Vt in this quadrant
+        ! now check for the max average Vt in this quadrant
         if (vtavg > -9998.0) then
           if ((hemisphere * vtavg) > (hemisphere * vtquadmax(nq))) then
             vtquadmax(nq) = vtavg
@@ -24673,6 +26392,14 @@ end program trakmain
 71    format (1x, '   LL Wind Circ Vt mean quadmax value: ', a2, 2x, f8.2, ' kts')
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! In each quadrant, there will be 3 choices: The full Vt thresh was reached, the half-Vt thresh was reached, or
+    ! neither thresh was reached. i.e., the same quadrant cannot have both the full and half threshold flags be tripped
+    ! to y, based on how the IF statement above has been set up. So that is why we create the final_quad_sum_ct below.
+    ! And we will require that at least 2 of the quadrants reach the full Vt thresh, while up to 2 can just simply reach
+    ! the half threshold. Doing it this way still ensures a closed wind circulation, however it also allows for
+    ! asymmetric stucture often found in developing disturbances.
+    !------------------------------------------------------------------------------------------------------------------
     final_quad_full_vt_ct = 0
     final_quad_half_vt_ct = 0
     final_quad_sum_ct     = 0
@@ -24788,6 +26515,7 @@ end program trakmain
 
         if (gm_wrap_flag == 'maxplus360') then
           if ((ctlon > 330.0 .and. ctlon <= 360.0) .and. targlon < 25.0) then
+            ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
             targlon = targlon + 360.0
           endif
           if (ctlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -24797,7 +26525,7 @@ end program trakmain
 
         if (targlon >= glonmax) then
           if (trkrinfo%gridtype == 'global') then
-            targlon = targlon - 360.0
+            targlon = targlon - 360.0 ! just GM-wrapped for the full, regular, global grid
           else
             xmax_rdist_reached = rdist
             exit  ! radial_loop
@@ -24806,7 +26534,7 @@ end program trakmain
 
         if (targlon < glonmin) then
           if (trkrinfo%gridtype == 'global') then
-            targlon = targlon + 360.0
+            targlon = targlon + 360.0 ! just GM-wrapped for the full, regular, global grid
           else
             xmax_rdist_reached = rdist
             exit  ! radial_loop
@@ -24818,6 +26546,8 @@ end program trakmain
           exit  ! radial_loop
         endif
 
+        ! These calls to bilin_int_uneven pass a variable, level, that contains the vertical level to pull the wind
+        ! data from, either 850, 700 or surface (which will be indicated by a value/code of 1020).
         call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, 'u', xintrp_u, &
              & valid_pt, bimct, -99, ibiret1)
         call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, level, 'v', xintrp_v, &
@@ -24828,6 +26558,8 @@ end program trakmain
           azimuth_ct = azimuth_ct + 1
           vt_azim_sum = vt_azim_sum + vt(iazim)
         else
+          ! If ibiret /= 0, then we have reached out too far (likely a regional grid). So, pull the plug and just set
+          ! the xmax_rdist_reached to the last diagnosed value of rdist.
           xmax_rdist_reached = rdist
           exit  ! radial_loop
         endif
@@ -24847,6 +26579,8 @@ end program trakmain
 
       if (ctlat >= 0.0) then
         if (vt_mean >= 3.0) then
+          ! For a NH storm, if the cyclonic mean Vt >= 3.0, increment rdist and cycle through to the next iteration of
+          ! radial_loop.
           rdist = rdist + 40.0
         else
           xmax_rdist_reached = rdist
@@ -24854,6 +26588,8 @@ end program trakmain
         endif
       else
         if (vt_mean <= -3.0 .and. vt_mean > -998.0) then
+          ! For a SH storm, if the cyclonic mean Vt <= -3.0, increment rdist and cycle through to the next iteration of
+          ! radial_loop.
           rdist = rdist + 40.0
         else
           xmax_rdist_reached = rdist
@@ -24878,6 +26614,13 @@ end program trakmain
       print *, 'mbow: After radial_loop, rdist = ', rdist, '    xmax_rdist_reached = ', xmax_rdist_reached
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! At this point, we are done searching radially outwards away from the storm center. The max radial distance we
+    ! reached is called xmax_rdist_reached. By getting to this spot in the subroutine, that means that we bumped out of
+    ! radial_loop above because the rdist being used in that loop got to a radius at which the mean cyclonic Vt no
+    ! longer was strong enough to continue the search outward, so we need to reduce it by 40 km here (back to the value
+    ! for the last successful search). At a minimum, we will mask to a radius of 80 km.
+    !------------------------------------------------------------------------------------------------------------------
     if (xmax_rdist_reached > 80.0) then
       xmax_rdist_reached = xmax_rdist_reached - 40.0
     else
@@ -24891,6 +26634,11 @@ end program trakmain
 
     do i = 1, 4  ! bearloop
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! Now find the values of the longitude for the farthest west and east points and find the values of the latitude
+      ! for the farthest north and south points. The i and j indices associated with these lons and lats will be used
+      ! to define the bounds of the grid over which we scan to find points that will update the mask.
+      !----------------------------------------------------------------------------------------------------------------
       select case (i)
         case (1); xbear =   0.0;
         case (2); xbear =  90.0;
@@ -24902,6 +26650,7 @@ end program trakmain
 
       if (gm_wrap_flag == 'maxplus360') then
         if ((ctlon > 330.0 .and. ctlon <= 360.0) .and. targlon < 25.0) then
+          ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
           targlon = targlon + 360.0
         endif
         if (ctlon > 360.0 .and. (targlon >= 0.0 .and. targlon < 180.0)) then
@@ -24916,7 +26665,7 @@ end program trakmain
 
       if (targlon >= glonmax) then
         if (trkrinfo%gridtype == 'global') then
-          targlon = targlon - 360.0
+          targlon = targlon - 360.0 ! just GM-wrapped for the full, regular. global grid
         else
           print *, ' '
           print *, 'WARNING: In subroutine mask_based_on_wind_circ,'
@@ -24931,7 +26680,7 @@ end program trakmain
 
       if (targlon < glonmin) then
         if (trkrinfo%gridtype == 'global') then
-          targlon = targlon + 360.0
+          targlon = targlon + 360.0 ! just GM-wrapped for the full, regular. global grid
         else
           print *, ' '
           print *, 'WARNING: In subroutine mask_based_on_wind_circ,'
@@ -24956,6 +26705,7 @@ end program trakmain
         cycle ! bearloop
       endif
 
+      ! get the i & j starting and ending points for our loop where we will update the mask
       if (i == 1) then
         ! get j for northern latitude; round targlat to the closest jpoint
         if (targlat >= 0.0) then    ! N. Hemisphere
@@ -25213,6 +26963,13 @@ end program trakmain
       print *, 'fxy(ix,jx) = ', fxy(ix,jx), ' xcentval = ', xcentval
     endif
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! First, set up the contour intervals that will be used. In the original version of this code, we used preset
+    ! standard intervals (984,988,992,996,1000,1004....). But upon further review, it was decided that this was too
+    ! arbitrary. So instead, we consider the found min (max) value to be the bottom (top) of the list of contour
+    ! intervals. In this way, we can clearly specify and screen storms based on the "depth" of the pressure field as
+    ! compared to the surroundings.
+    !------------------------------------------------------------------------------------------------------------------
     i = 1
     do while (i <= maxconts)
       if (cmaxmin == 'min') then
@@ -25225,6 +26982,20 @@ end program trakmain
       endif
     enddo
 
+    !------------------------------------------------------------------------------------------------------------------
+    ! This loop is the master loop
+    !
+    ! Find the contour interval in which the center value resides. Note that the lower bound is included for a min
+    ! check, while the upper bound is included for a max check. Note also that this subroutine can be used to find the
+    ! last closed contour, and part of that functionality shows up in the next while statement where we reference
+    ! "num_found_contours" in the array indeces for the contour values. Basically, the way we do this is, for example,
+    ! if our central value is 990.4 mb and our contour interval is 4 mb, then in the first run through 
+    ! successive_contours_loop we see if we have a closed contour in the interval 990.4-994.4. If yes, then the next
+    ! time through this loop, we see if we have a closed contour in the interval 994.4-998.4. If yes, then the next
+    ! loop check is for 998.4-1002.4, and so on. We stop searching if we find a value that is either below the xcentval
+    ! input into this subroutine or below the lower value of the current contour interval (this would mean a change in
+    ! the gradient and would indicate that, in the case of mslp, we are heading down towards another, different low).
+    !------------------------------------------------------------------------------------------------------------------
     do while (num_found_contours < num_requested_contours) ! successive_contours_loop
       isc_count = isc_count + 1
       point_is_already_in_next_contour = .false.
@@ -25265,6 +27036,11 @@ end program trakmain
         print *, '          xcentval = ', xcentval
       endif
 
+      !----------------------------------------------------------------------------------------------------------------
+      ! This single_contour_scan_loop is the main loop for searching for one individual contour. If it is determined
+      ! that a contour exists, control is returned to the successive_contours_loop, and if more contours were requested
+      ! to be found, then the search continues onward & outward.
+      !----------------------------------------------------------------------------------------------------------------
       temp_mask_i_loc = 0
       temp_mask_j_loc = 0
 
@@ -25280,12 +27056,24 @@ end program trakmain
       do while (still_scanning)  ! single_contour_scan_loop
 
         if (iter == 1 .and. num_found_contours == 0) then
+          ! for the first iteration, we have only the first ring, which is centered on the input minimum/maximum point
           ringct = 1
           search_next_i(1) = ix
           search_next_j(1) = jx
 
         else if (iter == 1 .and. num_found_contours > 0) then
+          ! This is the first iteration in a *new* contour. That is, we have already found 1 or more previous contours
+          ! while in previous iterations of successive_contours_loop and we are now beginning to look for the
+          ! next contour.
           if (next_contour_ct == 0) then
+            !----------------------------------------------------------------------------------------------------------
+            ! This would be for the special case in which, for example, you've got a very intense, compact storm that
+            ! "skips" a contour. That is, suppose the min pressure of a storm is 982 mb, and we are utilizing a 4-mb
+            ! contour interval, but all surrounding data points are, say, 987 mb or higher. Then, next_contour_ct would
+            ! be 0 since no data points were found in the next contour interval of 982-986 mb, but we can continue
+            ! searching since the gradient is still sloping the correct way. The code in this if statement handles this
+            ! special case.
+            !----------------------------------------------------------------------------------------------------------
             if (verb .ge. 3) then
               print *, ' '
               print *, 'ALERT: next_contour_ct = 0 '
@@ -25300,6 +27088,8 @@ end program trakmain
                 jby = beyond_contour_j(nb)
 
                 if (.not. point_is_already_in_beyond_pool(ibx,jby)) then
+                  ! If this point is no longer in our pool of "beyond contour" points, then just cycle out of this
+                  ! iteration
                   cycle   ! bey_con_min_loop
                 endif
 
@@ -25307,6 +27097,9 @@ end program trakmain
                   next_contour_ct = next_contour_ct + 1
                   next_contour_i(next_contour_ct) = ibx
                   next_contour_j(next_contour_ct) = jby
+                  ! This point has now been identified as being in the "next" contour interval, i.e., no longer in the
+                  ! "beyond" contour pool. Therefore, set the logical flag to indicate that this point is no longer
+                  ! in the "beyond" contour pool.
                   point_is_already_in_beyond_pool(ibx, jby) = .false.
                 endif
               enddo  ! bey_con_min_loop
@@ -25320,6 +27113,8 @@ end program trakmain
                 jby = beyond_contour_j(nb)
 
                 if (.not. point_is_already_in_beyond_pool(ibx,jby)) then
+                  ! If this point is no longer in our pool of "beyond contour" points, then just cycle out of this
+                  ! iteration
                   cycle  ! bey_con_max_loop
                 endif
 
@@ -25327,6 +27122,9 @@ end program trakmain
                   next_contour_ct = next_contour_ct + 1
                   next_contour_i(next_contour_ct) = ibx
                   next_contour_j(next_contour_ct) = jby
+                  ! This point has now been identified as being in the "next" contour interval, i.e., no longer in
+                  ! the "beyond" contour pool. Therefore, set the logical flag to indicate that this point is no longer
+                  ! in the "beyond" contour pool.
                   point_is_already_in_beyond_pool(ibx,jby) = .false.
                 endif
               enddo  ! bey_con_max_loop
@@ -25347,6 +27145,16 @@ end program trakmain
                 print *, ' '
               endif
 
+              !--------------------------------------------------------------------------------------------------------
+              ! The number of rings that we have available to search in the next contour interval is 0, so cycle all
+              ! the way back to the top of the outer loop, which is successive_contours_loop, so that we can increase
+              ! the contour bounds and search inside those new bounds. Again, this is for the case in which we have an
+              ! intense, compact storm and we are using a small contour interval, such that we are essentially
+              ! over one of these intervals in one of the loop iterations. We need to bump up the num_found_contours by
+              ! one in order to increase the array index in the contvals array at the top of the
+              ! successive_contours_loop. It is kosher to do this since the reason we are cycling back to the top of
+              ! that loop is that we are skipping over a contour interval.
+              !--------------------------------------------------------------------------------------------------------
               num_found_contours = num_found_contours + 1
               cycle ! successive_contours_loop
             endif
@@ -25390,21 +27198,38 @@ end program trakmain
 
         next_ring_ct = 0
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! This next loop reviews the points that have been labelled for the "beyond_contour" pool. As we get further
+        ! into successive iterations of successive_contours_loop, some of these previously "beyond" points are now
+        ! within the contour interval range that we are checking, so we need to go through the list of "beyond" points
+        ! and remove any that are no longer in that "beyond" category.
+        !--------------------------------------------------------------------------------------------------------------
         do nb = 1, beyond_contour_ct  ! check_beyond_loop
           ibx = beyond_contour_i(nb)
           jby = beyond_contour_j(nb)
 
           if (.not. point_is_already_in_beyond_pool(ibx,jby)) then
+            ! This point may have been removed already in a previous iteration of successive_contours_loop. If this
+            ! point is no longer in our pool of "beyond contour" points, then just cycle out of this iteration.
             cycle   ! check_beyond_loop
           endif
 
           do nring = 1, ringct
+            ! Check to see if any of the points being searched in the upcoming multiple_ring_loop are points that had
+            ! previously been saved as "beyond_contour" points. If so, remove their status as "beyond_contour" points
+            ! by setting the logical flag to false.
             if (ibx == ringposi(nring) .and. jby == ringposj(nring)) then
               point_is_already_in_beyond_pool(ibx,jby) = .false.
             endif
           enddo
         enddo  ! check_beyond_loop
 
+        !--------------------------------------------------------------------------------------------------------------
+        ! In each iteration of single_contour_scan_loop, we can have a different number of rings to analyze. In the
+        ! first iteration, we only have 1 ring, the initial ring around the local max/min that was input to this
+        ! subroutine. Subsequent iterations will have a variable number of rings, depending on how many new data points
+        ! within our contour interval were found in the previous iteration.
+        !--------------------------------------------------------------------------------------------------------------
         do mr = 1, ringct  ! multiple_ring_loop
           icenx = ringposi(mr)
           jcenx = ringposj(mr)
@@ -25440,6 +27265,12 @@ end program trakmain
             return
           endif
 
+          !------------------------------------------------------------------------------------------------------------
+          ! For each individual ring, we check all 8 points surrounding the center point. The points are numbered for
+          ! each ring as shown in the diagram to the right of the "select case" statement just below. REMEMBER: The j
+          ! in our grids increases from north to south, so that for a global grid, j = 1 is at 90N and j = jmax is
+          ! at 90S.
+          !------------------------------------------------------------------------------------------------------------
           do ir = 1, 9  ! individual_ring_loop
 
             select case (ir)
@@ -25454,6 +27285,8 @@ end program trakmain
               case (9); irx = icenx; jrx = jcenx;  ! = center pt of ring
             end select
 
+            ! Make sure the point we are looking at has valid data. This is an issue only on regional grids, where we
+            ! have a buffer of bitmapped (null) data points surrounding the real grid.
             if (.not. valid_pt(irx,jrx)) then
               if (verb .ge. 3) then
                 print *, ' '
@@ -25489,6 +27322,8 @@ end program trakmain
               return
             endif
 
+            ! Check to make sure that the point we are looking at is not considered under the influence of another
+            ! nearby low.
             if (masked_out(irx,jrx)) then
               if (verb .ge. 3) then
                 print *, ' '
@@ -25533,10 +27368,21 @@ end program trakmain
               return
             endif
 
+            ! if we have already hit this point on a previous ring check, then just ignore this point and cycle past it
             if (point_is_already_in_our_contour(irx,jrx)) then
               cycle   ! individual_ring_loop
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! For a MIN check, check to see if the data point is below the contour interval or is below the local
+            ! minimum value passed into this subroutine. In either case, exit and consider this to NOT be a closed
+            ! contour. For a MAX check, check to see if the data point is above the contour interval or is above the
+            ! local maximum value passed into this subroutine. In either case, exit and consider this to NOT be a
+            ! closed contour.
+            ! For example, for mslp, this would be as we're moving outward away from lower pressures to higher
+            ! pressures, and then all of a sudden we come upon a lower pressure. This probably means we're heading
+            ! toward another low pressure area, so mark the point and return to the calling routine.
+            !----------------------------------------------------------------------------------------------------------
             found_a_point_below_contour = 'n'
             found_a_point_above_contour = 'n'
             if (cmaxmin == 'min') then
@@ -25595,6 +27441,13 @@ end program trakmain
               return
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! If we've made it this far, then we at least know that the gradient is still heading in the right
+            ! direction. Do the check now to see if the value at this point is within our specific contour interval
+            ! (there is the possibility that the value is beyond our interval, which will be checked for just below,
+            ! and if that's the case, then that point will be processed in a subsequent iteration of this loop that
+            ! that encompasses that correct contour interval).
+            !----------------------------------------------------------------------------------------------------------
             found_a_point_in_our_contour = 'n'
             if (cmaxmin == 'min') then
               if (fxy(irx,jrx) >= contlo .and. fxy(irx,jrx) < conthi) then
@@ -25607,6 +27460,12 @@ end program trakmain
             endif
 
             if (found_a_point_in_our_contour == 'y') then
+              !--------------------------------------------------------------------------------------------------------
+              ! We've found a data point in our interval, something that is inside the closed contour, and it hasn't
+              ! been marked as being found in a previous iteration of this loop, so mark it now and store the (i,j)
+              ! location so that we can scan a ring around this point in a successive iteration of this loop for more
+              ! potential points within this interval
+              !--------------------------------------------------------------------------------------------------------
               point_is_already_in_our_contour(irx, jrx) = .true.
               next_ring_ct = next_ring_ct + 1
               search_next_i(next_ring_ct) = irx
@@ -25623,16 +27482,39 @@ end program trakmain
               endif
             endif
 
+            !----------------------------------------------------------------------------------------------------------
+            ! If we've made it this far AND the found_a_point_in_our_contour flag indicates that this point is not in
+            ! our contour interval, then by default that means that this point is for a contour interval beyond what
+            ! we're currently looking at. E.g., if we're looking at the contours around a 972 mb low and we're moving
+            ! outward and currently checking the 984-988 mb contour interval, it means that we found, say, a gridpoint
+            ! with 991 mb. So we want to mark that point for a future iteration of this loop that would be checking the
+            ! 988-992 mb contour interval.
+            !----------------------------------------------------------------------------------------------------------
             if (found_a_point_in_our_contour /= 'y' .and. .not. point_is_already_in_next_contour(irx,jrx)) then
+              !--------------------------------------------------------------------------------------------------------
+              ! We've found a data point that is beyond our interval, so this is not a concern for finding the bounds
+              ! of our current contour interval, but we want to mark these points and remember them for the next
+              ! iteration of successive_scan_loop. (For example, suppose we are currently searching for points in the
+              ! 984-988 mb range, and we find a point that is 990 -- mark it here to be remembered when we scan
+              ! for 988-992 mb).
+              !--------------------------------------------------------------------------------------------------------
               if (cmaxmin == 'min') then
                 contlo_next = conthi
                 conthi_next = conthi + trkrinfo%contint
+                ! Next contour; we've found a point that is in the very next contour interval
                 if (fxy(irx,jrx) >= contlo_next .and. fxy(irx,jrx) < conthi_next) then
                   next_contour_ct = next_contour_ct + 1
                   next_contour_i(next_contour_ct) = irx
                   next_contour_j(next_contour_ct) = jrx
                   point_is_already_in_next_contour(irx, jrx) = .true.
                 else if (fxy(irx,jrx) >= conthi_next) then
+                  !----------------------------------------------------------------------------------------------------
+                  ! Beyond contour; This point is at least 1 contour interval beyond the next contour interval. Dump
+                  ! the info into these i and j arrays. This info will be used if in the next iteration of,
+                  ! single_contour_scan_loop next_contour_ct = 0. That would mean that we have, e.g., an intensely deep
+                  ! low with a sharp mslp gradient that essentially "skips" over a contour interval. E.g., if using a
+                  ! 4 mb interval, we go from 947 to 953 AND there are NO intervening gridpoints in the 948-952 interval
+                  !----------------------------------------------------------------------------------------------------
                   beyond_contour_ct = beyond_contour_ct + 1
                   beyond_contour_i(beyond_contour_ct) = irx
                   beyond_contour_j(beyond_contour_ct) = jrx
@@ -25643,11 +27525,13 @@ end program trakmain
                 contlo_next = contlo - trkrinfo%contint
                 conthi_next = contlo
                 if (fxy(irx,jrx) >  contlo_next .and. fxy(irx,jrx) <= conthi_next) then
+                  ! see 'Next contour' comment above 
                   next_contour_ct = next_contour_ct + 1
                   next_contour_i(next_contour_ct) = irx
                   next_contour_j(next_contour_ct) = jrx
                   point_is_already_in_next_contour(irx, jrx) = .true.
                 else if (fxy(irx,jrx) <= contlo_next) then
+                  ! see 'Beyond contour' comment above
                   beyond_contour_ct = beyond_contour_ct + 1
                   beyond_contour_i(beyond_contour_ct) = irx
                   beyond_contour_j(beyond_contour_ct) = jrx
@@ -25769,6 +27653,9 @@ end program trakmain
 
     iclmret = 0
 
+    ! First, calculate the longitude and latitude of the input ix and jx points. If the xplon value ends up being
+    ! > 360.0 (this can happen for basin-scale HWRF), don't worry about it. Just leave it be, as the trigonometry will
+    ! work out the same for lons > 360.
     xplon = glonmin + (real(ix) - 1.0) * dx
     yplat = glatmax - (real(jx) - 1.0) * dy
 
@@ -25776,6 +27663,8 @@ end program trakmain
 
     imct = 0
 
+    ! Now get the mask value for the point directly at this input point (we will next work our way around this point in
+    ! the following loop).
     xmask_sum = 0.0
 
     if (valid_pt(ix,jx)) then
@@ -25797,6 +27686,8 @@ end program trakmain
       return
     endif
 
+    ! Now go around the storm via azimloop and get interpolated values of the land-sea mask at each azimuth at a radial
+    ! distance of 75 km from the center point.
     bimct = 0
 
     do iazim = 1, numazim  ! azimloop CAITLYN - do some of these do loops do the same thing?
@@ -25805,6 +27696,7 @@ end program trakmain
 
       if (gm_wrap_flag == 'maxplus360') then
         if ((xplon > 330.0 .and. xplon <= 360.0) .and. targlon < 25.0) then
+          ! targlon returned from distbear is just east of the GM with a non-360-adjusted value; adjust
           targlon = targlon + 360.0
         endif
         if (xplon > 360.0 .and.(targlon >= 0.0 .and. targlon < 180.0)) then
@@ -25812,6 +27704,9 @@ end program trakmain
         endif
       endif
 
+      ! These calls to bilin_int_uneven pass a variable, level, that is used for applications of interpolating wind
+      ! data. Here, we are instead interpolating the land-sea mask data, so we don't care about the level, so just
+      ! pass a dummy value of 850, which never gets used.
       call bilin_int_uneven (targlat, targlon, dx, dy, imax, jmax, trkrinfo, 850, 'm', xintrp_mask, &
            & valid_pt, bimct, -99, ibiret1)
 
