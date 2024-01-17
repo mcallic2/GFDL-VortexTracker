@@ -127,6 +127,180 @@ program trakmain
 
 end program trakmain
 
+  !********************************************************************************************************************
+  !*
+  !*  ABSTRACT: This subroutine is the core of the program. It contains the main loop for looping through all the
+  !*      forecast hours and all the storms. Basically, the way it works is that it has an outer loop that loops on the
+  !*      forecast hour. At the beginning of this loop, the data are read in for all parameters and levels needed for
+  !*      tracking. The full regional or global grid is read in. If vorticity was not read in (some of the centers do
+  !*      not send us vorticity), then vorticity calculations are done on the whole grid at both 850 and 700 mb. Then
+  !*      the program goes into the inner loop, which loops on storm number (program originally set up to handle a max
+  !*      of 15 storms). For each storm, subroutine find_maxmin is called for the following parameters: Rel Vort and
+  !*      geopotential hgt at 700 & 850 mb, and MSLP. Within find_maxmin, a barnes analysis is performed over the guess
+  !*      position of the  storm to find the max or min value, and then iteratively, the grid size is cut in half
+  !*      several times and the barnes analysis rerun to refine the positioning of the max or min location. After the
+  !*      center positions for these parameters have been obtained, subroutine get_uv_center is called to get a center
+  !*      fix for the minimum in the wind field, specifically, a minimum in the magnitude of the wind speed (vmag). The
+  !*      calculation of the vmag minimum is done differently than the calculation for the other parameters; for vmag,
+  !*      the grid near the storm center guess position is interpolated down to a very fine grid, and then find_maxmin
+  !*      is called and a barnes analysis is done on that smaller grid. For vmag, there are no further calls made to
+  !*      barnes with a smaller grid, since the grid has already been interpolated down to a smaller grid. Once all of
+  !*      the parameter center fixes have been made, subroutine fixcenter is called to average these positions together
+  !*      to get a best guess fix position. Then a check is done with a call to subroutine is_it_a_storm to make sure
+  !*      that the center that we have found does indeed resemble a tropical cyclone. Finally, subroutine get_next_ges
+  !*      is called to make a guess position for the next forecast time for this storm.
+  !*
+  !*  INPUT:
+  !*      inp                   :: contains input date and model number information
+  !*      maxstorm              :: maximum # of storms to be handled
+  !*      numtcv                :: number of storms read off of the tcvitals file
+  !*      ifhmax                :: max number of analysis & forecast times to be handled
+  !*      trkrinfo              :: derived type that holds/describes various tracker parms
+  !*      ncfile                :: if the input data type is netcdf, then this ncfile variable contains the name of
+  !*                               the netcdf file
+  !*      ncfile_id             :: if the input data type is netcdf, then this ncfile_id variable contains an integer
+  !*                               id assigned to the netcdf file from the open_ncfile subroutine.
+  !*      nc_lsmask_file        :: if the input data type is netcdf, and if there is a seperate file for the land-sea
+  !*                               mask, then this nc_lsmask_file variable contains the name of that netcdf land-sea
+  !*                               mask file.
+  !*      nc_lsmask_file_id     :: if the input data type is netcdf, and if there is a separate file for the land-sea
+  !*                               mask, then this nc_lsmask_file_id variable contains an integer id assigned to the
+  !*                               netcdf lsmask file from the open_ncfile subroutine.
+  !*      ncfile_has_hour0      :: character flag (y|n) that, if the tracker is running on NetCDF data, tells if the
+  !*                               NetCDF file actually contains hour0 data or not (some, like the 2016 version of FV3,
+  !*                               do not).
+  !*      ncfile_tmax           :: integer with max number of time levels in the input NetCDF file, as read in from the
+  !*                               NetCDF file itself in subroutine read_netcdf_fhours.
+  !*
+  !*    OUTPUT:
+  !*      itret                 :: return code from this subroutine
+  !*
+  !*    LOCAL PARAMETERS:
+  !*      storm                 :: contains the tcvitals for the storms
+  !*      stormswitch           :: 1, 2 or 3 (see more description under Main pgm section)
+  !*      slonfg                :: first guess array for longitude
+  !*      slatfg                :: first guess array for latitude
+  !*      maxtime               :: Max number of forecast times program can track
+  !*      maxtp                 :: Max number of tracked parameters program will track. Currently (7/2015), this maxtp
+  !*                               is 11, and these 11 are listed just a few lines below.
+  !*      readflag              :: Indicates status of read for each of 19 parms:
+  !*
+  !*                               1: 850 mb absolute vorticity
+  !*                               2: 700 mb absolute vorticity
+  !*                               3: 850 mb u-comp
+  !*                               4: 850 mb v-comp
+  !*                               5: 700 mb u-comp
+  !*                               6: 700 mb v-comp
+  !*                               7: 850 mb gp hgt
+  !*                               8: 700 mb gp hgt
+  !*                               9: MSLP
+  !*                              10: near-surface u-comp
+  !*                              11: near-surface v-comp
+  !*                              12: 500 mb u-comp
+  !*                              13: 500 mb v-comp
+  !*                              14: Mean temperature, centered at 400 mb
+  !*                              15: 500 mb gp hgt
+  !*                              16: 200 mb gp hgt
+  !*                              17: Land-Sea Mask (for use in tcgen applications, and even there, it's optional
+  !*                              18: 200 mb u-comp
+  !*                              19: 200 mb v-comp
+  !*
+  !*      calcparm              :: indicates which parms to track and which not to. Array positions are defined exactly
+  !*                               as for clon and clat, listed next, except that, in general, when flag 3 is set to a
+  !*                               value, flag 4 is set to the same value as 3, and when flag 5 is set to a value, flag
+  !*                               6 is set to the same value as 5. This is because 3 & 4 are for the 850 mb winds, and
+  !*                               if either u or v is missing, we obviously can't calculate the magnitude of the wind.
+  !*                               The same applies for 5 & 6, which are for the 700 mb winds. And also for reference,
+  !*                               here is a list of all the variables & levels for the tracked parameters (i.e., the)
+  !*                               "calcparm" elements):
+  !*
+  !*                               1: 850 mb relative vorticity
+  !*                               2: 700 mb relative vorticity
+  !*                               3: 850 mb wind circulation
+  !*                               4: NOT USED
+  !*                               5: 700 mb wind circulation
+  !*                               6: NOT USED
+  !*                               7: 850 mb geopotential height
+  !*                               8: 700 mb geopotential height
+  !*                               9: MSLP
+  !*                              10: 10-m wind circulation
+  !*                              11: 10-m relative vorticity
+  !*                              12: 500-850 mb thickness (lower level)
+  !*                              13: 200-500 mb thickness (upper level)
+  !*                              14: 200-850 mb thickness (deep-layer)
+  !*
+  !*      clon, clat            :: Holds the coordinates for the center positions for all storms at all times for all
+  !*                               parameters. (max_#_storms, max_fcst_times, max_#_parms). For the third position
+  !*                               (max_#_parms), here they are:
+  !*                               1: Relative vorticity at 850 mb
+  !*                               2: Relative vorticity at 700 mb
+  !*                               3: Wind circulation at 850 mb
+  !*                               4: NOT CURRENTLY USED
+  !*                               5: Wind circulation at 700 mb
+  !*                               6: NOT CURRENTLY USED
+  !*                               7: Geopotential height at 850 mb
+  !*                               8: Geopotential height at 700 mb
+  !*                               9: Mean Sea Level Pressure
+  !*                              10: Wind circulation at 10 m
+  !*                              11: Relative vorticity at 10 m
+  !*                              12: Lower-level thickness (500-850)
+  !*                              13: Upper-level thickness (200-500)
+  !*                              14: Deep-Layer thickness (200-850)
+  !*
+  !*      xmaxwind              :: Contains maximum near-surface wind near the storm center for each storm at each
+  !*                               forecast hour.
+  !*      stderr                :: Standard deviation of the position "errors" of the different parameters for each
+  !*                               storm at each time.
+  !*      fixlat, fixlon        :: Contain the final coordinates for each storm at each forecast hour. These
+  !*                               coordinates are a weighted average of all the individual parameter positions
+  !*                               (hgt, zeta, mslp, vmag).
+  !*      cvort_maxmin          :: Contains the characters 'max' or 'min', and is used when calling the find_maxmin
+  !*                               routine for the relative vorticity (Look for max in NH, min in SH).
+  !*      vradius               :: Contains the distance from the storm fix position to each of the various
+  !*                               near-surface wind threshhold distances in each quadrant. (3,4) ==> (# of 
+  !*                               threshholds, # of quadrants). See subroutine getradii for further details.
+  !*      wfract_cov            :: Fractional coverage (areal coverage) of winds exceeding a certain threshold (34, 50,
+  !*                               64 kts) in each quadrant. (5,5,3) ==> (# of quadrants + 1, # of distance bins, # of
+  !*                               thresholds). The "extra" array size for quadrants (5, instead of 4) is there to hold
+  !*                               the total (i.e., "whole disc") statistics. See subroutine get_fract_wind_cov for
+  !*                               further details
+  !*      er_wind               :: Quadrant winds in earth-relative framework
+  !*      sr_wind               :: Quadrant winds in storm-relative framework
+  !*      er_vr                 :: Quadrant radial winds in earth-relative framework
+  !*      sr_vr                 :: Quadrant radial winds in storm-relative framework
+  !*      er_vt                 :: Quadrant tangential winds in earth-relative framework
+  !*      sr_vt                 :: Quadrant tangential winds in storm-relative framework
+  !*
+  !*      isastorm              :: Character array used in the call to is_it_a_storm, tells whether the minimum
+  !*                               requirement for an MSLP gradient was met (isastorm(1)), whether for the midlat and
+  !*                               tcgen cases if a closed mslp contour was found (isastorm(2)), and if a circulation
+  !*                               exists at 850 mb(isastorm(3)). Can have a value of 'Y' (requirement met), 'N'
+  !*                               (requirement not met) or 'U' (requirement undetermined, due to the fact that no
+  !*                               center location was found for this parameter).
+  !*      maxmini               :: These 2 arrays contain the i and j indeces for the
+  !*      maxminj               :: max/min centers that are found using the rough check in first_ges_ctr and subsequent
+  !*                               routines. Only needed for a midlatitude or a genesis run, NOT needed for a
+  !*                               TC tracker run.
+  !*      stormct               :: Integer; keeps and increments a running tab of the number of storms that have been
+  !*                               tracked at any time across all forecast hours. Used only for midlat or tcgen runs.
+  !*      gridprs               :: This contains the actual value of the minimum pressure at a gridpoint. The barnes
+  !*                               analysis will return an area-averaged value of pressure; this variable will contain
+  !*                               the actual minimum value at a gridpoint near the lat/lon found by the barnes
+  !*                               analysis.
+  !*      closed_mslp_ctr_flag  :: This flag keeps track of the value of the vlosed contour flag returned from
+  !*                               subroutine check_closed_contour.
+  !*      closed_mslp_ctr_flag2 :: This flag also keeps track of the value of the closed contour flag returned from
+  !*                               subroutine check_closed_contour. But it does it for a different use. Yes, it's a
+  !*                               little redundant, but this was the least disruptive alternative.
+  !*      vt850_flag            :: This flag keeps track of the value of the flag for the 850 mb Vt check.
+  !*      shear                 :: real array containing both the magnitude and direction of the storm-centered
+  !*                               850-200 mb vertical shear. In the 3rd element of the array, index 1 is for shear
+  !*                               magnitude and index 2 is for shear direction.
+  !*      already_computed_domain_wide_rh character :: (y/n) indicates if RH has already been computed across the whole
+  !*                               domain for this forecast hour (this keeps us from re-computing it for every storm at
+  !*                               each lead time).
+  !*
+  !********************************************************************************************************************
   subroutine tracker (inp, maxstorm, numtcv, ifhmax, trkrinfo, ncfile, ncfile_id, nc_lsmask_file, nc_lsmask_file_id, &
                      & netcdfinfo, ncfile_has_hour0, ncfile_tmax,  itret)
 
