@@ -16898,6 +16898,7 @@ end program trakmain
         ! exit with an error message, but doing it this way allows us to continue tracking some systems that may be
         ! close to the grid boundary.  Also, remember to factor in the grid_buffer discussed in the doc block above for
         ! this subroutine.
+        !--------------------------------------------------------------------------------------------------------------
         if (rlont >= (grid_maxlon + dx - grid_buffer)) then
           if (trkrinfo%gridtype == 'global') then
             if (cparm == 'vmag') then
