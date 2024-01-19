@@ -22400,13 +22400,13 @@ end program trakmain
   subroutine getgridinfo_grib (imax, jmax, ifh, dx, dy, lugb, lugi, trkrinfo, need_to_flip_lats, &
                               & need_to_flip_lons, inp, gm_wrap_flag, iggret)
 
-    use grid_bounds;    use trkrparms; use tracked_parms; use inparms; use verbose_output
+    use grid_bounds; use trkrparms; use tracked_parms; use inparms; use verbose_output
 
     implicit none
 
     type (trackstuff) :: trkrinfo
     type (datecard)   :: inp
-    type(gribfield)   :: gfld
+    type (gribfield)  :: gfld
 
     logical(1)               :: need_to_flip_lats, need_to_flip_lons
     logical(1), allocatable  :: lb(:)
