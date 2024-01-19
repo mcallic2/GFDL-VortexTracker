@@ -18268,8 +18268,8 @@ end program trakmain
   subroutine getdata_grib (readflag, readgenflag, valid_pt, imax, jmax, ifh, need_to_flip_lats, &
                           & need_to_flip_lons, inp, lugb, lugi, trkrinfo) 
 
-    use tracked_parms;  use level_parms; use inparms;  use read_parms; use phase
-    use verbose_output; use params;      use grib_mod; use trkrparms;  use genesis_diags
+    use tracked_parms;  use level_parms; use inparms;    use read_parms; use phase
+    use verbose_output; use trkrparms;   use genesis_diags
 
     implicit none
 
@@ -22400,8 +22400,7 @@ end program trakmain
   subroutine getgridinfo_grib (imax, jmax, ifh, dx, dy, lugb, lugi, trkrinfo, need_to_flip_lats, &
                               & need_to_flip_lons, inp, gm_wrap_flag, iggret)
 
-    use grid_bounds;    use trkrparms; use tracked_parms; use inparms
-    use verbose_output; use params;    use grib_mod
+    use grid_bounds;    use trkrparms; use tracked_parms; use inparms; use verbose_output
 
     implicit none
 
@@ -27940,6 +27939,17 @@ end program trakmain
 
   !********************************************************************************************************************
   !*
+  !*  ABSTRACT: This subroutine uses an order n*log(n) quick sort to sort a real (dp) array x into increasing order.
+  !*      The algorithim is as follows. ind is initialized to the ordered sequence of indices 1,...,N and all
+  !*      interchanges are applied to ind. x is divided into two portions by picking a central element t. The first
+  !*      and last elements are compared with t, and interchanges are applied as necessary so that they three values
+  !*      are in ascending order. Interchanges are then applied so that all elements greater than t are in the upper
+  !*      portion of the array and all elements less than t are in the lower portion. The upper and lower indices of
+  !*      one of the portions are saved in local arrays, and the process is repeated interatively on the other portion.
+  !*      When a portion is completely sorted, the process begins again by retriving the indicies bounding another
+  !*      unsorted por
+  !********************************************************************************************************************
+  !*
   !*  ABSTRACT: This subroutine takes an (i,j) position input and returns the four neighboring (i,j) points to the
   !*      east, south, west and north. The routine checks for wrap around the GM, so that if, for example, you are on a
   !*      global 360x181 grid and you are at point i = 360, then i+1 = 361, so you need something to adjust that back
@@ -28037,18 +28047,7 @@ end program trakmain
     return
 
   end subroutine get_ijplus1_check_wrap
-
-  !********************************************************************************************************************
-  !*
-  !*  ABSTRACT: This subroutine uses an order n*log(n) quick sort to sort a real (dp) array x into increasing order.
-  !*      The algorithim is as follows. ind is initialized to the ordered sequence of indices 1,...,N and all
-  !*      interchanges are applied to ind. x is divided into two portions by picking a central element t. The first
-  !*      and last elements are compared with t, and interchanges are applied as necessary so that they three values
-  !*      are in ascending order. Interchanges are then applied so that all elements greater than t are in the upper
-  !*      portion of the array and all elements less than t are in the lower portion. The upper and lower indices of
-  !*      one of the portions are saved in local arrays, and the process is repeated interatively on the other portion.
-  !*      When a portion is completely sorted, the process begins again by retriving the indicies bounding another
-  !*      unsorted portion.
+tion.
   !*
   !*  INPUT:
   !*      n         :: length of the array x
