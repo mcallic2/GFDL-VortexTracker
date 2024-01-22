@@ -20730,7 +20730,7 @@ end program trakmain
 
     if (status /= nf_noerr) then
       print *, ' '
-      print *, 'NOTE: Could not find variable ', var3_name, ' at time NetCDF file ID = ncid = ', ncid
+      !print *, 'NOTE: Could not find variable ', var3_name, ' at time NetCDF file ID = ncid = ', ncid
       ignrret = 92
       return
     endif
