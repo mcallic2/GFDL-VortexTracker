@@ -11055,6 +11055,7 @@ end program trakmain
     character(len=*)  :: gm_wrap_flag
     logical(1)        :: valid_pt(imax,jmax), readflag(14)
 
+    in_grid = 'n'
     extrap_flag   = 'y'
     conv_ms_knots = 1.9427
 
