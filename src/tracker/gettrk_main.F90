@@ -20758,28 +20758,20 @@ end program trakmain
 
   !********************************************************************************************************************
   !*
-  !*  ABSTRACT: This routine reads a netcdf file and returns a 2-dimensional synoptic variable at a particular lead
-  !*      time. The lead time is specified by the ltix array, which is included in module tracked_parms and defined in
-  !*      subroutine read_fhours.
+  !*  ABSTRACT: This routine inquires into a NetCDF file using calls to the NetCDF library to determine the real type
+  !*      (32-bit vs. 64-bit real) for a given variable.
   !*
   !*  INPUT:
   !*      ncid      :: integer that contains the NetCDF file ID
-  !*      var3_name :: character name of NetCDF input file
-  !*      imax      :: integer x-dimension of input data
-  !*      jmax      :: integer y-dimension of input data
-  !*      ncix      :: integer index of time level for where this time level actually is inside the NetCDF data. Do NOT
-  !*                   confuse this with the index of where this forecast hour is in the user's list of input forecast
-  !*                   hours, as they may be different. For example, the user may request times that are every 6 hours,
-  !*                   but the NetCDF file might have times that are every hour, so the indices for those two arrays
-  !*                   will be different. Be sure to use the one (ncix) that indicates where the data actually starts
-  !*                   in the NetCDF file.
+  !*      var3_name :: character name of NetCDF input variable
   !*
   !*  OUTPUT:
-  !*      var3      :: real array with real values returned from NetCDF read
-  !*      igvret    :: integer return code from this routine
+  !*      xtype     :: integer value that indicates 4-byte or 8-byte real.
+  !*                   A value of 5 = 4-byte real;  6 = 8-byte real.
+  !*      ignrret   :: integer return code from this routine
   !*
   !********************************************************************************************************************
-  subroutine get_var3_tlev_real4 (ncid, var3_name, imax, jmax, ncix, var3, igvret)
+  subroutine get_netcdf_real_type (ncid, var3_name, xtype, ignrret)
 
     use tracked_parms; use verbose_output; use netcdf_parms
 
@@ -20787,44 +20779,44 @@ end program trakmain
 
     include "netcdf.inc"
 
-    integer,                        intent(in)  :: ncid, ncix
-    character(len=*), dimension(*), intent(in)  :: var3_name
-    integer,                        intent(in)  :: imax, jmax
-    integer                                     :: xtype
-    real(kind=4),                   intent(out) :: var3(imax,jmax)
-    integer                                     :: istart(3), ilength(3)
-    integer                                     :: status, var3id, igvret
+    integer,                        intent(in) :: ncid
+    character(len=*), dimension(*), intent(in) :: var3_name
+    integer                                    :: xtype
+    integer                                    :: status, var3id, ignrret
 
     if (verb .ge. 3) then
       print *, ' '
-      print *, 'In get_var3_tlev_double, ncix =  ', ncix
-      print *, ' nctotalmins(ncix) = ', nctotalmins(ncix)
+      print *, 'In get_netcdf_real_type, ncid =  ', ncid
     endif
-
-    istart(1) = 1
-    istart(2) = 1
-    istart(3) = ncix
-
-    ilength(1) = imax
-    ilength(2) = jmax
-    ilength(3) = 1
-
-    igvret = 0
 
     status = nf_inq_varid(ncid, var3_name, var3id)
 
     if (status /= nf_noerr) then
       print *, ' '
-      !print *, 'NOTE: Could not find variable ', var3_name, ' at time index ncix = ', ncix, &
-      !         ' nctotalmins(ncix) = ', nctotalmins(ncix)
-      igvret = 92
+      !print *, 'NOTE: Could not find variable ', var3_name, ' at time NetCDF file ID = ncid = ', ncid
+      ignrret = 92
       return
     endif
 
-    status = nf_get_vara_real(ncid, var3id, istart, ilength, var3)
+    status = nf_inq_vartype(ncid, var3id, xtype)
     if (status .ne. nf_noerr) call handle_netcdf_err (status)
 
-  end subroutine get_var3_tlev_real4
+    if (xtype == 5 .or. xtype == 6) then
+      continue
+    else
+      if (verb >= 1) then
+        print *, ' '
+        print *, '!!! ERROR: xtype returned in get_netcdf_real_type is'
+        print *, '           not equal to 5 or 6.  xtype = ', xtype
+        print *, '    EXITING....'
+        print *, ' '
+      endif
+      STOP 91
+    endif
+
+    return
+
+  end subroutine get_netcdf_real_type
 
   !********************************************************************************************************************
   !*
@@ -21234,24 +21226,24 @@ end program trakmain
     logical(1)         :: namelist_file_exists
     integer            :: ifh, lunml
 
-    namelist /datein_nml/       inp
-    namelist /atcfinfo_nml/     atcfnum, atcfname, atcfymdh, atcffreq
-    namelist /trackerinfo_nml/  trkrinfo
-    namelist /phaseinfo_nml/    phaseflag, phasescheme, wcore_depth
-    namelist /structinfo_nml/   structflag, ikeflag, radii_pctile, radii_free_pass_pctile, radii_width_thresh
-    namelist /fnameinfo_nml/    gmodname, rundescr, atcfdescr
-    namelist /cintinfo_nml/     contint_grid_bound_check
-    namelist /verbose_nml/      verb, verb_g2
-    namelist /waitinfo_nml/     use_waitfor, wait_min_age, wait_min_size, wait_max_wait, wait_sleeptime, &
-                                use_per_fcst_command, per_fcst_command
-    namelist /netcdflist_nml/   netcdfinfo
-    namelist /parmpreflist_nml/ user_wants_to_track_zeta850, user_wants_to_track_zeta700, user_wants_to_track_wcirc850, &
-                                user_wants_to_track_wcirc700, user_wants_to_track_gph850, user_wants_to_track_gph700,   &
-                                user_wants_to_track_mslp, user_wants_to_track_wcircsfc, user_wants_to_track_zetasfc,    &
-                                user_wants_to_track_thick500850, user_wants_to_track_thick200500, user_wants_to_track_thick200850
-    namelist /sheardiaginfo_nml/ shearflag
-    namelist /sstdiaginfo_nml/   sstflag
-    namelist /gendiaginfo_nml/   genflag, gen_read_rh_fields, need_to_compute_rh_from_q, smoothe_mslp_for_gen_scan
+    namelist /datein/        inp
+    namelist /atcfinfo/      atcfnum, atcfname, atcfymdh, atcffreq
+    namelist /trackerinfo/   trkrinfo
+    namelist /phaseinfo/     phaseflag, phasescheme, wcore_depth
+    namelist /structinfo/    structflag, ikeflag, radii_pctile, radii_free_pass_pctile, radii_width_thresh
+    namelist /fnameinfo/     gmodname, rundescr, atcfdescr
+    namelist /cintinfo/      contint_grid_bound_check
+    namelist /verbose/       verb, verb_g2
+    namelist /waitinfo/      use_waitfor, wait_min_age, wait_min_size, wait_max_wait, wait_sleeptime, &
+                             use_per_fcst_command, per_fcst_command
+    namelist /netcdflist/    netcdfinfo
+    namelist /parmpreflist/  user_wants_to_track_zeta850, user_wants_to_track_zeta700, user_wants_to_track_wcirc850, &
+                             user_wants_to_track_wcirc700, user_wants_to_track_gph850, user_wants_to_track_gph700,   &
+                             user_wants_to_track_mslp, user_wants_to_track_wcircsfc, user_wants_to_track_zetasfc,    &
+                             user_wants_to_track_thick500850, user_wants_to_track_thick200500, user_wants_to_track_thick200850
+    namelist /sheardiaginfo/ shearflag
+    namelist /sstdiaginfo/   sstflag
+    namelist /gendiaginfo/   genflag, gen_read_rh_fields, need_to_compute_rh_from_q, smoothe_mslp_for_gen_scan
 
     ! set namelist default values
     use_per_fcst_command   = 't'
@@ -21290,39 +21282,39 @@ end program trakmain
       return
     endif
 
-    read (lunml, nml = datein_nml, END = 801)
+    read (lunml, nml = datein, END = 801)
 801 continue
-    read (lunml, nml = atcfinfo_nml, END = 807)
+    read (lunml, nml = atcfinfo, END = 807)
 807 continue
     print *, 'just before trackerinfo read namelist'
-    read (lunml, nml = trackerinfo_nml, END = 809)
+    read (lunml, nml = trackerinfo, END = 809)
 809 continue
     print *, 'just after trackerinfo read namelist'
-    read (lunml, nml = phaseinfo_nml, end = 811)
+    read (lunml, nml = phaseinfo, end = 811)
 811 continue
-    read (lunml, nml = structinfo_nml, end = 815)
+    read (lunml, nml = structinfo, end = 815)
 815 continue
-    read (lunml, nml = fnameinfo_nml, end = 817)
+    read (lunml, nml = fnameinfo, end = 817)
 817 continue
-    read (lunml, nml = cintinfo_nml, end = 831)
+    read (lunml, nml = cintinfo, end = 831)
 831 continue
-    read (lunml, nml = waitinfo_nml, end = 821)
+    read (lunml, nml = waitinfo, end = 821)
 821 continue
-    read (lunml, nml = netcdflist_nml, end = 823)
+    read (lunml, nml = netcdflist, end = 823)
 823 continue
-    read (lunml, nml = parmpreflist_nml, end = 825)
+    read (lunml, nml = parmpreflist, end = 825)
 825 continue
-    read (lunml, nml = verbose_nml, end = 819, err = 833)
+    read (lunml, nml = verbose, end = 819, err = 833)
 819 continue
     goto 837
 833 continue
     verb = 1
 837 continue
-    read (lunml, nml = sheardiaginfo_nml, end = 839)
+    read (lunml, nml = sheardiaginfo, end = 839)
 839 continue
-    read (lunml, nml = sstdiaginfo_nml, end = 840)
+    read (lunml, nml = sstdiaginfo, end = 840)
 840 continue
-    read (lunml, nml = gendiaginfo_nml, end = 841)
+    read (lunml, nml = gendiaginfo, end = 841)
 841 continue
 
     close (lunml)
