@@ -20779,6 +20779,76 @@ end program trakmain
   !*      igvret    :: integer return code from this routine
   !*
   !********************************************************************************************************************
+  subroutine get_var3_tlev_real4 (ncid, var3_name, imax, jmax, ncix, var3, igvret)
+
+    use tracked_parms; use verbose_output; use netcdf_parms
+
+    implicit none
+
+    include "netcdf.inc"
+
+    integer,                        intent(in)  :: ncid, ncix
+    character(len=*), dimension(*), intent(in)  :: var3_name
+    integer,                        intent(in)  :: imax, jmax
+    integer                                     :: xtype
+    real(kind=4),                   intent(out) :: var3(imax,jmax)
+    integer                                     :: istart(3), ilength(3)
+    integer                                     :: status, var3id, igvret
+
+    if (verb .ge. 3) then
+      print *, ' '
+      print *, 'In get_var3_tlev_double, ncix =  ', ncix
+      print *, ' nctotalmins(ncix) = ', nctotalmins(ncix)
+    endif
+
+    istart(1) = 1
+    istart(2) = 1
+    istart(3) = ncix
+
+    ilength(1) = imax
+    ilength(2) = jmax
+    ilength(3) = 1
+
+    igvret = 0
+
+    status = nf_inq_varid(ncid, var3_name, var3id)
+
+    if (status /= nf_noerr) then
+      print *, ' '
+      !print *, 'NOTE: Could not find variable ', var3_name, ' at time index ncix = ', ncix, &
+      !         ' nctotalmins(ncix) = ', nctotalmins(ncix)
+      igvret = 92
+      return
+    endif
+
+    status = nf_get_vara_real(ncid, var3id, istart, ilength, var3)
+    if (status .ne. nf_noerr) call handle_netcdf_err (status)
+
+  end subroutine get_var3_tlev_real4
+
+  !********************************************************************************************************************
+  !*
+  !*  ABSTRACT: This routine reads a netcdf file and returns a 2-dimensional synoptic variable at a particular lead
+  !*      time. The lead time is specified by the ltix array, which is included in module tracked_parms and defined in
+  !*      subroutine read_fhours.
+  !*
+  !*  INPUT:
+  !*      ncid      :: integer that contains the NetCDF file ID
+  !*      var3_name :: character name of NetCDF input file
+  !*      imax      :: integer x-dimension of input data
+  !*      jmax      :: integer y-dimension of input data
+  !*      ncix      :: integer index of time level for where this time level actually is inside the NetCDF data. Do NOT
+  !*                   confuse this with the index of where this forecast hour is in the user's list of input forecast
+  !*                   hours, as they may be different. For example, the user may request times that are every 6 hours,
+  !*                   but the NetCDF file might have times that are every hour, so the indices for those two arrays
+  !*                   will be different. Be sure to use the one (ncix) that indicates where the data actually starts
+  !*                   in the NetCDF file.
+  !*
+  !*  OUTPUT:
+  !*      var3      :: real array with real values returned from NetCDF read
+  !*      igvret    :: integer return code from this routine
+  !*
+  !********************************************************************************************************************
   subroutine get_var3_tlev_double (ncid, var3_name, imax, jmax, ncix, var3, igvret)
 
     use tracked_parms; use verbose_output; use netcdf_parms
