@@ -20758,68 +20758,6 @@ end program trakmain
 
   !********************************************************************************************************************
   !*
-  !*  ABSTRACT: This routine inquires into a NetCDF file using calls to the NetCDF library to determine the real type
-  !*      (32-bit vs. 64-bit real) for a given variable.
-  !*
-  !*  INPUT:
-  !*      ncid      :: integer that contains the NetCDF file ID
-  !*      var3_name :: character name of NetCDF input variable
-  !*
-  !*  OUTPUT:
-  !*      xtype     :: integer value that indicates 4-byte or 8-byte real.
-  !*                   A value of 5 = 4-byte real;  6 = 8-byte real.
-  !*      ignrret   :: integer return code from this routine
-  !*
-  !********************************************************************************************************************
-  subroutine get_netcdf_real_type (ncid, var3_name, xtype, ignrret)
-
-    use tracked_parms; use verbose_output; use netcdf_parms
-
-    implicit none
-
-    include "netcdf.inc"
-
-    integer,                        intent(in) :: ncid
-    character(len=*), dimension(*), intent(in) :: var3_name
-    integer                                    :: xtype
-    integer                                    :: status, var3id, ignrret
-
-    if (verb .ge. 3) then
-      print *, ' '
-      print *, 'In get_netcdf_real_type, ncid =  ', ncid
-    endif
-
-    status = nf_inq_varid(ncid, var3_name, var3id)
-
-    if (status /= nf_noerr) then
-      print *, ' '
-      !print *, 'NOTE: Could not find variable ', var3_name, ' at time NetCDF file ID = ncid = ', ncid
-      ignrret = 92
-      return
-    endif
-
-    status = nf_inq_vartype(ncid, var3id, xtype)
-    if (status .ne. nf_noerr) call handle_netcdf_err (status)
-
-    if (xtype == 5 .or. xtype == 6) then
-      continue
-    else
-      if (verb >= 1) then
-        print *, ' '
-        print *, '!!! ERROR: xtype returned in get_netcdf_real_type is'
-        print *, '           not equal to 5 or 6.  xtype = ', xtype
-        print *, '    EXITING....'
-        print *, ' '
-      endif
-      STOP 91
-    endif
-
-    return
-
-  end subroutine get_netcdf_real_type
-
-  !********************************************************************************************************************
-  !*
   !*  ABSTRACT: This routine reads a netcdf file and returns a 2-dimensional synoptic variable at a particular lead
   !*      time. The lead time is specified by the ltix array, which is included in module tracked_parms and defined in
   !*      subroutine read_fhours.
