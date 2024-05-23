@@ -90,6 +90,7 @@ program test_subroutine_getcorr
 
   ! test r2 = 0.0, no need to change other arrays
   ! with this test
+  expected_r2 = 0.0
   call getcorr(test_resid, test_zdiff, test_inum, test_r2)
 
   if (test_r2 .ne. expected_r2) then
