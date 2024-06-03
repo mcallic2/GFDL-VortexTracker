@@ -25,7 +25,7 @@ program test_subroutine_distbear
   endif
   print *, lon
 
-  lat = 90.0
+  lat = 45.0
   clat = cos(dtr * lat)
   slat = sin(dtr * lat)
   print *, "lats", clat, slat
@@ -61,6 +61,20 @@ program test_subroutine_distbear
     output_lon = mod(360.0 - output_lon,360.0)
   endif
   print *, "output lon", output_lon
+
+
+
+  lat = 30.0
+  lon = 300.0
+  bear = 45.0
+  dist = 150.0
+
+  print *, lat
+  print *, lon
+  print *, dist
+  print *, bear
+  print *, test_lat
+  print *, test_lon
 
   call distbear(lat, lon, dist, bear, test_lat, test_lon, "none")
   print *, "test_lat", test_lat

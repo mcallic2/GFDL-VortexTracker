@@ -14,7 +14,7 @@ set(tracker_src
 
 add_executable(gettrk.x gettrk_main.f ${tracker_src})
 
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O2 -fp-model precise -i4 -r8")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O0 -fp-model precise -i4 -r8 -debug")
 
 target_link_libraries(
   gettrk.x
@@ -75,6 +75,15 @@ target_link_libraries(test_stdevcalc.x PRIVATE subroutine_lib)
 add_executable(test_calc_vmag.x test_tracker/test_calc_vmag.F90)
 target_link_libraries(test_calc_vmag.x PRIVATE subroutine_lib)
 
+add_executable(test_calcdist.x test_tracker/test_calcdist.F90)
+target_link_libraries(test_calcdist.x PRIVATE subroutine_lib)
+
+add_executable(test_subtract_cor.x test_tracker/test_subtract_cor.F90)
+target_link_libraries(test_subtract_cor.x PRIVATE subroutine_lib)
+
+add_executable(test_rvcal.x test_tracker/test_rvcal.F90)
+target_link_libraries(test_rvcal.x PRIVATE subroutine_lib)
+
 # unit test suite
 add_test(test_getcorr ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_getcorr.x)
 add_test(test_is_it_a_storm ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_is_it_a_storm.x)
@@ -85,3 +94,6 @@ add_test(test_wtavrg_lon ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/
 add_test(test_avgcalc ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_avgcalc.x)
 add_test(test_stdevcalc ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_stdevcalc.x)
 add_test(test_calc_vmag ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_calc_vmag.x)
+add_test(test_calcdist ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_calcdist.x)
+add_test(test_subtract_cor ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_subtract_cor.x)
+add_test(test_rvcal ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_rvcal.x)
