@@ -10228,7 +10228,7 @@ c
       USE trkrparms; USE phase; USE shear_diags; USE genesis_diags
       USE verbose_output; USE level_parms
       
-      !implicit none 
+      implicit none 
       
       type (datecard) inp
       type (trackstuff) trkrinfo
@@ -10246,6 +10246,7 @@ c
       integer idivg,imoistdivg,irh_800_600,irh_1000_925,iomega500
       integer vradius(3,4),icps_vals(3)
       integer imeanzeta(nlevgrzeta),igridzeta(nlevgrzeta)
+      integer :: ist, ifcsthour, maxstorm, ioaxret
       character  basinid*2,clatns*1,clonew*1,wcore_flag*1
       character comma_fill1*48,comma_fill2*31,comma_filler*79
       character comma_fill1n*27,comma_fill2n*44
