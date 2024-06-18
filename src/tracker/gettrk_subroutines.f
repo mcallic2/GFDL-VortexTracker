@@ -13081,11 +13081,12 @@ c
       USE def_vitals; USE inparms; USE set_max_parms
       USE verbose_output
 
-      !implicit none
+      implicit none
 
       type (tcvcard) stm
       type (datecard) inp
       real       xlon,xlat
+      integer :: ist, iovret
 c
       iovret = 0
 
