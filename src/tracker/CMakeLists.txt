@@ -14,7 +14,7 @@ set(tracker_src
 
 add_executable(gettrk.x gettrk_main.f ${tracker_src})
 
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O0 -Wall -Wextra")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O0 -Wconversion")
 
 target_link_libraries(
   gettrk.x
