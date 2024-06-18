@@ -11636,7 +11636,7 @@ c
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE verbose_output
 
-      !implicit none
+      implicit none
 
       type (datecard) inp
 
@@ -11656,6 +11656,7 @@ c
       character  basinid*2,clatns*1,clonew*1,wfract_type*5,wt*1
       character*2 :: cquad(4) = (/'NE','SE','SW','NW'/)
       character*2 :: crel(4) = (/'FR','BR','BL','FL'/)
+      integer :: ist, ifcsthour, maxstorm, iofwret, iq, it
 
 
 c     First convert all of the lat/lon values from reals into integers.
