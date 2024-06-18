@@ -6968,7 +6968,7 @@ c
       rads = 500.0
       ri   = 300.0
       dell = (dx+dy)/2.
-      npts = rads/(dtk*dell)
+      npts = int(rads/(dtk*dell))
 
       wfract_cov            = 0.0
       area_total_quad_bin   = 0.0
@@ -7606,7 +7606,7 @@ c
       rads = 400.0
       ri   = 300.0
       dell = (dx+dy)/2.
-      npts = rads/(dtk*dell)
+      npts = int(rads/(dtk*dell))
 
 c     Call  get_ij_bounds in order to get the dimensions for a smaller
 c     subdomain of grid points to search over.
@@ -16027,12 +16027,14 @@ c     &           ,' num_qtr_azim= ',num_qtr_azim
               ! would only happen if radii_pctile = 100% and so that is 
               ! unlikely that someone will choose 100%.
               pctile_quad_bin_wind(iquad,idist)
-     &            = radii_wmag_bucket(isortix(num_qtr_azim))
+     &            = real(radii_wmag_bucket(isortix(num_qtr_azim))
+     &             ,kind=4)
             elseif (nint(target_slot + 0.49) == first_valid_ix) then
               ! This would be a weird case, but I have to code for it.
               ! It would be if someone selected a radii_pctile = 1%.
               pctile_quad_bin_wind(iquad,idist)
-     &             = radii_wmag_bucket(isortix(first_valid_ix))
+     &             = real(radii_wmag_bucket(isortix(first_valid_ix))
+     &               ,kind=4)
             else
               target_ix        = int(target_slot)
               target_remainder = mod(target_slot,1.0)
@@ -16040,14 +16042,17 @@ c     &           ,' num_qtr_azim= ',num_qtr_azim
                 ! This is for a case where the requested percentile
                 ! exactly hits a whole number for the target slot.
                 pctile_quad_bin_wind(iquad,idist)
-     &               = radii_wmag_bucket(isortix(target_ix))
+     &               = real(radii_wmag_bucket(isortix(target_ix))
+     &                 ,kind=4)
               else
                 one_minus_target_remainder = 1.0 - target_remainder
                 pctile_quad_bin_wind(iquad,idist)
      &               = (target_remainder 
-     &               * radii_wmag_bucket(isortix(target_ix+1))
+     &               * real(radii_wmag_bucket(isortix(target_ix+1))
+     &                 ,kind=4)
      &               + (one_minus_target_remainder
-     &               * radii_wmag_bucket(isortix(target_ix))) )
+     &               * real(radii_wmag_bucket(isortix(target_ix))
+     &                 ,kind=4)))
               endif
             endif
           else
@@ -16083,13 +16088,15 @@ c     &           ,' valid_wind_ct= ',valid_wind_ct
               ! would only happen if radii_free_pass_pctile = 100% and 
               ! so that is unlikely that someone will choose 100%.
               fp_pctile_quad_bin_wind(iquad,idist)
-     &            = radii_wmag_bucket(isortix(num_qtr_azim))
+     &            = real(radii_wmag_bucket(isortix(num_qtr_azim))
+     &              ,kind=4)
             elseif (nint(free_pass_slot + 0.49) == first_valid_ix) then
               ! This would be a weird case, but I have to code for it.
               ! It would be if someone selected a 
               ! radii_free_pass_pctile = 1%.
               fp_pctile_quad_bin_wind(iquad,idist)
-     &             = radii_wmag_bucket(isortix(first_valid_ix))
+     &             = real(radii_wmag_bucket(isortix(first_valid_ix))
+     &               ,kind=4)
             else
               free_pass_ix        = int(free_pass_slot)
               free_pass_remainder = mod(free_pass_slot,1.0)
@@ -16097,15 +16104,18 @@ c     &           ,' valid_wind_ct= ',valid_wind_ct
                 ! This is for a case where the requested percentile
                 ! exactly hits a whole number for the free_pass slot.
                 fp_pctile_quad_bin_wind(iquad,idist)
-     &               = radii_wmag_bucket(isortix(free_pass_ix))
+     &               = real(radii_wmag_bucket(isortix(free_pass_ix))
+     &                 ,kind=4)
               else
                 one_minus_free_pass_remainder = 
      &               1.0 - free_pass_remainder
                 fp_pctile_quad_bin_wind(iquad,idist)
      &               = (free_pass_remainder
-     &               * radii_wmag_bucket(isortix(free_pass_ix+1))
+     &               * real(radii_wmag_bucket(isortix(free_pass_ix+1))
+     &                 ,kind=4)
      &               + (one_minus_free_pass_remainder
-     &               * radii_wmag_bucket(isortix(free_pass_ix))) )
+     &               * real(radii_wmag_bucket(isortix(free_pass_ix))
+     &                 ,kind=4)))
               endif
             endif
           else
@@ -18422,7 +18432,7 @@ c
       endif
 
       dell = (dx+dy)/2.
-      npts = rads/(dtk*dell)
+      npts = int(rads/(dtk*dell))
       fmax  = -1.0e+15; fmin  =  1.0e+15
       ctlon = 0.0; ctlat = 0.0
 
@@ -20441,7 +20451,7 @@ c               parameter retrk_vmag, and use this instead.
       endif
 
       dell = (dx+dy)/2.
-      npts = rads/(dtk*dell)
+      npts = int(rads/(dtk*dell))
       fmax  = -1.0e+12; fmin  =  1.0e+12
       ctlon = 0.0; ctlat = 0.0
 
@@ -22020,8 +22030,8 @@ c     (e.g., 1.00000000007), due to (I'm guessing) rounding errors.
       circ_fract  = degrees8 / 360.
       xdist8      = circ_fract * ecircum
 
-      xdist   = xdist8
-      degrees = degrees8
+      xdist   = real(xdist8,kind=4)
+      degrees = real(degrees8,kind=4)
 c
 c     NOTE: whether this subroutine returns the value of the distance
 c           in km or m depends on the scale of the parameter ecircum. 
@@ -22695,7 +22705,7 @@ c           The default packing is 40  JPEG 2000
             kf = gfld%ngrdpts  ! Number of gridpoints returned from read
 
             do np = 1,kf
-              f(np)  = gfld%fld(np)
+              f(np)  = real(gfld%fld(np), kind=4)
               if (gfld%ibmap == 0) then
                 lb(np)  = gfld%bmap(np)
               else
@@ -22715,8 +22725,8 @@ c           once since using same model for all variables).
               lbrdflag = 'y'
             endif
 
-            firstval=gfld%fld(1)
-            lastval=gfld%fld(kf)
+            firstval=real(gfld%fld(1), kind=4)
+            lastval=real(gfld%fld(kf), kind=4)
 
             if (verb_g2 .ge. 1) then
               print *,' '
@@ -23042,7 +23052,7 @@ c               The default packing is 40  JPEG 2000
                                  ! from read
 
                 do np = 1,kf
-                  f(np)  = gfld%fld(np)
+                  f(np)  = real(gfld%fld(np), kind=4)
                   if (gfld%ibmap == 0) then
                     lb(np)  = gfld%bmap(np)
                   else
@@ -23061,8 +23071,8 @@ c               this once since using same model for all variables).
                   lbrdflag = 'y'
                 endif
 
-                firstval=gfld%fld(1)
-                lastval=gfld%fld(kf)
+                firstval=real(gfld%fld(1), kind=4)
+                lastval=real(gfld%fld(kf), kind=4)
 
                 if (verb_g2 .ge. 1) then
                   print *,' '
@@ -23373,7 +23383,7 @@ c             The default packing is 40  JPEG 2000
                                  ! from read
 
               do np = 1,kf
-                f(np)  = gfld%fld(np)
+                f(np)  = real(gfld%fld(np),kind=4)
                 if (gfld%ibmap == 0) then
                   lb(np)  = gfld%bmap(np)
                 else
@@ -23396,8 +23406,8 @@ c             requested, the cyclone phase space variables.
                 lbrdflag = 'y'
               endif
 
-              firstval=gfld%fld(1)
-              lastval=gfld%fld(kf)
+              firstval=real(gfld%fld(1), kind=4)
+              lastval=real(gfld%fld(kf), kind=4)
 
               if (verb_g2 .ge. 1) then
                 print *,' '
@@ -24480,7 +24490,7 @@ c     variables into the chparm array...
               else
                 call get_var3_tlev_double (nc_lsmask_file_id,chparm(ip)
      &                        ,imax,jmax,nc_zero_ix,f8,igvret)
-                f = f8
+                f = real(f8, kind=4)
               endif
               if (verb .ge. 3) then
                 print *,'After read of separate land_mask file, parm= '
@@ -24498,7 +24508,7 @@ c     variables into the chparm array...
               else
                 call get_var3_tlev_double (ncfile_id,chparm(ip)
      &                        ,imax,jmax,ncix,f8,igvret)
-                f = f8
+                f = real(f8, kind=4)
               endif
               if (verb .ge. 3) then
                 print *,'After read of land_mask record from main file,'
@@ -24522,7 +24532,7 @@ c     variables into the chparm array...
           else
             call get_var3_tlev_double (ncfile_id,chparm(ip)
      &                        ,imax,jmax,ncix,f8,igvret)
-            f = f8
+            f = real(f8, kind=4)
           endif
           if (verb .ge. 3) then
             print *,'After read, parm= ',chparm(ip),' ifh= ',ifh
@@ -24584,7 +24594,7 @@ c     &               ,ifvlen)
             else
               nf_status = nf_get_att_double (nc_lsmask_file_id,varid
      &                   ,"missing_value",xmissing_val8)
-              xmissing_value = xmissing_val8
+              xmissing_value = real(xmissing_val8, kind=4)
             endif
 
             
@@ -24607,7 +24617,7 @@ c     &               ,ifvlen)
             else
               nf_status = nf_get_att_double (ncfile_id,varid
      &                   ,"missing_value",xmissing_val8)
-              xmissing_value = xmissing_val8
+              xmissing_value = real(xmissing_val8, kind=4)
             endif
 
             print *,'nf_status from nf_get_att_real call = ',nf_status
@@ -24813,7 +24823,7 @@ c     *--------------------------------------------------------------*
             else
               call get_var3_tlev_double (ncfile_id,chparm_cps(ip),imax
      &                    ,jmax,ncix,f8,igvret)
-              f = f8
+              f = real(f8, kind=4)
             endif
 
             if (verb .ge. 3) then
@@ -24848,7 +24858,7 @@ c     &                   ,"_FillValue",xfill_value)
               else
                 nf_status = nf_get_att_double (ncfile_id,varid
      &                      ,"missing_value",xmissing_val8)
-                xmissing_value = xmissing_val8
+                xmissing_value = real(xmissing_val8, kind=4)
               endif
 
               if (verb .ge. 3) then
@@ -25016,7 +25026,7 @@ c     *------------------------------------------------------------*
           else
             call get_var3_tlev_double (ncfile_id,chparm_gen(ip),imax
      &                  ,jmax,ncix,f8,igvret)
-            f = f8
+            f = real(f8, kind=4)
           endif
 
           if (verb .ge. 3) then
@@ -25046,7 +25056,7 @@ c            call bitmapchk(kf,lb,f,dmin,dmax)
             else
               nf_status = nf_get_att_double (ncfile_id,varid
      &                    ,"missing_value",xmissing_val8)
-              xmissing_value = xmissing_val8
+              xmissing_value = real(xmissing_val8, kind=4)
             endif
 
             if (verb .ge. 3) then
@@ -25274,10 +25284,10 @@ c     tracker was compiled in.
         enddo
       elseif (xtype == 6) then
         ! Read data into an 8-byte double real array
-        status = nf_get_var_double (ncid,var1id,var1)
+        status = nf_get_var_double (ncid,var1id,real(var1,kind=8))
         if (status .ne. NF_NOERR) call handle_netcdf_err(status)
         do i = 1,nmax
-          var1(i) = readvar8(i)
+          var1(i) = real(readvar8(i), kind=4)
         enddo
       endif
 
@@ -27547,8 +27557,8 @@ c         Get parameter abbrev for record that was retrieved
         pabbrev=param_get_abbrev(gfld%discipline,gfld%ipdtmpl(1)
      &                          ,gfld%ipdtmpl(2))
 
-        firstval=gfld%fld(1)
-        lastval=gfld%fld(kf)
+        firstval=real(gfld%fld(1), kind=4)
+        lastval=real(gfld%fld(kf), kind=4)
 
         if (verb .ge. 3) then
           print *,' '
@@ -28188,7 +28198,7 @@ c
       else
         call get_var1_one_dim8 (ncfile_id,netcdfinfo%lon_name,imax
      &                        ,temp_tmplon8)
-        tmplon = temp_tmplon8
+        tmplon = real(temp_tmplon8, kind=4)
       endif
 
       if (allocated(temp_tmplon4)) deallocate (temp_tmplon4)
@@ -28207,7 +28217,7 @@ c
       else
         call get_var1_one_dim8 (ncfile_id,netcdfinfo%lat_name,jmax
      &                        ,temp_tmplat8)
-        tmplat = temp_tmplat8
+        tmplat = real(temp_tmplat8, kind=4)
       endif
 
       if (allocated(temp_tmplat4)) deallocate (temp_tmplat4)
@@ -28548,7 +28558,7 @@ c
       else
         call get_var1_one_dim8 (ncfile_id,netcdfinfo%time_name
      &                      ,ncfile_tmax,temp_nc_time_vals_r8)
-        netcdf_file_time_values = temp_nc_time_vals_r8
+        netcdf_file_time_values = real(temp_nc_time_vals_r8, kind=4)
       endif
 
       if (verb .ge. 1) then
@@ -31208,9 +31218,9 @@ c     of this loop) pressure is 1022, then it's time to stop searching.
       endif
 
       if (cmaxmin == 'min') then
-        search_cutoff = xavg + stdv
+        search_cutoff = real(xavg + stdv, kind=4)
       else
-        search_cutoff = xavg - stdv
+        search_cutoff = real(xavg - stdv, kind=4)
       endif
 
       if ( verb .ge. 3 ) then
@@ -34771,7 +34781,7 @@ c     *********************************************************************
 
       ! SELECT A CENTRAL ELEMENT OF X AND SAVE IT IN T
 
-      ij = i + r*(j-i)
+      ij = i + int(r)*(j-i)
       it = ind(ij)
       t = x(it)
 
