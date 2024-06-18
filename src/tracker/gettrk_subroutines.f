@@ -12335,7 +12335,7 @@ c
       USE trkrparms; USE gen_vitals; USE level_parms
       USE verbose_output; USE shear_diags; USE genesis_diags
 
-      !implicit none
+      implicit none
 
       type (gencard) gstm
       type (datecard) inp
@@ -12355,6 +12355,7 @@ c
       integer idivg,imoistdivg,irh_800_600,irh_1000_925,iomega500,isst
       integer irmw_dist,irmw_val
       character  basinid*2,clatns*1,clonew*1,wcore_flag*1
+      integer :: ist, ifcsthour, maxstorm, ioaxret
 
       if ( verb .ge. 3) then
         print *,'+++ Top of output_atcf_gen, ist= ',ist,' ifh= '
