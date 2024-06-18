@@ -5824,6 +5824,8 @@ c
 c     OUTPUT:
 c      slope  slope of regression line
 
+      implicit none
+
       real xarr(inum),yarr(inum)
       real slope,sumxy,sumx2
       integer i,inum
@@ -9366,7 +9368,9 @@ c     issret    return code from this subroutine
 c
       USE set_max_parms
       USE verbose_output
-
+      
+      !implicit none
+      
       real, allocatable :: iwork(:)
       real      gridprs(maxstorm,maxtime)
       integer   ifh,maxstorm
@@ -10222,7 +10226,9 @@ c
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE trkrparms; USE phase; USE shear_diags; USE genesis_diags
       USE verbose_output; USE level_parms
-
+      
+      !implicit none 
+      
       type (datecard) inp
       type (trackstuff) trkrinfo
 
@@ -10732,6 +10738,8 @@ c
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE tracked_parms
 c
+      !implicit none
+
       type (datecard) inp
 c
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
@@ -10879,6 +10887,8 @@ c
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE tracked_parms
 c
+      !implicit none
+
       type (datecard) inp
 c
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
@@ -11130,6 +11140,8 @@ c
       USE tracked_parms
       USE verbose_output
 
+      !implicit none
+
       type (datecard) inp
 
       real, intent(in) :: outlon,outlat
@@ -11362,6 +11374,8 @@ c
 
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE verbose_output
+
+      !implicit none
 
       type (datecard) inp
 c
@@ -11615,6 +11629,8 @@ c
 
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE verbose_output
+
+      !implicit none
 
       type (datecard) inp
 
@@ -11949,6 +11965,8 @@ c
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE verbose_output
 
+      !implicit none
+
       type (datecard) inp
 c
       integer, parameter :: numdist=14,numquad=4,numbin=5,numthresh=3
@@ -12114,6 +12132,8 @@ c
 
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE verbose_output
+
+      !implicit none
 
       type (datecard) inp
 
@@ -12306,6 +12326,8 @@ c
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE trkrparms; USE gen_vitals; USE level_parms
       USE verbose_output; USE shear_diags; USE genesis_diags
+
+      !implicit none
 
       type (gencard) gstm
       type (datecard) inp
@@ -13049,6 +13071,8 @@ c     storm  contains the tcvitals info (from module def_vitals)
 c
       USE def_vitals; USE inparms; USE set_max_parms
       USE verbose_output
+
+      !implicit none
 
       type (tcvcard) stm
       type (datecard) inp
@@ -14476,6 +14500,8 @@ c
       USE verbose_output; USE trig_vals; USE set_max_parms
       USE gen_vitals
 
+      !implicit none
+
       type (trackstuff) trkrinfo
       integer   iatret,inctcv
       real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
@@ -14717,6 +14743,7 @@ c               identifying when this subroutine is malfunctioning.
       USE trkrparms
       USE verbose_output
 
+      !implicit none
 c
       type (trackstuff) trkrinfo
 c
@@ -18127,6 +18154,8 @@ c     member or not in the calculation.
  
       USE verbose_output
 
+      !implicit none
+
       real      xdat(kmax)
       logical(1) valid(kmax)
 c
@@ -18169,6 +18198,8 @@ c     and lon fix positions.
 c
       USE verbose_output
 
+      !implicit none
+
       real     xdat(kmax),wt(kmax)
 c
       iwtret = 0
@@ -18209,6 +18240,8 @@ c     account for wrapping around the Greenwich Meridian.
 c
 
       USE verbose_output
+
+      !implicit none
 
       real     xlon(kmax),wt(kmax)
       integer  gt345_ct,lt15_ct
@@ -18272,6 +18305,8 @@ c-----------------------------------------------------------------------
       subroutine stdevcalc (xdat,kmax,valid,xavg,stdx,isret)
 
       USE verbose_output
+
+      !implicit none
 
       real      xdat(kmax)
       logical(1) valid(kmax)
@@ -19184,6 +19219,8 @@ c
       USE level_parms; USE trkrparms
       USE verbose_output
 
+      !implicit none
+
       type (trackstuff) trkrinfo
 
       real, allocatable ::  uold(:,:),vold(:,:),unew(:,:),vnew(:,:)
@@ -19903,6 +19940,8 @@ c-----------------------------------------------------------------------
 c
 c     ABSTRACT: This subroutine calculates the magnitude of the wind
 c     speed for an array of points, given real u and real v arrays.
+      
+      !implicit none
 c
       real    xu(imx,jmx),xv(imx,jmx),wspeed(imx,jmx)
 c
@@ -19926,6 +19965,8 @@ c     grid of evenly spaced data.  Do NOT attempt to use this subroutine
 c     with data that are not evenly spaced or you will get unpredictable
 c     results.
 c
+      !implicit none
+
       real      xold(imxold,jmxold), xnew(imxnew,jmxnew)
 c
 c
@@ -20038,6 +20079,8 @@ c
 c     ABSTRACT: This subroutine linearly interpolates evenly spaced
 c               data from one grid to another.
 c 
+      !implicit none
+
       real      xold(ioldmax), xnew(inewmax)
 c
 c     First just copy points from old grid onto new, larger grid
@@ -20067,6 +20110,8 @@ c               routine is specifically used for interpolating
 c               longitudes, and it factors in the possibility of 
 c               interpolating across the greenwich meridian.
 c
+      !implicit none
+
       real      xold(ioldmax), xnew(inewmax)
 c
 c     First just copy points from old grid onto new, larger grid
@@ -21616,6 +21661,8 @@ c     igiret   Return code from this subroutine
 c
       USE trig_vals; USE trkrparms
       USE verbose_output
+
+      !implicit none
 
       type (trackstuff) trkrinfo
       real tmpangle
@@ -25629,6 +25676,8 @@ c     later in the program, set these bitmapped data values to a
 c     value of -999.0.  The min and max of this array are also 
 c     returned if a user wants to check for reasonable values.
 c
+      !implicit none
+
       logical(1) ld
       dimension  ld(n),d(n)
 c
@@ -25692,6 +25741,8 @@ c
 c     OUTPUT:
 c     lb2d     2-d array containing logical bitmap values
 c
+      !implicit none
+
       logical(1) lb1d(imax*jmax),lb2d(imax,jmax)
       logical(1) :: need_to_flip_lats
       integer :: ilat,ilatix,ilon,imax,jmax
@@ -25875,6 +25926,8 @@ c
 c     OUTPUT:
 c     dat2d    2-d real array of data
 c
+      !implicit none
+
       logical(1) :: need_to_flip_lats
       real    dat1d(imax*jmax),dat2d(imax,jmax)
 c
@@ -25946,6 +25999,8 @@ c
 c     OUTPUT:
 c     dat2d    2-d real array of data
 c
+      !implicit none
+
       logical(1) :: need_to_flip_lats
       real ::   dat1d(imax*jmax)
       real ::   dat2d(imax,jmax)
