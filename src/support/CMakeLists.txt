@@ -6,7 +6,7 @@
 #----------------------------------------------------------
 
 # fortran flags
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O2 -fp-model precise -i4 -r8")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O0")
 
 # set up build for supvit support code
 set(supvit_srcs
