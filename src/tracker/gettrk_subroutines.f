@@ -11380,7 +11380,7 @@ c
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE verbose_output
 
-      !implicit none
+      implicit none
 
       type (datecard) inp
 c
@@ -11394,6 +11394,7 @@ c
       integer intlon,intlat,output_fhr,intlon100,intlat100,pdf_ct_tot
       integer maxstorm
       character  basinid*2,clatns*1,clonew*1,wfract_type*5,wt*1,cquad*2
+      integer :: ist, ifcsthour, iofwret, ib, it, ip
 
 c     First convert all of the lat/lon values from reals into integers.
 c     These integer values must be 10x their real value (eg. 125.4 will
