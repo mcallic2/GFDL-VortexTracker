@@ -2873,7 +2873,7 @@ c                  print *,'At pt isi, type= ',trkrinfo%type == 'tracker'
 
                     if (trkrinfo%type == 'midlat' .or. 
      &                trkrinfo%type == 'tcgen') then
-                      write (6,234) ,atcfymdh,adjustr(atcfname)
+                      write (6,234) atcfymdh,adjustr(atcfname)
      &                   ,ifhours(ifh)
      &                   ,int_vtq_ne,int_vtq_se,int_vtq_sw,int_vtq_nw
                     endif
@@ -31731,7 +31731,7 @@ c            print *,'xxtim b4 call_mslp_chk, ip= ',ip,' jp= ',jp
 
                 print *,' '
 
-                write (6,234) ,atcfymdh,adjustr(atcfname)
+                write (6,234) atcfymdh,adjustr(atcfname)
      &                ,ifhours(ifh)
      &                ,int_vtq_ne,int_vtq_se,int_vtq_sw,int_vtq_nw
 
