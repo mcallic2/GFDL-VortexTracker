@@ -12140,7 +12140,7 @@ c
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE verbose_output
 
-      !implicit none
+      implicit none
 
       type (datecard) inp
 
@@ -12149,6 +12149,7 @@ c
       real    vmaxwind,conv_ms_knots,xminmslp
       integer intlon,intlat,output_fhr
       character  basinid*2,clatns*1,clonew*1
+      integer :: ist, ifcsthour, ioiret
 
 c     First convert all of the lat/lon values from reals into integers.
 c     These integer values must be 10x their real value (eg. 125.4 will
