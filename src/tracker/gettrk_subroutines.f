@@ -10740,7 +10740,7 @@ c
       USE def_vitals; USE inparms; USE set_max_parms; USE atcf
       USE tracked_parms
 c
-      !implicit none
+      implicit none
 
       type (datecard) inp
 c
@@ -10748,6 +10748,7 @@ c
       integer modelnum(maxmodel)
       integer intlon(maxtime),intlat(maxtime)
       character  modelchar(maxmodel)*4
+      integer :: maxstorm, ifhmax, ioaret, ifh, ist
 
 c     First convert all of the lat/lon values from reals into integers.
 c     These integer values must be 10x their real value (eg. 125.4 will
