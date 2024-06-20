@@ -18171,8 +18171,10 @@ c     member or not in the calculation.
  
       USE verbose_output
 
-      !implicit none
+      implicit none
 
+      integer :: kmax, iaret, i, ict
+      real :: xavg, xsum
       real      xdat(kmax)
       logical(1) valid(kmax)
 c
