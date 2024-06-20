@@ -14755,10 +14755,14 @@ c               identifying when this subroutine is malfunctioning.
       USE trkrparms
       USE verbose_output
 
-      !implicit none
+      implicit none
 c
       type (trackstuff) trkrinfo
 c
+      integer :: imax, jmax, igrret, i, ibeg, idta, iend
+      integer :: iisa, ilonfix, imode, inum, ip, iq, iqa
+      integer :: itret, iwa, j, jbeg, jend, jlatfix, jnum
+      integer :: k, m, numalloc, numipts, numjpts
       logical(1) valid_pt(imax,jmax)     
       logical(1) first_time_thru_getradii
 c      dimension iwork(257)
@@ -14773,6 +14777,7 @@ c      dimension iwork(257)
       integer, parameter  :: dp = selected_real_kind(12, 60)
       real (dp), allocatable :: dtemp(:)
       real ::   windthresh(3) = (/17.5,25.7,32.9/)
+      real :: xcenlon, xcenlat, dx, dy, cosfac, vmag, dist
       character cstormid*3
       character :: need_to_expand_r34(4)*1
 
