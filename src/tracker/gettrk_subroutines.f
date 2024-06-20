@@ -14510,10 +14510,12 @@ c
       USE verbose_output; USE trig_vals; USE set_max_parms
       USE gen_vitals
 
-      !implicit none
+      implicit none
 
       type (trackstuff) trkrinfo
       integer   iatret,inctcv
+      integer :: maxstorm, ifh, ifcsthour, ileadtime
+      real    :: extraplon, xdeg
       real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real      dist,distm,xincr,yincr,stmspd,stmdir,atan,arct,degrees
       real      ucomp,vcomp,xdist,ydist,ydeg,dt,extraplat
