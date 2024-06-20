@@ -589,7 +589,7 @@ c          lugi = 5200
               call output_atcf_gen (x999_lon
      &           ,x999_lat,inp,inctcv
      &           ,izero_fhr,xzero_vmax
-     &           ,xzero_minslp,vradius,maxstorm,trkrinfo
+     &           ,xzero_minslp,vradius,trkrinfo
      &           ,i999_stmspd,i999_stmdir,x99_pbar,x99_rbar
      &           ,x99_rmax,cps_vals,c_undef_wcflag
      &           ,imeanzeta,igridzeta
@@ -597,7 +597,7 @@ c          lugi = 5200
      &           ,x999_divg,x999_moist_divg
      &           ,x999_rh600_800,x999_rh1000_925
      &           ,x999_omega500,x999_sst
-     &           ,x999_axirmw_dist,x999_axirmw_val,ioaxret)
+     &           ,x999_axirmw_dist,x999_axirmw_val)
             endif 
             call output_hfip (x999_lon
      &                ,x999_lat,inp,inctcv
@@ -1898,7 +1898,7 @@ c           to get a guess position for the next forecast hour.
                       call output_atcf_gen (x999_lon
      &                   ,x999_lat,inp,ist
      &                   ,ifcsthour,xzero_vmax
-     &                   ,xzero_minslp,vradius,maxstorm,trkrinfo
+     &                   ,xzero_minslp,vradius,trkrinfo
      &                   ,i999_stmspd,i999_stmdir,x99_pbar,x99_rbar
      &                   ,x99_rmax,cps_vals,c_undef_wcflag
      &                   ,imeanzeta,igridzeta
@@ -1906,7 +1906,7 @@ c           to get a guess position for the next forecast hour.
      &                   ,x999_divg,x999_moist_divg
      &                   ,x999_rh600_800,x999_rh1000_925
      &                   ,x999_omega500,x999_sst
-     &                   ,x999_axirmw_dist,x999_axirmw_val,ioaxret)
+     &                   ,x999_axirmw_dist,x999_axirmw_val)
                     endif
                     cycle stormloop     
                   endif
@@ -3595,7 +3595,7 @@ c           knots (1.9427) is explained in output_atcf.
                   call output_atcf_gen (fixlon(ist,ifh)
      &               ,fixlat(ist,ifh),inp,ist
      &               ,ifcsthour,xmaxwind(ist,ifh)
-     &               ,gridprs(ist,ifh),vradius,maxstorm,trkrinfo
+     &               ,gridprs(ist,ifh),vradius,trkrinfo
      &               ,istmspd,istmdir,plastbar,rlastbar
      &               ,rmax,cps_vals,wcore_flag
      &               ,imeanzeta,igridzeta
@@ -3603,7 +3603,7 @@ c           knots (1.9427) is explained in output_atcf.
      &               ,divg,moist_divg
      &               ,rh_800_600_smooth,rh_1000_925_smooth
      &               ,omega500_smooth,sst_smooth
-     &               ,axisymet_rmw_dist,axisymet_rmw_val,ioaxret)
+     &               ,axisymet_rmw_dist,axisymet_rmw_val)
                 endif
 
                 call output_atcf_parms (fixlon(ist,ifh),fixlat(ist,ifh)
@@ -3801,7 +3801,7 @@ c           knots (1.9427) is explained in output_atcf.
                   call output_atcf_gen (x999_lon
      &               ,x999_lat,inp,ist
      &               ,ifcsthour,xzero_vmax
-     &               ,xzero_minslp,vradius,maxstorm,trkrinfo
+     &               ,xzero_minslp,vradius,trkrinfo
      &               ,i999_stmspd,i999_stmdir,x99_pbar,x99_rbar
      &               ,x99_rmax,cps_vals,c_undef_wcflag
      &               ,imeanzeta,igridzeta
@@ -3809,7 +3809,7 @@ c           knots (1.9427) is explained in output_atcf.
      &               ,x999_divg,x999_moist_divg
      &               ,x999_rh600_800,x999_rh1000_925
      &               ,x999_omega500,x999_sst
-     &               ,x999_axirmw_dist,x999_axirmw_val,ioaxret)
+     &               ,x999_axirmw_dist,x999_axirmw_val)
                 endif
                 call output_hfip (x999_lon
      &                    ,x999_lat,inp,ist
@@ -3946,7 +3946,7 @@ c           data, so we'll just output the genesis vitals record.
                 call output_atcf_gen (x999_lon
      &             ,x999_lat,inp,ist
      &             ,ifcsthour,xzero_vmax
-     &             ,xzero_minslp,vradius,maxstorm,trkrinfo
+     &             ,xzero_minslp,vradius,trkrinfo
      &             ,i999_stmspd,i999_stmdir,x99_pbar,x99_rbar
      &             ,x99_rmax,cps_vals,c_undef_wcflag
      &             ,imeanzeta,igridzeta
@@ -3954,7 +3954,7 @@ c           data, so we'll just output the genesis vitals record.
      &             ,x999_divg,x999_moist_divg
      &             ,x999_rh600_800,x999_rh1000_925
      &             ,x999_omega500,x999_sst
-     &             ,x999_axirmw_dist,x999_axirmw_val,ioaxret)
+     &             ,x999_axirmw_dist,x999_axirmw_val)
               endif
               call output_hfip (x999_lon
      &                  ,x999_lat,inp,ist
@@ -12230,13 +12230,13 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine output_atcf_gen (outlon,outlat,inp,ist
-     &         ,ifcsthour,vmaxwind,xminmslp,vradius,maxstorm
+     &         ,ifcsthour,vmaxwind,xminmslp,vradius
      &         ,trkrinfo,istmspd,istmdir,plastbar,rlastbar,rmax
      &         ,cps_vals,wcore_flag,imeanzeta,igridzeta
      &         ,shear_mag,shear_dir,divg,moist_divg
      &         ,rh_800_600_smooth,rh_1000_925_smooth
      &         ,omega500_smooth,sst_smooth
-     &         ,axisymet_rmw_dist,axisymet_rmw_val,ioaxret)
+     &         ,axisymet_rmw_dist,axisymet_rmw_val)
 
 c     ABSTRACT: This subroutine  outputs a 1-line message for a given 
 c     storm at an input forecast hour in a modified atcfunix format.  
@@ -12335,7 +12335,7 @@ c
       USE trkrparms; USE gen_vitals; USE level_parms
       USE verbose_output; USE shear_diags; USE genesis_diags
 
-      !implicit none
+      implicit none
 
       type (gencard) gstm
       type (datecard) inp
@@ -12355,6 +12355,7 @@ c
       integer idivg,imoistdivg,irh_800_600,irh_1000_925,iomega500,isst
       integer irmw_dist,irmw_val
       character  basinid*2,clatns*1,clonew*1,wcore_flag*1
+      integer :: ist, ifcsthour
 
       if ( verb .ge. 3) then
         print *,'+++ Top of output_atcf_gen, ist= ',ist,' ifh= '
