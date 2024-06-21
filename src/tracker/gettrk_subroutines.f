@@ -29616,10 +29616,10 @@ c
       dimension cosfac(jmax),tanfac(jmax)
       real, allocatable :: div(:,:)
       real      divx4(imax,jmax)
-      real      xlondiff,xlatdiff,dlon,dlat,dfix
+      real      dlon,dlat,dfix
       real      dlat_edge,dlat_inter,dlon_edge,dlon_inter
       real      rlat(jmax),cosfac,tanfac
-      integer   nlat,nlon,i,j,imax,jmax,w
+      integer   i,j,imax,jmax,w
       integer   ii,jj,idvcret,ida
       logical(1) vp(imax,jmax)
 c
@@ -30159,11 +30159,10 @@ c     LOCAL:
       implicit none
 
       type (trackstuff) trkrinfo
-      integer   ist,ifh,imax,jmax,maxstorm,igsvret,npts,bskip,icut
-      integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igiret,icutmax
-      integer   icount,ibret,imrhf,ichrret,icmlret,ip,igrhret
+      integer   ist,ifh,imax,jmax,maxstorm,igsvret
+      integer   imrhf,ichrret,icmlret,ip,igrhret
       real, allocatable :: mean_rh(:,:)
-      real      re,ri,xsmoothval,xcenlon,xcenlat,dx,dy,reold,riold
+      real      re,ri,xsmoothval,xcenlon,xcenlat,dx,dy
       real      rh_1000_925_smooth,rh_800_600_smooth
       character :: already_computed_domain_wide_rh*1
       logical(1) valid_pt(imax,jmax),readgenflag(nreadgenparms)
@@ -30478,7 +30477,6 @@ c     LOCAL:
       real      xcenlon,xcenlat,dx,dy
       real      xmaxrh,xminrh
       logical(1) valid_pt(imax,jmax)
-      character*1 :: in_grid
       character(*) :: clevstr,cvar
 c
       if (allocated(point_ct)) deallocate(point_ct)
