@@ -19707,7 +19707,7 @@ c     ------------------
       allocate (vmag(imxnew,jmxnew),stat=ivm)
       allocate (lbi(imxnew,jmxnew),stat=ilb)
       if (ivm /= 0 .or. ilb /= 0) goto 972
-      call calc_vmag (unew,vnew,imxnew,jmxnew,vmag,icvret)
+      call calc_vmag (unew,vnew,imxnew,jmxnew,vmag)
       deallocate (unew); deallocate (vnew)
  
       lbi = .TRUE.
@@ -19971,13 +19971,14 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine calc_vmag (xu,xv,imx,jmx,wspeed,icvret)
+      subroutine calc_vmag (xu,xv,imx,jmx,wspeed)
 c
 c     ABSTRACT: This subroutine calculates the magnitude of the wind
 c     speed for an array of points, given real u and real v arrays.
       
-      !implicit none
+      implicit none
 c
+      integer :: imx, jmx, i, j
       real    xu(imx,jmx),xv(imx,jmx),wspeed(imx,jmx)
 c
       do i=1,imx
