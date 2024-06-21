@@ -17160,15 +17160,14 @@ c
       integer, parameter :: numdist=42,numazim=24
       real      rdist1(numdist),rdist2(numdist),rdist3(numdist)
       real      rdist4(numdist),rdist(numdist),azim_ave_wmag(numdist)
-      real      degrees,dx,dy,rmax,xcenlon,xcenlat,vmax
-      real      cosfac,dist,vmag,targlat,targlon,bear,xintrp_u,xintrp_v
+      real      dx,dy,xcenlon,xcenlat
+      real      targlat,targlon,bear,xintrp_u,xintrp_v
       real      wmag,wmag_sum,maxrmw_wmag,maxrmw_dist
       real      axisymet_rmw_dist,axisymet_rmw_val,integ_dvdr_thresh
       real      rising_sum_dvdr,declining_sum_dvdr,dvdr
       logical(1) valid_pt(imax,jmax)
-      integer   jbeg_hold,jend_hold,bimect,bimwct,imax,jmax
-      integer   igmwret,ilonfix,jlatfix,numipts,numjpts,i,j,ip
-      integer   ibeg,jbeg,iend,jend,igarret,bimct,ibiret1,ibiret2
+      integer   imax,jmax
+      integer   igarret,bimct,ibiret1,ibiret2
       integer   azimuth_ct,maxrmw_ix,rdist_ix,ir,idv_start,idv_end
       integer   rising_sum_dvdr_ct,declining_sum_dvdr_ct,kr,mr
       integer   idist,iazim,ird
@@ -17581,7 +17580,7 @@ c
       real      clon(maxstorm,maxtime,maxtp),temp_clon(maxtp)
       real      clat(maxstorm,maxtime,maxtp),temp_clat(maxtp)
       real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real      trkerr(maxtp),errdist(maxtp),xvalues(maxtp)
+      real      errdist(maxtp),xvalues(maxtp)
       real      stderr(maxstorm,maxtime),devia(maxtp),wtpos(maxtp)
       real      dist_from_mean(maxtp)
       real      degrees,errtmp,errmax,errinit,xavg_stderr,trkerr_avg
