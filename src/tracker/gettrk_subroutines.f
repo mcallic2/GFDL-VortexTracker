@@ -22360,14 +22360,13 @@ c
       logical(1) ::  need_to_flip_lats,need_to_flip_lons
       logical(1) file_open
       logical :: unpack=.true.
-      logical :: open_grb=.false.
       character*1 :: lbrdflag
       character*8 :: chparm(nreadparms),ch_genparm(nreadgenparms)
       CHARACTER(len=8) :: pabbrev
       character (len=10) big_ben(3)
       integer   date_time(8)
       integer,dimension(200) :: jids,jpdt,jgdt
-      integer :: listsec1(13), enable_timing
+      integer :: enable_timing
       integer, intent(in) :: imax,jmax
       integer   igparm(nreadparms),iglev(nreadparms)
       integer   genparm(nreadgenparms),genlev(nreadgenparms)
@@ -22392,14 +22391,11 @@ c
       integer   cpsglevtyp(nreadcpsparms)
       integer   ec_cpsgparm(nreadcpsparms)
       integer   jpds(200),jgds(200),kpds(200),kgds(200)
-      integer   igvret,ifa,ila,ip,ifh,i,j,k,kj,iret,kf,lugb,lugi
+      integer   ifa,ila,ip,ifh,i,j,k,iret,kf,lugb,lugi
       integer   jskp,jdisc,np,igrh,igrhct,lmgb,lmgi
       integer   jpdtn,jgdtn,npoints,icount,ipack,krec
       integer   pdt_4p0_vert_level,pdt_4p0_vtime
-      integer :: listsec0(2)=(/0,2/)
-      integer :: igds(5)=(/0,0,0,0,0/),previgds(5)
-      integer :: idrstmpl(200)
-      integer :: currlen=1000000
+      integer :: previgds(5)
 c
       lbrdflag = 'n'
       enable_timing=trkrinfo%enable_timing
@@ -24389,7 +24385,7 @@ c
       real, allocatable :: f(:)
       real(kind=4) :: f4(imax*jmax)
       real(kind=8) :: f8(imax*jmax)
-      real :: dmin,dmax,xfill_value
+      real :: dmin,dmax
       real         :: xmissing_value
       real(kind=4) :: xmissing_val4
       real(kind=8) :: xmissing_val8
@@ -24401,9 +24397,9 @@ c
       character*30 :: chparm_cps(nreadcpsparms)
       character*30 :: chparm_gen(nreadgenparms)
       integer, intent(in) :: ncfile_id,nc_lsmask_file_id,imax,jmax
-      integer :: igvret,ifa,ip,ifh,i,j,k,m,n,ncfile_tmax,nf_get_att_real
-      integer :: nf_get_att_double,nf_inq_attlen,imvlen,ifvlen
-      integer :: usertime,ncix,missing_val_length,nf_status
+      integer :: igvret,ifa,ip,ifh,m,ncfile_tmax,nf_get_att_real
+      integer :: nf_get_att_double
+      integer :: usertime,ncix,nf_status
       integer :: nf_inq_varid,varid,igrh,igrhct,nc_zero_ix
       integer :: xtype,ignrret
 c
