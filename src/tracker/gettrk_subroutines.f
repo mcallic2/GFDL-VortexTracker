@@ -31212,22 +31212,22 @@ c     ifamret  return code from this subroutine
       integer    date_time(8)
       integer    stormct,i,j,ibeg,iend,jbeg,jend,ix,jx,ixp1,ixm1
       integer    bskip,ibeg_sm,iend_sm,jbeg_sm,jend_sm
-      integer    ip,jp,maxstorm,jxp1,jxm1,ifamret,isret,iclmret
-      integer    isoiret,icccret,igicwret,imax,jmax,ifh,totpts,kct
+      integer    ip,jp,maxstorm,jxp1,jxm1,ifamret,iclmret
+      integer    icccret,igicwret,imax,jmax,ifh,totpts,kct
       integer    eligible_pts,isia,ipa,candidate_ct,ist,ict,iia,ija,imsa
       integer    icmrgret,cand_not_valid_ct,cand_masked_out_ct,ivsa
       integer    cand_cc_good_ct,cand_cc_bad_ct,iccwcret,isla
-      integer    ilonfix,jlatfix,icount,npts,nhalf,igsvret,isaa
-      integer    compute_ct,num_smooth_iter,k,maxip,maxjp,cmrg_fail_ct
+      integer    icount,npts,nhalf,isaa
+      integer    compute_ct,num_smooth_iter,k,cmrg_fail_ct
       integer    int_vtq_ne,int_vtq_se,int_vtq_sw,int_vtq_nw
       integer(kind=8)    ssct1,yyct1,yyct2,zzct1,zzct2,zzct3
       character (len=10) big_ben(3)
       character ccflag*1,get_last_isobar_flag*1,point_is_over_water*1
       character pass_checks*1,low_level_wind_circ_flag*1
-      character try_low_level_circ*1,maxmin*3,cvar*3
+      character maxmin*3,cvar*3
       character(*) cmaxmin
       character(*) gm_wrap_flag
-      logical(1) still_finding_valid_maxmins,rough_gradient_check_okay
+      logical(1) still_finding_valid_maxmins
       logical(1) valid_pt(imax,jmax),masked_out(imax,jmax)
       logical(1) pt_eligible(imax,jmax)
       logical(1), allocatable :: slp_valid_pt(:,:),valid_smoothe(:,:)
@@ -31237,12 +31237,11 @@ c     ifamret  return code from this subroutine
       real (dp), allocatable ::  prstemp(:)
       real, allocatable :: mslp_smoothe(:,:),slp_array(:,:)
       real, intent(in) :: fxy(imax,jmax)
-      real       realmask(imax,jmax)
       real       vtquadmax(4)
-      real       search_cutoff,dmin,dmax,sphere_cutoff
+      real       search_cutoff,dmin,dmax
       real       plastbar,rlastbar,fract_land,dx,dy
       real       xmlat,xmlon,ylat,xlon,xsmoothval
-      real       wgt1,wgt3,wgt5,wgt7,wgt9,sdiff,maxmslpsmooth
+      real       wgt1,wgt3,wgt5,wgt7,wgt9,maxmslpsmooth
       real(kind=8)  xavg,stdv
 
 c-----
