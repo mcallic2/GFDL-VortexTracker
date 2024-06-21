@@ -18217,8 +18217,11 @@ c     and lon fix positions.
 c
       USE verbose_output
 
-      !implicit none
-
+      implicit none
+      
+      integer :: kmax, iwtret
+      integer :: i
+      real    :: xwtavg, wtot
       real     xdat(kmax),wt(kmax)
 c
       iwtret = 0
