@@ -19581,7 +19581,7 @@ c     Now begin the interpolation process
         call bilin_int_even (imxold,jmxold,vold
      &                      ,imxnew,jmxnew,vnew)
 c        call lin_int (imxold,imxnew,rlonold,rlonnew,iliret)
-        call lin_int_lon (imxold,imxnew,rlonold,rlonnew,iliret)
+        call lin_int_lon (imxold,imxnew,rlonold,rlonnew)
         call lin_int     (jmxold,jmxnew,rlatold,rlatnew)
  
         chk_lonspc_old = rlonold(imxold) - rlonold(imxold - 1)
@@ -20141,7 +20141,7 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine lin_int_lon (ioldmax,inewmax,xold,xnew,iliret)
+      subroutine lin_int_lon (ioldmax,inewmax,xold,xnew)
 c
 c     ABSTRACT: This subroutine linearly interpolates evenly spaced
 c               data from one grid to another.  This particular 
@@ -20149,8 +20149,9 @@ c               routine is specifically used for interpolating
 c               longitudes, and it factors in the possibility of 
 c               interpolating across the greenwich meridian.
 c
-      !implicit none
+      implicit none
 
+      integer :: ioldmax, inewmax, i
       real      xold(ioldmax), xnew(inewmax)
 c
 c     First just copy points from old grid onto new, larger grid
