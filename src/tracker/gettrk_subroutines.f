@@ -31211,13 +31211,13 @@ c     ifamret  return code from this subroutine
       type (cint_stuff) contour_info
       integer    date_time(8)
       integer    stormct,i,j,ibeg,iend,jbeg,jend,ix,jx,ixp1,ixm1
-      integer    igiret,bskip,ibeg_sm,iend_sm,jbeg_sm,jend_sm
-      integer    ip,jp,maxstorm,jxp1,jxm1,ifamret,isret,iaret,iclmret
+      integer    bskip,ibeg_sm,iend_sm,jbeg_sm,jend_sm
+      integer    ip,jp,maxstorm,jxp1,jxm1,ifamret,isret,iclmret
       integer    isoiret,icccret,igicwret,imax,jmax,ifh,totpts,kct
       integer    eligible_pts,isia,ipa,candidate_ct,ist,ict,iia,ija,imsa
       integer    icmrgret,cand_not_valid_ct,cand_masked_out_ct,ivsa
-      integer    cand_cc_good_ct,cand_cc_bad_ct,iccwcret,icvpret,isla
-      integer    ilonfix,jlatfix,icount,npts,nhalf,igsvret,ibret,isaa
+      integer    cand_cc_good_ct,cand_cc_bad_ct,iccwcret,isla
+      integer    ilonfix,jlatfix,icount,npts,nhalf,igsvret,isaa
       integer    compute_ct,num_smooth_iter,k,maxip,maxjp,cmrg_fail_ct
       integer    int_vtq_ne,int_vtq_se,int_vtq_sw,int_vtq_nw
       integer(kind=8)    ssct1,yyct1,yyct2,zzct1,zzct2,zzct3
@@ -32237,7 +32237,7 @@ c              what GM-wrapping setting to use.
       character(*)  gm_wrap_flag
       integer, parameter :: distmax=11,num_azim=8
       integer  imax,jmax,ip,jp,idist,ilevint,bimct,iazim,ifh99,iquadct
-      integer  iazim_good_depth_ct,ibiret1,icmrgret,i,j
+      integer  iazim_good_depth_ct,ibiret1,icmrgret
       integer  iazim_full_dist_ct
       real, intent(in) :: fxy(imax,jmax)
       real     max_radial_grad_dist(num_azim)
@@ -32691,7 +32691,6 @@ c     iccwcret  return code from this subroutine
       integer, intent(in) :: ip,jp
       integer   vt_exceed_17kts_ct(numquad,numdist)
       integer   vtct(numquad,numdist)
-      integer   date_time(8)
       integer   imax,jmax,idist,azimuth_ct,ibiret1,ibiret2,bimct,iq,nq
       integer   final_quad_full_vt_ct,iccwcret,iazim,igvtret,ifh
       integer   final_quad_half_vt_ct,final_quad_sum_ct
@@ -33484,8 +33483,8 @@ c              not if we just delete them now.
       type (trackstuff) trkrinfo
       type (cint_stuff) contour_info
 
-      integer    i,j,ir,iria,irja,irx,jrx,ix,jx,imax,jmax
-      integer    nb,ibx,jby,nct,iflip
+      integer    i,ir,iria,irja,irx,jrx,ix,jx,imax,jmax
+      integer    nb,ibx,jby,iflip
       integer    mr,ringct,ixp1,ixm1,jxp1,jxm1,nring,iter
       integer    icenx,jcenx,icccret,next_ring_ct,igicwret
       integer    num_pts_in_all_contours,next_contour_ct
@@ -34539,9 +34538,6 @@ c
       implicit none
 
       type (trackstuff) trkrinfo
-
-      integer date_time(8)
-      character (len=10) big_ben(3)
 
       logical(1) valid_pt(imax,jmax)
       character  point_is_over_water*1
