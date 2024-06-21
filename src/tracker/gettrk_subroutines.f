@@ -27476,7 +27476,6 @@ c
       character(*) :: gm_wrap_flag
       integer,dimension(200) :: jids,jpdt,jgdt
       integer, parameter :: jf=40000000
-      integer :: listsec1(13)
       integer   pdt_4p0_vert_level,pdt_4p0_vtime
       real      xhold,xlondiff,xlatdiff,temp,firstval,lastval
       real, allocatable :: f(:)
@@ -27485,13 +27484,10 @@ c
       integer   jpds(200),jgds(200),igetpds(200),igetgds(200)
       integer, intent(in)  :: ifh
       integer, intent(out) :: imax,jmax
-      integer   iia,ija,ila,midi,midj,i,j,iix,jix,ifa,iret
+      integer   iia,ija,ila,midi,midj,i,j,ifa,iret
       integer   iscanflag,iggret,kf,k,lugb,lugi,jskp,jdisc
       integer   jpdtn,jgdtn,npoints,icount,ipack,krec
-      integer :: listsec0(2)=(/0,2/)
-      integer :: igds(5)=(/0,0,0,0,0/),previgds(5)
-      integer :: idrstmpl(200)
-      integer :: currlen=1000000
+      integer :: previgds(5)
 
       iggret = 0
 
@@ -28243,12 +28239,12 @@ c
       type (datecard) inp
 
       logical(1) :: need_to_flip_lats,need_to_flip_lons
-      real      xhold,xlondiff,xlatdiff
+      real      xhold,xlondiff
       real, allocatable :: tmplon(:),tmplat(:)
       real(kind=4), allocatable :: temp_tmplon4(:),temp_tmplat4(:)
       real(kind=8), allocatable :: temp_tmplon8(:),temp_tmplat8(:)
       real, intent(out) :: dx,dy
-      integer   iscanflag,iggret
+      integer   iggret
       integer, intent(in)  :: ncfile_id
       integer, intent(out) :: imax,jmax
       integer :: iia,ija,midi,midj,i,j,iix,jix,xtype,ignrret
@@ -29289,10 +29285,10 @@ c
 
       dimension cosfac(jmax),tanfac(jmax)
       real      tmpzeta(imax,jmax)
-      real      xlondiff,xlatdiff,dlon,dlat,dfix
+      real      dlon,dlat,dfix
       real      dlat_edge,dlat_inter,dlon_edge,dlon_inter
       real      rlat(jmax),cosfac,tanfac
-      integer   z,iscanflag,nlat,nlon,i,j,imax,jmax,w
+      integer   z,i,j,imax,jmax,w
       integer   ii,jj
       logical(1) vp(imax,jmax)
 
