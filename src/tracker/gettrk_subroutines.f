@@ -30472,11 +30472,10 @@ c     LOCAL:
 
       type (trackstuff) trkrinfo
       integer, allocatable :: point_ct(:,:)
-      integer   ist,ifh,imax,jmax,maxstorm,igsvret,npts,bskip,icut
-      integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igiret,icutmax
-      integer   icount,ibret,z,zstart,zend,ipc,icmlret,i,j
+      integer   ist,ifh,imax,jmax,maxstorm
+      integer   z,zstart,zend,ipc,icmlret,i,j
       real      xmean_arr(imax,jmax)
-      real      re,ri,xsmoothval,xcenlon,xcenlat,dx,dy,reold,riold
+      real      xcenlon,xcenlat,dx,dy
       real      xmaxrh,xminrh
       logical(1) valid_pt(imax,jmax)
       character*1 :: in_grid
@@ -31240,7 +31239,7 @@ c     ifamret  return code from this subroutine
       real       vtquadmax(4)
       real       search_cutoff,dmin,dmax
       real       plastbar,rlastbar,fract_land,dx,dy
-      real       xmlat,xmlon,ylat,xlon,xsmoothval
+      real       xmlat,xmlon
       real       wgt1,wgt3,wgt5,wgt7,wgt9,maxmslpsmooth
       real(kind=8)  xavg,stdv
 
