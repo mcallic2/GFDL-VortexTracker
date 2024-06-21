@@ -19582,7 +19582,7 @@ c     Now begin the interpolation process
      &                      ,imxnew,jmxnew,vnew)
 c        call lin_int (imxold,imxnew,rlonold,rlonnew,iliret)
         call lin_int_lon (imxold,imxnew,rlonold,rlonnew,iliret)
-        call lin_int     (jmxold,jmxnew,rlatold,rlatnew,iliret)
+        call lin_int     (jmxold,jmxnew,rlatold,rlatnew)
  
         chk_lonspc_old = rlonold(imxold) - rlonold(imxold - 1)
         chk_latspc_old = rlatold(jmxold) - rlatold(jmxold - 1)
@@ -20112,13 +20112,14 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine lin_int (ioldmax,inewmax,xold,xnew,iliret)
+      subroutine lin_int (ioldmax,inewmax,xold,xnew)
 c
 c     ABSTRACT: This subroutine linearly interpolates evenly spaced
 c               data from one grid to another.
 c 
-      !implicit none
+      implicit none
 
+      integer :: ioldmax, inewmax, i
       real      xold(ioldmax), xnew(inewmax)
 c
 c     First just copy points from old grid onto new, larger grid
