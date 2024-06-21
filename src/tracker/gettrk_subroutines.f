@@ -18443,14 +18443,14 @@ c
       real rads,ri,uvgeslon,uvgeslat,dx,dy,ctlon,ctlat,fxval
       real temp_grid_minlon,temp_guesslon,rlatt,rlont,bear
       real targlon,targlat,xintrp_u,xintrp_v,vt_azim_sum,degrees
-      real circ_diff,circ_diff_sum,hemisphere,wind_mag_ctr,dist
-      real xmin_circ_diff_mean,xmax_circ_diff_mean,tlon,tlat
-      real dell,fmax,fmin,grid_buffer,circ_diff_mean
+      real hemisphere,dist
+      real tlon,tlat
+      real dell,fmax,fmin,grid_buffer
       real circumference,arclength
       real circul_disk,xmax_circul_disk,xmin_circul_disk
-      integer ibiret1,ibiret2,igvtret,azimuth_ct,igiret,npts
+      integer ibiret1,ibiret2,igvtret,azimuth_ct,npts
       integer igibret,bimct,ifh
-      integer circ_diff_ct,ir,nhalf,bskip1,bskip2,iskip,nlev
+      integer nhalf,bskip1,bskip2,iskip,nlev
       integer ilonfix,jlatfix,ibeg,iend,jbeg,jend,i,j,k,iix,jix
       logical(1) cflag, valid_pt(imax,jmax)
 
@@ -19259,8 +19259,8 @@ c
       real :: dx,dy
       real  :: grid_maxlat,grid_minlat,grid_maxlon,grid_minlon
       integer :: imax, jmax, ist, level, igucret
-      integer :: i, ibeg, ibiret, icvret, iend, ifmret, igiret
-      integer :: igrret, ik, ilao, ilb, iliret, ilonfix, iloo
+      integer :: i, ibeg, iend, ifmret, igiret
+      integer :: igrret, ik, ilao, ilb, ilonfix, iloo
       integer :: imxnew, imxold, intnum, ip, iuo, ivm, ivo, numinterp
       integer :: j, jbeg, jend, jlatfix, jmxnew, jmxold, nlev, npts
       character*1 ::   gotlat
@@ -20199,13 +20199,13 @@ c     the atcfunix file (the "atcf_gen" file).
       type (datecard) inp
 
       logical(1) readflag(14),valid_pt(imax,jmax),compflag
-      character  cmaxmin*3,cvort_maxmin*3,csmooth_var*8
+      character  cvort_maxmin*3,csmooth_var*8
       real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real     gridpoint_maxmin,dx,dy,re,ri,parmlon,parmlat,xsmoothval
+      real     gridpoint_maxmin,dx,dy,re,ri,xsmoothval
       integer  igridzeta(nlevgrzeta),imeanzeta(nlevgrzeta)
-      integer  n,ix1,ix2,ilev,npts,imax,jmax,igzvret,ilonfix,jlatfix
-      integer  idum,jdum,ibeg,jbeg,iend,jend,igiret,icount,iuret
-      integer  ifilret,ist,ifh,ifmret,maxstorm,igsvret
+      integer  n,ilev,npts,imax,jmax,igzvret,ilonfix,jlatfix
+      integer  idum,jdum,ibeg,jbeg,iend,jend,igiret
+      integer  ifilret,ist,ifh,maxstorm,igsvret
 
 c     First, call  get_ij_bounds in order to get the (i,j) coordinates
 c     of the (fixlon,fixlat) position that we need to search around.
@@ -22395,7 +22395,6 @@ c
       integer   jskp,jdisc,np,igrh,igrhct,lmgb,lmgi
       integer   jpdtn,jgdtn,npoints,icount,ipack,krec
       integer   pdt_4p0_vert_level,pdt_4p0_vtime
-      integer :: previgds(5)
 c
       lbrdflag = 'n'
       enable_timing=trkrinfo%enable_timing
