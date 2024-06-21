@@ -18330,8 +18330,10 @@ c-----------------------------------------------------------------------
 
       USE verbose_output
 
-      !implicit none
+      implicit none
 
+      integer :: kmax, isret, i, ict
+      real    :: xavg, stdx
       real      xdat(kmax)
       logical(1) valid(kmax)
 
