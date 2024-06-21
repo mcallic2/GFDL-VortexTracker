@@ -25724,10 +25724,13 @@ c     later in the program, set these bitmapped data values to a
 c     value of -999.0.  The min and max of this array are also 
 c     returned if a user wants to check for reasonable values.
 c
-      !implicit none
+      implicit none
 
+      integer :: n, i
+      real :: dmin, dmax
       logical(1) ld
-      dimension  ld(n),d(n)
+      dimension  ld(n)
+      real :: d(n)
 c
       dmin=1.E15
       dmax=-1.E15
