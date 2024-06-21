@@ -21702,10 +21702,18 @@ c
       USE trig_vals; USE trkrparms
       USE verbose_output
 
-      !implicit none
+      implicit none
 
       type (trackstuff) trkrinfo
       real tmpangle
+      real :: ri, dx, dy, cosfac, dlon
+      real :: rglatmax, rglatmin, rglonmax, rglonmin, rdeg
+      real :: geslon, geslat
+      integer :: npts, nhalf, imax, jmax
+      integer :: ilonfix, jlatfix
+      integer :: ibeg, jbeg, iend, jend
+      integer :: igiret, i, ibmaxlonpts, ihlonpts
+      integer :: jbmaxlatpts, jhlatpts, jripts
 c
       igiret = 0
 c
