@@ -25410,7 +25410,6 @@ c     array of real, 4-byte data.
       integer, intent(in):: ncid
       character*(*), intent(in)::  var1_name
       integer, intent(in):: nmax
-      integer    :: ira
       real(kind=4), intent(out) :: readvar4(nmax)
 
       integer ::  status, var1id
@@ -25443,7 +25442,6 @@ c     array of real, 8-byte data.
       integer, intent(in):: ncid
       character*(*), intent(in)::  var1_name
       integer, intent(in):: nmax
-      integer    :: ira
       real(kind=8), intent(out) :: readvar8(nmax)
 
       integer ::  status, var1id
@@ -25565,7 +25563,6 @@ c
       integer, intent(in)       :: ncid,ncix
       character*(*), intent(in) :: var3_name
       integer, intent(in)       :: imax,jmax
-      integer                   :: xtype
       real(kind=4), intent(out)   :: var3(imax,jmax)
       integer :: istart(3),ilength(3)
       integer :: status,var3id,igvret
@@ -25647,7 +25644,6 @@ c
       integer, intent(in)       :: ncid,ncix
       character*(*), intent(in) :: var3_name
       integer, intent(in)       :: imax,jmax
-      integer                   :: xtype
       real(kind=8), intent(out)   :: var3(imax,jmax)
       integer :: istart(3),ilength(3)
       integer :: status,var3id,igvret
@@ -26105,7 +26101,7 @@ c
       implicit none
 
       logical(1) :: namelist_file_exists
-      integer ifh,lunml
+      integer lunml
       type (datecard) inp
       type (trackstuff) trkrinfo
       type (netcdfstuff) netcdfinfo
@@ -26704,7 +26700,7 @@ c
 c
       integer, parameter :: iunit_fh=15
       integer itmphrs(750),itmpmins(750),input_mins(750),itmpltix(750)
-      integer ifhmax,inphr,inpmin,ict,i,ifa,ifma,icma,ira,inpltix,ila
+      integer ifhmax,inpmin,ict,i,ifa,ifma,icma,ira,inpltix,ila
       real    xminfract
 
       itmphrs  = -99
@@ -27471,23 +27467,20 @@ c
       logical(1) :: need_to_flip_lats,need_to_flip_lons
       logical(1), allocatable :: lb(:)
       logical :: unpack=.true.
-      logical :: open_grb=.false.
       CHARACTER(len=8) :: pabbrev
       character(*) :: gm_wrap_flag
       integer,dimension(200) :: jids,jpdt,jgdt
       integer, parameter :: jf=40000000
       integer   pdt_4p0_vert_level,pdt_4p0_vtime
-      real      xhold,xlondiff,xlatdiff,temp,firstval,lastval
+      real      xhold,temp,firstval,lastval
       real, allocatable :: f(:)
-      real, allocatable :: tmplon(:),tmplat(:)
       real, intent(out) :: dx,dy
       integer   jpds(200),jgds(200),igetpds(200),igetgds(200)
       integer, intent(in)  :: ifh
       integer, intent(out) :: imax,jmax
-      integer   iia,ija,ila,midi,midj,i,j,ifa,iret
+      integer   iia,ija,ila,i,j,ifa,iret
       integer   iscanflag,iggret,kf,k,lugb,lugi,jskp,jdisc
       integer   jpdtn,jgdtn,npoints,icount,ipack,krec
-      integer :: previgds(5)
 
       iggret = 0
 
@@ -28239,7 +28232,7 @@ c
       type (datecard) inp
 
       logical(1) :: need_to_flip_lats,need_to_flip_lons
-      real      xhold,xlondiff
+      real      xhold
       real, allocatable :: tmplon(:),tmplat(:)
       real(kind=4), allocatable :: temp_tmplon4(:),temp_tmplat4(:)
       real(kind=8), allocatable :: temp_tmplon8(:),temp_tmplat8(:)
