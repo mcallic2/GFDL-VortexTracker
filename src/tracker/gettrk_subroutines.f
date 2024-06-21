@@ -19577,9 +19577,9 @@ c     Now begin the interpolation process
      &      iloo /= 0 .or. ilao /= 0) goto 971
 
         call bilin_int_even (imxold,jmxold,uold
-     &                      ,imxnew,jmxnew,unew,ibiret)
+     &                      ,imxnew,jmxnew,unew)
         call bilin_int_even (imxold,jmxold,vold
-     &                      ,imxnew,jmxnew,vnew,ibiret)
+     &                      ,imxnew,jmxnew,vnew)
 c        call lin_int (imxold,imxnew,rlonold,rlonnew,iliret)
         call lin_int_lon (imxold,imxnew,rlonold,rlonnew,iliret)
         call lin_int     (jmxold,jmxnew,rlatold,rlatnew,iliret)
@@ -19994,15 +19994,17 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine bilin_int_even (imxold,jmxold,xold
-     &                          ,imxnew,jmxnew,xnew,ibiret)
+     &                          ,imxnew,jmxnew,xnew)
 c
 c     ABSTRACT: This subroutine does a bilinear interpolation on a 
 c     grid of evenly spaced data.  Do NOT attempt to use this subroutine
 c     with data that are not evenly spaced or you will get unpredictable
 c     results.
 c
-      !implicit none
+      implicit none
 
+      integer :: imxold, jmxold, imxnew, jmxnew
+      integer :: i, j, istep
       real      xold(imxold,jmxold), xnew(imxnew,jmxnew)
 c
 c
