@@ -19245,15 +19245,24 @@ c
       USE level_parms; USE trkrparms
       USE verbose_output
 
-      !implicit none
+      implicit none
 
       type (trackstuff) trkrinfo
 
       real, allocatable ::  uold(:,:),vold(:,:),unew(:,:),vnew(:,:)
       real, allocatable ::  rlonold(:),rlatold(:),rlonnew(:),rlatnew(:)
       real, allocatable ::  vmag(:,:)
+      real :: uvgeslon, uvgeslat, xval, dell
+      real :: chk_latspc_new, chk_latspc_old
+      real :: chk_lonspc_new, chk_lonspc_old
+      real :: ctlon, ctlat
       real :: dx,dy
       real  :: grid_maxlat,grid_minlat,grid_maxlon,grid_minlon
+      integer :: imax, jmax, ist, level, igucret
+      integer :: i, ibeg, ibiret, icvret, iend, ifmret, igiret
+      integer :: igrret, ik, ilao, ilb, iliret, ilonfix, iloo
+      integer :: imxnew, imxold, intnum, ip, iuo, ivm, ivo, numinterp
+      integer :: j, jbeg, jend, jlatfix, jmxnew, jmxold, nlev, npts
       character*1 ::   gotlat
       logical(1)        cflag, valid_pt(imax,jmax)
       logical(1), allocatable :: lbi(:,:)
