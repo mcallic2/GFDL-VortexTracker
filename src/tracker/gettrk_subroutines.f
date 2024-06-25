@@ -30182,9 +30182,8 @@ c
 
       mean_rh = 0.0
       icmlret = 0
-      call calc_multi_layer_mean (xcenlon,xcenlat,ist
-     &                ,ifh,imax,jmax,'rh','1000-925',dx,dy
-     &                ,valid_pt,maxstorm,trkrinfo,mean_rh,icmlret)
+      call calc_multi_layer_mean (imax,jmax,'rh','1000-925'
+     &                ,valid_pt,mean_rh)
 
       if (icmlret == 0) then
 
@@ -30211,9 +30210,9 @@ c
 
       mean_rh = 0.0
       icmlret = 0
-      call calc_multi_layer_mean (xcenlon,xcenlat,ist
-     &                ,ifh,imax,jmax,'rh','800-600',dx,dy
-     &                ,valid_pt,maxstorm,trkrinfo,mean_rh,icmlret)
+      call calc_multi_layer_mean (xcenlon,xcenlat
+imax,jmax,'rh','800-600'
+     &                ,valid_pt,mean_rh)
 
       if (icmlret == 0) then
 
@@ -30408,10 +30407,8 @@ c
 c----------------------------------------------------------------------
 c
 c----------------------------------------------------------------------
-      subroutine calc_multi_layer_mean (xcenlon,xcenlat
-     &                ,ist,ifh,imax,jmax,cvar,clevstr,dx,dy
-     &                ,valid_pt,maxstorm,trkrinfo
-     &                ,xmean_arr,icmlret)
+      subroutine calc_multi_layer_mean (imax,jmax,cvar,clevstr
+     &                ,valid_pt,xmean_arr)
 c
 c     ABSTRACT: This routine computes a multi-layer mean of an input
 c     variable.
