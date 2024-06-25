@@ -8534,8 +8534,8 @@ c     trkrinfo derived type detailing user-specified grid info
         ri = 250.0
         igsvret = 0
         call get_smooth_value_at_pt (fixlon(ist,ifh),fixlat(ist,ifh),ist
-     &                ,ifh,imax,jmax,sst(1,1),'sst',dx,dy
-     &                ,valid_pt,maxstorm,re,ri,trkrinfo
+     &                ,imax,jmax,sst(1,1),'sst',dx,dy
+     &                ,valid_pt,re,ri,trkrinfo
      &                ,xsmoothval,igsvret)
         if (igsvret == 0) then
           sst_smooth = xsmoothval
@@ -8687,8 +8687,8 @@ c
         endif
 
         call get_smooth_value_at_pt (fixlon(ist,ifh),fixlat(ist,ifh),ist
-     &                ,ifh,imax,jmax,q850(1,1),'q850',dx,dy
-     &                ,valid_pt,maxstorm,re,ri,trkrinfo
+     &                ,imax,jmax,q850(1,1),'q850',dx,dy
+     &                ,valid_pt,re,ri,trkrinfo
      &                ,xsmoothval,igsvret)
         if (igsvret == 0) then
           q850_smooth = xsmoothval
@@ -8770,8 +8770,8 @@ c
         ri = 250.0 
         igsvret = 0
         call get_smooth_value_at_pt (fixlon(ist,ifh),fixlat(ist,ifh),ist
-     &                ,ifh,imax,jmax,omega500(1,1),'omega500',dx,dy
-     &                ,valid_pt,maxstorm,re,ri,trkrinfo
+     &                ,imax,jmax,omega500(1,1),'omega500',dx,dy
+     &                ,valid_pt,re,ri,trkrinfo
      &                ,xsmoothval,igsvret)
         if (igsvret == 0) then
           omega500_smooth = xsmoothval
@@ -8853,8 +8853,8 @@ c
       igsvret = 0
 
       call get_smooth_value_at_pt (fixlon(ist,ifh),fixlat(ist,ifh),ist
-     &                ,ifh,imax,jmax,divg_850(1,1),'divg_850',dx,dy
-     &                ,valid_pt,maxstorm,re,ri,trkrinfo
+     &                ,imax,jmax,divg_850(1,1),'divg_850',dx,dy
+     &                ,valid_pt,re,ri,trkrinfo
      &                ,xsmoothval,igsvret)
 
       if (igsvret == 0) then
@@ -20305,8 +20305,8 @@ c     These (i,j) coordinates are returned as ilonfix and jlatfix.
           ri = 250.0
           igsvret = 0
           call get_smooth_value_at_pt (fixlon(ist,ifh),fixlat(ist,ifh)
-     &                ,ist,ifh,imax,jmax,zeta(1,1,n),csmooth_var,dx,dy
-     &                ,valid_pt,maxstorm,re,ri,trkrinfo
+     &                ,ist,imax,jmax,zeta(1,1,n),csmooth_var,dx,dy
+     &                ,valid_pt,re,ri,trkrinfo
      &                ,xsmoothval,igsvret)
           if (igsvret == 0) then
             imeanzeta(n) = int ((xsmoothval * 1e6) + 0.5)
@@ -29876,8 +29876,8 @@ c
 c---------------------------------------------------------------------
 c
 c---------------------------------------------------------------------
-      subroutine get_smooth_value_at_pt (xcenlon,xcenlat,ist,ifh
-     &              ,imax,jmax,xarray,cvar,dx,dy,valid_pt,maxstorm
+      subroutine get_smooth_value_at_pt (xcenlon,xcenlat,ist
+     &              ,imax,jmax,xarray,cvar,dx,dy,valid_pt
      &              ,re,ri,trkrinfo,xsmoothval,igsvret)
 c
 c     ABSTRACT: This routine computes one smoothed value of a value from
@@ -30188,8 +30188,8 @@ c
 
         igsvret = 0
         call get_smooth_value_at_pt (xcenlon,xcenlat,ist
-     &                  ,ifh,imax,jmax,mean_rh(1,1),'mean_rh1',dx,dy
-     &                  ,valid_pt,maxstorm,re,ri,trkrinfo
+     &                  ,imax,jmax,mean_rh(1,1),'mean_rh1',dx,dy
+     &                  ,valid_pt,re,ri,trkrinfo
      &                  ,xsmoothval,igsvret)
 
         if (igsvret == 0) then
@@ -30216,8 +30216,8 @@ c
 
         igsvret = 0
         call get_smooth_value_at_pt (xcenlon,xcenlat,ist
-     &                  ,ifh,imax,jmax,mean_rh(1,1),'mean_rh8',dx,dy
-     &                  ,valid_pt,maxstorm,re,ri,trkrinfo
+     &                  ,imax,jmax,mean_rh(1,1),'mean_rh8',dx,dy
+     &                  ,valid_pt,re,ri,trkrinfo
      &                  ,xsmoothval,igsvret)
 
         if (igsvret == 0) then
