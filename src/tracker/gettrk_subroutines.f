@@ -6023,9 +6023,8 @@ c              barnes analysis.
       real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real      dx,dy,wcore_mean_val,wcore_mean_lon,wcore_mean_lat
       real      wcore_point_max,tlastcont,rlastcont,tlastout,rlastout
-      integer   imax,jmax,igvpret,ist,ifh,npts,bskip,i,j
-      integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igiret
-      integer   icount,maxstorm,ip,ifmret,ifilret,ifix,jfix,icccret
+      integer   imax,jmax,igvpret,ist,ifh,npts
+      integer   maxstorm,ifmret,ifilret,ifix,jfix,icccret
       integer   num_check_conts
       integer(kind=8)   dum1,dum2,dum3
       logical(1) valid_pt(imax,jmax),compflag,wcore_mask(imax,jmax)
@@ -6370,8 +6369,8 @@ c     icqwret  return code from this subroutine
       character (*)  gm_wrap_flag
       real     rdist(numdist),vt_quad(numquad)
       real     dx,dy,bear,targlat,targlon,xintrp_u,xintrp_v
-      real     temp_bear,xdist,xclon,xclat,wmag,wmag_sum,wmag_mean,d
-      real     vr,vt,vr_sum,vt_sum,degrees,hemisphere,hem_adj_vt_quad
+      real     xclon,xclat,wmag,wmag_sum,wmag_mean
+      real     vr,vt,vr_sum,vt_sum,hemisphere,hem_adj_vt_quad
       logical(1) valid_pt(imax,jmax)
 c
       data rdist/50.,100.,150.,200.,250./
@@ -6563,7 +6562,7 @@ c       sr_vt:    Quadrant tangential winds in storm-relative framework
       character (*)  gm_wrap_flag
       integer, parameter :: numdist=14,numquad=4,num_qtr_azim=6
       integer  imax,jmax,igwsret,ist,ifh,iquad,idist,ibiret1,ibiret2
-      integer  igvtret,ipct,maxstorm,iazim,azimuth_ct,bimct
+      integer  igvtret,maxstorm,iazim,azimuth_ct,bimct
       real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real     rdist(numdist)
       real     er_wind(numquad,numdist)
@@ -6946,9 +6945,9 @@ c       rdist     Radii (km) at which the winds will be evaluated
       real     area_exceed_quad_bin(numquad,numbin,numthresh)
       real     xintlon,xintlat
       real ::  windthresh(numthresh) = (/17.5,25.74,32.94/)
-      real     dx,dy,bear,targlat,targlon,xintrp_u,xintrp_v,st_heading
+      real     dx,dy,bear,st_heading
       real     d,cosarg,rlonc,rlatc,rlonb,rlatb,st_heading_rad,degrees
-      real     temp_bear,xdist,conv_ms_knots,vmagkts
+      real     xdist,conv_ms_knots,vmagkts
       real     rads,ri,dell,vmag,xarea,grdintincr,xsfclon,xsfclat
       real     sum_exceed_area(numbin,numthresh)
       real     sum_total_area(numbin,numthresh)
