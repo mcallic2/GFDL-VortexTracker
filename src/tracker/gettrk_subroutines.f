@@ -260,12 +260,12 @@ c
       integer, parameter :: num_r34_bins=353
       integer, allocatable :: prsindex(:)
       integer   imax,jmax,ifh,ist,irf,jj,istmp,ifhtemp,itret,ivpa
-      integer   isiret1,isiret2,isiret3,idum,m,iix,jjx,imode,numtcv
+      integer   isiret1,isiret2,isiret3,idum,m,numtcv
       integer   iha,isa,iua,iva,iza,maxstorm,ivort,ifix,jfix,issret
-      integer   imoa,imoca,iksa,isda,ileadtime,leadtime_check,imota
-      integer   ioaret,ioaxret,ifgcret,ifmret,igugret,isoiret,icccret
-      integer   igrret,igmwret,iorret,ignret,iovret,icbret,igucret,ita
-      integer   ifilret,ifret,iaret,isret,iotmret,iwa,iisa,sl_counter
+      integer   imoa,imoca,iksa,isda,ileadtime,leadtime_check
+      integer   ioaret,ioaxret,ifgcret,ifmret,igugret,icccret
+      integer   igrret,igmwret,ignret,iovret,icbret,ita
+      integer   ifilret,ifret,iotmret,iwa,iisa,sl_counter
       integer   iicret,igcret,igwcret,imbowret,iatret,ioapret
       integer(kind=8) :: pfcret
       logical(1), allocatable :: valid_pt(:,:)
@@ -281,9 +281,9 @@ c
       character close_to_boundary*1,quad_wind_circ_check*4
       integer   vradius(3,4),igridzeta(nlevgrzeta),imeanzeta(nlevgrzeta)
       integer   maxmini(maxstorm),maxminj(maxstorm),pdf_ct_bin(16)
-      integer   ifcsthour,stormct,prevstormct,kf,istmspd,istmdir,iggret
-      integer   igiret,iuret,jdum,icount,ilonfix,jlatfix,igpret,ifhmax
-      integer   ibeg,jbeg,iend,jend,ix1,ix2,n,ilev,npts,icpsa,igzvret
+      integer   ifcsthour,stormct,prevstormct,istmspd,istmdir,iggret
+      integer   igpret,ifhmax
+      integer   icpsa,igzvret
       integer   igfwret,ioiret,igisret,iofwret,iowsret,igwsret,igscret
       integer   pdf_ct_tot,lugb,lugi,iret,icmcf,iccfh,ivt8f,icqwret
       integer   igsret,issta,iq850a,irha,ispfha,itempa,iomegaa
@@ -314,15 +314,15 @@ c
       real      pctile_quad_bin_wind(numquad,num_r34_bins)
       real      fp_pctile_quad_bin_wind(numquad,num_r34_bins)
       real      gridpoint_maxmin,dist,distnm,xknots,xmaxspeed
-      real      uvgeslon,uvgeslat,xavg,stdv,search_cutoff,re,ri,dx,dy
+      real      uvgeslon,uvgeslat,dx,dy
       real      xinp_fixlat,xinp_fixlon,degrees,plastbar,rlastbar
       real      xinterval_fhr,cc_time_sum_tot,cc_time_sum_yes
-      real      rmax,sdp,wdp,paramb,vtl_slope,vtu_slope
+      real      rmax,sdp,wdp
       real      xsfclon,xsfclat,cc_time_pct,radmax,r34_dist_thresh
       real      prev_latmax,prev_latmin,prev_lonmax,prev_lonmin
       real      vradius_km,hold_old_contint,tcv_max_wind_ms
       real      tcv_mslp_pa,r34_from_tcv,roci_from_tcv
-      real      proci_from_tcv,roci_prs_contint_thresh,xprstemp
+      real      proci_from_tcv,roci_prs_contint_thresh
       real      divg,moist_divg,rh_800_600_smooth,rh_1000_925_smooth
       real      omega500_smooth,sst_smooth
       real      axisymet_rmw_dist,axisymet_rmw_val
@@ -4182,7 +4182,6 @@ c
       logical(1)  file_open
       logical(4)  file_open4,file_open5
       character fnameg*7,fnamei*7,fnameo*7
-      character fname_mask_g*7,fname_mask_i*7
       character opening_mask*1
       character(*) gfilename,ifilename
       character(120) gopen_g_file,gopen_i_file
@@ -5046,7 +5045,7 @@ c     storm center.
       real      st_heading,st_heading_rad,ricps,dx,dy
       real      pt_dir,pt_dir_rad,zthick,hemval,paramb
       real      zthick_right_mean,zthick_left_mean
-      integer   imax,jmax,igpret,igcpret,ist,ifh,npts,bskip,i,j
+      integer   imax,jmax,igcpret,ist,ifh,npts,bskip,i,j
       integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igiret
       integer   left_ct,right_ct,hemis,icount,maxstorm,ip
       logical(1) valid_pt(imax,jmax)
@@ -5384,9 +5383,9 @@ c     only those points that are within 500 km of the storm center.
       real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real      zmax(7),zmin(7),zdiff(7),xlolevs(7),xhilevs(7),plev(7)
       real      dlnp(7),dzdlnp(7),dz(7),lnp(7)
-      real      vth_slope,xdist,degrees,d,cosarg
+      real      vth_slope,xdist,degrees
       real      ricps,dx,dy,R2
-      integer   imax,jmax,igpret,igcpret,ist,ifh,npts,bskip,i,j,k,kix
+      integer   imax,jmax,ist,ifh,npts,bskip,i,j,k,kix
       integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igcvret,igiret
       integer   kbeg,kend,maxstorm,ip
       logical(1) valid_pt(imax,jmax)
@@ -6023,12 +6022,11 @@ c              barnes analysis.
       real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real      dx,dy,wcore_mean_val,wcore_mean_lon,wcore_mean_lat
       real      wcore_point_max,tlastcont,rlastcont,tlastout,rlastout
-      integer   imax,jmax,igvpret,ist,ifh,npts
+      integer   imax,jmax,igvpret,ist,ifh
       integer   maxstorm,ifmret,ifilret,ifix,jfix,icccret
       integer   num_check_conts
       integer(kind=8)   dum1,dum2,dum3
       logical(1) valid_pt(imax,jmax),compflag,wcore_mask(imax,jmax)
-      logical(1) output_file_open
 c
 
       if ( verb .ge. 3 ) then
@@ -6944,8 +6942,8 @@ c       rdist     Radii (km) at which the winds will be evaluated
       real     area_exceed_quad_bin(numquad,numbin,numthresh)
       real     xintlon,xintlat
       real ::  windthresh(numthresh) = (/17.5,25.74,32.94/)
-      real     dx,dy,st_heading
-      real     st_heading_rad,degrees
+      real     dx,dy
+      real     degrees
       real     xdist,conv_ms_knots,vmagkts
       real     rads,ri,dell,vmag,xarea,grdintincr,xsfclon,xsfclat
       real     sum_exceed_area(numbin,numthresh)
@@ -11975,7 +11973,7 @@ c
       real    vmaxwind,conv_ms_knots,xminmslp,xsfclon,xsfclat
       integer intlon,intlat,output_fhr,intlon100,intlat100,maxstorm
       integer :: ist, ifcsthour, ioiret
-      character  basinid*2,clatns*1,clonew*1,wfract_type*5,wt*1,cquad*2
+      character  basinid*2,clatns*1,clonew*1
 
 c     First convert all of the lat/lon values from reals into integers.
 c     These integer values must be 10x their real value (eg. 125.4 will
