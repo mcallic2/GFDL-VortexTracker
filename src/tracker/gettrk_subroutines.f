@@ -8821,12 +8821,12 @@ c
       type (datecard) inp
 
       integer imax,jmax,ist,ifh,maxstorm
-      integer level,iggdret,igdret,ilev,idvgf,idvcret,igsvret
+      integer igdret,idvgf,idvcret,igsvret
       real, allocatable :: divg_850(:,:)
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real    clon(maxstorm,maxtime,maxtp)
       real    clat(maxstorm,maxtime,maxtp)
-      real    dx,dy,xcenlon,xcenlat,divg,xsmoothval,re,ri
+      real    dx,dy,divg,xsmoothval,re,ri
       
       logical(1) calcparm(maxtp,maxstorm),valid_pt(imax,jmax)
 c
@@ -9808,10 +9808,9 @@ c
       real    axisymet_rmw_dist,axisymet_rmw_val
       integer intlon,intlat,irmax,output_fhr,ic,iplastbar,irlastbar
       integer ishear_mag,ishear_dir,istmspd,istmdir,isst,ioaxret
-      integer irmw_dist,irmw_val,maxstorm,ist,ifh,ifcsthour
+      integer irmw_dist,irmw_val,maxstorm,ist,ifcsthour
       integer vradius(3,4),icps_vals(3)
       character  basinid*2,clatns*1,clonew*1,wcore_flag*1
-      character comma_fill1*48,comma_fill2*31,comma_filler*79
       character comma_fill1n*25,comma_fill2n*44
 
       if ( verb .ge. 3 ) then
@@ -10247,7 +10246,6 @@ c
       integer imeanzeta(nlevgrzeta),igridzeta(nlevgrzeta)
       integer :: ist, ifcsthour, maxstorm, ioaxret
       character  basinid*2,clatns*1,clonew*1,wcore_flag*1
-      character comma_fill1*48,comma_fill2*31,comma_filler*79
       character comma_fill1n*27,comma_fill2n*44
 c
       if ( verb .ge. 3 ) then
@@ -10744,9 +10742,7 @@ c
       type (datecard) inp
 c
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      integer modelnum(maxmodel)
       integer intlon(maxtime),intlat(maxtime)
-      character  modelchar(maxmodel)*4
       integer :: maxstorm, ifhmax, ioaret, ifh, ist
 
 c     First convert all of the lat/lon values from reals into integers.
@@ -10896,9 +10892,8 @@ c
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real    xmaxwind(maxstorm,maxtime)
       real    conv_ms_knots
-      integer modelnum(maxmodel)
       integer intlon(maxtime),intlat(maxtime)
-      character  modelchar(maxmodel)*4,basinid*4
+      character  basinid*4
       integer :: maxstorm, ifhmax, ioaret, ifh, ist
 
 c     First convert all of the lat/lon values from reals into integers.
@@ -11150,7 +11145,7 @@ c
       real, intent(in) :: outlon,outlat
       real    mslp_outp_adj,xoutlon
       real    vmaxwind,conv_ms_knots,xminmslp,rmax
-      integer intlon,intlat,output_fhr,irmax,ileadtime
+      integer intlon,intlat,irmax,ileadtime
       integer vradius(3,4)
       character  basinid*2,clatns*1,clonew*1
       integer :: ist, ifh, ioaxret
@@ -11392,7 +11387,7 @@ c
       integer pdf_ct_bin(16)
       integer intlon,intlat,output_fhr,intlon100,intlat100,pdf_ct_tot
       integer maxstorm
-      character  basinid*2,clatns*1,clonew*1,wfract_type*5,wt*1,cquad*2
+      character  basinid*2,clatns*1,clonew*1,wfract_type*5,wt*1
       integer :: ist, ifcsthour, iofwret, ib, it, ip
 
 c     First convert all of the lat/lon values from reals into integers.
@@ -11652,7 +11647,7 @@ c
       real     xoutlon
       real     vmaxwind,conv_ms_knots,xminmslp,xsfclon,xsfclat
       integer intlon,intlat,output_fhr,id,intlon100,intlat100,ir
-      character  basinid*2,clatns*1,clonew*1,wfract_type*5,wt*1
+      character  basinid*2,clatns*1,clonew*1
       character*2 :: cquad(4) = (/'NE','SE','SW','NW'/)
       character*2 :: crel(4) = (/'FR','BR','BL','FL'/)
       integer :: ist, ifcsthour, maxstorm, iofwret, iq, it
