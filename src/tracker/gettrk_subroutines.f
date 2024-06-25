@@ -8738,10 +8738,10 @@ c
       re = 125.0
       ri = 250.0
       call get_rh_at_center (fixlon(ist,ifh),fixlat(ist,ifh),ist
-     &                ,ifh,imax,jmax,dx,dy
-     &                ,valid_pt,maxstorm,re,ri,trkrinfo
+     &                ,imax,jmax,dx,dy
+     &                ,valid_pt,re,ri,trkrinfo
      &                ,rh_1000_925_smooth,rh_800_600_smooth,readgenflag
-     &                ,already_computed_domain_wide_rh,igrhret)
+     &                ,already_computed_domain_wide_rh)
 
       if ( verb .ge. 3 ) then
         call date_and_time (big_ben(1),big_ben(2),big_ben(3)
@@ -30084,11 +30084,10 @@ c
 c---------------------------------------------------------------------
 c
 c---------------------------------------------------------------------
-      subroutine get_rh_at_center (xcenlon,xcenlat,ist,ifh
-     &              ,imax,jmax,dx,dy,valid_pt,maxstorm
+      subroutine get_rh_at_center (xcenlon,xcenlat,ist
+     &              ,imax,jmax,dx,dy,valid_pt
      &              ,re,ri,trkrinfo,rh_1000_925_smooth,rh_800_600_smooth
-     &              ,readgenflag,already_computed_domain_wide_rh
-     &              ,igrhret)
+     &              ,readgenflag,already_computed_domain_wide_rh)
 c
 c     ABSTRACT: This routine computes smoothed values of RH, averaged
 c     over multiple layers, initially 1000-925 mb and 800-600 mb.
