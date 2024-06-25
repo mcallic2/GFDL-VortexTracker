@@ -25959,9 +25959,10 @@ c
 c     OUTPUT:
 c     dat2d    2-d real array of data
 c
-      !implicit none
+      implicit none
 
       logical(1) :: need_to_flip_lats
+      integer :: imax, jmax, ilat, ilatix, ilon
       real    dat1d(imax*jmax),dat2d(imax,jmax)
 c
       if (need_to_flip_lats) then
