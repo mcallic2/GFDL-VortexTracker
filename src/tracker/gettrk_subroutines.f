@@ -6939,23 +6939,22 @@ c       rdist     Radii (km) at which the winds will be evaluated
 
       integer, parameter :: numdist=14,numquad=4,numbin=5,numthresh=3
       real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real     rdist(numdist)
       real     wfract_cov(numquad+1,numbin,numthresh)
       real     area_total_quad_bin(numquad,numbin)
       real     area_exceed_quad_bin(numquad,numbin,numthresh)
       real     xintlon,xintlat
       real ::  windthresh(numthresh) = (/17.5,25.74,32.94/)
-      real     dx,dy,bear,st_heading
-      real     d,cosarg,rlonc,rlatc,rlonb,rlatb,st_heading_rad,degrees
+      real     dx,dy,st_heading
+      real     st_heading_rad,degrees
       real     xdist,conv_ms_knots,vmagkts
       real     rads,ri,dell,vmag,xarea,grdintincr,xsfclon,xsfclat
       real     sum_exceed_area(numbin,numthresh)
       real     sum_total_area(numbin,numthresh)
       integer  pdf_ct_bin(16)
-      integer  imax,jmax,igwsret,ist,ifh,iquad,idist,ibiret1,ibiret2
-      integer  igfwret,ipct,i,j,numinterp,ixoa,ixaa,iq,ib,it,ii
+      integer  imax,jmax,ist,ifh
+      integer  igfwret,i,j,numinterp,iq,ib,it,ii
       integer  jlatfix,ilonfix,npts,ibeg,iend,jbeg,jend,ngridint,ni,nj
-      integer  itret,igiret,idistbin,ipdfbin,pdf_ct_tot,maxstorm
+      integer  igiret,idistbin,ipdfbin,pdf_ct_tot,maxstorm
       logical(1) calcparm(maxtp,maxstorm)
       logical(1) valid_pt(imax,jmax)
       character  got_pdf*6
@@ -7590,7 +7589,7 @@ c     sdp   Storm surge damage potential
       type (trackstuff) trkrinfo
 
       integer, parameter :: numdist=14,numquad=4
-      integer  npts,ipct,igisret,imax,jmax,ist,ifh,ilonfix,jlatfix
+      integer  npts,igisret,imax,jmax,ist,ifh,ilonfix,jlatfix
       integer  ibeg,jbeg,iend,jend,igiret,i,j,maxstorm,ii
       real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real     ike(max_ike_cats)
@@ -8520,7 +8519,7 @@ c     trkrinfo derived type detailing user-specified grid info
       type (datecard) inp
 
       integer imax,jmax,ist,ifh,maxstorm
-      integer level,igsvret,igsstret
+      integer igsvret,igsstret
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real    dx,dy,re,ri,xsmoothval,sst_smooth
       logical(1) valid_pt(imax,jmax)
@@ -8627,11 +8626,11 @@ c
       character (len=10) big_ben(3)
 
       integer imax,jmax,ist,ifh,maxstorm
-      integer level,iggdret,igdret,ilev,igrhret,igsvret
+      integer iggdret,igdret,igrhret,igsvret
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real    clon(maxstorm,maxtime,maxtp)
       real    clat(maxstorm,maxtime,maxtp)
-      real    dx,dy,xcenlon,xcenlat,q850_smooth
+      real    dx,dy,q850_smooth
       real    rh_1000_925_smooth,rh_800_600_smooth,omega500_smooth
       real    divg,moist_divg,re,ri,xsmoothval
       character :: already_computed_domain_wide_rh*1
@@ -11637,7 +11636,6 @@ c
       real, intent(in) :: outlon,outlat
       integer, parameter :: numdist=14,numquad=4,numbin=5,numthresh=3
       integer  ioutwind(numdist)
-      real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real     er_wind(numquad,numdist)
       real     sr_wind(numquad,numdist)
       real     er_vr(numquad,numdist)
@@ -11646,7 +11644,7 @@ c
       real     sr_vt(numquad,numdist)
       real     xoutlon
       real     vmaxwind,conv_ms_knots,xminmslp,xsfclon,xsfclat
-      integer intlon,intlat,output_fhr,id,intlon100,intlat100,ir
+      integer intlon,intlat,output_fhr,intlon100,intlat100,ir
       character  basinid*2,clatns*1,clonew*1
       character*2 :: cquad(4) = (/'NE','SE','SW','NW'/)
       character*2 :: crel(4) = (/'FR','BR','BL','FL'/)
@@ -14511,7 +14509,6 @@ c
       integer :: maxstorm, ifh, ifcsthour, ileadtime
       real    :: extraplon, xdeg
       real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real      dist,distm,xincr,yincr,stmspd,stmdir,atan,arct,degrees
       real      ucomp,vcomp,xdist,ydist,ydeg,dt,extraplat
       real      cosfac
       real      dtkm
@@ -15690,13 +15687,13 @@ c
       integer, parameter :: num_qtr_azim = 90,numquad = 4
       integer, parameter :: dp = selected_real_kind(12, 60)
       integer   isortix(num_qtr_azim),vradius(3,4)
-      integer   iwindix,ipoint,ifcsthr,igrct,azimuth_ct,bimct
+      integer   iwindix,ifcsthr,igrct,azimuth_ct,bimct
       integer   num_r34_bins,good_quad_ct,valid_wind_ct,imax,jmax
       integer   ix_radii_beg,ix_radii_end,first_valid_ix,ifh,iprint
       integer   n_r34_iter,ifh99,ilevint,target_ix,idist,iquad
       integer   holland_good_1_ct,holland_good_2_ct,i,n,iazim,igvtret
       integer   num_bins_to_check,checkct,ihc,igrret,ibiret1,ibiret2
-      integer   free_pass_ix,ist,ijunk
+      integer   free_pass_ix,ist
       real, parameter :: r34_bin_width = 3.0  !width of radial bins(km)
       real (dp) :: radii_wmag_bucket(num_qtr_azim)
       real      mean_radii_wind(numquad,num_r34_bins)
@@ -15709,7 +15706,7 @@ c
       real      exactdistnm,exactdistkm,radmax,vmaxwind,bear
       real      xcenlon,xcenlat,xintrp_u,xintrp_v,vr,vt
       real      wmag_sum,vr_sum,vt_sum,target_remainder,target_slot
-      real      mean_radii_wind_4quad_sum,mean_radii_vt_4quad_sum
+      real      mean_radii_vt_4quad_sum
       real      targlat,targlon,dx,dy,wmag,hemisphere,b
       real      v_holland,check_dist,one_minus_target_remainder
       real      holl_rmw,pct_holland_good_1,pct_holland_good_2
