@@ -352,7 +352,7 @@ c
       character :: ncfile*180,ncfile_has_hour0*1
       character :: nc_lsmask_file*180
       character :: opening_mask*1
-      integer itret,iggret,iicret,igcret,iret,ifhmax,maxstorm,numtcv
+      integer itret,iicret,igcret,iret,ifhmax,maxstorm,numtcv
       integer micret,mgcret
       integer iocret,enable_timing,ncfile_id,ncfile_tmax,irnhret
       integer nc_lsmask_file_id
