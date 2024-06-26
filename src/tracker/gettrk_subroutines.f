@@ -6539,13 +6539,12 @@ c       sr_vt:    Quadrant tangential winds in storm-relative framework
 
       implicit none
 
-      type (datecard) inp
       type (trackstuff) trkrinfo
 
       character (*)  gm_wrap_flag
       integer, parameter :: numdist=14,numquad=4,num_qtr_azim=6
       integer  imax,jmax,igwsret,ist,ifh,iquad,idist,ibiret1,ibiret2
-      integer  igvtret,maxstorm,iazim,azimuth_ct,bimct
+      integer  maxstorm,iazim,azimuth_ct,bimct
       real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real     rdist(numdist)
       real     er_wind(numquad,numdist)
@@ -6917,11 +6916,9 @@ c       rdist     Radii (km) at which the winds will be evaluated
 
       implicit none
 
-      type (datecard) inp
       type (trackstuff) trkrinfo
 
       integer, parameter :: numdist=14,numquad=4,numbin=5,numthresh=3
-      real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real     wfract_cov(numquad+1,numbin,numthresh)
       real     area_total_quad_bin(numquad,numbin)
       real     area_exceed_quad_bin(numquad,numbin,numthresh)
@@ -6934,7 +6931,7 @@ c       rdist     Radii (km) at which the winds will be evaluated
       real     sum_exceed_area(numbin,numthresh)
       real     sum_total_area(numbin,numthresh)
       integer  pdf_ct_bin(16)
-      integer  imax,jmax,ist,ifh
+      integer  imax,jmax,ist
       integer  igfwret,i,j,numinterp,iq,ib,it,ii
       integer  jlatfix,ilonfix,npts,ibeg,iend,jbeg,jend,ngridint,ni,nj
       integer  igiret,idistbin,ipdfbin,pdf_ct_tot,maxstorm
