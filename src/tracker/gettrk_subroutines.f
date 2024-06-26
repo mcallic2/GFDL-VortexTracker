@@ -6221,7 +6221,7 @@ c     igscret  Return code from this subroutine
 
       implicit none
 
-      integer  ist,ifh,ipct,igscret,maxstorm
+      integer  ist,ifh,ipct,maxstorm
       real     clon(maxstorm,maxtime,maxtp)
       real     clat(maxstorm,maxtime,maxtp)
       real     xmeanlon,xmeanlat
