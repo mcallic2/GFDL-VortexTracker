@@ -4748,7 +4748,7 @@ c               V850 circulation.
       character*1 :: close_to_boundary
       character*3 :: maxmin
       integer, parameter :: numazim=16
-      integer  imax,jmax,ipfbret,ist,iazim,icvpret
+      integer  imax,jmax,ipfbret,iazim,icvpret
       real, parameter :: bounddist=350.
       real     dx,dy,pfixlon,pfixlat,bear,targlon,targlat
       real     fxy(imax,jmax)
