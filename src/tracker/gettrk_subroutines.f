@@ -6345,8 +6345,8 @@ c     icqwret  return code from this subroutine
       type (trackstuff) trkrinfo
 
       integer, parameter :: numdist=5,numquad=4,num_qtr_azim=6
-      integer  imax,jmax,ist,ifh,iquad,idist,ibiret1,ibiret2,bimct
-      integer  igvtret,iazim,bad_quad_ct,good_quad_ct,icqwret
+      integer  imax,jmax,iquad,idist,ibiret1,ibiret2,bimct
+      integer  iazim,bad_quad_ct,good_quad_ct,icqwret
       integer  azimuth_ct
       character*4  quad_wind_circ_check
       character (*)  gm_wrap_flag
