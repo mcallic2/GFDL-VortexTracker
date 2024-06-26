@@ -11626,12 +11626,12 @@ c
       real     sr_vr(numquad,numdist)
       real     sr_vt(numquad,numdist)
       real     xoutlon
-      real     vmaxwind,conv_ms_knots,xminmslp,xsfclon,xsfclat
+      real     vmaxwind,conv_ms_knots,xminmslp
       integer intlon,intlat,output_fhr,intlon100,intlat100,ir
       character  basinid*2,clatns*1,clonew*1
       character*2 :: cquad(4) = (/'NE','SE','SW','NW'/)
       character*2 :: crel(4) = (/'FR','BR','BL','FL'/)
-      integer :: ist, ifcsthour, maxstorm, iofwret, iq, it
+      integer :: ist, ifcsthour, iq, it
 
 
 c     First convert all of the lat/lon values from reals into integers.
