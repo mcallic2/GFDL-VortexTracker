@@ -2772,7 +2772,7 @@ c                  print *,'At pt isi, type= ',trkrinfo%type == 'tracker'
      &                    (calcparm(3,ist) .or. 
      &                     (readflag(3) .and. readflag(4)))) then
                         call check_quadrant_wind_circ (imax,jmax,dx,dy
-     &                     ,ist,ifh,xinp_fixlon,xinp_fixlat,valid_pt
+     &                     ,xinp_fixlon,xinp_fixlat,valid_pt
      &                     ,vt_quad,trkrinfo,quad_wind_circ_check
      &                     ,gm_wrap_flag,icqwret)
 
@@ -3352,11 +3352,11 @@ c                 c---   radmax = radmax + 50.0
             if (structflag == 'y' .or. ikeflag == 'y') then
               call get_sfc_center (fixlon(ist,ifh),fixlat(ist,ifh)
      &                      ,clon,clat,ist,ifh,calcparm,xsfclon
-     &                      ,xsfclat,maxstorm,igscret)
+     &                      ,xsfclat,maxstorm)
             endif
 
             if (structflag == 'y' .and. stormswitch(ist) == 1) then
-              call get_wind_structure (imax,jmax,inp,dx,dy
+              call get_wind_structure (imax,jmax,dx,dy
      &                     ,ist,ifh,fixlon,fixlat,xsfclon,xsfclat
      &                     ,valid_pt,er_wind,sr_wind,er_vr,sr_vr
      &                     ,er_vt,sr_vt,maxstorm,trkrinfo,gm_wrap_flag
@@ -3371,9 +3371,9 @@ c                 c---   radmax = radmax + 50.0
             endif
 
             if (structflag == 'y' .and. stormswitch(ist) == 1) then
-              call get_fract_wind_cov (imax,jmax,inp,dx,dy
-     &                     ,ist,ifh,fixlon,fixlat,xsfclon,xsfclat
-     &                     ,valid_pt,calcparm,wfract_cov,pdf_ct_bin
+              call get_fract_wind_cov (imax,jmax,dx,dy
+     &                     ,ist,xsfclon,xsfclat
+     &                     ,valid_pt,wfract_cov,pdf_ct_bin
      &                     ,pdf_ct_tot,maxstorm,trkrinfo,igfwret)
               if (igfwret == 0) then 
                 call output_fract_wind (fixlon(ist,ifh)
@@ -3480,10 +3480,10 @@ c                 c---   radmax = radmax + 50.0
      &                    ,':',i2.2)
               endif
 
-              call get_gen_diags (imax,jmax,inp,dx,dy
+              call get_gen_diags (imax,jmax,dx,dy
      &                     ,ist,ifh,fixlon,fixlat,valid_pt,readflag
-     &                     ,readgenflag,calcparm,maxstorm,trkrinfo
-     &                     ,clon,clat,divg,moist_divg
+     &                     ,readgenflag,maxstorm,trkrinfo
+     &                     ,divg,moist_divg
      &                     ,rh_800_600_smooth,rh_1000_925_smooth
      &                     ,omega500_smooth
      &                     ,already_computed_domain_wide_rh)
@@ -4925,14 +4925,14 @@ c
             ! within a forecast that the storm has been detected (again,
             ! we don't yet know the storm heading).
 
-            call get_cps_paramb (imax,jmax,inp,dx,dy,ist,ifh,trkrinfo
+            call get_cps_paramb (imax,jmax,dx,dy,ist,ifh,trkrinfo
      &                  ,fixlon,fixlat,valid_pt,paramb,maxstorm,igcpret)
 
-            call get_cps_vth (imax,jmax,inp,dx,dy,ist,ifh,trkrinfo
+            call get_cps_vth (imax,jmax,dx,dy,ist,ifh,trkrinfo
      &                       ,fixlon,fixlat,valid_pt,'lower',vtl_slope
      &                       ,maxstorm,igcv1ret)
 
-            call get_cps_vth (imax,jmax,inp,dx,dy,ist,ifh,trkrinfo
+            call get_cps_vth (imax,jmax,dx,dy,ist,ifh,trkrinfo
      &                       ,fixlon,fixlat,valid_pt,'upper',vtu_slope
      &                       ,maxstorm,igcv2ret)
 
@@ -5008,7 +5008,7 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine get_cps_paramb (imax,jmax,inp,dx,dy,ist,ifh,trkrinfo
+      subroutine get_cps_paramb (imax,jmax,dx,dy,ist,ifh,trkrinfo
      &                 ,fixlon,fixlat,valid_pt,paramb,maxstorm,igcpret)
 c
 c     ABSTRACT: This subroutine is part of the algorithm for determining
@@ -5348,7 +5348,7 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine get_cps_vth (imax,jmax,inp,dx,dy,ist,ifh,trkrinfo
+      subroutine get_cps_vth (imax,jmax,dx,dy,ist,ifh,trkrinfo
      &        ,fixlon,fixlat,valid_pt,clayer,vth_slope,maxstorm,igcvret)
 c
 c     ABSTRACT: This subroutine is part of the algorithm for determining
@@ -6185,7 +6185,7 @@ c
 c-----------------------------------------------------------------------
       subroutine get_sfc_center (xmeanlon,xmeanlat,clon
      &                  ,clat,ist,ifh,calcparm,xsfclon,xsfclat
-     &                  ,maxstorm,igscret)
+     &                  ,maxstorm)
 c
 c     ABSTRACT: This subroutine computes a modified lat/lon fix position
 c     to use as the input center position for the subroutines that
@@ -6308,7 +6308,7 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine check_quadrant_wind_circ (imax,jmax,dx,dy
-     &             ,ist,ifh,xclon,xclat,valid_pt,vt_quad,trkrinfo
+     &             ,xclon,xclat,valid_pt,vt_quad,trkrinfo
      &             ,quad_wind_circ_check,gm_wrap_flag,icqwret)
 c
 c     ABSTRACT: This subroutine calculates the mean Vt separately for
@@ -6499,7 +6499,7 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine get_wind_structure (imax,jmax,inp,dx,dy
+      subroutine get_wind_structure (imax,jmax,dx,dy
      &             ,ist,ifh,fixlon,fixlat,xsfclon,xsfclat,valid_pt
      &             ,er_wind,sr_wind,er_vr,sr_vr,er_vt,sr_vt,maxstorm
      &             ,trkrinfo,gm_wrap_flag,igwsret)
@@ -6895,9 +6895,9 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine get_fract_wind_cov (imax,jmax,inp,dx,dy
-     &             ,ist,ifh,fixlon,fixlat,xsfclon,xsfclat,valid_pt
-     &             ,calcparm,wfract_cov,pdf_ct_bin,pdf_ct_tot,maxstorm
+      subroutine get_fract_wind_cov (imax,jmax,dx,dy
+     &             ,ist,xsfclon,xsfclat,valid_pt
+     &             ,wfract_cov,pdf_ct_bin,pdf_ct_tot,maxstorm
      &             ,trkrinfo,igfwret)
 c
 c     ABSTRACT: This subroutine determines the fractional areal coverage
@@ -8541,10 +8541,10 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine get_gen_diags (imax,jmax,inp,dx,dy
+      subroutine get_gen_diags (imax,jmax,dx,dy
      &                     ,ist,ifh,fixlon,fixlat,valid_pt,readflag
-     &                     ,readgenflag,calcparm,maxstorm,trkrinfo
-     &                     ,clon,clat,divg,moist_divg
+     &                     ,readgenflag,maxstorm,trkrinfo
+     &                     ,divg,moist_divg
      &                     ,rh_800_600_smooth,rh_1000_925_smooth
      &                     ,omega500_smooth
      &                     ,already_computed_domain_wide_rh)
