@@ -11122,7 +11122,6 @@ c
 
       implicit none
 
-      type (datecard) inp
 
       real, intent(in) :: outlon,outlat
       real    mslp_outp_adj,xoutlon
@@ -11130,7 +11129,7 @@ c
       integer intlon,intlat,irmax,ileadtime
       integer vradius(3,4)
       character  basinid*2,clatns*1,clonew*1
-      integer :: ist, ifh, ioaxret
+      integer :: ist, ifh
 
 c     First convert all of the lat/lon values from reals into integers.
 c     These integer values must be 10x their real value (eg. 125.4 will
