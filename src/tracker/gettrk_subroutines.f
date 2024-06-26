@@ -563,7 +563,7 @@ c          lugi = 5200
           null_netcdf_hour0_storm_loop: do inctcv = 1,numtcv
 
             call output_atcfunix (x999_lon
-     &                ,x999_lat,inp,inctcv
+     &                ,x999_lat,inctcv
      &                ,izero_fhr,xzero_vmax
      &                ,xzero_minslp,vradius,maxstorm
      &                ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
@@ -575,7 +575,7 @@ c          lugi = 5200
             call output_aext (x999_lon
      &                ,x999_lat,inctcv
      &                ,izero_fhr,xzero_vmax
-     &                ,xzero_minslp,vradius,maxstorm
+     &                ,xzero_minslp,vradius
      &                ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
      &                ,wcore_flag,i999_stmspd,i999_stmdir,x999_shrmag
      &                ,x999_shrdir,x999_sst
@@ -909,7 +909,7 @@ c       If not enough tracked parms were read in, exit the program....
                ileadtime = nint(fhreal(ifh) * 100.0)
                ifcsthour = ileadtime / 100
                call output_atcfunix (x999_lon
-     &                 ,x999_lat,inp,istmp
+     &                 ,x999_lat,istmp
      &                 ,ifcsthour,xzero_vmax
      &                 ,xzero_minslp,vradius,maxstorm
      &                 ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
@@ -921,7 +921,7 @@ c       If not enough tracked parms were read in, exit the program....
                call output_aext (x999_lon
      &                ,x999_lat,istmp
      &                ,ifcsthour,xzero_vmax
-     &                ,xzero_minslp,vradius,maxstorm
+     &                ,xzero_minslp,vradius
      &                ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
      &                ,wcore_flag,i999_stmspd,i999_stmdir,x999_shrmag
      &                ,x999_shrdir,x999_sst
@@ -1231,8 +1231,7 @@ c       is why we set all the other calcparms to 'false' just below.
 
         if (trkrinfo%type == 'midlat' .or. trkrinfo%type == 'tcgen')
      &  then
-          call sort_storms_by_pressure (gridprs,ifh,maxstorm,prsindex
-     &                                 ,issret)
+          call sort_storms_by_pressure (gridprs,ifh,maxstorm,prsindex)
           if ( (ifh == 1) .or.
      &         (ifh == 2 .and. trkrinfo%inp_data_type == 'netcdf' .and.
      &          ncfile_has_hour0 == 'n') ) then
@@ -1871,7 +1870,7 @@ c           to get a guess position for the next forecast hour.
                       ileadtime = nint(fhreal(ifh) * 100.0)
                       ifcsthour = ileadtime / 100
                       call output_atcfunix (x999_lon
-     &                   ,x999_lat,inp,ist
+     &                   ,x999_lat,ist
      &                   ,ifcsthour,xzero_vmax
      &                   ,xzero_minslp,vradius,maxstorm
      &                   ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
@@ -1883,7 +1882,7 @@ c           to get a guess position for the next forecast hour.
                       call output_aext (x999_lon
      &                   ,x999_lat,ist
      &                   ,ifcsthour,xzero_vmax
-     &                   ,xzero_minslp,vradius,maxstorm
+     &                   ,xzero_minslp,vradius
      &                   ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
      &                   ,wcore_flag,i999_stmspd,i999_stmdir,x999_shrmag
      &                   ,x999_shrdir,x999_sst
@@ -3564,7 +3563,7 @@ c           knots (1.9427) is explained in output_atcf.
                 ifcsthour = ileadtime / 100 
 
                 call output_atcfunix (fixlon(ist,ifh)
-     &                    ,fixlat(ist,ifh),inp,ist
+     &                    ,fixlat(ist,ifh),ist
      &                    ,ifcsthour,xmaxwind(ist,ifh)
      &                    ,gridprs(ist,ifh),vradius,maxstorm
      &                    ,trkrinfo,plastbar,rlastbar,rmax,cps_vals
@@ -3575,7 +3574,7 @@ c           knots (1.9427) is explained in output_atcf.
                 call output_aext (fixlon(ist,ifh)
      &                    ,fixlat(ist,ifh),ist
      &                    ,ifcsthour,xmaxwind(ist,ifh)
-     &                    ,gridprs(ist,ifh),vradius,maxstorm
+     &                    ,gridprs(ist,ifh),vradius
      &                    ,trkrinfo,plastbar,rlastbar,rmax,cps_vals
      &                    ,wcore_flag,istmspd,istmdir,shear(ist,ifh,1)
      &                    ,shear(ist,ifh,2),sst_smooth
@@ -3733,7 +3732,7 @@ c           knots (1.9427) is explained in output_atcf.
      &                   ,' YMDH: ',i10)
 
                   call output_atcfunix (slonfg(ist,ifh)
-     &                  ,slatfg(ist,ifh),inp,ist
+     &                  ,slatfg(ist,ifh),ist
      &                  ,ifcsthour,tcv_max_wind_ms
      &                  ,tcv_mslp_pa,vradius,maxstorm
      &                  ,trkrinfo,plastbar,rlastbar,x99_rmax,cps_vals
@@ -3746,7 +3745,7 @@ c           knots (1.9427) is explained in output_atcf.
                   call output_aext (slonfg(ist,ifh)
      &                  ,slatfg(ist,ifh),ist
      &                  ,ifcsthour,tcv_max_wind_ms
-     &                  ,tcv_mslp_pa,vradius,maxstorm
+     &                  ,tcv_mslp_pa,vradius
      &                  ,trkrinfo,plastbar,rlastbar,x99_rmax,cps_vals
      &                  ,wcore_flag,istmspd,istmdir,x999_shrmag
      &                  ,x999_shrdir,x999_sst
@@ -3762,7 +3761,7 @@ c           knots (1.9427) is explained in output_atcf.
                   ! unable to find the storm....
 
                   call output_atcfunix (x999_lon
-     &                  ,x999_lat,inp,ist
+     &                  ,x999_lat,ist
      &                  ,ifcsthour,xzero_vmax
      &                  ,xzero_minslp,vradius,maxstorm
      &                  ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
@@ -3775,7 +3774,7 @@ c           knots (1.9427) is explained in output_atcf.
                   call output_aext (x999_lon
      &                  ,x999_lat,ist
      &                  ,ifcsthour,xzero_vmax
-     &                  ,xzero_minslp,vradius,maxstorm
+     &                  ,xzero_minslp,vradius
      &                  ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
      &                  ,wcore_flag,i999_stmspd,i999_stmdir,x999_shrmag
      &                  ,x999_shrdir,x999_sst
@@ -3912,7 +3911,7 @@ c           data, so we'll just output the genesis vitals record.
               ileadtime = nint(fhreal(ifh) * 100.0)
               ifcsthour = ileadtime / 100
               call output_atcfunix (x999_lon
-     &                  ,x999_lat,inp,ist
+     &                  ,x999_lat,ist
      &                  ,ifcsthour,xzero_vmax
      &                  ,xzero_minslp,vradius,maxstorm
      &                  ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
@@ -3924,7 +3923,7 @@ c           data, so we'll just output the genesis vitals record.
               call output_aext (x999_lon
      &                  ,x999_lat,ist
      &                  ,ifcsthour,xzero_vmax
-     &                  ,xzero_minslp,vradius,maxstorm
+     &                  ,xzero_minslp,vradius
      &                  ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
      &                  ,wcore_flag,i999_stmspd,i999_stmdir,x999_shrmag
      &                  ,x999_shrdir,x999_sst
@@ -4588,7 +4587,7 @@ c     for the GFS ensemble relocation.
 
             if (cparm == 'v850') then
               call getvrvt (parmlon,parmlat,glon(i),glat(j)
-     &           ,u(i,j,nlev850),v(i,j,nlev850),vr,vt,-99,igvtret)
+     &           ,u(i,j,nlev850),v(i,j,nlev850),vr,vt,-99)
               if ( verb .ge. 3 ) then
                 write (6,91) i,j,glon(i),mod(glon(i),360.),glat(j)
      &               ,u(i,j,nlev850),v(i,j,nlev850),vr,vt
@@ -6398,18 +6397,18 @@ c
 
             call bilin_int_uneven (targlat,targlon
      &           ,dx,dy,imax,jmax,trkrinfo,850,'u',xintrp_u
-     &           ,valid_pt,bimct,-99,ibiret1)
+     &           ,valid_pt,bimct,ibiret1)
 
             call bilin_int_uneven (targlat,targlon
      &           ,dx,dy,imax,jmax,trkrinfo,850,'v',xintrp_v
-     &           ,valid_pt,bimct,-99,ibiret2)
+     &           ,valid_pt,bimct,ibiret2)
 
             if (ibiret1 == 0 .and. ibiret2 == 0) then
               wmag = sqrt (xintrp_u**2 + xintrp_v**2)
               wmag_sum = wmag_sum + wmag
               call getvrvt (xclon,xclat,targlon,targlat
      &                     ,xintrp_u,xintrp_v,vr
-     &                     ,vt,-99,igvtret)
+     &                     ,vt,-99)
               vr_sum = vr_sum + vr
               vt_sum = vt_sum + vt
               azimuth_ct = azimuth_ct + 1
@@ -6720,18 +6719,18 @@ c            print *,' '
 
             call bilin_int_uneven (targlat,targlon
      &            ,dx,dy,imax,jmax,trkrinfo,1020,'u',xintrp_u
-     &            ,valid_pt,bimct,-99,ibiret1)
+     &            ,valid_pt,bimct,ibiret1)
 
             call bilin_int_uneven (targlat,targlon
      &            ,dx,dy,imax,jmax,trkrinfo,1020,'v',xintrp_v
-     &            ,valid_pt,bimct,-99,ibiret2)
+     &            ,valid_pt,bimct,ibiret2)
 
             if (ibiret1 == 0 .and. ibiret2 == 0) then
               wmag = sqrt (xintrp_u**2 + xintrp_v**2)
               wmag_sum = wmag_sum + wmag
               call getvrvt (xsfclon,xsfclat,targlon,targlat
      &                     ,xintrp_u,xintrp_v,vr
-     &                     ,vt,ifh,igvtret)
+     &                     ,vt,ifh)
               vr_sum = vr_sum + vr
               vt_sum = vt_sum + vt
               azimuth_ct = azimuth_ct + 1
@@ -6835,18 +6834,18 @@ c            endif
 
             call bilin_int_uneven (targlat,targlon
      &            ,dx,dy,imax,jmax,trkrinfo,1020,'u',xintrp_u
-     &            ,valid_pt,bimct,-99,ibiret1)
+     &            ,valid_pt,bimct,ibiret1)
 
             call bilin_int_uneven (targlat,targlon
      &            ,dx,dy,imax,jmax,trkrinfo,1020,'v',xintrp_v
-     &            ,valid_pt,bimct,-99,ibiret2)
+     &            ,valid_pt,bimct,ibiret2)
 
             if (ibiret1 == 0 .and. ibiret2 == 0) then
               wmag = sqrt (xintrp_u**2 + xintrp_v**2)
               wmag_sum = wmag_sum + wmag
               call getvrvt (xsfclon,xsfclat,targlon,targlat
      &                     ,xintrp_u,xintrp_v,vr
-     &                     ,vt,ifh,igvtret)
+     &                     ,vt,ifh)
               vr_sum = vr_sum + vr
               vt_sum = vt_sum + vt
               azimuth_ct = azimuth_ct + 1
@@ -8054,11 +8053,11 @@ c     ------------------------------------------------------------------
 
             call bilin_int_uneven (targlat,targlon
      &          ,dx,dy,imax,jmax,trkrinfo,level,'u',xintrp_u
-     &          ,valid_pt,bimct,ifh,ibiret1)
+     &          ,valid_pt,bimct,ibiret1)
 
             call bilin_int_uneven (targlat,targlon
      &          ,dx,dy,imax,jmax,trkrinfo,level,'v',xintrp_v
-     &          ,valid_pt,bimct,ifh,ibiret2)
+     &          ,valid_pt,bimct,ibiret2)
 
 c            if (verb >= 1) then
 c              print *,' '
@@ -8082,7 +8081,7 @@ c            endif
             if (ibiret1 == 0 .and. ibiret2 == 0) then
               call getvrvt (xcenlon,xcenlat,targlon,targlat
      &                     ,xintrp_u,xintrp_v,vr(iazim,idist,ilev)
-     &                     ,vt(iazim,idist,ilev),ifh,igvtret)
+     &                     ,vt(iazim,idist,ilev),ifh)
               azimuth_ct = azimuth_ct + 1
               vt_azim_sum = vt_azim_sum + vt(iazim,idist,ilev)
               vr_azim_sum = vr_azim_sum + vr(iazim,idist,ilev)
@@ -9001,7 +9000,7 @@ c
 c-----------------------------------------------------------------------
       subroutine bilin_int_uneven (targlat,targlon,dx,dy
      &              ,imax,jmax,trkrinfo,level,cparm,xintrp_val
-     &              ,valid_pt,bimct,ifh,ibiret)
+     &              ,valid_pt,bimct,ibiret)
 c
 c     ABSTRACT: This subroutine performs a bilinear interpolation to get
 c     a data value at a given lat/lon that may be anywhere within a box
@@ -9308,8 +9307,8 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine sort_storms_by_pressure (gridprs,ifh,maxstorm,sortindex
-     &                                   ,issret)
+      subroutine sort_storms_by_pressure (gridprs,ifh,maxstorm
+     &              ,sortindex)
 c
 c     ABSTRACT: This subroutine  sorts storms by mslp.  It is called by
 c     subroutine  tracker just before the loop for "stormloop" is done
@@ -9437,7 +9436,7 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine getvrvt (centlon,centlat,xlon,xlat
-     &                   ,udat,vdat,vr,vt,ifh,igvtret)
+     &                   ,udat,vdat,vr,vt,ifh)
 c
 c     ABSTRACT: This subroutine takes as input a u-wind and v-wind value
 c     at an input (xlon,xlat) location and returns the tangential and
@@ -9686,7 +9685,7 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine output_atcfunix (outlon,outlat,inp,ist
+      subroutine output_atcfunix (outlon,outlat,ist
      &         ,ifcsthour,vmaxwind,xminmslp,vradius,maxstorm
      &         ,trkrinfo,plastbar,rlastbar,rmax,cps_vals
      &         ,wcore_flag,istmspd,istmdir,shear_mag,shear_dir
@@ -10140,7 +10139,7 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine output_aext (outlon,outlat,ist
-     &         ,ifcsthour,vmaxwind,xminmslp,vradius,maxstorm
+     &         ,ifcsthour,vmaxwind,xminmslp,vradius
      &         ,trkrinfo,plastbar,rlastbar,rmax,cps_vals
      &         ,wcore_flag,istmspd,istmdir,shear_mag,shear_dir
      &         ,sst_smooth,axisymet_rmw_dist,axisymet_rmw_val
@@ -15855,11 +15854,11 @@ c     &         ,mean_radii_vt_4quad_sum
 
             call bilin_int_uneven (targlat,targlon
      &            ,dx,dy,imax,jmax,trkrinfo,ilevint,'u',xintrp_u
-     &            ,valid_pt,bimct,ifh99,ibiret1)
+     &            ,valid_pt,bimct,ibiret1)
 
             call bilin_int_uneven (targlat,targlon
      &            ,dx,dy,imax,jmax,trkrinfo,ilevint,'v',xintrp_v
-     &            ,valid_pt,bimct,ifh99,ibiret2)
+     &            ,valid_pt,bimct,ibiret2)
 
 c            if (idist == 1) then
 c              print *,'vtn A, xintrp_u= ',xintrp_u,' xintrp_v= '
@@ -15888,7 +15887,7 @@ c                iprint = 751
                 
               call getvrvt (xcenlon,xcenlat,targlon,targlat
      &                     ,xintrp_u,xintrp_v,vr
-     &                     ,vt,iprint,igvtret)
+     &                     ,vt,iprint)
 
 c              if (idist == 1) then
 c                print *,'vtn B, vt= ',vt,' vr= ',vr
@@ -17222,11 +17221,11 @@ c
 
             call bilin_int_uneven (targlat,targlon
      &           ,dx,dy,imax,jmax,trkrinfo,1020,'u',xintrp_u
-     &           ,valid_pt,bimct,-99,ibiret1)
+     &           ,valid_pt,bimct,ibiret1)
 
             call bilin_int_uneven (targlat,targlon
      &           ,dx,dy,imax,jmax,trkrinfo,1020,'v',xintrp_v
-     &           ,valid_pt,bimct,-99,ibiret2)
+     &           ,valid_pt,bimct,ibiret2)
 
             if (ibiret1 == 0 .and. ibiret2 == 0) then
               wmag = sqrt (xintrp_u**2 + xintrp_v**2)
@@ -18750,16 +18749,16 @@ c              endif
           
               call bilin_int_uneven (targlat,targlon
      &            ,dx,dy,imax,jmax,trkrinfo,level,'u',xintrp_u
-     &            ,valid_pt,bimct,ifh,ibiret1)
+     &            ,valid_pt,bimct,ibiret1)
 
               call bilin_int_uneven (targlat,targlon
      &            ,dx,dy,imax,jmax,trkrinfo,level,'v',xintrp_v
-     &            ,valid_pt,bimct,ifh,ibiret2)
+     &            ,valid_pt,bimct,ibiret2)
 
               if (ibiret1 == 0 .and. ibiret2 == 0) then
                 call getvrvt (rlont,rlatt,targlon,targlat
      &                       ,xintrp_u,xintrp_v,vr(iazim,idist)
-     &                       ,vt(iazim,idist),ifh,igvtret)
+     &                       ,vt(iazim,idist),ifh)
                 azimuth_ct = azimuth_ct + 1
                 circul_band(idist) = circul_band(idist)
      &                             + (vt(iazim,idist) * arclength)
@@ -19090,16 +19089,16 @@ ctmwc                endif
 
                 call bilin_int_uneven (targlat,targlon
      &            ,dx,dy,imax,jmax,trkrinfo,level,'u',xintrp_u
-     &            ,valid_pt,bimct,ifh,ibiret1)
+     &            ,valid_pt,bimct,ibiret1)
   
                 call bilin_int_uneven (targlat,targlon
      &            ,dx,dy,imax,jmax,trkrinfo,level,'v',xintrp_v
-     &            ,valid_pt,bimct,ifh,ibiret2)
+     &            ,valid_pt,bimct,ibiret2)
 
                 if (ibiret1 == 0 .and. ibiret2 == 0) then
                   call getvrvt (rlont,rlatt,targlon,targlat
      &                         ,xintrp_u,xintrp_v,vr(iazim,idist)
-     &                         ,vt(iazim,idist),ifh,igvtret)
+     &                         ,vt(iazim,idist),ifh)
                   azimuth_ct = azimuth_ct + 1
                   circul_band(idist) = circul_band(idist)
      &                               + (vt(iazim,idist) * arclength)
@@ -32311,7 +32310,7 @@ c        print *,'    ==> xxtim, iazim= ',iazim,' bear= ',bear
  
           call bilin_int_uneven (targlat,targlon
      &            ,dx,dy,imax,jmax,trkrinfo,ilevint,'p',xintrp_mslp
-     &            ,valid_pt,bimct,ifh99,ibiret1)
+     &            ,valid_pt,bimct,ibiret1)
 
           if (ibiret1 == 0) then
 
@@ -32717,11 +32716,11 @@ c        print *,' '
 
           call bilin_int_uneven (targlat,targlon
      &         ,dx,dy,imax,jmax,trkrinfo,1020,'u',xintrp_u
-     &         ,valid_pt,bimct,-99,ibiret1)
+     &         ,valid_pt,bimct,ibiret1)
 
           call bilin_int_uneven (targlat,targlon
      &         ,dx,dy,imax,jmax,trkrinfo,1020,'v',xintrp_v
-     &         ,valid_pt,bimct,-99,ibiret2)
+     &         ,valid_pt,bimct,ibiret2)
 
 c          write (6,81) iazim,bear,targlat,targlon,xintrp_u,xintrp_v 
 c     &                ,ibiret1,ibiret2
@@ -32734,7 +32733,7 @@ c     &              ,' ibiret2= ',i3)
 
             call getvrvt (xcandlon,ycandlat,targlon,targlat
      &                   ,xintrp_u,xintrp_v,vr
-     &                   ,vt,ifh,igvtret)
+     &                   ,vt,ifh)
 
 c            write (6,83) vr,vt
 c   83       format (1x,'     vr= ',f7.2,' vt= ',f7.2)
@@ -33030,16 +33029,16 @@ c              which GM-wrapping setting to use.
 
           call bilin_int_uneven (targlat,targlon
      &        ,dx,dy,imax,jmax,trkrinfo,level,'u',xintrp_u
-     &            ,valid_pt,bimct,-99,ibiret1)
+     &            ,valid_pt,bimct,ibiret1)
 
           call bilin_int_uneven (targlat,targlon
      &        ,dx,dy,imax,jmax,trkrinfo,level,'v',xintrp_v
-     &            ,valid_pt,bimct,-99,ibiret2)
+     &            ,valid_pt,bimct,ibiret2)
     
           if (ibiret1 == 0 .and. ibiret2 == 0) then
             call getvrvt (ctlon,ctlat,targlon,targlat
      &                   ,xintrp_u,xintrp_v,vr(iazim)
-     &                   ,vt(iazim),-99,igvtret)
+     &                   ,vt(iazim),-99)
             azimuth_ct = azimuth_ct + 1
             vt_azim_sum = vt_azim_sum + vt(iazim)
           else 
@@ -34571,7 +34570,7 @@ c     distance of 75 km from the center point....
 
         call bilin_int_uneven (targlat,targlon
      &      ,dx,dy,imax,jmax,trkrinfo,850,'m',xintrp_mask
-     &            ,valid_pt,bimct,-99,ibiret1)
+     &            ,valid_pt,bimct,ibiret1)
 
         if (ibiret1 == 0) then
           xmask_sum = xmask_sum + xintrp_mask
