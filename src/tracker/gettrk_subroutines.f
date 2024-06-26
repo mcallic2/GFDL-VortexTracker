@@ -1831,7 +1831,7 @@ c           to get a guess position for the next forecast hour.
             if (stormswitch(ist) == 1) then
 
               call fixcenter (clon,clat,ist,ifh,calcparm
-     &             ,slonfg(ist,ifh),slatfg(ist,ifh),inp
+     &             ,slonfg(ist,ifh),slatfg(ist,ifh)
      &             ,stderr,fixlon,fixlat,xval,maxstorm,ifret)
 
               if (ifret == 0) then
@@ -3152,7 +3152,7 @@ c              if (igmwret /= 0 .and. gridmove_status == 'stopped') then
               call get_axisymet_rmw (fixlon(ist,ifh),fixlat(ist,ifh)
      &                       ,imax,jmax,dx,dy,valid_pt
      &                       ,trkrinfo,axisymet_rmw_dist
-     &                       ,axisymet_rmw_val,gm_wrap_flag,igarret)
+     &                       ,axisymet_rmw_val,gm_wrap_flag)
 
               ileadtime = nint(fhreal(ifh) * 100.0)
               ifcsthour = ileadtime / 100
@@ -3231,14 +3231,14 @@ c     &           c          ,first_time_thru_getradii,igrct,igrret)
                   n_r34_iter = n_r34_iter + 1
 
                   call getradii_2 (fixlon(ist,ifh),fixlat(ist,ifh),imax
-     &                      ,jmax,dx,dy,valid_pt,storm(ist)%tcv_storm_id
+     &                      ,jmax,dx,dy,valid_pt
      &                      ,ifh,ifcsthour,xmaxwind(ist,ifh),vradius
      &                      ,trkrinfo,need_to_expand_r34,num_r34_bins
      &                      ,pctile_quad_bin_wind
      &                      ,fp_pctile_quad_bin_wind,radmax
      &                      ,axisymet_rmw_dist,ix_radii_beg,ix_radii_end
      &                      ,n_r34_iter,ist
-     &                      ,first_time_thru_getradii,igrct,gm_wrap_flag
+     &                      ,first_time_thru_getradii,gm_wrap_flag
      &                      ,igrret)
 
                   if (igrret /= 0) then
@@ -3540,7 +3540,7 @@ c           knots (1.9427) is explained in output_atcf.
 
                 if (ifh < ifhmax) then
                   call get_next_ges (fixlon,fixlat,ist,ifh
-     &              ,imax,jmax,dx,dy,inp%model,valid_pt,readflag
+     &              ,imax,jmax,dx,dy,valid_pt,readflag
      &              ,maxstorm,istmspd,istmdir,'vitals',trkrinfo
      &              ,gm_wrap_flag,ignret)
                 else
@@ -3878,7 +3878,7 @@ c           data, so we'll just output the genesis vitals record.
               endif
               if (ifh < ifhmax) then
                 call get_next_ges (fixlon,fixlat,ist,ifh
-     &            ,imax,jmax,dx,dy,inp%model,valid_pt,readflag
+     &            ,imax,jmax,dx,dy,valid_pt,readflag
      &            ,maxstorm,istmspd,istmdir,'tracker',trkrinfo
      &            ,gm_wrap_flag,ignret)
                 if (ignret /= 0) then
@@ -13464,7 +13464,7 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine get_next_ges (fixlon,fixlat,ist,ifh,imax,jmax
-     &          ,dx,dy,modelid,valid_pt,readflag,maxstorm,istmspd
+     &          ,dx,dy,valid_pt,readflag,maxstorm,istmspd
      &          ,istmdir,ctype,trkrinfo,gm_wrap_flag,ignret)
 c
 c     ABSTRACT: This subroutine calculates a guess position for the next
@@ -14654,7 +14654,7 @@ c-----------------------------------------------------------------------
       subroutine getradii (xcenlon,xcenlat,imax,jmax,dx,dy,valid_pt
      &                    ,cstormid,ifcsthr,vmaxwind,vradius,trkrinfo
      &                    ,need_to_expand_r34,radmax
-     &                    ,first_time_thru_getradii,igrct,igrret)
+     &                    ,first_time_thru_getradii,igrret)
 c
 c     ABSTRACT: This subroutine looks through the wind data near an
 c     input storm center (fixlon,fixlat) and gets the radii of various
@@ -15578,14 +15578,14 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine getradii_2 (xcenlon,xcenlat,imax
-     &                     ,jmax,dx,dy,valid_pt,cstormid
+     &                     ,jmax,dx,dy,valid_pt
      &                     ,ifh,ifcsthr,vmaxwind,vradius
      &                     ,trkrinfo,need_to_expand_r34,num_r34_bins
      &                     ,pctile_quad_bin_wind
      &                     ,fp_pctile_quad_bin_wind,radmax
      &                     ,axi_rmw,ix_radii_beg,ix_radii_end
      &                     ,n_r34_iter,ist
-     &                     ,first_time_thru_getradii,igrct
+     &                     ,first_time_thru_getradii
      &                     ,gm_wrap_flag,igrret)
 c
 c     ABSTRACT: This subroutine looks through the wind data near an
@@ -17092,7 +17092,7 @@ c-----------------------------------------------------------------------
       subroutine get_axisymet_rmw (xcenlon,xcenlat
      &                       ,imax,jmax,dx,dy,valid_pt
      &                       ,trkrinfo,axisymet_rmw_dist
-     &                       ,axisymet_rmw_val,gm_wrap_flag,igarret)
+     &                       ,axisymet_rmw_val,gm_wrap_flag)
 c
 c     ABSTRACT: This subroutine calculates the axisymmetric RMW (ARMW),
 c     as opposed to the gridpoint RMW that was found in subroutine
@@ -17480,7 +17480,7 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine fixcenter (clon,clat,ist,ifh,calcparm,geslon,geslat
-     &               ,inp,stderr,fixlon,fixlat,xvalues,maxstorm,ifret)
+     &               ,stderr,fixlon,fixlat,xvalues,maxstorm,ifret)
 c
 c     ABSTRACT: This subroutine loops through the different parameters
 c               for the input storm number (ist) and calculates the 
