@@ -573,7 +573,7 @@ c          lugi = 5200
             imeanzeta = -99
             igridzeta = -99
             call output_aext (x999_lon
-     &                ,x999_lat,inp,inctcv
+     &                ,x999_lat,inctcv
      &                ,izero_fhr,xzero_vmax
      &                ,xzero_minslp,vradius,maxstorm
      &                ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
@@ -582,8 +582,7 @@ c          lugi = 5200
      &                ,x999_axirmw_dist,x999_axirmw_val
      &                ,x999_divg,x999_moist_divg
      &                ,x999_rh600_800,x999_rh1000_925
-     &                ,x999_omega500,imeanzeta,igridzeta
-     &                ,ioaxret)
+     &                ,x999_omega500,imeanzeta,igridzeta)
             if (trkrinfo%type == 'midlat' .or.
      &          trkrinfo%type == 'tcgen') then
               call output_atcf_gen (x999_lon
@@ -920,7 +919,7 @@ c       If not enough tracked parms were read in, exit the program....
                imeanzeta = -99
                igridzeta = -99
                call output_aext (x999_lon
-     &                ,x999_lat,inp,istmp
+     &                ,x999_lat,istmp
      &                ,ifcsthour,xzero_vmax
      &                ,xzero_minslp,vradius,maxstorm
      &                ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
@@ -929,8 +928,7 @@ c       If not enough tracked parms were read in, exit the program....
      &                ,x999_axirmw_dist,x999_axirmw_val
      &                ,x999_divg,x999_moist_divg
      &                ,x999_rh600_800,x999_rh1000_925
-     &                ,x999_omega500,imeanzeta,igridzeta
-     &                ,ioaxret)
+     &                ,x999_omega500,imeanzeta,igridzeta)
                call output_hfip (x999_lon
      &                ,x999_lat,istmp
      &                ,ifh,xzero_vmax
@@ -1883,7 +1881,7 @@ c           to get a guess position for the next forecast hour.
                       imeanzeta = -99
                       igridzeta = -99
                       call output_aext (x999_lon
-     &                   ,x999_lat,inp,ist
+     &                   ,x999_lat,ist
      &                   ,ifcsthour,xzero_vmax
      &                   ,xzero_minslp,vradius,maxstorm
      &                   ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
@@ -1892,8 +1890,7 @@ c           to get a guess position for the next forecast hour.
      &                   ,x999_axirmw_dist,x999_axirmw_val
      &                   ,x999_divg,x999_moist_divg
      &                   ,x999_rh600_800,x999_rh1000_925
-     &                   ,x999_omega500,imeanzeta,igridzeta
-     &                   ,ioaxret)
+     &                   ,x999_omega500,imeanzeta,igridzeta)
                       call output_atcf_gen (x999_lon
      &                   ,x999_lat,inp,ist
      &                   ,ifcsthour,xzero_vmax
@@ -3576,7 +3573,7 @@ c           knots (1.9427) is explained in output_atcf.
      &                    ,axisymet_rmw_dist,axisymet_rmw_val,ioaxret)
 
                 call output_aext (fixlon(ist,ifh)
-     &                    ,fixlat(ist,ifh),inp,ist
+     &                    ,fixlat(ist,ifh),ist
      &                    ,ifcsthour,xmaxwind(ist,ifh)
      &                    ,gridprs(ist,ifh),vradius,maxstorm
      &                    ,trkrinfo,plastbar,rlastbar,rmax,cps_vals
@@ -3585,8 +3582,7 @@ c           knots (1.9427) is explained in output_atcf.
      &                    ,axisymet_rmw_dist,axisymet_rmw_val
      &                    ,divg,moist_divg
      &                    ,rh_800_600_smooth,rh_1000_925_smooth
-     &                    ,omega500_smooth,imeanzeta,igridzeta
-     &                    ,ioaxret)
+     &                    ,omega500_smooth,imeanzeta,igridzeta)
 
                 if (trkrinfo%type == 'midlat' .or.
      &              trkrinfo%type == 'tcgen') then
@@ -3748,7 +3744,7 @@ c           knots (1.9427) is explained in output_atcf.
                   imeanzeta = -99
                   igridzeta = -99
                   call output_aext (slonfg(ist,ifh)
-     &                  ,slatfg(ist,ifh),inp,ist
+     &                  ,slatfg(ist,ifh),ist
      &                  ,ifcsthour,tcv_max_wind_ms
      &                  ,tcv_mslp_pa,vradius,maxstorm
      &                  ,trkrinfo,plastbar,rlastbar,x99_rmax,cps_vals
@@ -3757,8 +3753,7 @@ c           knots (1.9427) is explained in output_atcf.
      &                  ,x999_axirmw_dist,x999_axirmw_val
      &                  ,x999_divg,x999_moist_divg
      &                  ,x999_rh600_800,x999_rh1000_925
-     &                  ,x999_omega500,imeanzeta,igridzeta
-     &                  ,ioaxret)
+     &                  ,x999_omega500,imeanzeta,igridzeta)
 
                 else
 
@@ -3778,7 +3773,7 @@ c           knots (1.9427) is explained in output_atcf.
                   imeanzeta = -99
                   igridzeta = -99
                   call output_aext (x999_lon
-     &                  ,x999_lat,inp,ist
+     &                  ,x999_lat,ist
      &                  ,ifcsthour,xzero_vmax
      &                  ,xzero_minslp,vradius,maxstorm
      &                  ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
@@ -3787,8 +3782,7 @@ c           knots (1.9427) is explained in output_atcf.
      &                  ,x999_axirmw_dist,x999_axirmw_val
      &                  ,x999_divg,x999_moist_divg
      &                  ,x999_rh600_800,x999_rh1000_925
-     &                  ,x999_omega500,imeanzeta,igridzeta
-     &                  ,ioaxret)
+     &                  ,x999_omega500,imeanzeta,igridzeta)
 
                 endif
 
@@ -3928,7 +3922,7 @@ c           data, so we'll just output the genesis vitals record.
               imeanzeta = -99
               igridzeta = -99
               call output_aext (x999_lon
-     &                  ,x999_lat,inp,ist
+     &                  ,x999_lat,ist
      &                  ,ifcsthour,xzero_vmax
      &                  ,xzero_minslp,vradius,maxstorm
      &                  ,trkrinfo,x99_pbar,x99_rbar,x99_rmax,cps_vals
@@ -3937,8 +3931,7 @@ c           data, so we'll just output the genesis vitals record.
      &                  ,x999_axirmw_dist,x999_axirmw_val
      &                  ,x999_divg,x999_moist_divg
      &                  ,x999_rh600_800,x999_rh1000_925
-     &                  ,x999_omega500,imeanzeta,igridzeta
-     &                  ,ioaxret)
+     &                  ,x999_omega500,imeanzeta,igridzeta)
               if (trkrinfo%type == 'midlat' .or.
      &            trkrinfo%type == 'tcgen') then
                 call output_atcf_gen (x999_lon
@@ -10146,14 +10139,14 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine output_aext (outlon,outlat,inp,ist
+      subroutine output_aext (outlon,outlat,ist
      &         ,ifcsthour,vmaxwind,xminmslp,vradius,maxstorm
      &         ,trkrinfo,plastbar,rlastbar,rmax,cps_vals
      &         ,wcore_flag,istmspd,istmdir,shear_mag,shear_dir
      &         ,sst_smooth,axisymet_rmw_dist,axisymet_rmw_val
      &         ,divg,moist_divg
      &         ,rh_800_600_smooth,rh_1000_925_smooth
-     &         ,omega500_smooth,imeanzeta,igridzeta,ioaxret)
+     &         ,omega500_smooth,imeanzeta,igridzeta)
 
 c     ABSTRACT: This subroutine  is very similar to subroutine
 c     output_atcfunix, however it also writes out additional 
