@@ -259,12 +259,12 @@ c
       integer, allocatable :: prsindex(:)
       integer   imax,jmax,ifh,ist,irf,jj,istmp,ifhtemp,itret,ivpa
       integer   isiret1,isiret2,isiret3,idum,m,numtcv
-      integer   iha,isa,iua,iva,iza,maxstorm,ivort,ifix,jfix,issret
+      integer   iha,isa,iua,iva,iza,maxstorm,ivort,ifix,jfix
       integer   imoa,imoca,iksa,isda,ileadtime,leadtime_check
-      integer   ioaret,ioaxret,ifgcret,ifmret,igugret,icccret
+      integer   ioaxret,ifgcret,ifmret,igugret,icccret
       integer   igrret,igmwret,ignret,iovret,icbret,ita
-      integer   ifilret,ifret,iotmret,iwa,iisa,sl_counter
-      integer   iicret,igcret,igwcret,imbowret,iatret,ioapret
+      integer   ifilret,ifret,iwa,iisa,sl_counter
+      integer   iicret,igcret,igwcret,imbowret,iatret
       integer(kind=8) :: pfcret
       logical(1), allocatable :: valid_pt(:,:)
       logical(1), allocatable :: masked_outc(:,:),masked_out(:,:)
@@ -280,16 +280,16 @@ c
       integer   vradius(3,4),igridzeta(nlevgrzeta),imeanzeta(nlevgrzeta)
       integer   maxmini(maxstorm),maxminj(maxstorm),pdf_ct_bin(16)
       integer   ifcsthour,stormct,prevstormct,istmspd,istmdir,iggret
-      integer   igpret,ifhmax
+      integer   ifhmax
       integer   icpsa,igzvret
-      integer   igfwret,ioiret,igisret,iofwret,iowsret,igwsret,igscret
+      integer   igfwret,igisret,igwsret
       integer   pdf_ct_tot,lugb,lugi,iret,icmcf,iccfh,ivt8f,icqwret
       integer   igsret,issta,iq850a,irha,ispfha,itempa,iomegaa
       integer   ncfile_tmax,ivr,r34_good_ct,itha,ilma,inctcv,lmgb,lmgi
       integer(kind=8) :: waitfor_gfile_status,waitfor_ifile_status
       integer(kind=8) :: wait_max_ifile_wait
       integer   ix_radii_beg,ix_radii_end,n_r34_iter,iccwcret
-      integer   date_time(8),igarret
+      integer   date_time(8)
       integer   int_vtq_ne,int_vtq_se,int_vtq_sw,int_vtq_nw
       integer(kind=8)   dum1,dum2,dum3
       character (len=10) big_ben(3)
@@ -329,8 +329,8 @@ c
       real      x999_axirmw_dist,x999_axirmw_val,x999_divg
       real      x999_moist_divg,x999_rh600_800,x999_rh1000_925
       real      x999_omega500,x999_imzeta,x999_igzeta
-      integer   enable_timing,igrct,ipfbret,icmc2f,iqwcf,iggdret
-      integer   izero_fhr,i999_stmspd,i999_stmdir,igsstret
+      integer   enable_timing,igrct,ipfbret,icmc2f,iqwcf
+      integer   izero_fhr,i999_stmspd,i999_stmdir
       character(pfc_cmd_len) :: pfc_final
       character :: c_undef_wcflag*1
 c
