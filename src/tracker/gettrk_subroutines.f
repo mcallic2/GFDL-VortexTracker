@@ -3385,9 +3385,9 @@ c                 c---   radmax = radmax + 50.0
             endif
 
             if (ikeflag == 'y' .and. stormswitch(ist) == 1) then
-              call get_ike_stats (imax,jmax,inp,dx,dy
-     &                     ,ist,ifh,fixlon,fixlat,xsfclon,xsfclat
-     &                     ,valid_pt,calcparm,ike,sdp,wdp,maxstorm
+              call get_ike_stats (imax,jmax,dx,dy
+     &                     ,ist,xsfclon,xsfclat
+     &                     ,valid_pt,ike,sdp,wdp,maxstorm
      &                     ,trkrinfo,igisret)
               if (igisret == 0) then
                 call output_ike (fixlon(ist,ifh)
@@ -3427,7 +3427,7 @@ c                 c---   radmax = radmax + 50.0
      &                    ,':',i2.2)
               endif
 
-              call get_shear (imax,jmax,inp,dx,dy
+              call get_shear (imax,jmax,dx,dy
      &                     ,ist,ifh,fixlon,fixlat,valid_pt
      &                     ,calcparm,maxstorm,trkrinfo,clon,clat
      &                     ,shear,gm_wrap_flag,igsret)
@@ -3455,9 +3455,9 @@ c                 c---   radmax = radmax + 50.0
 
             if ((sstflag == 'y' .or. sstflag == 'Y') .and.
      &           stormswitch(ist) == 1) then
-              call get_sst (imax,jmax,inp,dx,dy
+              call get_sst (imax,jmax,dx,dy
      &                     ,ist,ifh,fixlon,fixlat,valid_pt,readflag
-     &                     ,maxstorm,trkrinfo,sst_smooth,igsstret)
+     &                     ,maxstorm,trkrinfo,sst_smooth)
             endif
 
             !--------------------------------------------------------
@@ -3486,7 +3486,7 @@ c                 c---   radmax = radmax + 50.0
      &                     ,clon,clat,divg,moist_divg
      &                     ,rh_800_600_smooth,rh_1000_925_smooth
      &                     ,omega500_smooth
-     &                     ,already_computed_domain_wide_rh,iggdret)
+     &                     ,already_computed_domain_wide_rh)
 
               if ( verb .ge. 3 ) then
                 call date_and_time (big_ben(1),big_ben(2),big_ben(3)
@@ -4774,7 +4774,7 @@ c
         bear = ((iazim-1) * 22.5) + 22.5
 
         call distbear (pfixlat,pfixlon,bounddist
-     &                ,bear,targlat,targlon,gm_wrap_flag)
+     &                ,bear,targlat,targlon)
 
         if (gm_wrap_flag == 'maxplus360') then
           if ((pfixlon > 330. .and. pfixlon <= 360.)
@@ -6380,7 +6380,7 @@ c
             bear = ((iquad-1) * 90.) + ((iazim-1) * 15.) + 7.5 
 
             call distbear (xclat,xclon,rdist(idist)
-     &                    ,bear,targlat,targlon,gm_wrap_flag)
+     &                    ,bear,targlat,targlon)
 
             if (gm_wrap_flag == 'maxplus360') then
               if ((xclon > 330. .and. xclon <= 360.)
@@ -6689,7 +6689,7 @@ c            print *,' '
             endif
 
             call distbear (xsfclat,xsfclon,rdist(idist)
-     &                    ,bear,targlat,targlon,gm_wrap_flag)
+     &                    ,bear,targlat,targlon)
 
             if (gm_wrap_flag == 'maxplus360') then
               if ((xsfclon > 330. .and. xsfclon <= 360.)
@@ -6814,7 +6814,7 @@ c     &               ,' storm-relative bear= ',bear
 c            endif
 
             call distbear (xsfclat,xsfclon,rdist(idist)
-     &                    ,bear,targlat,targlon,gm_wrap_flag)
+     &                    ,bear,targlat,targlon)
 
             if (gm_wrap_flag == 'maxplus360') then
               if ((xsfclon > 330. .and. xsfclon <= 360.) 
@@ -7540,8 +7540,8 @@ c     -------------------------------------------------
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine get_ike_stats (imax,jmax,inp,dx,dy,ist,ifh
-     &               ,fixlon,fixlat,xsfclon,xsfclat,valid_pt,calcparm
+      subroutine get_ike_stats (imax,jmax,dx,dy,ist
+     &               ,xsfclon,xsfclat,valid_pt
      &               ,ike,sdp,wdp,maxstorm,trkrinfo,igisret)
 c
 c     ABSTRACT: This subroutine computes the Integrated Kinetic Energy
@@ -7806,7 +7806,7 @@ c     Print out the IKE and SDP statistics...
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine get_shear (imax,jmax,inp,dx,dy
+      subroutine get_shear (imax,jmax,dx,dy
      &                     ,ist,ifh,fixlon,fixlat,valid_pt
      &                     ,calcparm,maxstorm,trkrinfo,clon,clat
      &                     ,shear,gm_wrap_flag,igsret)
@@ -8036,7 +8036,7 @@ c     ------------------------------------------------------------------
             bear = ((iazim-1) * 15.) + 7.5
 
             call distbear (xcenlat,xcenlon,rdist(idist)
-     &                        ,bear,targlat,targlon,gm_wrap_flag)
+     &                        ,bear,targlat,targlon)
 
             if (gm_wrap_flag == 'maxplus360') then
               if ((xcenlon > 330. .and. xcenlon <= 360.)
@@ -8467,9 +8467,9 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine get_sst (imax,jmax,inp,dx,dy
+      subroutine get_sst (imax,jmax,dx,dy
      &                   ,ist,ifh,fixlon,fixlat,valid_pt,readflag
-     &                   ,maxstorm,trkrinfo,sst_smooth,igsstret)
+     &                   ,maxstorm,trkrinfo,sst_smooth)
 c
 c     ABSTRACT: This subroutine calls a routine to create an
 c     area-averaged value of SST, centered on the model fix position at
@@ -8547,7 +8547,7 @@ c-----------------------------------------------------------------------
      &                     ,clon,clat,divg,moist_divg
      &                     ,rh_800_600_smooth,rh_1000_925_smooth
      &                     ,omega500_smooth
-     &                     ,already_computed_domain_wide_rh,iggdret)
+     &                     ,already_computed_domain_wide_rh)
 c
 c     ABSTRACT: This subroutine is the driver for calling various other 
 c     routines to compute diagnostics needed for genesis.
@@ -8641,10 +8641,10 @@ c
 
       divg = -9999.0
       if (readflag(3) .and. readflag(4)) then
-        call get_divg (imax,jmax,inp,dx,dy
+        call get_divg (imax,jmax,dx,dy
      &                ,ist,ifh,fixlon,fixlat,valid_pt
-     &                ,calcparm,maxstorm,trkrinfo,clon,clat
-     &                ,divg,igdret)
+     &                ,maxstorm,trkrinfo
+     &                ,divg)
       endif
 
       if ( verb .ge. 3 ) then
@@ -8786,10 +8786,10 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine get_divg (imax,jmax,inp,dx,dy
+      subroutine get_divg (imax,jmax,dx,dy
      &                ,ist,ifh,fixlon,fixlat,valid_pt
-     &                ,calcparm,maxstorm,trkrinfo,clon,clat
-     &                ,divg,igdret)
+     &                ,maxstorm,trkrinfo
+     &                ,divg)
 c
 c     ABSTRACT: This subroutine calls two routines that will return the
 c     area-averaged (Barnes-averaged) value of divergence surrounding
@@ -8860,8 +8860,7 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine distbear (xlatin,xlonin,dist,bear,xlatt,xlont
-     &                    ,gm_wrap_flag)
+      subroutine distbear (xlatin,xlonin,dist,bear,xlatt,xlont)
 c
 c     ABSTRACT: Given an origin at latitude, longitude=xlato,xlono,
 c     this subroutine will locate a target point at a distance dist in
@@ -8894,7 +8893,6 @@ c
 
       implicit none
 c
-      character (*)  gm_wrap_flag
       real, parameter :: rad_earth_nm = 3440.170  ! radius of earth
       real, parameter :: rad_earth_km = 6372.797  ! radius of earth
       real     xlato,xlono,dist,bear,xlatt,xlont,xlatin,xlonin
@@ -15832,7 +15830,7 @@ c     &         ,mean_radii_vt_4quad_sum
             bear = (float(iquad-1) * 90.) + float(iazim)
 
             call distbear (xcenlat,xcenlon,rdist(idist)
-     &                    ,bear,targlat,targlon,gm_wrap_flag)
+     &                    ,bear,targlat,targlon)
 
             if (gm_wrap_flag == 'maxplus360') then
               if ((xcenlon > 330. .and. xcenlon <= 360.)
@@ -17204,7 +17202,7 @@ c
             bear = ((iazim-1) * 15.) + 7.5
 
             call distbear (xcenlat,xcenlon,rdist(idist)
-     &                    ,bear,targlat,targlon,gm_wrap_flag)
+     &                    ,bear,targlat,targlon)
 
             if (gm_wrap_flag == 'maxplus360') then
               if ((xcenlon > 330. .and. xcenlon <= 360.)
@@ -18711,7 +18709,7 @@ c         clockwise each time, all the way up through 352.5.
               bear = ((iazim-1) * 15.) + 7.5
 
               call distbear (rlatt,rlont,rdist(idist)
-     &                      ,bear,targlat,targlon,gm_wrap_flag)
+     &                      ,bear,targlat,targlon)
 
               if (gm_wrap_flag == 'maxplus360') then
                 if ((rlont > 330. .and. rlont <= 360.)
@@ -19061,7 +19059,7 @@ c           clockwise each time, all the way up through 352.5.
                 bear = ((iazim-1) * 15.) + 7.5
 
                 call distbear (rlatt,rlont,rdist(idist)
-     &                        ,bear,targlat,targlon,gm_wrap_flag)
+     &                        ,bear,targlat,targlon)
 
                 if (gm_wrap_flag == 'maxplus360') then
                   if ((rlont > 330. .and. rlont <= 360.)
@@ -32293,7 +32291,7 @@ c        print *,'    ==> xxtim, iazim= ',iazim,' bear= ',bear
         distloop1: do idist = 1,distmax
 
           call distbear (xmlat,xmlon,rdist(idist)
-     &                  ,bear,targlat,targlon,gm_wrap_flag)
+     &                  ,bear,targlat,targlon)
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xmlon > 330. .and. xmlon <= 360.)
@@ -32699,7 +32697,7 @@ c        print *,' '
           bear = ((iazim-1) * 22.5) + 11.25
 
           call distbear (ycandlat,xcandlon,rdist(idist)
-     &                  ,bear,targlat,targlon,gm_wrap_flag)
+     &                  ,bear,targlat,targlon)
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((xcandlon > 330. .and. xcandlon <= 360.)
@@ -32981,8 +32979,7 @@ c              which GM-wrapping setting to use.
 
           bear = ((iazim-1) * 15.) + 7.5
 
-          call distbear (ctlat,ctlon,rdist,bear,targlat,targlon
-     &                  ,gm_wrap_flag)
+          call distbear (ctlat,ctlon,rdist,bear,targlat,targlon)
 
           if (gm_wrap_flag == 'maxplus360') then
             if ((ctlon > 330. .and. ctlon <= 360.)
@@ -33143,7 +33140,7 @@ c     radius of 80 km.
         end select
 
         call distbear (ctlat,ctlon,xmax_rdist_reached,xbear
-     &                ,targlat,targlon,gm_wrap_flag)
+     &                ,targlat,targlon)
 
         if (gm_wrap_flag == 'maxplus360') then
           if ((ctlon > 330. .and. ctlon <= 360.)
@@ -34546,8 +34543,7 @@ c     distance of 75 km from the center point....
 
         bear = ((iazim-1) * 15.) + 45.0
 
-        call distbear (yplat,xplon,rdist,bear,targlat,targlon
-     &                ,gm_wrap_flag)
+        call distbear (yplat,xplon,rdist,bear,targlat,targlon)
 
         if (gm_wrap_flag == 'maxplus360') then
           if ((xplon > 330. .and. xplon <= 360.)
