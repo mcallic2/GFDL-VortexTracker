@@ -2234,7 +2234,7 @@ c             flag will have a value of 'U', for "undetermined".
                       dum3 = 0
                       call check_closed_contour (imax,jmax,ifix,jfix,slp
      &                    ,valid_pt,masked_outc,ccflag,'min',trkrinfo
-     &                    ,999,contour_info,get_last_isobar_flag
+     &                    ,999,get_last_isobar_flag
      &                    ,plastbar,rlastbar,dum1,dum2,dum3,icccret)
 
                       if ( verb .ge. 3 ) then
@@ -2296,7 +2296,7 @@ c             flag will have a value of 'U', for "undetermined".
                       call check_closed_contour (imax,jmax,ifix,jfix,slp
      &                    ,valid_pt,masked_outc,ccflag,'min'
      &                    ,gb_check_trkrinfo
-     &                    ,999,contour_info,get_last_isobar_flag
+     &                    ,999,get_last_isobar_flag
      &                    ,plastbar,rlastbar,dum1,dum2,dum3,icccret)
 
                       if ( verb .ge. 3 ) then
@@ -2432,7 +2432,7 @@ c             flag will have a value of 'U', for "undetermined".
                   dum3 = 0
                   call check_closed_contour (imax,jmax,ifix,jfix,slp
      &                ,valid_pt,masked_outc,ccflag,'min',trkrinfo
-     &                ,999,contour_info,get_last_isobar_flag,plastbar
+     &                ,999,get_last_isobar_flag,plastbar
      &                ,rlastbar,dum1,dum2,dum3,icccret)
 
                   if ( verb .ge. 3 ) then
@@ -2567,7 +2567,7 @@ c     &           c    ,rlastbar,icccret)
                   call mask_based_on_wind_circ (imax,jmax,dx,dy,850
      &                     ,valid_pt,masked_outc,trkrinfo
      &                     ,clon(ist,ifh,3),clat(ist,ifh,3),inp%modtyp
-     &                     ,ifh,gm_wrap_flag,imbowret)
+     &                     ,gm_wrap_flag,imbowret)
 
                 endif
 
@@ -2860,7 +2860,7 @@ c                  print *,'At pt isi, type= ',trkrinfo%type == 'tracker'
                   call check_for_closed_wind_circulation (imax,jmax
      &                   ,ifix,jfix,dx,dy,valid_pt,trkrinfo,ifh
      &                   ,low_level_wind_circ_flag,gm_wrap_flag
-     &                   ,vtquadmax,'forward',iccwcret)
+     &                   ,vtquadmax,iccwcret)
 
                   if (iccwcret == 0) then
 
@@ -6163,7 +6163,7 @@ c     the tlastcont and rlastcont values are returned.
       dum3 = 0
       call check_closed_contour (imax,jmax,ifix,jfix,tmean
      &    ,valid_pt,wcore_mask,wcore_flag,'max',wcore_trkrinfo
-     &    ,num_check_conts,wcore_contour_info,get_last_contour_flag
+     &    ,num_check_conts,get_last_contour_flag
      &    ,tlastcont,rlastcont,dum1,dum2,dum3,icccret)
 
       if (wcore_flag == 'y') then
@@ -31001,7 +31001,7 @@ c     &                 ,contour_info%contvals(n)
      &        ,valid_pt,masked_out,contour_info,dx,dy
      &        ,trkrinfo,cmaxmin,maxstorm,stormct,maxmini
      &        ,maxminj,ifh,xavg,stdx,ssct1,yyct1,yyct2,zzct1,zzct2,zzct3
-     &        ,gm_wrap_flag,ifamret)
+     &        ,gm_wrap_flag)
 
       print *,' '
       print *,'Summary counter stats for find_all_maxmins at ifh= ',ifh
@@ -31109,8 +31109,7 @@ c---------------------------------------------------------------------
      &          ,valid_pt,masked_out,contour_info,dx,dy
      &          ,trkrinfo,cmaxmin,maxstorm,stormct,maxmini
      &          ,maxminj,ifh,xavg,stdv
-     &          ,ssct1,yyct1,yyct2,zzct1,zzct2,zzct3,gm_wrap_flag
-     &          ,ifamret)
+     &          ,ssct1,yyct1,yyct2,zzct1,zzct2,zzct3,gm_wrap_flag)
 c
 c     ABSTRACT: This subroutine will search an area delineated by  
 c     input i and j indeces in order to find all local maxes or mins 
@@ -31786,7 +31785,7 @@ c            print *,'xxtim b4 call_mslp_chk, ip= ',ip,' jp= ',jp
               call check_for_closed_wind_circulation (imax,jmax,ip,jp
      &               ,dx,dy,valid_pt,trkrinfo,ifh
      &               ,low_level_wind_circ_flag,gm_wrap_flag
-     &               ,vtquadmax,'genesis',iccwcret)
+     &               ,vtquadmax,iccwcret)
 
               call date_and_time (big_ben(1),big_ben(2),big_ben(3)
      &                           ,date_time)
@@ -31990,7 +31989,7 @@ c       surrounding this local maximum or minimum.
         call check_closed_contour (imax,jmax,ix,jx,slp_array
      &           ,slp_valid_pt
      &           ,masked_out,ccflag,cmaxmin,trkrinfo
-     &           ,1,contour_info,get_last_isobar_flag,plastbar
+     &           ,1,get_last_isobar_flag,plastbar
      &           ,rlastbar,zzct1,zzct2,zzct3,icccret)
 
         pass_checks = 'n'
@@ -32014,7 +32013,7 @@ c       surrounding this local maximum or minimum.
             if (trkrinfo%use_land_mask == 'y' .and. 
      &          trkrinfo%type == 'tcgen') then
               call check_land_mask (imax,jmax,ix,jx,fract_land
-     &            ,slp_valid_pt,dx,dy,point_is_over_water,ifh
+     &            ,slp_valid_pt,dx,dy,point_is_over_water
      &            ,gm_wrap_flag,iclmret)
               if (iclmret /= 0) then
                 print *,' '
@@ -32592,7 +32591,7 @@ c---------------------------------------------------------------------
       subroutine check_for_closed_wind_circulation (imax,jmax,ip,jp
      &                ,dx,dy,valid_pt,trkrinfo,ifh
      &                ,low_level_wind_circ_flag,gm_wrap_flag
-     &                ,vtquadmax,tracker_application,iccwcret)
+     &                ,vtquadmax,iccwcret)
 c
 c     ABSTRACT: This subroutine checks for a low-level (10-m) 
 c     cyclonic circulation, in a manner that is meant to emulate how
@@ -32666,7 +32665,7 @@ c     iccwcret  return code from this subroutine
       character :: quad_pass_flag(numquad)*1
       character :: quad_pass_half_vt_flag(numquad)*1
       character (*)  gm_wrap_flag
-      character (*)  tracker_application
+
       logical(1) valid_pt(imax,jmax)
 c
       data rdist/75.,125.,175./  ! Distances in km
@@ -32907,7 +32906,7 @@ c
 c---------------------------------------------------------------------
       subroutine mask_based_on_wind_circ (imax,jmax,dx,dy,level
      &                     ,valid_pt,masked_outc,trkrinfo
-     &                     ,ctlon,ctlat,cmodel_type,ifh,gm_wrap_flag
+     &                     ,ctlon,ctlat,cmodel_type,gm_wrap_flag
      &                     ,imbowret)
 c
 c     ABSTRACT: This subroutine masks out grid points for a storm that
@@ -33290,7 +33289,7 @@ c
 c---------------------------------------------------------------------
       subroutine check_closed_contour (imax,jmax,ix,jx,fxy,valid_pt
      &           ,masked_out,closed_contour,cmaxmin,trkrinfo
-     &           ,num_requested_contours,contour_info
+     &           ,num_requested_contours
      &           ,get_last_isobar_flag,plastbar,rlastbar
      &           ,zzct1,zzct2,zzct3,icccret)
 c
@@ -34470,7 +34469,7 @@ c---------------------------------------------------------------------
 c
 c---------------------------------------------------------------------
       subroutine check_land_mask (imax,jmax,ix,jx,fract_land,valid_pt
-     &                         ,dx,dy,point_is_over_water,ifh
+     &                         ,dx,dy,point_is_over_water
      &                         ,gm_wrap_flag,iclmret)
 c
 c     ABSTRACT: This subroutine looks at the values for the land-sea 
