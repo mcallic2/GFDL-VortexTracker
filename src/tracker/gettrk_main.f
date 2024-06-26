@@ -394,7 +394,7 @@ c
         goto 890
       endif
 
-      call read_gen_vitals (lgvcard,maxstorm,trkrinfo,numtcv,iret)
+      call read_gen_vitals (lgvcard,trkrinfo,numtcv,iret)
 
       if (iret == 0) then
         if ( verb .ge. 3 ) then
@@ -416,7 +416,7 @@ c
           print *,'before open_ncfile call, ncfile= ',ncfile
           call open_ncfile (ncfile,ncfile_id)
           print *,'after open_ncfile call, ncfile_id= ',ncfile_id
-          call read_netcdf_hours (ncfile,ncfile_id,ncfile_tmax,ifhmax
+          call read_netcdf_hours (ncfile_id,ncfile_tmax,ifhmax
      &                           ,ncfile_has_hour0,netcdfinfo,irnhret)
           if (irnhret /= 0) then
             print *,'(/,a32,a5,i4,/)','!!! ERROR: in read_netcdf_hours,'

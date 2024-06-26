@@ -652,7 +652,7 @@ c          lugi = 5200
         elseif (trkrinfo%inp_data_type == 'netcdf') then
           call getgridinfo_netcdf (ncfile_id,imax,jmax,dx,dy
      &                 ,trkrinfo,need_to_flip_lats,need_to_flip_lons
-     &                 ,inp,netcdfinfo,iggret)
+     &                 ,netcdfinfo,iggret)
         else
           print *,' '
           print *,'!!! ERROR: trkrinfo%inp_data_type NOT VALID '
@@ -27138,7 +27138,7 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine read_gen_vitals (lgvcard,maxstorm,trkrinfo,numtcv,iret)
+      subroutine read_gen_vitals (lgvcard,trkrinfo,numtcv,iret)
 c
 c     ABSTRACT: This subroutine reads in a modified TC Vitals file
 c     for the current time and prints out those cards (storms) that
@@ -28197,7 +28197,7 @@ c
 c---------------------------------------------------------------------
       subroutine getgridinfo_netcdf (ncfile_id,imax,jmax,dx,dy
      &                   ,trkrinfo,need_to_flip_lats,need_to_flip_lons
-     &                   ,inp,netcdfinfo,iggret)
+     &                   ,netcdfinfo,iggret)
 c
 c     ABSTRACT: The purpose of this subroutine is just to get the max
 c     values of i and j and the dx and dy grid spacing intervals for the
@@ -28519,7 +28519,7 @@ c
 c---------------------------------------------------------------------
 c
 c---------------------------------------------------------------------
-      subroutine read_netcdf_hours (ncfile,ncfile_id,ncfile_tmax,ifhmax
+      subroutine read_netcdf_hours (ncfile_id,ncfile_tmax,ifhmax
      &                            ,ncfile_has_hour0,netcdfinfo,irnhret)
 c
 c     ABSTRACT: The purpose of this subroutine is to read the "time"
