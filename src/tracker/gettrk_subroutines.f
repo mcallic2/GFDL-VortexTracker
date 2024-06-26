@@ -5023,7 +5023,6 @@ c     storm center.
 
       implicit none
 
-      type (datecard) inp
       type (trackstuff) trkrinfo
 
       real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
