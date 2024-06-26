@@ -1986,8 +1986,8 @@ c             flag will have a value of 'U', for "undetermined".
 
                       call fix_latlon_to_ij (imax,jmax,dx,dy,slp,'min'
      &                   ,valid_pt,fixlon(ist,ifh),fixlat(ist,ifh)
-     &                   ,9999.0,ifix,jfix,gridpoint_maxmin,'tracker'
-     &                   ,'xxxxxxx',glatmax,glatmin,glonmax,glonmin
+     &                   ,ifix,jfix,gridpoint_maxmin,'tracker'
+     &                   ,'xxxxxxx',glatmax,glonmin
      &                   ,trkrinfo,ifilret)
 
                       print *,'ttest ELSE B, ifilret= ',ifilret
@@ -2081,8 +2081,8 @@ c             flag will have a value of 'U', for "undetermined".
                   endif
                   call fix_latlon_to_ij (imax,jmax,dx,dy,slp,'min'
      &               ,valid_pt,xinp_fixlon,xinp_fixlat
-     &               ,xval(9),ifix,jfix,gridpoint_maxmin,'tracker'
-     &               ,'gptmslp',glatmax,glatmin,glonmax,glonmin
+     &               ,ifix,jfix,gridpoint_maxmin,'tracker'
+     &               ,'gptmslp',glatmax,glonmin
      &               ,trkrinfo,ifilret)
                   if (verb >= 3) then
                     print *,' ttest at location E, ifilret= ',ifilret
@@ -6076,8 +6076,8 @@ c     the call to check_closed_contour below.
       if (wcore_mean_lat > -99.0 .and. wcore_mean_lon > -990.0) then
         call fix_latlon_to_ij (imax,jmax,dx,dy,tmean,'max'
      &     ,valid_pt,wcore_mean_lon,wcore_mean_lat
-     &     ,wcore_mean_val,ifix,jfix,wcore_point_max,'tracker'
-     &     ,'xxxxxxx',glatmax,glatmin,glonmax,glonmin
+     &     ,ifix,jfix,wcore_point_max,'tracker'
+     &     ,'xxxxxxx',glatmax,glonmin
      &     ,trkrinfo,ifilret)
         if (ifilret == 0) then
 
@@ -20352,9 +20352,9 @@ c     These (i,j) coordinates are returned as ilonfix and jlatfix.
      
         call fix_latlon_to_ij (imax,jmax,dx,dy
      &     ,zeta(1,1,n),cvort_maxmin,valid_pt,fixlon(ist,ifh)
-     &     ,fixlat(ist,ifh),xsmoothval,idum,jdum
+     &     ,fixlat(ist,ifh),idum,jdum
      &     ,gridpoint_maxmin,'tracker'
-     &     ,'xxxxxxx',glatmax,glatmin,glonmax,glonmin
+     &     ,'xxxxxxx',glatmax,glonmin
      &     ,trkrinfo,ifilret)
         if (ifilret == 0) then
           igridzeta(n) = int ((gridpoint_maxmin * 1e6) + 0.5)
@@ -28839,8 +28839,8 @@ c
 c
       call fix_latlon_to_ij (imax,jmax,dx,dy,fxy,cmaxmin
      &        ,valid_pt,rlont,rlatt
-     &        ,xdum,ifix,jfix,gridpoint_maxmin,'checker'
-     &        ,'checker',grid_maxlat,grid_minlat,grid_maxlon,grid_minlon
+     &        ,ifix,jfix,gridpoint_maxmin,'checker'
+     &        ,'checker',grid_maxlat,grid_minlon
      &        ,trkrinfo,ifilret)
 
       if (ifilret /= 0) then
@@ -28861,9 +28861,9 @@ c---------------------------------------------------------------------
 c
 c---------------------------------------------------------------------
       subroutine fix_latlon_to_ij (imax,jmax,dx,dy,fxy,cmaxmin
-     &                 ,valid_pt,parmlon,parmlat,xdataval
+     &                 ,valid_pt,parmlon,parmlat
      &                 ,ifix,jfix,gridpoint_maxmin,ccall
-     &                 ,stopcheck,grid_maxlat,grid_minlat,grid_maxlon
+     &                 ,stopcheck,grid_maxlat
      &                 ,grid_minlon,trkrinfo,ifilret)
 c
 c     ABSTRACT: This subroutine takes an input lat/lon position and
@@ -30998,7 +30998,7 @@ c     &                 ,contour_info%contvals(n)
     
       oldstormct = stormct
       call find_all_maxmins (imax,jmax,ibeg,iend,jbeg,jend,fxy
-     &        ,valid_pt,masked_out,contour_info,dx,dy
+     &        ,valid_pt,masked_out,dx,dy
      &        ,trkrinfo,cmaxmin,maxstorm,stormct,maxmini
      &        ,maxminj,ifh,xavg,stdx,ssct1,yyct1,yyct2,zzct1,zzct2,zzct3
      &        ,gm_wrap_flag)
@@ -31106,7 +31106,7 @@ c---------------------------------------------------------------------
 c
 c---------------------------------------------------------------------
       subroutine find_all_maxmins (imax,jmax,ibeg,iend,jbeg,jend,fxy
-     &          ,valid_pt,masked_out,contour_info,dx,dy
+     &          ,valid_pt,masked_out,dx,dy
      &          ,trkrinfo,cmaxmin,maxstorm,stormct,maxmini
      &          ,maxminj,ifh,xavg,stdv
      &          ,ssct1,yyct1,yyct2,zzct1,zzct2,zzct3,gm_wrap_flag)
@@ -32665,7 +32665,6 @@ c     iccwcret  return code from this subroutine
       character :: quad_pass_flag(numquad)*1
       character :: quad_pass_half_vt_flag(numquad)*1
       character (*)  gm_wrap_flag
-
       logical(1) valid_pt(imax,jmax)
 c
       data rdist/75.,125.,175./  ! Distances in km
