@@ -11358,19 +11358,17 @@ c
 
       implicit none
 
-      type (datecard) inp
 c
       real, intent(in) :: outlon,outlat
       integer, parameter :: numdist=14,numquad=4,numbin=5,numthresh=3
       real    xoutlon,pdfval
       real    wfract_cov(numquad+1,numbin,numthresh)
-      real    vmaxwind,conv_ms_knots,xminmslp,xsfclon,xsfclat
+      real    vmaxwind,conv_ms_knots,xminmslp
       integer ::  windthresh(numthresh) = (/34,50,64/)
       integer pdf_ct_bin(16)
       integer intlon,intlat,output_fhr,intlon100,intlat100,pdf_ct_tot
-      integer maxstorm
       character  basinid*2,clatns*1,clonew*1,wfract_type*5,wt*1
-      integer :: ist, ifcsthour, iofwret, ib, it, ip
+      integer :: ist, ifcsthour, ib, it, ip
 
 c     First convert all of the lat/lon values from reals into integers.
 c     These integer values must be 10x their real value (eg. 125.4 will
