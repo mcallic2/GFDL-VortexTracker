@@ -4390,8 +4390,8 @@ c
       character(*) cparm
       logical(1)   defined_pt(imax,jmax)
       character*1  stormcheck
-      integer      isiret,imax,jmax,ist,npts,ilonfix,jlatfix,igvtret
-      integer      ibeg,iend,jbeg,jend,ivt,i,j,iix,jix,bskip,igiret,ifh
+      integer      isiret,imax,jmax,ist,npts,ilonfix,jlatfix
+      integer      ibeg,iend,jbeg,jend,ivt,i,j,iix,jix,bskip,igiret
 
       isiret = 0
       stormcheck = 'N'
