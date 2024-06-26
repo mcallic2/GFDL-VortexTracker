@@ -600,9 +600,9 @@ c          lugi = 5200
      &           ,x999_axirmw_dist,x999_axirmw_val)
             endif 
             call output_hfip (x999_lon
-     &                ,x999_lat,inp,inctcv
+     &                ,x999_lat,inctcv
      &                ,ifh,xzero_vmax
-     &                ,xzero_minslp,vradius,x99_rmax,ioaxret)
+     &                ,xzero_minslp,vradius,x99_rmax)
 
             if (verb .ge. 3) then
               print *,' ' 
@@ -891,9 +891,8 @@ c       If not enough tracked parms were read in, exit the program....
             enddo
             ifhtemp = ifhtemp + 1
           enddo
-          call output_all (fixlon,fixlat,inp,maxstorm,ifhmax,ioaret)
-          call output_atcf (fixlon,fixlat,inp,xmaxwind,maxstorm,ifhmax
-     &                     ,ioaret)
+          call output_all (fixlon,fixlat,inp,maxstorm,ifhmax)
+          call output_atcf (fixlon,fixlat,inp,xmaxwind,maxstorm,ifhmax)
           if (ifh == 1) then
             ! Per Jim Gross (1/01), if the  tracker ran but was unable
             ! to get an initial fix (or, in this case, unable to get 
@@ -933,9 +932,9 @@ c       If not enough tracked parms were read in, exit the program....
      &                ,x999_omega500,imeanzeta,igridzeta
      &                ,ioaxret)
                call output_hfip (x999_lon
-     &                ,x999_lat,inp,istmp
+     &                ,x999_lat,istmp
      &                ,ifh,xzero_vmax
-     &                ,xzero_minslp,vradius,x99_rmax,ioaxret)
+     &                ,xzero_minslp,vradius,x99_rmax)
               endif
             enddo
           endif
@@ -3368,10 +3367,10 @@ c                 c---   radmax = radmax + 50.0
      &                     ,igwsret)
               if (igwsret == 0) then
                 call output_wind_structure (fixlon(ist,ifh)
-     &                      ,fixlat(ist,ifh),xsfclon,xsfclat,inp,ist
+     &                      ,fixlat(ist,ifh),ist
      &                      ,ifcsthour,xmaxwind(ist,ifh)
      &                      ,gridprs(ist,ifh),er_wind,sr_wind
-     &                      ,er_vr,sr_vr,er_vt,sr_vt,maxstorm,iowsret)
+     &                      ,er_vr,sr_vr,er_vt,sr_vt)
               endif
             endif
 
@@ -3382,10 +3381,10 @@ c                 c---   radmax = radmax + 50.0
      &                     ,pdf_ct_tot,maxstorm,trkrinfo,igfwret)
               if (igfwret == 0) then 
                 call output_fract_wind (fixlon(ist,ifh)
-     &                      ,fixlat(ist,ifh),xsfclon,xsfclat,inp,ist
+     &                      ,fixlat(ist,ifh),ist
      &                      ,ifcsthour,xmaxwind(ist,ifh)
      &                      ,gridprs(ist,ifh),wfract_cov,'earth'
-     &                      ,pdf_ct_bin,pdf_ct_tot,maxstorm,iofwret)
+     &                      ,pdf_ct_bin,pdf_ct_tot)
               endif
             endif
 
@@ -3623,9 +3622,9 @@ c           knots (1.9427) is explained in output_atcf.
               ! that is processed....
 
               call output_hfip (fixlon(ist,ifh)
-     &                  ,fixlat(ist,ifh),inp,ist
+     &                  ,fixlat(ist,ifh),ist
      &                  ,ifh,xmaxwind(ist,ifh)
-     &                  ,gridprs(ist,ifh),vradius,rmax,ioaxret)
+     &                  ,gridprs(ist,ifh),vradius,rmax)
             else
 
               if ( verb .ge. 3 ) then
@@ -3811,9 +3810,9 @@ c           knots (1.9427) is explained in output_atcf.
      &               ,x999_axirmw_dist,x999_axirmw_val)
                 endif
                 call output_hfip (x999_lon
-     &                    ,x999_lat,inp,ist
+     &                    ,x999_lat,ist
      &                    ,ifh,xzero_vmax
-     &                    ,xzero_minslp,vradius,x99_rmax,ioaxret)
+     &                    ,xzero_minslp,vradius,x99_rmax)
 
                 if (trkrinfo%type == 'tracker') then
                   ! Update 11/11: For a 'tracker' run, i.e., one in 
@@ -3956,9 +3955,9 @@ c           data, so we'll just output the genesis vitals record.
      &             ,x999_axirmw_dist,x999_axirmw_val)
               endif
               call output_hfip (x999_lon
-     &                  ,x999_lat,inp,ist
+     &                  ,x999_lat,ist
      &                  ,ifh,xzero_vmax
-     &                  ,xzero_minslp,vradius,x99_rmax,ioaxret)
+     &                  ,xzero_minslp,vradius,x99_rmax)
             endif
 
           case (3)
@@ -4042,9 +4041,8 @@ c          User wants us to run a command per forecast time
 
       enddo ifhloop
 c
-      call output_all (fixlon,fixlat,inp,maxstorm,ifhmax,ioaret)
-      call output_atcf (fixlon,fixlat,inp,xmaxwind,maxstorm,ifhmax
-     &                 ,ioaret)
+      call output_all (fixlon,fixlat,inp,maxstorm,ifhmax)
+      call output_atcf (fixlon,fixlat,inp,xmaxwind,maxstorm,ifhmax)
 c
   73  format ('fixpos  ',a4,'  fhr= ',i4,':',i2.2,'   Fix position=  '
      &       ,f7.2,'E  (',f6.2,'W)',2x,f7.2,'   Max Wind= ',i3,' kts')
@@ -10715,7 +10713,7 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine output_all (fixlon,fixlat,inp,maxstorm,ifhmax,ioaret)
+      subroutine output_all (fixlon,fixlat,inp,maxstorm,ifhmax)
 c
 c     ABSTRACT: This subroutine  outputs a 1-line message for each
 c     storm.  This message contains the model identifier, the forecast
@@ -10861,7 +10859,7 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine output_atcf (fixlon,fixlat,inp,xmaxwind,maxstorm
-     &                       ,ifhmax,ioaret)
+     &                       ,ifhmax)
 c
 c     ABSTRACT: This subroutine  outputs a 1-line message for each storm
 c     in ATCF format.  This message contains the model identifier, the
@@ -11052,8 +11050,8 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine output_hfip (outlon,outlat,inp,ist
-     &          ,ifh,vmaxwind,xminmslp,vradius,rmax,ioaxret)
+      subroutine output_hfip (outlon,outlat,ist
+     &          ,ifh,vmaxwind,xminmslp,vradius,rmax)
 
 c     ABSTRACT: This subroutine  outputs a 1-line message for a given
 c     storm at an input forecast hour in a modified ATCF UNIX format.
@@ -11279,9 +11277,9 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine output_fract_wind (outlon,outlat,xsfclon,xsfclat
-     &          ,inp,ist,ifcsthour,vmaxwind,xminmslp,wfract_cov
-     &          ,wfract_type,pdf_ct_bin,pdf_ct_tot,maxstorm,iofwret)
+      subroutine output_fract_wind (outlon,outlat
+     &          ,ist,ifcsthour,vmaxwind,xminmslp,wfract_cov
+     &          ,wfract_type,pdf_ct_bin,pdf_ct_tot)
 c
 c     ABSTRACT: This subroutine  outputs a 1-line message for a given
 c     storm at an input forecast hour.  This message contains the
@@ -11521,9 +11519,9 @@ c     bug fix for IBM: flush the output stream so it actually writes
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine output_wind_structure (outlon,outlat,xsfclon
-     &          ,xsfclat,inp,ist,ifcsthour,vmaxwind,xminmslp,er_wind
-     &          ,sr_wind,er_vr,sr_vr,er_vt,sr_vt,maxstorm,iofwret)
+      subroutine output_wind_structure (outlon,outlat
+     &          ,ist,ifcsthour,vmaxwind,xminmslp,er_wind
+     &          ,sr_wind,er_vr,sr_vr,er_vt,sr_vt)
 c
 c     ABSTRACT: This subroutine  outputs a 1-line message for a given
 c     storm at an input forecast hour.  This message contains the
