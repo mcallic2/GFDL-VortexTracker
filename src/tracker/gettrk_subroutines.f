@@ -3396,10 +3396,9 @@ c                 c---   radmax = radmax + 50.0
      &                     ,trkrinfo,igisret)
               if (igisret == 0) then
                 call output_ike (fixlon(ist,ifh)
-     &                      ,fixlat(ist,ifh),xsfclon,xsfclat,inp,ist
+     &                      ,fixlat(ist,ifh),ist
      &                      ,ifcsthour,xmaxwind(ist,ifh)
-     &                      ,gridprs(ist,ifh),ike,sdp,wdp,maxstorm
-     &                      ,ioiret)
+     &                      ,gridprs(ist,ifh),ike,sdp,wdp)
               endif
             endif
 
@@ -3609,12 +3608,12 @@ c           knots (1.9427) is explained in output_atcf.
                 call output_atcf_parms (fixlon(ist,ifh),fixlat(ist,ifh)
      &               ,inp,ist,ifh,ifcsthour,xmaxwind(ist,ifh)
      &               ,gridprs(ist,ifh),maxstorm,trkrinfo
-     &               ,clon,clat,calcparm,xval,ioapret)
+     &               ,clon,clat,calcparm,xval)
 
                 if (inp%model == 12 .and. ifcsthour == 0) then
                   ! Write vitals for GFS ens control analysis
                   call output_tcvitals (fixlon(ist,ifh)
-     &                    ,fixlat(ist,ifh),inp,ist,iovret)
+     &                    ,fixlat(ist,ifh),ist,iovret)
 
                 endif
               endif
@@ -3983,7 +3982,7 @@ c            print *,'!!! Storm ID = ',storm(ist)%tcv_storm_id
           endif
           if (trkrinfo%inp_data_type == 'grib') then
             call output_tracker_mask (masked_outc,valid_pt,ifh
-     &                  ,ifcsthour,imax,jmax,iotmret)
+     &                  ,ifcsthour,imax,jmax)
           endif
         endif
 
@@ -11876,9 +11875,8 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine output_ike (outlon,outlat,xsfclon,xsfclat,inp,ist
-     &          ,ifcsthour,vmaxwind,xminmslp,ike,sdp,wdp,maxstorm
-     &          ,ioiret)
+      subroutine output_ike (outlon,outlat,ist
+     &          ,ifcsthour,vmaxwind,xminmslp,ike,sdp,wdp)
 c
 c     ABSTRACT: This subroutine  outputs a 1-line message for a given
 c     storm at an input forecast hour.  This message contains the values
@@ -12062,9 +12060,9 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine output_phase (outlon,outlat,inp,ist
+      subroutine output_phase (outlon,outlat,ist
      &          ,ifcsthour,vmaxwind,xminmslp,paramb,vtl_slope
-     &          ,vtu_slope,ioiret)
+     &          ,vtu_slope)
 c
 c     ABSTRACT: This subroutine  outputs a 1-line message for a given
 c     storm at an input forecast hour.  This message contains the values
@@ -12776,7 +12774,7 @@ c-----------------------------------------------------------------------
       subroutine output_atcf_parms (xmeanlon,xmeanlat
      &               ,inp,ist,ifh,ifcsthour,vmaxwind
      &               ,xminmslp,maxstorm,trkrinfo
-     &               ,clon,clat,calcparm,xval,ioapret)
+     &               ,clon,clat,calcparm,xval)
 c
 c     ABSTRACT: This subroutine  outputs a 1-line message for a given 
 c     storm at an input forecast hour in a modified atcfunix format.  
@@ -13051,7 +13049,7 @@ c
 c---------------------------------------------------------------------
 c
 c---------------------------------------------------------------------
-      subroutine output_tcvitals (xlon,xlat,inp,ist,iovret)
+      subroutine output_tcvitals (xlon,xlat,ist,iovret)
 c
 c     ABSTRACT: This subroutine  outputs a tcvitals record.  The
 c     lat/lon location is given by the xlon and xlat that are
@@ -13305,7 +13303,7 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine output_tracker_mask (masked_outc,lb,ifh,ifcsthour
-     &                ,imax,jmax,iotmret)
+     &                ,imax,jmax)
 c
 c     ABSTRACT: This subroutine  outputs a GRIB record that contains the
 c     "mask" used to mask out areas surrounding low pressure centers 
