@@ -4821,7 +4821,7 @@ c
         ! lat/lon grid, leaving invalid data around the edges.
 
         call check_valid_point (imax,jmax,dx,dy,fxy,maxmin,valid_pt
-     &      ,targlon,targlat,glatmax,glatmin,glonmax,glonmin
+     &      ,targlon,targlat,glatmax,glonmin
      &      ,trkrinfo,icvpret)
 
         if (icvpret /= 0) then
@@ -18680,7 +18680,7 @@ c         check_valid_point comes back non-zero, simply cycle iloop
 c         and go to the next point.
 
           call check_valid_point (imax,jmax,dx,dy,u(1,1,nlev),maxmin
-     &        ,valid_pt,rlont,rlatt,grid_maxlat,grid_minlat,grid_maxlon
+     &        ,valid_pt,rlont,rlatt,grid_maxlat
      &        ,temp_grid_minlon,trkrinfo,icvpret)
 
           if (icvpret /= 0) then
@@ -19033,8 +19033,8 @@ c           question here has valid data (see the explanation further
 c           up in this subroutine inside iloop).
 
             call check_valid_point (imax,jmax,dx,dy,u(1,1,nlev),maxmin
-     &          ,valid_pt,rlont,rlatt,grid_maxlat,grid_minlat
-     &          ,grid_maxlon,grid_minlon,trkrinfo,icvpret)
+     &          ,valid_pt,rlont,rlatt,grid_maxlat
+     &          ,grid_minlon,trkrinfo,icvpret)
 
             if (icvpret /= 0) then
               cycle iloop2
@@ -20778,7 +20778,7 @@ c         check_valid_point comes back non-zero, simply cycle iloop
 c         and go to the next point.
 
           call check_valid_point (imax,jmax,dx,dy,fxy,maxmin,valid_pt
-     &        ,rlont,rlatt,grid_maxlat,grid_minlat,grid_maxlon
+     &        ,rlont,rlatt,grid_maxlat
      &        ,temp_grid_minlon,trkrinfo,icvpret)
 
           if (icvpret /= 0) then
@@ -21174,7 +21174,7 @@ c           question here has valid data (see the explanation further
 c           up in this subroutine inside iloop).
 
             call check_valid_point (imax,jmax,dx,dy,fxy,maxmin,valid_pt
-     &          ,rlont,rlatt,grid_maxlat,grid_minlat,grid_maxlon
+     &          ,rlont,rlatt,grid_maxlat
      &          ,grid_minlon,trkrinfo,icvpret)
 
             if (icvpret /= 0) then
@@ -28775,7 +28775,7 @@ c---------------------------------------------------------------------
 c
 c---------------------------------------------------------------------
       subroutine check_valid_point (imax,jmax,dx,dy,fxy,cmaxmin
-     &        ,valid_pt,rlont,rlatt,grid_maxlat,grid_minlat,grid_maxlon
+     &        ,valid_pt,rlont,rlatt,grid_maxlat
      &        ,grid_minlon,trkrinfo,icvpret)
 c
 c     ABSTRACT: This subroutine checks to see if the input lat/lon
