@@ -459,8 +459,8 @@ c
         endif
       endif
 
-      call tracker (inp,maxstorm,numtcv,ifhmax,trkrinfo,ncfile
-     &             ,ncfile_id,nc_lsmask_file,nc_lsmask_file_id
+      call tracker (inp,maxstorm,numtcv,ifhmax,trkrinfo
+     &             ,ncfile_id,nc_lsmask_file_id
      &             ,netcdfinfo,ncfile_has_hour0,ncfile_tmax,itret)
 c
 890   continue

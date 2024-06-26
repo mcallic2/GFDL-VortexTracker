@@ -4,8 +4,8 @@
 c---------------------------------------------------------------------
 c
 c---------------------------------------------------------------------
-      subroutine tracker (inp,maxstorm,numtcv,ifhmax,trkrinfo,ncfile
-     &                   ,ncfile_id,nc_lsmask_file,nc_lsmask_file_id
+      subroutine tracker (inp,maxstorm,numtcv,ifhmax,trkrinfo
+     &                   ,ncfile_id,nc_lsmask_file_id
      &                   ,netcdfinfo,ncfile_has_hour0,ncfile_tmax,itret)
 c
 c     ABSTRACT: This subroutine is the core of the program.  It contains
@@ -251,8 +251,6 @@ c
       character :: need_to_expand_r34(4)*1,ncfile_has_hour0*1
       character :: already_computed_domain_wide_rh*1,gm_wrap_flag*21
       character :: low_level_wind_circ_flag*1,opening_mask*1
-      character*(*), intent(in) :: ncfile
-      character*(*), intent(in) :: nc_lsmask_file
       integer :: ncfile_id
       integer :: nc_lsmask_file_id
       real, allocatable :: prstemp(:),iwork(:)
@@ -1948,7 +1946,7 @@ c             flag will have a value of 'U', for "undetermined".
 
                   call is_it_a_storm (imax,jmax,dx,dy,'slp',ist
      &                 ,valid_pt,clon(ist,ifh,9),clat(ist,ifh,9)
-     &                 ,xval(9),trkrinfo,isastorm(1),ifh,isiret1)
+     &                 ,xval(9),trkrinfo,isastorm(1),isiret1)
 
                 else
 
@@ -2000,7 +1998,7 @@ c             flag will have a value of 'U', for "undetermined".
                         call is_it_a_storm (imax,jmax,dx,dy,'slp',ist
      &                     ,valid_pt,fixlon(ist,ifh),fixlat(ist,ifh)
      &                     ,gridpoint_maxmin,trkrinfo,isastorm(1)
-     &                     ,ifh,isiret1)
+     &                     ,isiret1)
 
                         if (isiret1 == 0) then
                           ! Even though calcparm(9) is FALSE and mslp 
@@ -2131,7 +2129,7 @@ c             flag will have a value of 'U', for "undetermined".
                       print *,'latitude= ',xinp_fixlat
                       print *,'mean mslp value (xval(9))= ',xval(9)
                     endif
-                    call probe_for_boundary (imax,jmax,dx,dy,ist
+                    call probe_for_boundary (imax,jmax,dx,dy
      &                   ,'slp',slp,valid_pt,xinp_fixlon
      &                   ,xinp_fixlat,trkrinfo,close_to_boundary
      &                   ,gm_wrap_flag,ipfbret)
@@ -2593,7 +2591,7 @@ c     &           c    ,rlastbar,icccret)
  
                     call is_it_a_storm (imax,jmax,dx,dy,'v850',ist
      &                   ,valid_pt,clon(ist,ifh,3),clat(ist,ifh,3)
-     &                   ,xval(3),trkrinfo,isastorm(3),ifh,isiret3)
+     &                   ,xval(3),trkrinfo,isastorm(3),isiret3)
 
                   else
 
@@ -2634,7 +2632,7 @@ c     &           c    ,rlastbar,icccret)
 
                         call is_it_a_storm (imax,jmax,dx,dy,'v850',ist
      &                     ,valid_pt,fixlon(ist,ifh),fixlat(ist,ifh)
-     &                     ,0.00,trkrinfo,isastorm(3),ifh,isiret3)
+     &                     ,0.00,trkrinfo,isastorm(3),isiret3)
 
                       endif
   
@@ -2760,7 +2758,7 @@ c                  print *,'At pt isi, type= ',trkrinfo%type == 'tracker'
 
                     if (trkrinfo%gridtype == 'regional' .and.
      &                  inp%nesttyp == 'fixed') then
-                      call probe_for_boundary (imax,jmax,dx,dy,ist
+                      call probe_for_boundary (imax,jmax,dx,dy
      &                     ,'v850',v(1,1,1),valid_pt,xinp_fixlon
      &                     ,xinp_fixlat,trkrinfo,close_to_boundary
      &                     ,gm_wrap_flag,ipfbret)
@@ -3315,7 +3313,7 @@ c                 c---   radmax = radmax + 50.0
               wcore_flag = 'u'   ! 'u' = undetermined
               call get_phase (imax,jmax,inp,dx,dy,ist,ifh,trkrinfo
      &                       ,fixlon,fixlat,valid_pt,maxstorm
-     &                       ,cps_vals,wcore_flag,igpret)
+     &                       ,cps_vals,wcore_flag)
 
               if ( verb .ge. 3 ) then
                 call date_and_time (big_ben(1),big_ben(2),big_ben(3)
@@ -4346,7 +4344,7 @@ c
 c-----------------------------------------------------------------------
       subroutine is_it_a_storm (imax,jmax,dx,dy,cparm,ist
      &                        ,defined_pt,parmlon,parmlat
-     &                        ,parmval,trkrinfo,stormcheck,ifh,isiret)
+     &                        ,parmval,trkrinfo,stormcheck,isiret)
 
 c     ABSTRACT: This subroutine is called after the center of the storm
 c     has been fixed.  Its purpose is to determine whether or not 
@@ -4691,7 +4689,7 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine probe_for_boundary (imax,jmax,dx,dy,ist
+      subroutine probe_for_boundary (imax,jmax,dx,dy
      &                     ,cparm,fxy,valid_pt,pfixlon,pfixlat
      &                     ,trkrinfo,close_to_boundary,gm_wrap_flag
      &                     ,ipfbret)
@@ -4832,7 +4830,7 @@ c
 c-----------------------------------------------------------------------
       subroutine get_phase (imax,jmax,inp,dx,dy,ist,ifh,trkrinfo
      &                    ,fixlon,fixlat,valid_pt,maxstorm
-     &                    ,cps_vals,wcore_flag,igpret)
+     &                    ,cps_vals,wcore_flag)
 c
 c     ABSTRACT: This subroutine is a driver subroutine for
 c     determining the structure or phase of a cyclone.  Initially, we
