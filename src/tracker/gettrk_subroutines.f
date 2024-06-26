@@ -825,12 +825,12 @@ c       then call subroutine to read data for this forecast time.
 
         if (trkrinfo%inp_data_type == 'grib') then
           call getdata_grib (readflag,readgenflag,valid_pt,imax,jmax
-     &               ,ifh,need_to_flip_lats,need_to_flip_lons,inp
+     &               ,ifh,need_to_flip_lats,inp
      &               ,lugb,lugi,lmgb,lmgi,trkrinfo)
         elseif (trkrinfo%inp_data_type == 'netcdf') then
           call getdata_netcdf (ncfile_id,nc_lsmask_file_id,readflag
      &               ,readgenflag,valid_pt,imax,jmax,ifh
-     &               ,need_to_flip_lats,need_to_flip_lons
+     &               ,need_to_flip_lats
      &               ,ncfile_tmax,netcdfinfo,trkrinfo)
         endif
 
@@ -3563,8 +3563,8 @@ c           knots (1.9427) is explained in output_atcf.
                 imeanzeta = -99
                 igridzeta = -99
                 call get_zeta_values (fixlon,fixlat,imax,jmax,dx,dy
-     &                 ,trkrinfo,imeanzeta,igridzeta,readflag
-     &                 ,valid_pt,ist,ifh,maxstorm,inp,igzvret)
+     &                 ,trkrinfo,imeanzeta,igridzeta
+     &                 ,valid_pt,ist,ifh,maxstorm,igzvret)
 
                 ifcsthour = ileadtime / 100 
 
@@ -20169,8 +20169,8 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine get_zeta_values (fixlon,fixlat,imax,jmax,dx,dy
-     &                     ,trkrinfo,imeanzeta,igridzeta,readflag
-     &                     ,valid_pt,ist,ifh,maxstorm,inp,igzvret)
+     &                     ,trkrinfo,imeanzeta,igridzeta
+     &                     ,valid_pt,ist,ifh,maxstorm,igzvret)
 c
 c     ABSTRACT: This subroutine finds the maximum and mean zeta values
 c     at 850 & 700 mb, near a storm center.  It is called from 
@@ -22238,7 +22238,7 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine getdata_grib (readflag,readgenflag,valid_pt,imax,jmax
-     &               ,ifh,need_to_flip_lats,need_to_flip_lons,inp
+     &               ,ifh,need_to_flip_lats,inp
      &               ,lugb,lugi,lmgb,lmgi,trkrinfo)
 c
 c     ABSTRACT: This subroutine reads the input GRIB file for the
@@ -24268,7 +24268,7 @@ c
 c-----------------------------------------------------------------------
       subroutine getdata_netcdf (ncfile_id,nc_lsmask_file_id,readflag
      &                  ,readgenflag,valid_pt,imax,jmax,ifh
-     &                  ,need_to_flip_lats,need_to_flip_lons
+     &                  ,need_to_flip_lats
      &                  ,ncfile_tmax,netcdfinfo,trkrinfo)
 c
 c     ABSTRACT: This subroutine reads the input NetCDF file for the 
