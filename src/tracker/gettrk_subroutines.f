@@ -5361,7 +5361,6 @@ c     only those points that are within 500 km of the storm center.
 
       implicit none
 
-      type (datecard) inp
       type (trackstuff) trkrinfo
 
       character clayer*5
