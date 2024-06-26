@@ -4849,7 +4849,7 @@ c     will just have it use the Hart cyclone phase space (CPS) scheme.
       real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real     cps_vals(3)
       real     dx,dy,paramb,vtl_slope,vtu_slope
-      integer  imax,jmax,igpret,igcpret,ist,ifh,maxstorm
+      integer  imax,jmax,igcpret,ist,ifh,maxstorm
       integer  igvpret,igcv1ret,igcv2ret
       logical(1) valid_pt(imax,jmax)
 c         
