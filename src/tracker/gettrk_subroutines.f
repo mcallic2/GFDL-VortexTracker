@@ -652,7 +652,7 @@ c          lugi = 5200
         elseif (trkrinfo%inp_data_type == 'netcdf') then
           call getgridinfo_netcdf (ncfile_id,imax,jmax,dx,dy
      &                 ,trkrinfo,need_to_flip_lats,need_to_flip_lons
-     &                 ,inp,netcdfinfo,iggret)
+     &                 ,netcdfinfo,iggret)
         else
           print *,' '
           print *,'!!! ERROR: trkrinfo%inp_data_type NOT VALID '
@@ -825,12 +825,12 @@ c       then call subroutine to read data for this forecast time.
 
         if (trkrinfo%inp_data_type == 'grib') then
           call getdata_grib (readflag,readgenflag,valid_pt,imax,jmax
-     &               ,ifh,need_to_flip_lats,need_to_flip_lons,inp
+     &               ,ifh,need_to_flip_lats,inp
      &               ,lugb,lugi,lmgb,lmgi,trkrinfo)
         elseif (trkrinfo%inp_data_type == 'netcdf') then
           call getdata_netcdf (ncfile_id,nc_lsmask_file_id,readflag
      &               ,readgenflag,valid_pt,imax,jmax,ifh
-     &               ,need_to_flip_lats,need_to_flip_lons
+     &               ,need_to_flip_lats
      &               ,ncfile_tmax,netcdfinfo,trkrinfo)
         endif
 
@@ -3564,7 +3564,7 @@ c           knots (1.9427) is explained in output_atcf.
                 igridzeta = -99
                 call get_zeta_values (fixlon,fixlat,imax,jmax,dx,dy
      &                 ,trkrinfo,imeanzeta,igridzeta,readflag
-     &                 ,valid_pt,ist,ifh,maxstorm,inp,igzvret)
+     &                 ,valid_pt,ist,ifh,maxstorm,igzvret)
 
                 ifcsthour = ileadtime / 100 
 
@@ -4821,7 +4821,7 @@ c
         ! lat/lon grid, leaving invalid data around the edges.
 
         call check_valid_point (imax,jmax,dx,dy,fxy,maxmin,valid_pt
-     &      ,targlon,targlat,glatmax,glatmin,glonmax,glonmin
+     &      ,targlon,targlat,glatmax,glonmin
      &      ,trkrinfo,icvpret)
 
         if (icvpret /= 0) then
@@ -18680,7 +18680,7 @@ c         check_valid_point comes back non-zero, simply cycle iloop
 c         and go to the next point.
 
           call check_valid_point (imax,jmax,dx,dy,u(1,1,nlev),maxmin
-     &        ,valid_pt,rlont,rlatt,grid_maxlat,grid_minlat,grid_maxlon
+     &        ,valid_pt,rlont,rlatt,grid_maxlat
      &        ,temp_grid_minlon,trkrinfo,icvpret)
 
           if (icvpret /= 0) then
@@ -19033,8 +19033,8 @@ c           question here has valid data (see the explanation further
 c           up in this subroutine inside iloop).
 
             call check_valid_point (imax,jmax,dx,dy,u(1,1,nlev),maxmin
-     &          ,valid_pt,rlont,rlatt,grid_maxlat,grid_minlat
-     &          ,grid_maxlon,grid_minlon,trkrinfo,icvpret)
+     &          ,valid_pt,rlont,rlatt,grid_maxlat
+     &          ,grid_minlon,trkrinfo,icvpret)
 
             if (icvpret /= 0) then
               cycle iloop2
@@ -20170,7 +20170,7 @@ c
 c-----------------------------------------------------------------------
       subroutine get_zeta_values (fixlon,fixlat,imax,jmax,dx,dy
      &                     ,trkrinfo,imeanzeta,igridzeta,readflag
-     &                     ,valid_pt,ist,ifh,maxstorm,inp,igzvret)
+     &                     ,valid_pt,ist,ifh,maxstorm,igzvret)
 c
 c     ABSTRACT: This subroutine finds the maximum and mean zeta values
 c     at 850 & 700 mb, near a storm center.  It is called from 
@@ -20778,7 +20778,7 @@ c         check_valid_point comes back non-zero, simply cycle iloop
 c         and go to the next point.
 
           call check_valid_point (imax,jmax,dx,dy,fxy,maxmin,valid_pt
-     &        ,rlont,rlatt,grid_maxlat,grid_minlat,grid_maxlon
+     &        ,rlont,rlatt,grid_maxlat
      &        ,temp_grid_minlon,trkrinfo,icvpret)
 
           if (icvpret /= 0) then
@@ -21174,7 +21174,7 @@ c           question here has valid data (see the explanation further
 c           up in this subroutine inside iloop).
 
             call check_valid_point (imax,jmax,dx,dy,fxy,maxmin,valid_pt
-     &          ,rlont,rlatt,grid_maxlat,grid_minlat,grid_maxlon
+     &          ,rlont,rlatt,grid_maxlat
      &          ,grid_minlon,trkrinfo,icvpret)
 
             if (icvpret /= 0) then
@@ -22238,7 +22238,7 @@ c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
       subroutine getdata_grib (readflag,readgenflag,valid_pt,imax,jmax
-     &               ,ifh,need_to_flip_lats,need_to_flip_lons,inp
+     &               ,ifh,need_to_flip_lats,inp
      &               ,lugb,lugi,lmgb,lmgi,trkrinfo)
 c
 c     ABSTRACT: This subroutine reads the input GRIB file for the
@@ -24268,7 +24268,7 @@ c
 c-----------------------------------------------------------------------
       subroutine getdata_netcdf (ncfile_id,nc_lsmask_file_id,readflag
      &                  ,readgenflag,valid_pt,imax,jmax,ifh
-     &                  ,need_to_flip_lats,need_to_flip_lons
+     &                  ,need_to_flip_lats
      &                  ,ncfile_tmax,netcdfinfo,trkrinfo)
 c
 c     ABSTRACT: This subroutine reads the input NetCDF file for the 
@@ -27138,7 +27138,7 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine read_gen_vitals (lgvcard,maxstorm,trkrinfo,numtcv,iret)
+      subroutine read_gen_vitals (lgvcard,trkrinfo,numtcv,iret)
 c
 c     ABSTRACT: This subroutine reads in a modified TC Vitals file
 c     for the current time and prints out those cards (storms) that
@@ -28197,7 +28197,7 @@ c
 c---------------------------------------------------------------------
       subroutine getgridinfo_netcdf (ncfile_id,imax,jmax,dx,dy
      &                   ,trkrinfo,need_to_flip_lats,need_to_flip_lons
-     &                   ,inp,netcdfinfo,iggret)
+     &                   ,netcdfinfo,iggret)
 c
 c     ABSTRACT: The purpose of this subroutine is just to get the max
 c     values of i and j and the dx and dy grid spacing intervals for the
@@ -28519,7 +28519,7 @@ c
 c---------------------------------------------------------------------
 c
 c---------------------------------------------------------------------
-      subroutine read_netcdf_hours (ncfile,ncfile_id,ncfile_tmax,ifhmax
+      subroutine read_netcdf_hours (ncfile_id,ncfile_tmax,ifhmax
      &                            ,ncfile_has_hour0,netcdfinfo,irnhret)
 c
 c     ABSTRACT: The purpose of this subroutine is to read the "time"
@@ -28775,7 +28775,7 @@ c---------------------------------------------------------------------
 c
 c---------------------------------------------------------------------
       subroutine check_valid_point (imax,jmax,dx,dy,fxy,cmaxmin
-     &        ,valid_pt,rlont,rlatt,grid_maxlat,grid_minlat,grid_maxlon
+     &        ,valid_pt,rlont,rlatt,grid_maxlat
      &        ,grid_minlon,trkrinfo,icvpret)
 c
 c     ABSTRACT: This subroutine checks to see if the input lat/lon
