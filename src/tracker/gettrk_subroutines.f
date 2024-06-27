@@ -11925,15 +11925,14 @@ c
 
       implicit none
 
-      type (datecard) inp
 c
       integer, parameter :: numdist=14,numquad=4,numbin=5,numthresh=3
       real, intent(in) :: outlon,outlat
       real    xoutlon,sdp,wdp
       real    ike(max_ike_cats)
-      real    vmaxwind,conv_ms_knots,xminmslp,xsfclon,xsfclat
-      integer intlon,intlat,output_fhr,intlon100,intlat100,maxstorm
-      integer :: ist, ifcsthour, ioiret
+      real    vmaxwind,conv_ms_knots,xminmslp
+      integer intlon,intlat,output_fhr,intlon100,intlat100
+      integer :: ist, ifcsthour
       character  basinid*2,clatns*1,clonew*1
 
 c     First convert all of the lat/lon values from reals into integers.
