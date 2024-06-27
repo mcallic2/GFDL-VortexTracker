@@ -10857,7 +10857,7 @@ c
       real    conv_ms_knots
       integer intlon(maxtime),intlat(maxtime)
       character  basinid*4
-      integer :: maxstorm, ifhmax, ioaret, ifh, ist
+      integer :: maxstorm, ifhmax, ifh, ist
 
 c     First convert all of the lat/lon values from reals into integers.
 c     These integer values must be 10x their real value (eg. 125.4 will
