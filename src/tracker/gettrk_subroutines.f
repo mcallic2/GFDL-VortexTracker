@@ -10192,7 +10192,6 @@ c
       
       implicit none 
       
-      type (datecard) inp
       type (trackstuff) trkrinfo
 
       real, intent(in) :: outlon,outlat
@@ -10208,7 +10207,7 @@ c
       integer idivg,imoistdivg,irh_800_600,irh_1000_925,iomega500
       integer vradius(3,4),icps_vals(3)
       integer imeanzeta(nlevgrzeta),igridzeta(nlevgrzeta)
-      integer :: ist, ifcsthour, maxstorm, ioaxret
+      integer :: ist, ifcsthour
       character  basinid*2,clatns*1,clonew*1,wcore_flag*1
       character comma_fill1n*27,comma_fill2n*44
 c
