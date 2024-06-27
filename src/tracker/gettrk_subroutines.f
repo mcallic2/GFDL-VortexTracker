@@ -17114,7 +17114,7 @@ c
       real      rising_sum_dvdr,declining_sum_dvdr,dvdr
       logical(1) valid_pt(imax,jmax)
       integer   imax,jmax
-      integer   igarret,bimct,ibiret1,ibiret2
+      integer   bimct,ibiret1,ibiret2
       integer   azimuth_ct,maxrmw_ix,rdist_ix,ir,idv_start,idv_end
       integer   rising_sum_dvdr_ct,declining_sum_dvdr_ct,kr,mr
       integer   idist,iazim,ird
