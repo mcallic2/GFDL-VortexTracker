@@ -30389,12 +30389,10 @@ c     LOCAL:
 
       implicit none
 
-      type (trackstuff) trkrinfo
       integer, allocatable :: point_ct(:,:)
-      integer   ist,ifh,imax,jmax,maxstorm
-      integer   z,zstart,zend,ipc,icmlret,i,j
+      integer   imax,jmax
+      integer   z,zstart,zend,ipc,i,j
       real      xmean_arr(imax,jmax)
-      real      xcenlon,xcenlat,dx,dy
       real      xmaxrh,xminrh
       logical(1) valid_pt(imax,jmax)
       character(*) :: clevstr,cvar
