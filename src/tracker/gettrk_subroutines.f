@@ -11592,7 +11592,6 @@ c
 
       implicit none
 
-      type (datecard) inp
 
       real, intent(in) :: outlon,outlat
       integer, parameter :: numdist=14,numquad=4,numbin=5,numthresh=3
