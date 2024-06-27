@@ -24334,7 +24334,7 @@ c
       real(kind=8) :: xmissing_val8
       logical(1) valid_pt(imax,jmax),readflag(nreadparms)
       logical(1) readgenflag(nreadgenparms)
-      logical(1) ::  need_to_flip_lats,need_to_flip_lons
+      logical(1) ::  need_to_flip_lats
       character*1  :: lbrdflag,match_check,match_zero_check
       character*30 :: chparm(nreadparms)
       character*30 :: chparm_cps(nreadcpsparms)
