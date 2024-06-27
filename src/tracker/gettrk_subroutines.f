@@ -9017,7 +9017,7 @@ c
       real       targlat,targlon,xintrp_val,dx,dy,tmp_targlon
       real       to,ta,d1,d2,d3,d4,z,eastlon
       integer    ie,iw,jn,js,ibiret,imax,jmax,level,nlev,bimct
-      integer    ie_hold,iw_hold,ifh
+      integer    ie_hold,iw_hold
 
       ibiret = 0
 
