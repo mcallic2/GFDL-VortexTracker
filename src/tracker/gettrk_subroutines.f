@@ -8594,21 +8594,18 @@ c
       implicit none
 
       type (trackstuff) trkrinfo
-      type (datecard) inp
 
       integer date_time(8)
       character (len=10) big_ben(3)
 
       integer imax,jmax,ist,ifh,maxstorm
-      integer iggdret,igdret,igrhret,igsvret
+      integer igdret,igrhret,igsvret
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real    clon(maxstorm,maxtime,maxtp)
-      real    clat(maxstorm,maxtime,maxtp)
       real    dx,dy,q850_smooth
       real    rh_1000_925_smooth,rh_800_600_smooth,omega500_smooth
       real    divg,moist_divg,re,ri,xsmoothval
       character :: already_computed_domain_wide_rh*1
-      logical(1) calcparm(maxtp,maxstorm),valid_pt(imax,jmax)
+      logical(1) valid_pt(imax,jmax)
       logical(1) readflag(nreadparms),readgenflag(nreadgenparms)
 c
       !----------------------------------------------------------------
