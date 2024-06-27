@@ -12093,7 +12093,6 @@ c
 
       implicit none
 
-      type (datecard) inp
 
       real, intent(in) :: outlon,outlat
       real    xoutlon,paramb,vtl_slope,vtu_slope
