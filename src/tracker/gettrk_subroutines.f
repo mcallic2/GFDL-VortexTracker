@@ -10706,7 +10706,7 @@ c
 c
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       integer intlon(maxtime),intlat(maxtime)
-      integer :: maxstorm, ifhmax, ioaret, ifh, ist
+      integer :: maxstorm, ifhmax, ifh, ist
 
 c     First convert all of the lat/lon values from reals into integers.
 c     These integer values must be 10x their real value (eg. 125.4 will
