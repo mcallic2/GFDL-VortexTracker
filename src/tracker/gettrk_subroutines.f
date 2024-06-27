@@ -30086,8 +30086,8 @@ c     LOCAL:
       implicit none
 
       type (trackstuff) trkrinfo
-      integer   ist,ifh,imax,jmax,maxstorm,igsvret
-      integer   imrhf,ichrret,icmlret,ip,igrhret
+      integer   ist,imax,jmax,igsvret
+      integer   imrhf,icmlret,ip
       real, allocatable :: mean_rh(:,:)
       real      re,ri,xsmoothval,xcenlon,xcenlat,dx,dy
       real      rh_1000_925_smooth,rh_800_600_smooth
