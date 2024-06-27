@@ -8788,14 +8788,11 @@ c
       implicit none
 
       type (trackstuff) trkrinfo
-      type (datecard) inp
 
       integer imax,jmax,ist,ifh,maxstorm
-      integer igdret,idvgf,idvcret,igsvret
+      integer idvgf,idvcret,igsvret
       real, allocatable :: divg_850(:,:)
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
-      real    clon(maxstorm,maxtime,maxtp)
-      real    clat(maxstorm,maxtime,maxtp)
       real    dx,dy,divg,xsmoothval,re,ri
       
       logical(1) calcparm(maxtp,maxstorm),valid_pt(imax,jmax)
