@@ -6935,7 +6935,6 @@ c       rdist     Radii (km) at which the winds will be evaluated
       integer  igfwret,i,j,numinterp,iq,ib,it,ii
       integer  jlatfix,ilonfix,npts,ibeg,iend,jbeg,jend,ngridint,ni,nj
       integer  igiret,idistbin,ipdfbin,pdf_ct_tot,maxstorm
-      logical(1) calcparm(maxtp,maxstorm)
       logical(1) valid_pt(imax,jmax)
       character  got_pdf*6
       character*2 :: cquad(4) = (/'NE','SE','SW','NW'/)
