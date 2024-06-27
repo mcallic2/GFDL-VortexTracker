@@ -31122,11 +31122,10 @@ c     ifamret  return code from this subroutine
       implicit none
 
       type (trackstuff) trkrinfo
-      type (cint_stuff) contour_info
       integer    date_time(8)
       integer    stormct,i,j,ibeg,iend,jbeg,jend,ix,jx,ixp1,ixm1
       integer    bskip,ibeg_sm,iend_sm,jbeg_sm,jend_sm
-      integer    ip,jp,maxstorm,jxp1,jxm1,ifamret,iclmret
+      integer    ip,jp,maxstorm,jxp1,jxm1,iclmret
       integer    icccret,igicwret,imax,jmax,ifh,totpts,kct
       integer    eligible_pts,isia,ipa,candidate_ct,ist,ict,iia,ija,imsa
       integer    icmrgret,cand_not_valid_ct,cand_masked_out_ct,ivsa
