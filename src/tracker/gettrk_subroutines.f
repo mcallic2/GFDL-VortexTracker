@@ -13034,7 +13034,6 @@ c
       implicit none
 
       type (tcvcard) stm
-      type (datecard) inp
       real       xlon,xlat
       integer :: ist, iovret
 c
