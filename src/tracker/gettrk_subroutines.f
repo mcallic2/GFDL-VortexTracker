@@ -7567,13 +7567,11 @@ c     sdp   Storm surge damage potential
       type (trackstuff) trkrinfo
 
       integer, parameter :: numdist=14,numquad=4
-      integer  npts,igisret,imax,jmax,ist,ifh,ilonfix,jlatfix
+      integer  npts,igisret,imax,jmax,ist,ilonfix,jlatfix
       integer  ibeg,jbeg,iend,jend,igiret,i,j,maxstorm,ii
-      real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real     ike(max_ike_cats)
       real     dx,dy,degrees,rads,ri,dell,xdist,vmag,xarea
       real     xsfclon,xsfclat,sdp,wdp
-      logical(1) calcparm(maxtp,maxstorm)
       logical(1) valid_pt(imax,jmax)
 c
       igisret = 0
