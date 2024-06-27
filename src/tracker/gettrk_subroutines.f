@@ -32900,8 +32900,8 @@ c              which GM-wrapping setting to use.
       character(*)  gm_wrap_flag
       integer, parameter :: numazim=24
       integer    imax,jmax,level,imbowret,nlev,iazim,i,j
-      integer    ibiret1,ibiret2,azimuth_ct,igvtret
-      integer    jnfix,jsfix,iefix,iwfix,bimct,ifh
+      integer    ibiret1,ibiret2,azimuth_ct
+      integer    jnfix,jsfix,iefix,iwfix,bimct
       real       vr(numazim),vt(numazim)
       real       dx,dy,ctlon,ctlat,rdist,bear,targlat,targlon
       real       xintrp_u,xintrp_v,grid_buffer,xmax_rdist_reached
