@@ -7564,7 +7564,6 @@ c     sdp   Storm surge damage potential
 
       implicit none
 
-      type (datecard) inp
       type (trackstuff) trkrinfo
 
       integer, parameter :: numdist=14,numquad=4
