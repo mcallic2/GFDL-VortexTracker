@@ -28511,7 +28511,7 @@ c
 c
       type (netcdfstuff) netcdfinfo
 
-      character :: ncfile*180,ncfile_has_hour0*1,match_check*1
+      character :: ncfile_has_hour0*1,match_check*1
       real(kind=4), allocatable :: temp_nc_time_vals_r4(:)
       real(kind=8), allocatable :: temp_nc_time_vals_r8(:)
       integer, intent(in)  :: ncfile_id
