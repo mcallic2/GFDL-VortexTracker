@@ -30224,7 +30224,6 @@ c     LOCAL:
 
       implicit none
 
-      type (trackstuff) trkrinfo
       real, parameter :: rd_over_rv=0.622
       real, parameter :: l_over_rv_water=5423.0
       real, parameter :: l_over_rv_ice=6139.0
@@ -30233,9 +30232,9 @@ c     LOCAL:
       real, parameter :: b=17.2694
       real, parameter :: t1=273.16
       real, parameter :: t2=35.86
-      integer   ist,ifh,imax,jmax,maxstorm,ichrret,ip,qix,tix,i,j
+      integer   imax,jmax,ip,qix,tix,i,j
       integer   z,x999ct,rhgt100ct
-      real      dx,dy,penv,es,qs,xminrh,xmaxrh
+      real      penv,es,qs,xminrh,xmaxrh
       logical(1) valid_pt(imax,jmax),readgenflag(nreadgenparms)
 c
       select case (ip)
