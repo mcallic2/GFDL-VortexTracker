@@ -15648,7 +15648,7 @@ c
       integer   num_r34_bins,good_quad_ct,valid_wind_ct,imax,jmax
       integer   ix_radii_beg,ix_radii_end,first_valid_ix,ifh,iprint
       integer   n_r34_iter,ifh99,ilevint,target_ix,idist,iquad
-      integer   holland_good_1_ct,holland_good_2_ct,i,n,iazim,igvtret
+      integer   holland_good_1_ct,holland_good_2_ct,i,n,iazim
       integer   num_bins_to_check,checkct,ihc,igrret,ibiret1,ibiret2
       integer   free_pass_ix,ist
       real, parameter :: r34_bin_width = 3.0  !width of radial bins(km)
