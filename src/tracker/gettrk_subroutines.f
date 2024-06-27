@@ -28169,7 +28169,6 @@ c
 c
       type (trackstuff) trkrinfo
       type (netcdfstuff) netcdfinfo
-      type (datecard) inp
 
       logical(1) :: need_to_flip_lats,need_to_flip_lons
       real      xhold
