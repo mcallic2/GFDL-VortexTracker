@@ -27177,7 +27177,7 @@ c
       type (gencard) tmpstorm(maxstorm_mg)
       type (trackstuff) trkrinfo
       logical(1) :: vit_file_exists
-      integer    iret,maxstorm
+      integer    iret
       integer    i,ii,lgvcard,numtcv,num_mod_vit,vitix,iga
 c------
 
