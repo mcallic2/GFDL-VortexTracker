@@ -12100,7 +12100,7 @@ c
       real    vmaxwind,conv_ms_knots,xminmslp
       integer intlon,intlat,output_fhr
       character  basinid*2,clatns*1,clonew*1
-      integer :: ist, ifcsthour, ioiret
+      integer :: ist, ifcsthour
 
 c     First convert all of the lat/lon values from reals into integers.
 c     These integer values must be 10x their real value (eg. 125.4 will
