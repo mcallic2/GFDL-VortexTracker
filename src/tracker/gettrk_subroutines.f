@@ -14720,7 +14720,7 @@ c      dimension iwork(257)
       real      rlonb,rlonc,rlatb,rlatc,vmaxwind
       real      pt_heading_rad,pt_heading,d
       integer, allocatable :: isortix(:)
-      integer   iwindix,ipoint,ifcsthr,igrct
+      integer   iwindix,ipoint,ifcsthr
       integer   quadct(4),vradius(3,4)
       integer, parameter  :: dp = selected_real_kind(12, 60)
       real (dp), allocatable :: dtemp(:)
