@@ -33391,7 +33391,6 @@ c              not if we just delete them now.
       implicit none
 
       type (trackstuff) trkrinfo
-      type (cint_stuff) contour_info
 
       integer    i,ir,iria,irja,irx,jrx,ix,jx,imax,jmax
       integer    nb,ibx,jby,iflip
@@ -34453,7 +34452,7 @@ c
       character  point_is_over_water*1
       character (*)  gm_wrap_flag
       integer, parameter :: numazim=8
-      integer  iazim,ibiret1,imax,jmax,ix,jx,iclmret,imct,bimct,ifh
+      integer  iazim,ibiret1,imax,jmax,ix,jx,iclmret,imct,bimct
       real     bear,targlat,targlon,xplon,yplat,rdist,xintrp_mask
       real     fract_land,dx,dy,xmask_sum
 c
