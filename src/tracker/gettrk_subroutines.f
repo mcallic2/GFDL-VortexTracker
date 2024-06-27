@@ -7890,7 +7890,6 @@ c            is for 200 mb.
       implicit none
 
       type (trackstuff) trkrinfo
-      type (datecard) inp
 
       character :: found_vt_ge_1_flag*1
       character (*)  gm_wrap_flag
@@ -7898,7 +7897,7 @@ c            is for 200 mb.
       integer u_cart_sum_ct(numlev),v_cart_sum_ct(numlev)
       integer max_dist_index(2)
       integer imax,jmax,ist,ifh,maxstorm,idist,azimuth_ct,iazim
-      integer level,ibiret1,ibiret2,bimct,igvtret,igsret,ilev
+      integer level,ibiret1,ibiret2,bimct,igsret,ilev
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real    clon(maxstorm,maxtime,maxtp)
       real    clat(maxstorm,maxtime,maxtp)
