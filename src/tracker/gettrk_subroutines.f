@@ -13287,7 +13287,7 @@ c     iotmret  return code from this subroutine
 
       implicit none
 c
-      integer   ifh,imax,jmax,iotmret,kf,igoret,iix,jjx,ipret
+      integer   ifh,imax,jmax,kf,igoret,iix,jjx,ipret
       integer   ifcsthour
       integer   kpds(200),kgds(200)
       logical(1) masked_outc(imax,jmax),lb(imax,jmax)
