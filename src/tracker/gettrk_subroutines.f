@@ -29869,7 +29869,7 @@ c     LOCAL:
       implicit none
 
       type (trackstuff) trkrinfo
-      integer   ist,ifh,imax,jmax,maxstorm,igsvret,npts,bskip,icut
+      integer   ist,imax,jmax,igsvret,npts,bskip,icut
       integer   ilonfix,jlatfix,ibeg,jbeg,iend,jend,igiret,icutmax
       integer   icount,ibret
       real      xarray(imax,jmax)
