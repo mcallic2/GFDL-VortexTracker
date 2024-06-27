@@ -22301,7 +22301,7 @@ c
       logical(1), allocatable :: lb(:)
       logical(1) valid_pt(imax,jmax),readflag(nreadparms)
       logical(1) readgenflag(nreadgenparms)
-      logical(1) ::  need_to_flip_lats,need_to_flip_lons
+      logical(1) ::  need_to_flip_lats
       logical(1) file_open
       logical :: unpack=.true.
       character*1 :: lbrdflag
