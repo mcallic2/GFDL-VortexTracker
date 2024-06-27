@@ -28788,8 +28788,8 @@ c
       character(*)  cmaxmin
       logical(1) valid_pt(imax,jmax)
       real       fxy(imax,jmax)
-      real       rlont,rlatt,xdum,gridpoint_maxmin
-      real       dx,dy,grid_maxlat,grid_minlat,grid_maxlon,grid_minlon
+      real       rlont,rlatt,gridpoint_maxmin
+      real       dx,dy,grid_maxlat,grid_minlon
 c
       call fix_latlon_to_ij (imax,jmax,dx,dy,fxy,cmaxmin
      &        ,valid_pt,rlont,rlatt
