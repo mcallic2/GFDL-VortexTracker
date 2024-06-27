@@ -9450,7 +9450,7 @@ c
       real angle,xlondiff,xlatdiff,opp_dist,hyp_dist,sin_value
       real cos_value,adj_dist,tmpangle,sin_angle,cos_angle
       real uvrcomp,vvrcomp,uvtcomp,vvtcomp,tmpcentlon
-      integer igvtret,ifh
+      integer ifh
 c
       call calcdist(centlon,centlat,xlon,xlat,hyp_dist,degrees)
 
