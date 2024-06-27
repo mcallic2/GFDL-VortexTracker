@@ -8795,7 +8795,7 @@ c
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real    dx,dy,divg,xsmoothval,re,ri
       
-      logical(1) calcparm(maxtp,maxstorm),valid_pt(imax,jmax)
+      logical(1) valid_pt(imax,jmax)
 c
       if (allocated(divg_850)) deallocate(divg_850)
       allocate (divg_850(imax,jmax),stat=idvgf)
