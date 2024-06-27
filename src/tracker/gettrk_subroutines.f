@@ -12777,7 +12777,7 @@ c     ioapret   integer return code from this subroutine
       real    xoutlon,vmaxwind,xminmslp,mslp_outp_adj,conv_ms_knots
       real    clon(maxstorm,maxtime,maxtp),clat(maxstorm,maxtime,maxtp)
       real    xval(maxtp)
-      integer ist,ifcsthour,maxstorm,ioapret,intmeanlon,intmeanlat
+      integer ist,ifcsthour,maxstorm,intmeanlon,intmeanlat
       integer ip,icc,output_fhr,k,intlonew,intlatns,ifh
       integer iclon(9),iclat(9),icxval(9)
       character :: icvalid(9)*1,clatns*1,clonew*1
