@@ -13517,7 +13517,7 @@ c
       integer   icutmax,istmspd,istmdir,bskip,ileadtime,ifcsthour
       integer   ifh,ist,npts,ilonfix,jlatfix,ibeg,jbeg,iend,jend
       integer   igiret,ignret,icut,iuret,ivret,ibarnct,n,ix1,ix2
-      integer   icount,imax,jmax,modelid,maxstorm
+      integer   icount,imax,jmax,maxstorm
       real      fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real      dist,distm,xincr,yincr,stmspd,stmdir,atan,arct,degrees
       real      barneswt,extrapwt,dtkm,dt,ucomp,vcomp,xdist,ydist,ydeg
