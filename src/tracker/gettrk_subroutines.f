@@ -30607,7 +30607,7 @@ c     storm    Contains the tcvitals for the storms (module def_vitals)
       type (trackstuff) trkrinfo
       type (cint_stuff) contour_info
 
-      integer       i,j,n,isstart,ifamret,ibeg,jbeg,iend,jend
+      integer       i,j,n,isstart,ibeg,jbeg,iend,jend
       integer       ifh,maxstorm,imax,jmax,itemp,ifgcret
       integer       stormct,oldstormct,mm
       logical(1)    valid_pt(imax,jmax),masked_out(imax,jmax)
