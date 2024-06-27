@@ -28889,9 +28889,9 @@ c
       character(*)  cmaxmin,ccall,stopcheck
       logical(1) valid_pt(imax,jmax)
       real       fxy(imax,jmax)
-      real       parmlon,parmlat,xdataval,gridpoint_maxmin
+      real       parmlon,parmlat,gridpoint_maxmin
       real       xplon,yplat,dmin,dmax,dx,dy,grdspc
-      real       grid_maxlat,grid_minlat,grid_maxlon,grid_minlon
+      real       grid_maxlat,grid_minlon
 
       ifilret = 0
 
