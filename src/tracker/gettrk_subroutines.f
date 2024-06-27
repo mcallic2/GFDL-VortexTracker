@@ -9341,7 +9341,7 @@ c
       integer   sortindex(maxstorm)
       integer, parameter  :: dp = selected_real_kind(12, 60)
       real (dp), allocatable ::  prstemp(:)
-      integer :: issret, imode, ist, iva, iwa
+      integer :: imode, ist, iva, iwa
 c
       allocate (prstemp(maxstorm),stat=iva)
       allocate (iwork(maxstorm),stat=iwa)
