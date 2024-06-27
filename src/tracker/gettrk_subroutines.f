@@ -20141,9 +20141,8 @@ c     the atcfunix file (the "atcf_gen" file).
       implicit none
 
       type (trackstuff) trkrinfo
-      type (datecard) inp
 
-      logical(1) readflag(14),valid_pt(imax,jmax),compflag
+      logical(1) valid_pt(imax,jmax),compflag
       character  cvort_maxmin*3,csmooth_var*8
       real     fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real     gridpoint_maxmin,dx,dy,re,ri,xsmoothval
