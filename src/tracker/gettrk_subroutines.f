@@ -18393,7 +18393,7 @@ c
       real dell,fmax,fmin,grid_buffer
       real circumference,arclength
       real circul_disk,xmax_circul_disk,xmin_circul_disk
-      integer ibiret1,ibiret2,igvtret,azimuth_ct,npts
+      integer ibiret1,ibiret2,azimuth_ct,npts
       integer igibret,bimct,ifh
       integer nhalf,bskip1,bskip2,iskip,nlev
       integer ilonfix,jlatfix,ibeg,iend,jbeg,jend,i,j,k,iix,jix
