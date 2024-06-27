@@ -15644,7 +15644,7 @@ c
       integer, parameter :: num_qtr_azim = 90,numquad = 4
       integer, parameter :: dp = selected_real_kind(12, 60)
       integer   isortix(num_qtr_azim),vradius(3,4)
-      integer   iwindix,ifcsthr,igrct,azimuth_ct,bimct
+      integer   iwindix,ifcsthr,azimuth_ct,bimct
       integer   num_r34_bins,good_quad_ct,valid_wind_ct,imax,jmax
       integer   ix_radii_beg,ix_radii_end,first_valid_ix,ifh,iprint
       integer   n_r34_iter,ifh99,ilevint,target_ix,idist,iquad
@@ -15671,7 +15671,6 @@ c
       real      one_minus_free_pass_remainder
       real, intent(in) :: axi_rmw
       real ::   windthresh(3) = (/17.5,25.7,32.9/)
-      character cstormid*3
       character :: need_to_expand_r34(4)*1
       character :: holland_good_1_flag*1,holland_good_2_flag*1
       character :: free_pass*1
