@@ -17522,7 +17522,6 @@ c
 
       implicit none
 
-      type (datecard) inp
 
       real      clon(maxstorm,maxtime,maxtp),temp_clon(maxtp)
       real      clat(maxstorm,maxtime,maxtp),temp_clat(maxtp)
