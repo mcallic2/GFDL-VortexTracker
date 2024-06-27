@@ -8491,10 +8491,9 @@ c     trkrinfo derived type detailing user-specified grid info
       implicit none
 
       type (trackstuff) trkrinfo
-      type (datecard) inp
 
       integer imax,jmax,ist,ifh,maxstorm
-      integer igsvret,igsstret
+      integer igsvret
       real    fixlon(maxstorm,maxtime),fixlat(maxstorm,maxtime)
       real    dx,dy,re,ri,xsmoothval,sst_smooth
       logical(1) valid_pt(imax,jmax)
