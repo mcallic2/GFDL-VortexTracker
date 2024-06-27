@@ -9762,7 +9762,6 @@ c
 
       implicit none
 
-      type (datecard) inp
       type (trackstuff) trkrinfo
 
       real, intent(in) :: outlon,outlat
