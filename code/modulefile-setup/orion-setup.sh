@@ -10,6 +10,7 @@ module load zlib
 module load hdf5
 module load netcdf-fortran
 module load netcdf-c
+module load python
 
 module load libpng
 module load jasper

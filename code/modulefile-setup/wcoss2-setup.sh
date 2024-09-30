@@ -14,6 +14,7 @@ module load jasper/2.0.25
 
 module load hdf5/1.10.6
 module load netcdf/4.7.4
+module load python
 
 module load g2/3.4.5
 module load w3emc/2.9.1

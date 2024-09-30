@@ -7,6 +7,7 @@ module load cmake
 module load hdf5
 module load netcdf-c
 module load netcdf-fortran
+module load python
 
 module load libpng
 module load jasper

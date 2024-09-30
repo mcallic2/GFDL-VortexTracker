@@ -5,6 +5,7 @@ module load stack-intel/2023.1.0
 
 module load cray-hdf5
 module load cray-netcdf
+module load python
 
 module load libpng
 module load jasper

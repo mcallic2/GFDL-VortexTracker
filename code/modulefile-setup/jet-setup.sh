@@ -10,6 +10,7 @@ module load szip
 
 module load hdf5
 module load netcdf
+module load python
 module load jasper
 module load zlib
 module load libpng
