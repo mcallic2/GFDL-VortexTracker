@@ -2,7 +2,7 @@ from netCDF4 import Dataset
 import numpy as np
 
 # create file
-ncfile = Dataset('testfile.nc',mode='w')
+ncfile = Dataset('testing_input_data.nc',mode='w')
 
 # create dimensions
 lat_dim = ncfile.createDimension('grid_yt', 73)
