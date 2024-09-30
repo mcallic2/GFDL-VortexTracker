@@ -53,3 +53,4 @@ target_link_libraries(calccorr.x PRIVATE subroutine_lib)
 
 # unit test suit
 add_test(test_calccorr ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/calccorr.x)
+add_test(run_python_script ${CMAKE_SOURCE_DIR}/src/tracker/test_tracker/build_testing_data.sh)
