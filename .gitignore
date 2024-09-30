@@ -34,6 +34,7 @@
 **/cmake_install.cmake
 **/install_manifest.txt
 **/CMakeFiles/
+**/Testing/
 **/CTestTestfile.cmake
 **/Makefile
 **/*.cbp
