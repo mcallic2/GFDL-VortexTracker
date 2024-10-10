@@ -57,7 +57,7 @@ Before running a few steps need to be taken:
 * Edit tcvit_date file
 * Edit runscript
 
-**Note:** This runscript is configured for bash shells, if the user is using a different shell please change necessary variables <br />
+**Note:** This runscript is configured for bash shells, if the user is using a different shell please change necessary varibales <br />
 Also, note that the runscript only works for netcdf data for the time being. <br /> <br />
 
 
