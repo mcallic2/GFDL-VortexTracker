@@ -794,8 +794,9 @@ c       First, allocate the working data arrays....
           print *,'in beginning of tracker, imax= ',imax,' jmax= ',jmax
         endif
 
-c       Initialize all readflags to NOT FOUND for this forecast time,
-c       then call subroutine to read data for this forecast time.
+c       Initialize all data arrays to -9999 and all readflags to 
+c       NOT FOUND for this forecast time, then call subroutine to read 
+c       data for this forecast time.
 
         zeta  = -9999.0 
         u     = -9999.0
@@ -1016,12 +1017,23 @@ c       vorticity calcparms to TRUE for all storms for now.
 
           if (readflag(ivort)) then
           
-            call subtract_cor (imax,jmax,dy,ivort)
+            if (verb >= 3) then
+              print *,' '
+              print *,'Calling subtract_cor, ivort= ',ivort
+            endif
+
+            call subtract_cor (imax,jmax,dy,ivort,valid_pt)
             
             do jj=1,maxstorm
               calcparm(ivort,jj) = .TRUE.
             enddo
           else
+
+            if (verb >= 3) then
+              print *,' '
+              print *,'Computing zeta explicitly, ivort= ',ivort
+            endif
+
             if (ivort == 1) then
               if (readflag(3) .and. readflag(4)) then
                 call rvcal (imax,jmax,dx,dy,ivort,valid_pt)
@@ -4211,7 +4223,7 @@ c
         endif
       else
 
-        if (opening_mask /= 'y') then
+        if (opening_mask == 'y') then
           print *,' '
           print *,'!!! ERROR: In open_grib_files, opening_mask=y '
           print *,'!!! which means that we are trying to open up an' 
@@ -4235,9 +4247,9 @@ c
         print *,'gopen_g_file= ',gopen_g_file
         print *,'gopen_i_file= ',gopen_i_file
 
-        write (6,81) gopen_g_file,gopen_i_file
-   81   format (1x,'tpm gopen_g_file= ...',a<nlen1>
-     &         ,'...  gopen_i_file= ...',a<nlen2>,'...')
+c        write (6,81) gopen_g_file,gopen_i_file
+c   81   format (1x,'tpm gopen_g_file= ...',a<nlen1>
+c     &         ,'...  gopen_i_file= ...',a<nlen2>,'...')
 
         print *,'gopen_g_file= ',gopen_g_file,'....'
         print *,'gopen_i_file= ',gopen_i_file,'....'
@@ -9299,6 +9311,27 @@ c        endif
 
 cstr      print '(2x,4(a4,f8.2))','  d1= ',d1*z,'  d2= ',d2*z
 cstr     &                       ,'  d3= ',d3*z,' d4= ',d4*z
+
+      if ((d1 >-999.01 .and. d1 <-998.99)   .or.
+     &    (d1 >-9999.01 .and. d1 <-9998.99) .or.
+     &    (d2 >-999.01 .and. d2 <-998.99)   .or.
+     &    (d2 >-9999.01 .and. d2 <-9998.99) .or.
+     &    (d3 >-999.01 .and. d3 <-998.99)   .or.
+     &    (d3 >-9999.01 .and. d3 <-9998.99) .or.
+     &    (d4 >-999.01 .and. d4 <-998.99)   .or.
+     &    (d4 >-9999.01 .and. d4 <-9998.99)) then
+          ! This is a patch.  If the logical bitmap array, i.e.,
+          ! the valid_pt array, is indicating that this is a valid
+          ! point, but the actual data at this point is either -999
+          ! or -9999, then this means that we have likely
+          ! encountered a bug that has occurred with HWRF and MPAS
+          ! data in which there is an inconsistency in the grid
+          ! edges (and, therefore, bitmaps) among different
+          ! variables.  So if this happens, simply ignore this point
+          ! and cycle the loop.
+        ibiret = 85
+        return
+      endif
 
 c     -------------------------------------------------------------
 c     Compute the interpolated value
@@ -14483,6 +14516,7 @@ c
       real      ucomp,vcomp,xdist,ydist,ydeg,dt,extraplat
       real      cosfac
       real      dtkm
+      character(len=1) :: in_grid, extrap_flag
 c
       in_grid = 'n'
       extrap_flag = 'y'
@@ -16758,7 +16792,7 @@ c                model grids with coarse resolution (ECMWF 2.5 degree).
       type (trackstuff) trkrinfo
 
       real      radmaxwind,degrees,dx,dy,rmax,xcenlon,xcenlat,vmax
-      real      cosfac,dist,vmag
+      real      cosfac,dist,vmag,uval,vval
       logical(1) valid_pt(imax,jmax)
       integer   jbeg_hold,jend_hold,bimect,bimwct,levsfc,imax,jmax
       integer   igmwret,ilonfix,jlatfix,numipts,numjpts,i,j,ip
@@ -17006,6 +17040,26 @@ c     that we are sure radmaxwind is within those points.
           if (dist > radmaxwind) cycle
 
           if (valid_pt(ip,j)) then
+
+            uval = u(ip,j,levsfc)
+            vval = v(ip,j,levsfc)
+
+            if ((uval >-999.01 .and. uval <-998.99) .or.
+     &          (vval >-999.01 .and. vval <-998.99) .or.
+     &          (uval >-9999.01 .and. uval <-9998.99) .or.
+     &          (vval >-9999.01 .and. vval <-9998.99)) then
+              ! This is a patch.  If the logical bitmap array, i.e.,
+              ! the valid_pt array, is indicating that this is a valid
+              ! point, but the actual data at this point is either -999
+              ! or -9999, then this means that we have likely
+              ! encountered a bug that has occurred with HWRF and MPAS
+              ! data in which there is an inconsistency in the grid
+              ! edges (and, therefore, bitmaps) among different
+              ! variables.  So if this happens, simply ignore this point
+              ! and cycle the iloop.
+              cycle iloop
+            endif
+
             vmag = sqrt (u(ip,j,levsfc)**2  + v(ip,j,levsfc)**2)
             if (vmag > vmax) then
               vmax = vmag
@@ -17035,7 +17089,8 @@ c     that we are sure radmaxwind is within those points.
       endif
 
       if ( verb .ge. 3 ) then
-        print *,'At end of get_max_wind, vmax= ',vmax,' rmax= ',rmax
+        print *,'At end of get_max_wind, vmax= ',vmax,' m/s   rmax= '
+     &         ,rmax,' nm'
       endif
 
       return
@@ -21194,12 +21249,12 @@ c     subroutine has to calculate distances (for a global 1 deg grid,
 c     the number of loop iterations is reduced from 65160 to somewhere
 c     around 600).
 c
-c     NOTE: This subroutine will immediately exit with a non-zero
-c     return code if it tries to access a grid point that does not have
-c     valid data.  This would happen in the case of a regional grid, if
-c     you try to access a point near the edge of the grid (remember that
-c     because of the interpolation for the regional grids, there will be
-c     areas around the edges that have no valid data).
+c     NOTE: This subroutine will ignore the data at grid points where 
+c     there is no valid data.  This would happen in the case of a
+c     regional grid, if you try to access a point near the edge of the
+c     grid (remember that because of the interpolation for the regional
+c     grids, there will be areas around the edges that have no valid
+c     data).
 c
 c     INPUT:
 c     flon    Lon value for center point about which barnes anl is done
@@ -21253,8 +21308,8 @@ c     --------------------------
 
       icount = 0
 
-      do jix=jjbeg,jjend,bskip
-        do iix=iibeg,iiend,bskip
+      jloop: do jix=jjbeg,jjend,bskip
+        iloop: do iix=iibeg,iiend,bskip
 
           i = iix
           j = jix
@@ -21297,18 +21352,21 @@ c     --------------------------
 
           call calcdist(flon,flat,rlon(i),rlat(j),dist,degrees)
 
-          if (dist .gt. ri) cycle
+          if (dist .gt. ri) cycle iloop
 
           if (defined_pt(i,j)) then
-            if (fxy(i,j) >-999.01 .and. fxy(i,j) <-998.99) then
-              ! This is a patch.  Even though this (i,j) is a valid
-              ! point, its zeta value has been set to -999 because a
-              ! neighboring point in subroutine  rvcal was found
-              ! to be out of the grid boundaries.  This also prevents
-              ! -999 values for MSLP at grid edges in HWRF from 
-              ! getting included in the mean calculation, a problem
-              ! diagnosed in October, 2020.
-              cycle
+            if ((fxy(i,j) >-999.01 .and. fxy(i,j) <-998.99) .or.
+     &          (fxy(i,j) >-9999.01 .and. fxy(i,j) <-9998.99)) then
+              ! This is a patch.  If the logical bitmap array, i.e.,
+              ! the defined_pt array, is indicating that this is a valid
+              ! point, but the actual data at this point is either -999
+              ! or -9999, then this means that we have likely
+              ! encountered a bug that has occurred with HWRF and MPAS
+              ! data in which there is an inconsistency in the grid
+              ! edges (and, therefore, bitmaps) among different
+              ! variables.  So if this happens, simply ignore this point
+              ! and cycle the loop.
+              cycle iloop
             endif
             wt   = exp(-1.0*dist*dist/res)
             wts  = wts + wt
@@ -21336,8 +21394,8 @@ carw           return
             endif
           endif
  
-        enddo
-      enddo
+        enddo iloop
+      enddo jloop
  
       if (wts > 1.0E-5) then
          favg = favg/wts
@@ -21469,14 +21527,17 @@ c     --------------------------
 
           if (defined_pt(i,j)) then
             if (lsmask(i,j) < 0.5) then
-              if (fxy(i,j) >-999.01 .and. fxy(i,j) <-998.99) then
-                ! This is a patch.  Even though this (i,j) is a valid
-                ! point, its sst value has been set to -999 because a
-                ! neighboring point was found
-                ! to be out of the grid boundaries.  This also prevents
-                ! -999 values for MSLP at grid edges in HWRF from 
-                ! getting included in the mean calculation, a problem
-                ! diagnosed in October, 2020.
+              if ((fxy(i,j) >-999.01 .and. fxy(i,j) <-998.99) .or.
+     &            (fxy(i,j) >-9999.01 .and. fxy(i,j) <-9998.99)) then
+                ! This is a patch.  If the logical bitmap array, i.e.,
+                ! the defined_pt array, is indicating that this is a
+                ! valid point, but the actual data at this point is 
+                ! either -999 or -9999, then this means that we have
+                ! likely encountered a bug that has occurred with HWRF 
+                ! and MPAS data in which there is an inconsistency in
+                ! the grid edges (and, therefore, bitmaps) among
+                ! different variables.  So if this happens, simply
+                ! ignore this point and cycle the loop.
                 cycle
               endif
               seact = seact + 1
@@ -22034,7 +22095,7 @@ c
 c-----------------------------------------------------------------------
 c
 c-----------------------------------------------------------------------
-      subroutine subtract_cor (imax,jmax,dy,level)
+      subroutine subtract_cor (imax,jmax,dy,level,valid_pt)
 c
 c     ABSTRACT: This subroutine  subtracts out the coriolis parameter
 c     from the vorticity values.  It is needed because at the original
@@ -22046,13 +22107,23 @@ c
       implicit none
 
       integer :: i,j,imax,jmax,level
-      real    :: dy,coriolis,rlat
+      real    :: dy,coriolis,rlat,zval
+      logical(1) :: valid_pt(imax,jmax)
 c
       do j=1,jmax
         rlat = glatmax - ((j-1) * dy)
         coriolis = 2. * omega * sin(rlat*dtr) 
         do i=1,imax
-          zeta(i,j,level) = zeta(i,j,level) - coriolis
+          if (valid_pt(i,j)) then
+            zval = zeta(i,j,level)
+            if ((zval >-999.01 .and. zval <-998.99) .or.
+     &          (zval >-9999.01 .and. zval <-9998.99)) then
+              continue ! keep zeta value at initialized value of -999
+                       ! or -9999
+            else
+              zeta(i,j,level) = zeta(i,j,level) - coriolis
+            endif
+          endif
         enddo
       enddo
 c
@@ -25274,7 +25345,7 @@ c     tracker was compiled in.
         enddo
       elseif (xtype == 6) then
         ! Read data into an 8-byte double real array
-        status = nf_get_var_double (ncid,var1id,var1)
+        status = nf_get_var_double (ncid,var1id,real(var1,kind=8))
         if (status .ne. NF_NOERR) call handle_netcdf_err(status)
         do i = 1,nmax
           var1(i) = readvar8(i)
@@ -29868,7 +29939,8 @@ c     Abstract of subroutine  get_next_ges for further details.
       if (verb >= 3) then
         print *,' '
         print *,' In get_smooth_value_at_pt for cvar= ',cvar
-        print *,' *** AFTER *** call to get_ij_bounds'
+        print *,' *** AFTER *** call to get_ij_bounds for '
+        print *,' boundaries of barnes analysis.'
         print *,' npts= ',npts,' ri= ',ri
         print *,' imax= ',imax,' jmax= ',jmax
         print *,' dx= ',dx,' dy= ',dy
@@ -29890,20 +29962,6 @@ c     Abstract of subroutine  get_next_ges for further details.
         endif
         igsvret = 92
         return
-      endif
-
-      if (verb >= 3) then
-        print *,' '
-        print *,' +++ In get_smooth_value_at_pt after call'
-        print *,'     to get_ij_bounds getting bounds for '
-        print *,'     the  barnes analysis...'
-        print *,'     cvar= ',cvar
-        print *,'     glatmax= ',glatmax,'  glatmin= ',glatmin
-        print *,'     glonmax= ',glonmax,'  glonmin= ',glonmin
-        print *,'     xcenlon= ',xcenlon,'  xcenlat= ',xcenlat
-        print *,'     ilonfix= ',ilonfix,'  jlatfix= ',jlatfix
-        print *,'     ibeg= ',ibeg,'  iend= ',iend
-        print *,'     jbeg= ',jbeg,'  jend= ',jend
       endif
 
       ! Since we are only doing the  barnes analysis centered at one
