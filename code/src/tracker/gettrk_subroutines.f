@@ -30077,7 +30077,7 @@ c
           ! This loop starts at 2 because the first RH variable is
           ! the 2nd variable in the list of genesis variables.
           call compute_rh_from_q (ist,ifh,imax,jmax,dx,dy,ip
-     &                  ,valid_pt,maxstorm,trkrinfo,readgenflag
+     &                  ,valid_pt,maxstorm,readgenflag
      &                  ,ichrret)
         enddo
         already_computed_domain_wide_rh = 'y'
@@ -30148,7 +30148,7 @@ c----------------------------------------------------------------------
 c
 c----------------------------------------------------------------------
       subroutine compute_rh_from_q (ist,ifh,imax,jmax,dx,dy,ip
-     &                  ,valid_pt,maxstorm,trkrinfo,readgenflag
+     &                  ,valid_pt,maxstorm,readgenflag
      &                  ,ichrret)
 c
 c     ABSTRACT: This routine computes relative humidity across a full
@@ -30183,7 +30183,7 @@ c     LOCAL:
 
       implicit none
 
-      type (trackstuff) trkrinfo
+      !type (trackstuff) trkrinfo
       real, parameter :: rd_over_rv=0.622
       real, parameter :: l_over_rv_water=5423.0
       real, parameter :: l_over_rv_ice=6139.0

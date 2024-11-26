@@ -14,7 +14,7 @@ set(tracker_src
 
 add_executable(gettrk.x gettrk_main.f ${tracker_src})
 
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O2 -fp-model precise -i4 -r8")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O0 -fp-model precise -i4 -r8 -debug")
 
 target_link_libraries(
   gettrk.x
@@ -48,8 +48,56 @@ target_link_libraries(
 # create test executables
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/src/tracker/exec) # put any build executables in exec directory
 
-add_executable(calccorr.x test_tracker/test_calccorr.F90)
-target_link_libraries(calccorr.x PRIVATE subroutine_lib)
+add_executable(test_getcorr.x test_tracker/test_getcorr.F90)
+target_link_libraries(test_getcorr.x PRIVATE subroutine_lib)
 
-# unit test suit
-add_test(test_calccorr ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/calccorr.x)
+add_executable(test_is_it_a_storm.x test_tracker/test_is_it_a_storm.F90)
+target_link_libraries(test_is_it_a_storm.x PRIVATE subroutine_lib)
+
+add_executable(test_get_sfc_center.x test_tracker/test_get_sfc_center.F90)
+target_link_libraries(test_get_sfc_center.x PRIVATE subroutine_lib)
+
+add_executable(test_distbear.x test_tracker/test_distbear.F90)
+target_link_libraries(test_distbear.x PRIVATE subroutine_lib)
+
+add_executable(test_wtavrg.x test_tracker/test_wtavrg.F90)
+target_link_libraries(test_wtavrg.x PRIVATE subroutine_lib)
+
+add_executable(test_wtavrg_lon.x test_tracker/test_wtavrg_lon.F90)
+target_link_libraries(test_wtavrg_lon.x PRIVATE subroutine_lib)
+
+add_executable(test_avgcalc.x test_tracker/test_avgcalc.F90)
+target_link_libraries(test_avgcalc.x PRIVATE subroutine_lib)
+
+add_executable(test_stdevcalc.x test_tracker/test_stdevcalc.F90)
+target_link_libraries(test_stdevcalc.x PRIVATE subroutine_lib)
+
+add_executable(test_calc_vmag.x test_tracker/test_calc_vmag.F90)
+target_link_libraries(test_calc_vmag.x PRIVATE subroutine_lib)
+
+add_executable(test_calcdist.x test_tracker/test_calcdist.F90)
+target_link_libraries(test_calcdist.x PRIVATE subroutine_lib)
+
+add_executable(test_subtract_cor.x test_tracker/test_subtract_cor.F90)
+target_link_libraries(test_subtract_cor.x PRIVATE subroutine_lib)
+
+add_executable(test_rvcal.x test_tracker/test_rvcal.F90)
+target_link_libraries(test_rvcal.x PRIVATE subroutine_lib)
+
+add_executable(test_compute_rh_from_q.x test_tracker/test_compute_rh_from_q.F90)
+target_link_libraries(test_compute_rh_from_q.x PRIVATE subroutine_lib)
+
+# unit test suite
+add_test(test_getcorr ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_getcorr.x)
+add_test(test_is_it_a_storm ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_is_it_a_storm.x)
+add_test(test_get_sfc_center ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_get_sfc_center.x)
+add_test(test_distbear ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_distbear.x)
+add_test(test_wtavrg ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_wtavrg.x)
+add_test(test_wtavrg_lon ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_wtavrg_lon.x)
+add_test(test_avgcalc ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_avgcalc.x)
+add_test(test_stdevcalc ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_stdevcalc.x)
+add_test(test_calc_vmag ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_calc_vmag.x)
+add_test(test_calcdist ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_calcdist.x)
+add_test(test_subtract_cor ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_subtract_cor.x)
+add_test(test_rvcal ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_rvcal.x)
+add_test(test_compute_rh_from_q ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_compute_rh_from_q.x)
