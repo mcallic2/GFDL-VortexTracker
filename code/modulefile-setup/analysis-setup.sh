@@ -1,5 +1,7 @@
 # set up module environment on ppan
 
+module use /app/spack/2024.02/modulefiles/linux-rhel8-x86_64
+
 module load intel-oneapi-compilers
 
 module load cmake
