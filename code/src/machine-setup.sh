@@ -4,7 +4,8 @@
 
 # declare target variable (i.e. which system user is on)
 target=""
-echo $HOSTNAME
+mynode=$HOSTNAME
+echo $mynode
 
 # create arrays with elements of every known login-node for each system
 analysis=("an001" "an002" "an007" "an008" "an009" "an010" "an011" "an012" "an014" \
