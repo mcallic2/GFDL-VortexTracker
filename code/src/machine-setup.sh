@@ -42,11 +42,10 @@ for i in "${analysis[@]}"; do
     echo $target
     return 0
   fi
-done
 echo "Tracker will only compile on nodes with RHEL8"
 echo "Please switch to upgraded node"
 return 1
-
+done
 
 for i in "${!gaea[@]}"; do
   if [ "${gaea[$i]}" == $HOSTNAME ]; then
