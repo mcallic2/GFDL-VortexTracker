@@ -32,13 +32,21 @@ wcoss2=("dlogin01" "dlogin02" "dlogin03" "dlogin04" "dlogin05" "dlogin06" "dlogi
         "clogin01" "clogin02" "clogin03" "clogin04" "clogin05" "clogin06" "clogin07" "clogin08" "clogin09")
 
 # loop through each system array for a matching login-node to set target = to the correct machine
-for i in "${!analysis[@]}"; do
-  if [ "${analysis[$i]}" == $HOSTNAME ]; then
+
+# tracker will only compile on upgraded RHEL8 nodes for the moment,
+# this will be updated when all nodes have been switched to RHEL8 OS
+for i in "${analysis[@]}"; do
+  if [ "$i" == $mynode ]; then
     source $MODULESHOME/init/bash
     target=analysis
     echo $target
+    return 0
   fi
 done
+echo "Tracker will only compile on nodes with RHEL8"
+echo "Please switch to upgraded node"
+return 1
+
 
 for i in "${!gaea[@]}"; do
   if [ "${gaea[$i]}" == $HOSTNAME ]; then
