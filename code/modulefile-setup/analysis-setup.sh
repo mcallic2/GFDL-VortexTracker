@@ -21,4 +21,4 @@ module load w3emc
 module load nco
 module load cdo
 
-export ncdump=/app/spack/2023.02/linux-rhel7-x86_64/intel-2021.7.1/netcdf-c/4.9.2-pvuitvtd4ixig2ldwtx2qlqkkefh4ora/bin/ncdump
+export ncdump=/app/spack/2024.02/linux-rhel8-x86_64/oneapi-2024.1.0/netcdf-c/4.9.2-x3z2nqyag7fyz5pyepvwge5ldeeez5di/bin/ncdump
