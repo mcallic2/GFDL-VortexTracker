@@ -9,7 +9,7 @@ echo $HOSTNAME
 # create arrays with elements of every known login-node for each system
 analysis=("an001" "an002" "an007" "an008" "an009" "an010" "an011" "an012" "an014" \
           "an101" "an102" "an103" "an104" "an105" "an106" "an107" "an108" "an200" \
-          "an201" "an202" "an203" "an204" "an205" "an206" "an207" "an210")
+          "an201" "an202" "an203" "an204" "an205" "an206" "an207" "an210" "an211")
 
 gaea=("gaea" \
       "gaea51" "gaea52" "gaea53" "gaea54" "gaea55" "gaea56" "gaea57" "gaea58" \
@@ -25,14 +25,24 @@ orion=("orion-login-1.hpc.msstate.edu" "orion-login-2.hpc.msstate.edu" \
 hercules=("hercules-login-1.hpc.msstate.edu" "hercules-login-2.hpc.msstate.edu" \
           "hercules-login-3.hpc.msstate.edu" "hercules-login-4.hpc.msstate.edu")
 
-#wcoss2= this will have to be done when I have access to wcoss2
+# wcoss2 will be saved under the same target name regardless if on dogwood or cactus
+wcoss2=("dlogin01" "dlogin02" "dlogin03" "dlogin04" "dlogin05" "dlogin06" "dlogin07" "dlogin08" "dlogin09" \
+        "clogin01" "clogin02" "clogin03" "clogin04" "clogin05" "clogin06" "clogin07" "clogin08" "clogin09")
 
 # loop through each system array for a matching login-node to set target = to the correct machine
 for i in "${!analysis[@]}"; do
   if [ "${analysis[$i]}" == $HOSTNAME ]; then
     source $MODULESHOME/init/bash
-    target=analysis
-    echo $target
+    if  [ $HOSTNAME == "an001" ] || [ $HOSTNAME == "an002" ] || [ $HOSTNAME == "an009" ] || [ $HOSTNAME == "an010" ] || \
+        [ $HOSTNAME == "an011" ] || [ $HOSTNAME == "an012" ] || [ $HOSTNAME == "an101" ] || [ $HOSTNAME == "an102" ] || \
+        [ $HOSTNAME == "an103" ] || [ $HOSTNAME == "an104" ] || [ $HOSTNAME == "an105" ] || [ $HOSTNAME == "an106" ] || \
+        [ $HOSTNAME == "an201" ] || [ $HOSTNAME == "an210" ]; then
+      target=analysisRHEL8
+      echo $target
+    else
+      target=analysisRHEL7
+      echo $target
+    fi
   fi
 done
 
@@ -75,3 +85,12 @@ for i in "${!hercules[@]}"; do
     echo $target
   fi
 done
+
+for i in "${!wcoss2[@]}"; do
+  if [ "${wcoss2[$i]}" == $HOSTNAME ]; then
+    source $MODULESHOME/init/bash
+    target=wcoss2
+    echo $target
+  fi
+done
+
