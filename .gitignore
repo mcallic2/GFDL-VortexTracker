@@ -29,6 +29,7 @@
 *.out
 *.app
 
+# CMake
 **/cmake-build-debug
 **/CMakeCache.txt
 **/cmake_install.cmake
@@ -36,9 +37,11 @@
 **/CMakeFiles/
 **/CTestTestfile.cmake
 **/Makefile
+**/Testing/
 **/*.cbp
 **/CMakeScripts
 **/compile_commands.json
+*.cmake
 
 include/divisible/*
 
