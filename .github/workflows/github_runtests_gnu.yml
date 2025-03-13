@@ -23,5 +23,6 @@ jobs:
         make
  #       ctest
     - name: Run tests
-      working-directory: ./build
-      run: ctest
+      run: |
+        cd build
+        ctest
