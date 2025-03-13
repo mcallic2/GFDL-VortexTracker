@@ -21,6 +21,6 @@ jobs:
         mkdir -p build && cd build
         cmake -DCMAKE_PREFIX_PATH="/opt/views/view/" ..
         make
-        ctest --verbose
+        ctest
     #- name: Run tests
     #  run:  make test
