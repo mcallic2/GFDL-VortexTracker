@@ -14,13 +14,14 @@ set(tracker_src
 
 add_executable(gettrk.x gettrk_main.f ${tracker_src})
 
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O0 -fp-model precise -i4 -r8 -debug")
+# add if statement in case user is using gcc
+if(CMAKE_Fortran_COMPILER_ID MATCHES "^(Intel)$")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O2 -fp-model precise -i4 -r8")
+endif()
 
 target_link_libraries(
   gettrk.x
   g2::g2_d
-  bacio::bacio_4
-  w3emc::w3emc_d
   NetCDF::NetCDF_Fortran
   ${JASPER_LIBRARIES}
   ${PNG_LIBRARIES})
@@ -37,8 +38,6 @@ add_library(subroutine_lib ${tracker_src})
 target_link_libraries(
   subroutine_lib
   g2::g2_d
-  bacio::bacio_4
-  w3emc::w3emc_d
   NetCDF::NetCDF_Fortran
   ${JASPER_LIBRARIES}
   ${PNG_LIBRARIES})
