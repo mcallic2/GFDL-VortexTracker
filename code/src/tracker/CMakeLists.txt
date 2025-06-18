@@ -44,10 +44,17 @@ target_link_libraries(
   ${PNG_LIBRARIES})
 
 # create test executables
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/src/tracker/exec) # put any build executables in exec directory
+#set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/src/tracker/exec) # put any build executables in exec directory
+
+find_program(BASH_PROGRAM bash)
 
 add_executable(calccorr.x test_tracker/test_calccorr.F90)
 target_link_libraries(calccorr.x PRIVATE subroutine_lib)
 
+add_executable(get_netcdf_real_type.x test_tracker/test_get_netcdf_real_type.F90)
+target_link_libraries(get_netcdf_real_type.x PRIVATE subroutine_lib)
+
 # unit test suit
-add_test(test_calccorr ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/calccorr.x)
+add_test(test_calccorr ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/calccorr.x)
+add_test(build_mslp ${CMAKE_SOURCE_DIR}/src/tracker/test_tracker/build_mslp_file.sh)
+add_test(get_netcdf_real_type ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/get_netcdf_real_type.x)
