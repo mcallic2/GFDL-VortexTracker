@@ -80,3 +80,4 @@ add_test(test_getcorr ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/tes
 add_test(test_stdevcalc ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_stdevcalc.x)
 add_test(test_wtavrg_lon ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_wtavrg_lon.x)
 add_test(test_wtavrg ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_wtavrg.x)
+add_test(build_mslp ${CMAKE_SOURCE_DIR}/src/tracker/test_tracker/build_mslp_file.sh)
