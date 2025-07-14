@@ -7,7 +7,7 @@
 export PS4=' line $LINENO: '
 
 # set directory paths
-export home=
+export home=$PWD/..
 export workroot=${home}/work
 export codedir=${home}/code
 export execdir=${codedir}/exec
