@@ -48,3 +48,7 @@ source ${knowntcvitscript}
 # export & run ncvariables script
 export ncvarscript=${rundir}/ncvariables.sh
 source ${ncvarscript}
+
+# export & run input data script
+export datascript=${rundir}/inputdata.sh
+source ${datascript}
