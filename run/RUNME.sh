@@ -56,3 +56,7 @@ source ${datascript}
 # export & run populate namelist script
 export popnamelist=${rundir}/populatenamelist.sh
 source ${popnamelist}
+
+# export & run input/output files script
+export ioscript=${rundir}/IOfiles.sh
+source ${ioscript}
