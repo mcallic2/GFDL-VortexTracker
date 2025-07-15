@@ -34,9 +34,13 @@ if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 # INVOKE SCRIPTS
 
 # compile source code
-export compilescript=${rundir}/compile.sh
-source ${compilescript}
+#export compilescript=${rundir}/compile.sh
+#source ${compilescript}
 
 # export variables code
 export varscript=${rundir}/variables.sh
 source ${varscript}
+
+# export known tcvitals script
+export knowntcvitscript=${rundir}/tcvitals.sh
+source ${knowntcvitscript}
