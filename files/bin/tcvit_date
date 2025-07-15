@@ -1,4 +1,4 @@
-#!/bin/ksh
+#!/bin/bash
 
 # Script written by Tim Marchok
 
@@ -23,7 +23,7 @@ hh=`       echo $ymdh | cut -c9-10`
 if [ ${yyyy} -ge 2003 ]; then
 # USER - change location of path respecively
 # i.e. vitdir=/home/$USER/GFDL-VortexTracker/files/vitals
-  vitdir=/files/vitals
+  vitdir=${home}/files/vitals
   grep  "${yyyymmdd} ${hh}" ${vitdir}/syndat_tcvitals.${yyyy}   | \
         grep -v TEST                                            | \
         sort -k2 -k4 -n -k5 -n -u                               | \
@@ -31,7 +31,7 @@ if [ ${yyyy} -ge 2003 ]; then
 else
 # USER - change location of path respecively
 # i.e. vitdir=/home/$USER/GFDL-VortexTracker/files/vitals
-  vitdir=/files/vitals
+  vitdir=${home}/files/vitals
   grep  "${yyyymmdd} ${hh}" ${vitdir}/syndat_tcvitals.${yyyy}   | \
         grep -v TEST                                            | \
         sort -k2 -k4 -n -k5 -n -u                               | \
