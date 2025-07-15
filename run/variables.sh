@@ -6,7 +6,7 @@
 export ncdf_ls_mask_filename=           # used for other models, not needed for tshield
 export gribver=1
 export basin=al
-export trkrtype=tcgen
+export trkrtype=tracker
 export trkrebd=339.0   # boundary only if trkrtype = tcgen or midlat
 export trkrwbd=260.0   # boundary only if trkrtype = tcgen or midlat
 export trkrnbd=40.0    # boundary only if trkrtype = tcgen or midlat
