@@ -34,8 +34,8 @@ if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 # INVOKE SCRIPTS
 
 # compile source code
-#export compilescript=${rundir}/compile.sh
-#source ${compilescript}
+export compilescript=${rundir}/compile.sh
+source ${compilescript}
 
 # export & run variables code
 export varscript=${rundir}/variables.sh
