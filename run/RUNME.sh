@@ -60,3 +60,32 @@ source ${popnamelist}
 # export & run input/output files script
 export ioscript=${rundir}/IOfiles.sh
 source ${ioscript}
+
+# print tracker set up is finished
+echo "TRACKER SET UP FINISHED"
+
+# -------------------------------------------------------------------------------------------------
+# EXECUTE TRACKER SOURCE CODE
+
+echo " "
+echo "INITIALIZE TRACKER EXECUTABLE"
+echo " "
+
+echo "gettrk start for $atcfout at ${cyc}z at ${date_stamp}"
+
+echo "TIMING: BEFORE gettrk  ---> ${date_stamp}"
+
+export for_dump_core_file=TRUE
+ulimit -s unlimited
+
+echo " "
+echo "before gettrk, Output of ulimit command follows...."
+ulimit -a
+echo "before gettrk, Done: Output of ulimit command."
+${execdir}/gettrk.x
+export gettrk_rcc=$?
+
+echo "   TIMING: AFTER  gettrk  ---> ${date_stamp}"
+echo "   "
+echo "   Return code from tracker= gettrk_rcc= ${gettrk_rcc}"
+echo "   "
