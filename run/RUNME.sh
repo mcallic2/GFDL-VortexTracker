@@ -37,10 +37,14 @@ if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 #export compilescript=${rundir}/compile.sh
 #source ${compilescript}
 
-# export variables code
+# export & run variables code
 export varscript=${rundir}/variables.sh
 source ${varscript}
 
-# export known tcvitals script
+# export & run known tcvitals script
 export knowntcvitscript=${rundir}/tcvitals.sh
 source ${knowntcvitscript}
+
+# export & run ncvariables script
+export ncvarscript=${rundir}/ncvariables.sh
+source ${ncvarscript}
