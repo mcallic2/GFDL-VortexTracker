@@ -89,3 +89,10 @@ echo "   TIMING: AFTER  gettrk  ---> ${date_stamp}"
 echo "   "
 echo "   Return code from tracker= gettrk_rcc= ${gettrk_rcc}"
 echo "   "
+
+# -------------------------------------------------------------------------------------------------
+# CLEAN UP WORK DIRECTORY
+
+# export & run clean work directory script
+export cleanup=${rundir}/cleanworkdir.sh
+source ${cleanup}
