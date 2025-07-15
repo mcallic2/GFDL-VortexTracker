@@ -36,3 +36,7 @@ if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 # compile source code
 export compilescript=${rundir}/compile.sh
 source ${compilescript}
+
+# export variables code
+export varscript=${rundir}/variables.sh
+source ${varscript}
