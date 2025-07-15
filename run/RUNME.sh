@@ -52,3 +52,7 @@ source ${ncvarscript}
 # export & run input data script
 export datascript=${rundir}/inputdata.sh
 source ${datascript}
+
+# export & run populate namelist script
+export popnamelist=${rundir}/populatenamelist.sh
+source ${popnamelist}
