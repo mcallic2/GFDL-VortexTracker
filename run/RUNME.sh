@@ -34,31 +34,31 @@ if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 # INVOKE SCRIPTS
 
 # compile source code
-export compilescript=${rundir}/compile.sh
+export compilescript=${rundir}/subscripts/compile.sh
 source ${compilescript}
 
 # export & run variables code
-export varscript=${rundir}/variables.sh
+export varscript=${rundir}/subscripts/variables.sh
 source ${varscript}
 
 # export & run known tcvitals script
-export knowntcvitscript=${rundir}/tcvitals.sh
+export knowntcvitscript=${rundir}/subscripts/tcvitals.sh
 source ${knowntcvitscript}
 
 # export & run ncvariables script
-export ncvarscript=${rundir}/ncvariables.sh
+export ncvarscript=${rundir}/subscripts/ncvariables.sh
 source ${ncvarscript}
 
 # export & run input data script
-export datascript=${rundir}/inputdata.sh
+export datascript=${rundir}/subscripts/inputdata.sh
 source ${datascript}
 
 # export & run populate namelist script
-export popnamelist=${rundir}/populatenamelist.sh
+export popnamelist=${rundir}/subscripts/populatenamelist.sh
 source ${popnamelist}
 
 # export & run input/output files script
-export ioscript=${rundir}/IOfiles.sh
+export ioscript=${rundir}/subscripts/IOfiles.sh
 source ${ioscript}
 
 # print tracker set up is finished
@@ -94,5 +94,5 @@ echo "   "
 # CLEAN UP WORK DIRECTORY
 
 # export & run clean work directory script
-export cleanup=${rundir}/cleanworkdir.sh
+export cleanup=${rundir}/subscripts/cleanworkdir.sh
 source ${cleanup}
