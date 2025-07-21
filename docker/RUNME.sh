@@ -11,7 +11,7 @@ export home=$PWD/..
 export workroot=${home}/work
 export codedir=${home}/code
 export execdir=${codedir}/exec
-export rundir=${home}/run
+export rundir=${home}/docker
 export tcvit_date=${home}/files/bin/tcvit_date
 export ndate=${home}/files/bin/ndate.x
 
