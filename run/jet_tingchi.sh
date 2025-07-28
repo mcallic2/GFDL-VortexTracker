@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH  -o output/tingchi_pt1.out
+#SBATCH  -o output/tingchi_pt3.out
 #SBATCH  -J tracker
 #SBATCH  --time=15       # time limit in minutes
 #SBATCH  --ntasks=1
@@ -18,10 +18,10 @@ ulimit -c unlimited
 # Set critical initial variables and directories
 #-----------------------------------------------------------
 
-export cmodel=gfs
+export cmodel=twrf
 export vit_hr_incr=6  #caitlyn, this is in tims runscript on wcoss2, don't know if its needed
-atcfname="gfs"
-atcfout="gfs"
+atcfname="twrf"
+atcfout="twrf"
 
 export fcstlen=126    # caitlyn, adding this, don't know if its needed
 # CAITLYN - looks like this array is used in support source code (tave, vint, supvit)
@@ -33,7 +33,7 @@ export fcsthrs=' 000 006 012 018 024 030 036 042 048 054 060 066 072 078
                   99  99  99  99  99  99  99  99  99  99
                   99  99  99  99  99  99  99  99  99'
 
-export curymdh=2023092912 # caitlyn, same as forecast as grib1
+export curymdh=2023090300 # caitlyn, same as forecast as grib1
 
 # CAITLYN - these are different in netcdf runscript
 export scc=` echo $curymdh | cut -c1-2`
@@ -42,7 +42,7 @@ export smm=` echo $curymdh | cut -c5-6`
 export sdd=` echo $curymdh | cut -c7-8`
 export shh=` echo $curymdh | cut -c9-10`
 
-export home=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/grib2
+export home=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/tingchi
 export workroot=${home}/work
 export rundir=${home}/run
 export srcroot=${home}/code/src
@@ -330,10 +330,10 @@ user_wants_to_track_thick200850=n
 # CAITLYN - this is pointing the runscript to where the input data is i think
 # not sure if this is how ECMWF model actually creates the output data or if Tim modified this
 # also not sure what that $gix variable is doing
-$gix ${DATA}/gfsgribfile.${PDY}${CYL} ${DATA}/ecixfile.${PDY}${CYL}
+$gix ${DATA}/twrfgribfile.${PDY}${CYL} ${DATA}/ecixfile.${PDY}${CYL}
 # grib index is a utility that does stuff for the grib file
 # the grib index works on the ecgribfile itself and the output of that work is the ecixfile
-gribfile=${DATA}/gfsgribfile.${PDY}${CYL}
+gribfile=${DATA}/twrfgribfile.${PDY}${CYL}
 ixfile=${DATA}/ecixfile.${PDY}${CYL}
 
 # Define the name of a file that we will cat extra GRIB records into
@@ -360,7 +360,7 @@ do
   echo " "
   set -x
 
-  gfile=${DATA}/gfsgribfile.${PDY}${CYL}
+  gfile=${DATA}/twrfgribfile.${PDY}${CYL}
   ifile=${DATA}/ecixfile.${PDY}${CYL}
   $gix $gfile $ifile
 
