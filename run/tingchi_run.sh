@@ -38,7 +38,7 @@ export fcsthrs=' 000 006 012 018 024 030 036 042 048 054 060 066 072 078
                   99  99  99  99  99  99  99  99  99  99
                   99  99  99  99  99  99  99  99  99'
 
-export curymdh=2023092912
+export curymdh=2023092912 # this doesn't match the date of his filename
 
 #
 export scc=` echo $curymdh | cut -c1-2`
@@ -185,7 +185,7 @@ rundescr="3KM"          # different
 atcfdescr="HAIKUI"      # different
 file_sequence="multi"   # different
 #file_sequence="onebig"   # figure this out
-lead_time_units='minutes'
+lead_time_units='minutes' #dont think this should be minutes
 
 # g2_jpdtn sets the variable that will be used as "JPDTN" for
 # the call to getgb2, if gribver=2.  jpdtn=1 for ens data,

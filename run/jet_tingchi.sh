@@ -170,14 +170,14 @@ export trkrsbd=1.0     # boundary only used by tracker if trkrtype = tcgen or mi
 export regtype=altg    # This variable is only needed if trkrtype = tcgen or midlat
 
 COM=${DATA}
-atcfnum=15
+atcfnum=10   # dont know if this is the right number
 atcfymdh=${PDY}${cyc}
 max_mslp_850=400.0
 mslpthresh=0.0015
 v850thresh=1.5000
 v850_qwc_thresh=1.0000
 cint_grid_bound_check=0.50
-modtyp='global'
+modtyp='regional'   # dont know if this right
 nest_type='fixed'
 export WCORE_DEPTH=1.0
 export PHASEFLAG=y
@@ -203,10 +203,10 @@ export depth_of_mslp_for_gen_scan=0.50
 #export vortex_tilt_allow_thresh=1.0
 atcfnum=15
 atcffreq=600
-rundescr="xxxx"
-atcfdescr="xxxx"
+rundescr="3KM"        # dont know what changing this will do
+atcfdescr="HAIKUI"    # dont know what changing this will do
 file_sequence="onebig"
-lead_time_units='hours'
+lead_time_units='hours'   #this will definitely mess up the levs & leadtimes files
 
 # g2_jpdtn sets the variable that will be used as "JPDTN" for
 # the call to getgb2, if gribver=2.  jpdtn=1 for ens data,
