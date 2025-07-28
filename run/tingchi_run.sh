@@ -15,7 +15,7 @@
 # Edited by Caitlyn McAllister  --> caitlyn.mcallister@noaa.gov
 #--------------------------------------------------------------
 
-export PS4=' + run_tracker.sh line $LINENO: '
+export PS4=' + TRAKCER SET UP line $LINENO: '
 
 ulimit -c unlimited
 
@@ -25,7 +25,27 @@ export LD_LIBRARY_PATH=/package/fx1000/operlib/lib/:/opt/FJSVxtclanga/tcsds-1.2.
 # Set critical initial variables and directories
 #-----------------------------------------------------------
 
-export curymdh=2023090300 # USER - date from model initilization date
+export cmodel=gfs
+export vit_hr_incr=6
+atcfname="gfs" # caitlyn, ting has these set line 149
+atcfout="gfs"  # set on line 150
+
+export fcstlen=126
+export fcsthrs=' 000 006 012 018 024 030 036 042 048 054 060 066 072 078
+                 084 090 096 102 108 114 120 126  99  99   99
+                  99  99  99  99  99  99  99  99  99  99   99
+                  99  99  99  99  99  99  99  99  99  99
+                  99  99  99  99  99  99  99  99  99  99
+                  99  99  99  99  99  99  99  99  99'
+
+export curymdh=2023092912
+
+#
+export scc=` echo $curymdh | cut -c1-2`
+export syy=` echo $curymdh | cut -c3-4`
+export smm=` echo $curymdh | cut -c5-6`
+export sdd=` echo $curymdh | cut -c7-8`
+export shh=` echo $curymdh | cut -c9-10`
 
 # USER - add paths to location of repository (i.e. home=) and location of workroot
 # no other paths should need to be changed
@@ -36,33 +56,21 @@ export rundir=${home}/run
 export srcroot=${home}/code/src
 export modulesetup=${home}/code/modulefile-setup
 export execdir=${home}/code/exec
+export tcvit_date=${home}/files/bin/tcvit_date
+export NDATE=${home}/files/bin/ndate.x
+
 
 # this next variable specifies the name of a seperate land-sea mask file
 # that can be used in case the main input netcdf file does not contain its own
 # land-sea mask record
 export ncdf_ls_mask_filename=
 
-export tcvit_date=${home}/files/bin/tcvit_date
-export NDATE=${home}/files/bin/ndate.x
-
-export gribver=2
-export basin=wp
+export gix=grbindex
+export gribver=2 # 1 = grib1/ecmwf, 2 = grib2/gfs
+export basin=al  # is this the correct basin?
 # USER - please choose "tracker" or "tcgen"
-# tracker denotes regular tracker run, tcgen denotes genesis run
 export trkrtype=tracker
 
-
-## loads any module/packages needed for cmake build
-#cd $srcroot
-#source machine-setup.sh
-#echo $target
-#
-#cd $modulesetup
-#source $target-setup.sh
-#
-#echo " "
-#module list
-#echo " "
 
 wdir=${workroot}/${curymdh}
 if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
@@ -87,21 +95,22 @@ export ymdh=${PDY}${cyc}
 export wdir=${workroot}/${PDY}${cyc}
 export DATA=${workroot}/${PDY}${cyc}
 
+# figure out if the wdir/DATA path might break, if so use these
+export wdir=${workroot}/${PDY}${cyc}/${cmodel}
+export DATA=${workroot}/${PDY}${cyc}/${cmodel}
+
 if [ ! -d ${workroot} ]; then mkdir -p ${workroot}; fi
 if [ ! -d ${wdir} ];     then mkdir -p ${pdir}; fi
 
 cd $wdir
-
-
-# USER - add location of data directory
-# This path is meant for the input data directory only, we will define the data files below.
-data_dir=/nwpr/fdda/p143/TOOLS/WRF_VTracker/TWRF.3KM.HAIKUI
 
 #--------------------------------------------------------------------------------
 # Check the TC Vitals to see if there are any observed storms for the input ymdh.
 #--------------------------------------------------------------------------------
 
 tcvit_logfile=${rundir}/tcvit_logfile.${yyyy}.txt
+
+# caitlyn, do i add the if statement?
 
 ${tcvit_date} ${curymdh} | egrep "JTWC|NHC"           | \
 grep -v TEST | awk 'substr($0,6,1) !~ /8/ {print $0}'   \
@@ -138,9 +147,10 @@ fi
 #export trkrnbd=40.0    # boundary only used by tracker if trkrtype = tcgen or midlat
 #export trkrsbd=7.0     # boundary only used by tracker if trkrtype = tcgen or midlat
 #export regtype=altg    # This variable is only needed if trkrtype = tcgen or midlat
+# caitlyn, since regtype is commented out it could be messing up the outout atcf files
 
 COM=${DATA}
-atcfnum=10
+atcfnum=10    # different
 atcfname="TWRF"
 atcfout="HAIKUI"
 atcfymdh=${PDY}${cyc}
@@ -149,7 +159,7 @@ mslpthresh=0.0015
 v850thresh=1.5000
 v850_qwc_thresh=1.0000
 cint_grid_bound_check=0.50
-modtyp='regional'
+modtyp='regional'             # should this be regional?
 nest_type='fixed'
 export WCORE_DEPTH=1.0
 export PHASEFLAG=y
@@ -169,22 +179,26 @@ export use_land_mask=n
 export read_separate_land_mask_file=n
 export need_to_compute_rh_from_q=y
 export smoothe_mslp_for_gen_scan=y
-atcfnum=10
+atcfnum=10      # repeated
 atcffreq=600
-rundescr="3KM"
-atcfdescr="HAIKUI"
-file_sequence="multi"
-#file_sequence="onebig"
-# For netCDF files, the lead time units are determined below in
-# an ncdump scan of the file, so leave this blank.
+rundescr="3KM"          # different
+atcfdescr="HAIKUI"      # different
+file_sequence="multi"   # different
+#file_sequence="onebig"   # figure this out
 lead_time_units='minutes'
-#       gribver=2     # N/A since we are using NetCDF data for T-SHiELD;
+
 # g2_jpdtn sets the variable that will be used as "JPDTN" for
 # the call to getgb2, if gribver=2.  jpdtn=1 for ens data,
 # jpdtn=0 for deterministic data.
 g2_jpdtn=0
 inp_data_type=grib
-model=41
+model=41    # different
+
+# have no idea what these actually are or need to set to
+g2_mlsp_parm_id=192
+g1_mslp_parm_id=130
+g1_sfcwind_lev_typ=105
+g1_sfcwind_lev_val=10
 
 ATCFNAME=` echo "${atcfname}" | tr '[a-z]' '[A-Z]'`
 
@@ -270,73 +284,164 @@ ncdf_temp650name="X"
 ncdf_temp600name="X"
 ncdf_omega500name="X"
 
-
-#-----------------------------------------------------------------------
-# USER - This is where the input netcdf files will be defined.
-# If there is only one data file, please insert the name of file
-# in the data_file1= variable line.
-# example: data_file1=mydata.nc
-# If there are multiple files set need_to_combine to = y
-# (need_to_combine=y)
-# Then additional files will need to be added,
-# i.e. data_file2=mydata2.nc, data_file3=mydata3.nc, ...
-# The different files will pull out just the records we need from the
-# original NetCDF files using ncks, and combine them into one file.
-# More instructions on how to do this are below
-#-----------------------------------------------------------------------
-need_to_combine=n
-data_file1=
-#data_file2=
-
-if [ ${need_to_combine} = 'y' ]; then
-  # USER - data files need to be added here, name them accordingly
-  # i.e. if there is a data_file1 and data_file2 above then there will need to be a
-  # netcdf_temp_file_1=${wdir}/mydata.nc and netcdf_temp_file_2=${wdir}/mydata.nc,
-  # and so on if there are more
-
-  netcdf_temp_file_1=${wdir}/ADDNAMEHERE.${PDY}${cyc}.nc
-  netcdf_temp_file_2=${wdir}/ADDNAMEHERE.${PDY}${cyc}.nc
-  netcdf_combined_file=${wdir}/combined.${PDY}${cyc}.nc # USER - do not change this one, leave as it is
-
-  if [ -s ${netcdf_temp_file_1} ]; then rm ${netcdf_temp_file_1}; fi
-  if [ -s ${netcdf_temp_file_2} ]; then rm ${netcdf_temp_file_2}; fi
-  if [ -s ${netcdf_combined_file} ]; then rm ${netcdf_combined_file}; fi
-
-  # USER - will need to do a ncdump -c to view all variables within each netcdf file
-  # all variables will have to be listed below. One line/ncks function for each data file
-  ncks --fl_fmt=64bit -F -v u850,u700,u500,u200,v850,v700,v500,v200,h900,h850,h800,h750,h700,h650,h600,h550,h500,h450,h400,h350,h300,h200,TMP500_300,q1000,q925,q850,q800,q750,q700,q650,q600,t1000,t925,t800,t750,t700,t650,t600,PRMSL,omg500 ${data_dir}/${data_file1} ${netcdf_combined_file} || exit 1
-  ncks --fl_fmt=64bit -F -A -v UGRD10m,VGRD10m,TMPsfc ${data_dir}/${data_file2} ${netcdf_combined_file} || exit 1
-  netcdffile=${wdir}/combined.${PDY}${cyc}.nc
-
-else
-
-  set +x
-  echo " "
-  echo " +++ Processed T-SHiELD files already.  NOT doing ncks stuff...."
-  echo " "
-  set -x
-  netcdffile=${data_dir}/${data_file1}
-fi
-
+# ting chi had this before is started editing
 gribfile=${data_dir}/${atcfname}.${rundescr}.${atcfdescr}.${curymdh}.f00000
 ixfile=${data_dir}/${atcfname}.${rundescr}.${atcfdescr}.${curymdh}.f00000.ix
 
-# This next ncdf_time_units variable is going to either be
-# "hours" or "days".  If it's "hours", then all the time data
-# values are for hours since the initial time.  Same thing
-# for "days", however if it is "days", then know that a value
-# of 0.25 will be the same as a 6-hour lead time.
+#-----------------------------------------------------------------------
+# Now process the ECMWF file in order to interpolate the GP height data
+# to get it from 300 to 900 mb, every 50 mb.  With some models, this is
+# not necessary because that vertical resolution of data already exists
+# in the data.  But with ECMWF, that's not the case; we only have their
+# GP height data at a limited subset of vertical levels, and those
+# levels are specified in the text file, ecmwf_hgt_levs.txt.  The
+# vint.x program reads in that list of vertical levels and interpolates
+# to levels in between them in order to have that 50-mb vertical
+# resolution starting at 900 mb and going up to and including 300 mb.
+#--------------------------------------------------------------------------
 
-ncdf_time_units=` ${ncdump} -h ${netcdffile} | \
-                  grep "time:units"          | \
-                  awk -F= '{print $2}'       | \
-                  awk -F\" '{print $2}'      | \
-                  awk '{print $1}'`
-set +x
-echo " "
-echo "NetCDF time units pulled from data file = ${ncdf_time_units}"
-echo " "
-set -x
+# add grib file
+$gix ${DATA}/gfsgribfile.${PDY}${CYL} ${DATA}/ecixfile.${PDY}${CYL}
+gribfile=${DATA}/gfsgribfile.${PDY}${CYL}
+ixfile=${DATA}/ecixfile.${PDY}${CYL}
+
+# Define the name of a file that we will cat extra GRIB records into
+
+catfile=${DATA}/${cmodel}.${PDY}${CYL}.catfile
+>${catfile}
+
+
+# Cycle through all the forecast hours and process the data to
+# vertically interpolate and average the data....
+
+for fhour in ${fcsthrs}
+do
+
+  if [ ${fhour} -eq 99 ]
+  then
+    continue
+  fi
+
+  set +x
+  echo " "
+  echo "Date in interpolation for fhour= $fhour before = `date`"
+  echo " "
+  set -x
+
+  gfile=${DATA}/gfsgribfile.${PDY}${CYL}
+  ifile=${DATA}/ecixfile.${PDY}${CYL}
+  $gix $gfile $ifile
+
+# ----------------------------------------------------
+# First, interpolate height data to get data from
+# 300 to 900 mb, every 50 mb....
+
+  gparm=156
+  namelist=${DATA}/vint_input.${PDY}${CYL}.z
+  echo "&timein ifcsthour=${fhour},"       >${namelist}
+  echo "        iparm=${gparm},"          >>${namelist}
+  echo "        gribver=${gribver},"      >>${namelist}
+  echo "        g2_jpdtn=${g2_jpdtn}/"    >>${namelist}
+
+  ln -s -f ${gfile}                                   fort.11
+  ln -s -f ${rundir}/tracker_hgt_levs                 fort.16
+  ln -s -f ${ifile}                                   fort.31
+  ln -s -f ${DATA}/${cmodel}.${PDY}${CYL}.z.f${fhour} fort.51
+
+  ${execdir}/vint.x <${namelist}
+  rcc=$?
+
+  if [ $rcc -ne 0 ]; then
+    set +x
+    echo " "
+    echo "ERROR in call to vint for GPH at fhour= $fhour"
+    echo "rcc= $rcc      EXITING.... "
+    echo " "
+    set -x
+    exit 91
+  fi
+
+# ----------------------------------------------------
+# Now interpolate temperature data to get data from
+# 300 to 500 mb, every 50 mb.  As with the GP height
+# data just above, we are only doing this because we
+# get the ECMWF temperature data at reduced vertical
+# resolution.  That resolution is defined in the
+# ecmwf_tmp_levs.txt file, which vint.x reads in to
+# interpolate between these levels.
+
+  gparm=130
+  namelist=${DATA}/vint_input.${PDY}${CYL}
+  echo "&timein ifcsthour=${fhour},"       >${namelist}
+  echo "        iparm=${gparm},"          >>${namelist}
+  echo "        gribver=${gribver},"      >>${namelist}
+  echo "        g2_jpdtn=${g2_jpdtn}/"    >>${namelist}
+
+  ln -s -f ${gfile}                                   fort.11
+  ln -s -f ${rundir}/tracker_tmp_levs                 fort.16
+  ln -s -f ${ifile}                                   fort.31
+  ln -s -f ${DATA}/${cmodel}.${PDY}${CYL}.t.f${fhour} fort.51
+
+  ${execdir}/vint.x <${namelist}
+  rcc=$?
+
+  if [ $rcc -ne 0 ]; then
+    set +x
+    echo " "
+    echo "ERROR in call to vint for T at fhour= $fhour"
+    echo "rcc= $rcc      EXITING.... "
+    echo " "
+    set -x
+    exit 91
+  fi
+
+# ----------------------------------------------------
+# Now average the temperature data that we just
+# interpolated to get the mean 300-500 mb temperature...
+
+  ffile=${DATA}/${cmodel}.${PDY}${CYL}.t.f${fhour}
+  ifile=${DATA}/${cmodel}.${PDY}${CYL}.t.f${fhour}.i
+  $gix ${ffile} ${ifile}
+
+  namelist=${DATA}/tave_input.${PDY}${CYL}
+  echo "&timein ifcsthour=${fhour},"       >${namelist}
+  echo "        iparm=${gparm},"          >>${namelist}
+  echo "        gribver=${gribver},"      >>${namelist}
+  echo "        g2_jpdtn=${g2_jpdtn}/"    >>${namelist}
+
+  ln -s -f ${ffile}                                      fort.11
+  ln -s -f ${ifile}                                      fort.31
+  ln -s -f ${DATA}/${cmodel}_tave.${PDY}${CYL}.f${fhour} fort.51
+
+  ${execdir}/tave.x <${namelist}
+  rcc=$?
+
+  if [ $rcc -ne 0 ]; then
+    set +x
+    echo " "
+    echo "ERROR in call to tave at fhour= $fhour"
+    echo "rcc= $rcc      EXITING.... "
+    echo " "
+    set -x
+    exit 91
+  fi
+
+  tavefile=${DATA}/${cmodel}_tave.${PDY}${CYL}.f${fhour}
+  zfile=${DATA}/${cmodel}.${PDY}${CYL}.z.f${fhour}
+  cat ${zfile} ${tavefile} >>${catfile}
+
+  set +x
+  echo " "
+  echo "Date in interpolation for fhour= $fhour after = `date`"
+  echo " "
+  set -x
+
+done
+
+# Now cat the interpolate height data and the averaged
+# temperature data onto the end of the original ECMWF file.
+
+cat ${catfile} >>${gfile}
 
 #####################################################
 # Populate the namelist, using the variables that
@@ -505,21 +610,19 @@ else
   fi
 fi
 
-if [ -s ${wdir}/vitals.${curymdh} ]; then
-  cp ${wdir}/vitals.${curymdh} \
+
+
+if [ -s ${DATA}/vitals.upd.${atcfout}.${PDY}${shh} ]; then
+  cp ${DATA}/vitals.upd.${atcfout}.${PDY}${shh} \
      ${DATA}/tcvit_rsmc_storms.txt
-else
-  >${DATA}/tcvit_rsmc_storms.txt
 fi
 
 if [ -s ${DATA}/genvitals.upd.${atcfout}.${PDY}${shh} ]; then
   cp ${DATA}/genvitals.upd.${atcfout}.${PDY}${shh} \
      ${DATA}/tcvit_genesis_storms.txt
-else
-  >${DATA}/tcvit_genesis_storms.txt
 fi
 
-ln -s -f ${rundir}/tracker_leadtimes                       fort.15
+ln -s -f ${rundir}/tracker_leadtimes                         fort.15
 
 if [ ${inp_data_type} = 'grib' ]; then
   ln -s -f ${ixfile}                                                 fort.31
