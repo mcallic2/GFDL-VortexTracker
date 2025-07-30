@@ -25,8 +25,8 @@ export LD_LIBRARY_PATH=/package/fx1000/operlib/lib/:/opt/FJSVxtclanga/tcsds-1.2.
 # Set critical initial variables and directories
 #-----------------------------------------------------------
 
-export cmodel=gfs
-export vit_hr_incr=6
+export curymdh=2023090300
+export cmodel=gfs  # this needs to be set. i think
 atcfname="gfs" # caitlyn, ting has these set line 149
 atcfout="gfs"  # set on line 150
 
@@ -38,7 +38,6 @@ export fcsthrs=' 000 006 012 018 024 030 036 042 048 054 060 066 072 078
                   99  99  99  99  99  99  99  99  99  99
                   99  99  99  99  99  99  99  99  99'
 
-export curymdh=2023092912 # this doesn't match the date of his filename
 
 #
 export scc=` echo $curymdh | cut -c1-2`
@@ -67,7 +66,7 @@ export ncdf_ls_mask_filename=
 
 export gix=grbindex
 export gribver=2 # 1 = grib1/ecmwf, 2 = grib2/gfs
-export basin=al  # is this the correct basin?
+export basin=wp  # is this the correct basin?
 # USER - please choose "tracker" or "tcgen"
 export trkrtype=tracker
 
@@ -159,7 +158,7 @@ mslpthresh=0.0015
 v850thresh=1.5000
 v850_qwc_thresh=1.0000
 cint_grid_bound_check=0.50
-modtyp='regional'             # should this be regional?
+modtyp='regional'             # should this be regional? tim has regional in hafs script
 nest_type='fixed'
 export WCORE_DEPTH=1.0
 export PHASEFLAG=y
@@ -180,12 +179,12 @@ export read_separate_land_mask_file=n
 export need_to_compute_rh_from_q=y
 export smoothe_mslp_for_gen_scan=y
 atcfnum=10      # repeated
-atcffreq=600
-rundescr="3KM"          # different
-atcfdescr="HAIKUI"      # different
+atcffreq=600    # tim has this =300 in hafs script
+rundescr="3KM"          # different, tim has 'multipstorm' in hafs script
+atcfdescr="HAIKUI"      # different, tim has 'trkcut' in hafs script
 file_sequence="multi"   # different
 #file_sequence="onebig"   # figure this out
-lead_time_units='minutes' #dont think this should be minutes
+lead_time_units='minutes' #dont think this should be minutes, tim has hours in hafs script
 
 # g2_jpdtn sets the variable that will be used as "JPDTN" for
 # the call to getgb2, if gribver=2.  jpdtn=1 for ens data,
@@ -194,19 +193,32 @@ g2_jpdtn=0
 inp_data_type=grib
 model=41    # different
 
-# have no idea what these actually are or need to set to
-g2_mlsp_parm_id=192
+# have no idea what these actually are/do or what they need to be set to
+
+# vairables from tims gfs grib2 script
+export vit_hr_incr=6
+
+g2_mlsp_parm_id=192   # tim also has this is hafs script
 g1_mslp_parm_id=130
 g1_sfcwind_lev_typ=105
 g1_sfcwind_lev_val=10
+
+# variables from tims hafs grib2 script
+loopnum=1
+stormid=091
+model=1  #not sure what this should be set too
+export wgrib2=
+export cnvgrib=
+cgb=
+cgb2=
 
 ATCFNAME=` echo "${atcfname}" | tr '[a-z]' '[A-Z]'`
 
 export atcfymdh=${PDY}${cyc}
 
 export use_land_mask=${use_land_mask:-no}
-# contour_interval=100.0
-contour_interval=1.0
+# contour_interval=100.0  # tim has this in hafs script
+contour_interval=1.0      # this is commented out in hafs script
 radii_pctile=95.0
 radii_free_pass_pctile=67.0
 radii_width_thresh=15.0
