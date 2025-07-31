@@ -25,8 +25,6 @@ export LD_LIBRARY_PATH=/package/fx1000/operlib/lib/:/opt/FJSVxtclanga/tcsds-1.2.
 # Set critical initial variables and directories
 #-----------------------------------------------------------
 
-export curymdh=2023090300 # USER - date from model initilization date
-
 # USER - add paths to location of repository (i.e. home=) and location of workroot
 # no other paths should need to be changed
 # do not add spaces next to = (ex. home=/home/...)
@@ -45,6 +43,7 @@ export ncdf_ls_mask_filename=
 export tcvit_date=${home}/files/bin/tcvit_date
 export NDATE=${home}/files/bin/ndate.x
 
+export curymdh=2023090300 # USER - date from model initilization date
 export gribver=2
 export basin=wp
 # USER - please choose "tracker" or "tcgen"
