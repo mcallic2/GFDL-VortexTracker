@@ -51,19 +51,6 @@ export basin=wp
 # tracker denotes regular tracker run, tcgen denotes genesis run
 export trkrtype=tracker
 
-
-## loads any module/packages needed for cmake build
-#cd $srcroot
-#source machine-setup.sh
-#echo $target
-#
-#cd $modulesetup
-#source $target-setup.sh
-#
-#echo " "
-#module list
-#echo " "
-
 wdir=${workroot}/${curymdh}
 if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 
