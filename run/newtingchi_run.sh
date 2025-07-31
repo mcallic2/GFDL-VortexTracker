@@ -119,11 +119,11 @@ fi
 # Set variables & parameters for the input namelist for T-SHiELD...
 #------------------------------------------------------------------------
 
-#export trkrebd=339.0   # boundary only used by tracker if trkrtype = tcgen or midlat
-#export trkrwbd=260.0   # boundary only used by tracker if trkrtype = tcgen or midlat
-#export trkrnbd=40.0    # boundary only used by tracker if trkrtype = tcgen or midlat
-#export trkrsbd=7.0     # boundary only used by tracker if trkrtype = tcgen or midlat
-#export regtype=altg    # This variable is only needed if trkrtype = tcgen or midlat
+export trkrebd=350.0   # boundary only used by tracker if trkrtype = tcgen or midlat
+export trkrwbd=260.0   # boundary only used by tracker if trkrtype = tcgen or midlat
+export trkrnbd=40.0    # boundary only used by tracker if trkrtype = tcgen or midlat
+export trkrsbd=1.0     # boundary only used by tracker if trkrtype = tcgen or midlat
+export regtype=altg    # This variable is only needed if trkrtype = tcgen or midlat
 
 COM=${DATA}
 atcfnum=10
