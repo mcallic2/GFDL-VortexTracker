@@ -66,7 +66,7 @@ export ncdf_ls_mask_filename=
 
 export gix=grbindex
 export gribver=2 # 1 = grib1/ecmwf, 2 = grib2/gfs
-export basin=wp  # is this the correct basin?
+export basin=wp  # tim has this wp basin option in a different script
 # USER - please choose "tracker" or "tcgen"
 export trkrtype=tracker
 
