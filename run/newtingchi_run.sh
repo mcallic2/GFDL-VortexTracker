@@ -118,7 +118,10 @@ fi
 #------------------------------------------------------------------------
 # Set variables & parameters for the input namelist for T-SHiELD...
 #------------------------------------------------------------------------
-
+# tingchi, these variables are needed, the comments that follow them are
+# misleading because this script was origionally developed for netcdf data only
+# with that being said, these variables do need to be modified to fit the basin's boundaries
+# I modified them slightly to match with what is needed when using GFS model output data
 export trkrebd=350.0   # boundary only used by tracker if trkrtype = tcgen or midlat
 export trkrwbd=260.0   # boundary only used by tracker if trkrtype = tcgen or midlat
 export trkrnbd=40.0    # boundary only used by tracker if trkrtype = tcgen or midlat
