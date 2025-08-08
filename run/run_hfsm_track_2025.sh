@@ -1,4 +1,5 @@
 #!/usr/bin/ksh
+# LEW - change these to the correct #SBATCH commands if you haven't already
 #PBS -j oe -o /lfs/h2/emc/hur/save/timothy.marchok/trak/para/scripts/hfsm_trak_2025/hfsm_trak_2024092812.out
 #PBS -N hfsm_trk
 #PBS -A HWRF-DEV
@@ -7,15 +8,14 @@
 #PBS -V
 #PBS -l walltime=00:30:00
   
-cd $PBS_O_WORKDIR
-
-source /usr/share/lmod/lmod/init/bash
-module use /lfs/h2/emc/hur/save/timothy.marchok/trak/para/sorc/gettrk.fd/modulefiles
-module load Module_github_tracker_for_wcoss2
+cd $PBS_O_WORKDIR  # LEW - not sure if this is needed/will break the run
 
 echo " "
 echo "date at top of script is `date`"
 echo " "
+
+cd $modulesetup
+source jet-setup.sh	# LEW - replace "jet" corresponding rdhpc system you're using
 
 echo " " 
 module list
@@ -35,15 +35,6 @@ export ymdh=${YMDH}
 export atcfymdh=${YMDH}
 
 export PS4=' + run_hfsm_track_test.sh line $LINENO: '
-
-echo " "
-module list
-echo " "
-
-export JASPER_PATH=/apps/spack/jasper/2.0.25/intel/19.1.3.304/sjib74krrorkyczqpqah4tvewmlnqdx4/lib64
-export NETCDF_PATH=/apps/prod/hpc-stack/intel-19.1.3.304/netcdf/4.7.4/lib
-export HDF5_PATH=/apps/prod/hpc-stack/intel-19.1.3.304/hdf5/1.10.6/lib
-export LD_LIBRARY_PATH=${JASPER_PATH}:${NETCDF_PATH}:${HDF5_PATH}:${LD_LIBRARY_PATH}
 
 export wgrib2=$WGRIB2
 export cnvgrib=$CNVGRIB
