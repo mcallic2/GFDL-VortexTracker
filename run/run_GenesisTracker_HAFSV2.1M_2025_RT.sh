@@ -9,7 +9,7 @@
 #PBS -l walltime=01:00:00
 
 #cd $PBS_O_WORKDIR  # LEW - not sure if this is needed/will break the run
-cd /scratch4/AOML/aoml-hafs1/role.aoml-hafs1/scrub/HAFSV2.1M_2025_RT/GenesisTracker/2024080812/
+#cd /scratch4/AOML/aoml-hafs1/role.aoml-hafs1/scrub/HAFSV2.1M_2025_RT/GenesisTracker/2024080812/
 
 echo " "
 echo "date at top of script is `date`"
@@ -17,7 +17,7 @@ echo " "
 
 #cd $modulesetup
 cd /scratch3/AOML/aoml-hafs1/role.aoml-hafs1/software/GenesisTracker_hafs_scripts/code/modulefile-setup
-source ursa-setup.sh	# LEW - replace "jet" corresponding rdhpc system you're using
+source ./ursa-setup.sh	# LEW - replace "jet" corresponding rdhpc system you're using
 
 echo " " 
 module list
@@ -27,8 +27,9 @@ set -x
 
 loopnum=1
 
-stormid=09l
-export YMDH=2024092812
+stormid=05l
+#export YMDH=2024092812
+export YMDH=2025081806
 CMODEL=hfsm
 # trkrtype=tracker
 trkrtype=tcgen
@@ -36,7 +37,7 @@ trkrtype=tcgen
 export ymdh=${YMDH}
 export atcfymdh=${YMDH}
 
-export PS4=' + run_hfsm_track_test.sh line $LINENO: '
+export PS4=' + run_GenesisTracker_HAFSV2.1M_2025_RT.sh line $LINENO: '
 
 export wgrib2=$WGRIB2
 export cnvgrib=$CNVGRIB
@@ -49,8 +50,11 @@ echo " "
 
 #export rundir=/lfs/h2/emc/hur/save/timothy.marchok/trak/para/scripts/hfsm_trak_2025
 #export exectrkdir=/lfs/h2/emc/hur/save/timothy.marchok/trak/para/sorc/gettrk.fd/20250704/code/exec
-export rundir=/scratch3/AOML/aoml-hafs1/role.aoml-hafs1/software/GenesisTracker_hafs_scripts
+export rundir=/scratch3/AOML/aoml-hafs1/role.aoml-hafs1/software/GenesisTracker_hafs_scripts/run
 export exectrkdir=/scratch3/AOML/aoml-hafs1/role.aoml-hafs1/software/GenesisTracker_hafs_scripts/code/exec
+
+# LJG
+export GRB2INDEX="grb2index"
 
 export gix=$GRBINDEX
 export g2ix=$GRB2INDEX
@@ -93,7 +97,8 @@ export CYL=${cyc}
 fcsthrs=' 000 003 006 009 012 015 018 021 024 027 030 033 036 
           039 042 045 048 051 054 057 060 063 066 069 072 075
           078 081 084 087 090 093 096 099 102 105 108 111 114
-          117 120 123 126'
+          117 120 123 126 129 132 135 138 141 144 147 150 153
+          156 159 162 165 168 171 174'
 
 atcfnum=15
 export ATCFNAME="HFSM"
@@ -153,8 +158,10 @@ g1_sfcwind_lev_val=10
 model=1                                 
 
 # export hfsmdir=/lfs/h1/ops/prod/com/hafs/v1.0/hfsa.${PDY}/${cyc}
-export hfsmdir=/lfs/h2/emc/ptmp/timothy.marchok/trakout3/${PDY}${CYL}/hfsm
-export DATA=${hfsmdir}
+#export hfsmdir=/lfs/h2/emc/ptmp/timothy.marchok/trakout3/${PDY}${CYL}/hfsm
+#export hfsmdir=/lfs/h2/emc/ptmp/timothy.marchok/trakout3/${PDY}${CYL}/hfsm
+export hfsmdir=/scratch4/AOML/aoml-hafs1/role.aoml-hafs1/scrub/HAFSV2.1M_2025_RT/com/${YMDH}/00L
+export DATA=/scratch4/AOML/aoml-hafs1/role.aoml-hafs1/scrub/HAFSV2.1M_2025_RT/com/${YMDH}/genesis
 
 if [ ! -d ${DATA} ]; then
   mkdir -p ${DATA}
@@ -194,7 +201,7 @@ then
 #    hfsm_orig_file=${hfsmdir}/${stormid}.${ymdh}.hfsa.parent.trk.f${fhour}.grb2
 #    hfsm_renamed_file=${hfsmdir}/${atcfout}.parent.${stormid}.${ymdh}.f${min5}
     hfsm_orig_file=${hfsmdir}/00l.${ymdh}.hfsb_multistorm.parent.atm.f${fhour}.grb2
-    hfsm_renamed_file=${hfsmdir}/${atcfout}.multistorm.trkcut.${ymdh}.f${min5}
+    hfsm_renamed_file=${DATA}/${atcfout}.multistorm.trkcut.${ymdh}.f${min5}
 
     if [ -s ${hfsm_orig_file} ]
     then
@@ -554,7 +561,7 @@ cp ${namelist} ${DATA}/namelist.gettrk
 ln -s -f namelist.gettrk                                   fort.555
 
 ln -s -f ${gribfile}                                       fort.11
-ln -s -f ${rundir}/${cmodel}.tracker_leadtimes             fort.15
+ln -s -f ${rundir}/tracker_leadtimes                       fort.15
 ln -s -f ${ixfile}                                         fort.31
 
 ln -s -f ${DATA}/trak.${atcfout}.all.${PDY}${CYL}          fort.61
