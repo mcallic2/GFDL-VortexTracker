@@ -49,9 +49,13 @@ source ${knowntcvitscript}
 export ncvarscript=${rundir}/subscripts/ncvariables.sh
 source ${ncvarscript}
 
-# export & run input data script
-export datascript=${rundir}/subscripts/inputdata.sh
-source ${datascript}
+# export & run input data script, use this script if there is only 1 data file
+export datascript1=${rundir}/subscripts/inputdata_single.sh
+source ${datascript1}
+
+# export & run input data script, use this script if there are multiple data files
+#export datascript2=${rundir}/subscripts/inputdata_multiple.sh
+#source ${datascript2}
 
 # export & run populate namelist script
 export popnamelist=${rundir}/subscripts/populatenamelist.sh

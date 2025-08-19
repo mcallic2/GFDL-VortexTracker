@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # -------------------------------------------------------------------------------------------------
-# SET UP INPUT NETCDF DATA FILE
+# SET UP FOR SINGLE INPUT NETCDF DATA FILE
 
 # define netcdf data file & set path
 export data_dir=${home}/tshield_data
