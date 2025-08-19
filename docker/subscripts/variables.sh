@@ -13,8 +13,8 @@ export trkrnbd=40.0    # boundary only if trkrtype = tcgen or midlat
 export trkrsbd=7.0     # boundary only if trkrtype = tcgen or midlat
 export regtype=altg    # This variable only needed if trkrtype = tcgen or midlat
 export atcfnum=15
-export atcfname="tshld"
-export atcfout="tshld"
+export atcfname="wrf"
+export atcfout="wrf"
 export atcfymdh=${pdy}${cyc}
 export max_mslp_850=400.0
 export mslpthresh=0.0015
