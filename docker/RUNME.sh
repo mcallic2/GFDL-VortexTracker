@@ -16,7 +16,7 @@ export tcvit_date=${home}/files/bin/tcvit_date
 export ndate=${home}/files/bin/ndate.x
 
 # set model initialization variables
-export curymdh=2023082900   # model initialization date
+export curymdh=2024052600  # model initialization date
 export pdy=`     echo ${curymdh} | cut -c1-8`
 export yyyy=`    echo ${curymdh} | cut -c1-4`
 export cyc=`     echo ${curymdh} | cut -c9-10`
