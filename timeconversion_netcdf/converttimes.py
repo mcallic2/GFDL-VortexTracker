@@ -20,4 +20,4 @@ new_times = pd.date_range(start='2024-05-25', periods=27, freq='3h')
 ds['time'] = new_times
 
 # save and create new nc file with new time format
-ds.to_netcdf('newtimes_wrfout_combined.nc')
+ds.to_netcdf('newtimes_wrfout_combined.nc', format='NETCDF3_CLASSIC')
