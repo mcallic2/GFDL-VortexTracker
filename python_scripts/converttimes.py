@@ -21,4 +21,4 @@ ds['time'] = ds['time'].astype('float32')
 ds['time'] = new_times
 
 # save and create new nc file with new time format
-ds.to_netcdf('newtimes_wrfout_combined.nc', format='NETCDF3_CLASSIC')
+ds.to_netcdf('newtimes2.nc', format='NETCDF3_CLASSIC')
