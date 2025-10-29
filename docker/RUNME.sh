@@ -23,6 +23,7 @@ export modulesetup=${codedir}/modulefile-setup
 export execdir=${codedir}/exec
 export vitalsdir=${home}/files/vitals
 export knowntcvitals=  # add path to tcvitals file if user already created it
+export initymdh=2023092912
 
 # slice init date/time to use later in script
 export pdy=`     echo $initymdh | cut -c1-8`
