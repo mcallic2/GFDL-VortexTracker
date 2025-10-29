@@ -33,6 +33,7 @@ export yy=`      echo $initymdh | cut -c3-4`
 export mm=`      echo $initymdh | cut -c5-6`
 export dd=`      echo $initymdh | cut -c7-8`
 export hh=`      echo $initymdh | cut -c9-10`
+export cyc=`     echo $initymdh  | cut -c9-10`
 export ymdh=${pdy}${hh}
 
 # set date stamp var
