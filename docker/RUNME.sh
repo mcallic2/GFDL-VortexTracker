@@ -1,6 +1,6 @@
 #!/bin/bash -l
-#SBATCH  -o output/multi/avnt.out
-#SBATCH  -J multi
+#SBATCH  -o output/tshld2.out
+#SBATCH  -J tshld
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
 #SBATCH  --partition=kjet
