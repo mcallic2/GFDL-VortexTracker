@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH  -o output/cyc.out
+#SBATCH  -o output/FIXDATE.out
 #SBATCH  -J tshld
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
@@ -23,7 +23,7 @@ export modulesetup=${codedir}/modulefile-setup
 export execdir=${codedir}/exec
 export vitalsdir=${home}/files/vitals
 export knowntcvitals=  # add path to tcvitals file if user already created it
-export initymdh=2023092912
+export initymdh=2023082912
 
 # slice init date/time to use later in script
 export pdy=`     echo $initymdh | cut -c1-8`
@@ -33,7 +33,6 @@ export yy=`      echo $initymdh | cut -c3-4`
 export mm=`      echo $initymdh | cut -c5-6`
 export dd=`      echo $initymdh | cut -c7-8`
 export hh=`      echo $initymdh | cut -c9-10`
-export cyc=`     echo $initymdh  | cut -c9-10`
 export ymdh=${pdy}${hh}
 
 # set date stamp var
