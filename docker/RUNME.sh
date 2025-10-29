@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH  -o output/vitals2.out
+#SBATCH  -o output/cyc.out
 #SBATCH  -J tshld
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
@@ -61,7 +61,7 @@ source ${knowntcvitscript}
 
 # export & run ncvariables script
 export ncvarscript=${rundir}/subscripts/ncvariables.sh
-#source ${ncvarscript}
+source ${ncvarscript}
 
 # export & run input data script, use this script if there is only 1 data file
 #export datascript1=${rundir}/subscripts/inputdata_single.sh
@@ -69,7 +69,7 @@ export ncvarscript=${rundir}/subscripts/ncvariables.sh
 
 # export & run input data script, use this script if there are multiple data files
 export datascript2=${rundir}/subscripts/inputdata_multiple.sh
-#source ${datascript2}
+source ${datascript2}
 
 # export & run populate namelist script
 export popnamelist=${rundir}/subscripts/populatenamelist.sh
