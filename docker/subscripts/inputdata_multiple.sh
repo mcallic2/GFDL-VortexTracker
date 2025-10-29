@@ -4,7 +4,7 @@ set -x
 # -------------------------------------------------------------------------------------------------
 # SET UP INPUT NETCDF FOR MULTIPLE DATA FILES
 
-export data_dir=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/tshd_data/${pdy}/${hh}z
+export data_dir=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/tshd_data/${pdy}/18z
 export data_file1=atmos_sos.nest02.tile7_nested_ltd.nc
 export data_file2=nggps2d.nest02.tile7_nested_ltd.nc
 

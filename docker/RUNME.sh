@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH  -o output/FIXDATE.out
+#SBATCH  -o output/3data.out
 #SBATCH  -J tshld
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
