@@ -58,12 +58,10 @@ export g1_mslp_parm_id=0
 export g1_sfcwind_lev_typ=0
 export g1_sfcwind_lev_val=0
 
-export lead_time_units=' '   # stays blank b/c units are determinded during ncdump of file
 export g2_jpdtn=0
 export inp_data_type=netcdf
 export model=41
 
 export use_land_mask=n
-export use_land_mask=${use_land_mask:-no}
-export use_backup_mslp_grad_check=${use_backup_mslp_grad_check:-y}  #caitlyn, use_backup_mslp_grad_check var isn't in the list yet
-export use_backup_850_vt_check=${use_backup_850_vt_check:-y}        #caitlyn, same thing for this
+export use_backup_mslp_grad_check=y  #caitlyn, use_backup_mslp_grad_check var isn't in the list yet
+export use_backup_850_vt_check=y        #caitlyn, same thing for this

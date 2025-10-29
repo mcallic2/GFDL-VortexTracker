@@ -3,19 +3,24 @@
 # -------------------------------------------------------------------------------------------------
 # SET UP KNOWN TCVITALS FILE
 
-export tcvit_logfile=${rundir}/tcvit_logfile.${yyyy}.txt
+if [ -z ${knowntcvitals} ]; then  # need to record tcvitals
+  echo "tcvitals not known; running tcvitals code"
 
-${tcvit_date} ${curymdh} | egrep "JTWC|NHC" | grep -v TEST | awk 'substr($0,6,1) !~ /8/ {print $0}' > ${wdir}/vitals.${curymdh}
-export num_storms="$(cat ${wdir}/vitals.${curymdh} | wc -l)"
+  export find_vitals_data="$(grep "${yyyy}${mm}${dd} ${hh}" ${vitalsdir}/syndat_tcvitals.${yyyy} | \
+          sort -k2 -k4 -n -k5 -n -u | sort -k4 -n -k5 -n | egrep "JTWC|NHC"                       | \
+          awk 'substr($0,6,1) !~ /8/ {print $0}' > ${wdir}/vitals.${initymdh})"
 
-if [ ${num_storms} -gt 0 ]; then
-  echo " "
-  echo "${num_storms} Observed storms exist for ${curymdh}: " | tee -a ${tcvit_logfile}
-  cat ${wdir}/vitals.${curymdh}
-  cat ${wdir}/vitals.${curymdh} >> ${tcvit_logfile}
-  echo " "
-else
-  touch ${wdir}/vitals.${curymdh}
+else  # tcvitals file already created; copy to work dir
+  echo "tcvitals files already created; copying to work dir"
+  cp ${knowntcvitals} ${wdir}/vitals.${initymdh}
+
 fi
 
-if [ -f ${tcvit_logfile} ]; then rm ${tcvit_logfile}; fi
+export num_storms="$(cat ${wdir}/vitals.${initymdh} | wc -l)"
+
+if [ ${num_storms} -gt 0 ]; then
+  echo "${num_storms} Observed storms exist for ${initymdh}: "
+  cat ${wdir}/vitals.${initymdh}
+else
+  touch ${wdir}/vitals.${initymdh}
+fi

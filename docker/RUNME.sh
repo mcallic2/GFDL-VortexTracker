@@ -1,19 +1,28 @@
-#!/bin/bash -x
+#!/bin/bash -l
+#SBATCH  -o output/multi/avnt.out
+#SBATCH  -J multi
+#SBATCH  --time=30       # time limit in minutes
+#SBATCH  --ntasks=1
+#SBATCH  --partition=kjet
+#SBATCH  -A hfip-gfdl
+
+# print line numbers in std out
+export PS4=' line $LINENO: '
+set -x
 
 # -------------------------------------------------------------------------------------------------
 # SET UP PATHS
 
-# print line numbers in std out
-export PS4=' line $LINENO: '
-
 # set directory paths
-export home=$PWD/..
-export workroot=${home}/work
-export codedir=${home}/code
-export execdir=${codedir}/exec
+export home=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/runtshld
+export datadir=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/tshd_data
 export rundir=${home}/docker
-export tcvit_date=${home}/files/bin/tcvit_date
-export ndate=${home}/files/bin/ndate.x
+export workdir=${rundir}/work/runtshld
+export codedir=${home}/code
+export modulesetup=${codedir}/modulefile-setup
+export execdir=${codedir}/exec
+export vitalsdir=${home}/files/vitals
+export knowntcvitals=  # add path to tcvitals file if user already created it
 
 # set model initialization variables
 export curymdh=2023082900   # model initialization date
@@ -51,11 +60,11 @@ source ${ncvarscript}
 
 # export & run input data script, use this script if there is only 1 data file
 export datascript1=${rundir}/subscripts/inputdata_single.sh
-source ${datascript1}
+#source ${datascript1}
 
 # export & run input data script, use this script if there are multiple data files
-#export datascript2=${rundir}/subscripts/inputdata_multiple.sh
-#source ${datascript2}
+export datascript2=${rundir}/subscripts/inputdata_multiple.sh
+source ${datascript2}
 
 # export & run populate namelist script
 export popnamelist=${rundir}/subscripts/populatenamelist.sh
@@ -99,4 +108,4 @@ echo "   "
 
 # export & run clean work directory script
 export cleanup=${rundir}/subscripts/cleanworkdir.sh
-source ${cleanup}
+#source ${cleanup}
