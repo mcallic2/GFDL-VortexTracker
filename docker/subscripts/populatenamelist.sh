@@ -5,7 +5,7 @@ set -x
 # SET UP INPUT NETCDF DATA FILE
 
 # create namelist file in work directory
-export namelist=${wdir}/input.${atcfout}.${pdy}${cyc}           #caitlyn, still might want to delete the $atcfout flag, come back
+export namelist=${wdir}/input.${atcfout}.${pdy}${hh}           #caitlyn, still might want to delete the $atcfout flag, come back
 
 # populate namelist file with defined variables
 echo "&datein inp%bcc=${scc},inp%byy=${syy},inp%bmm=${smm},"      >${namelist}

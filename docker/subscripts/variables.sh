@@ -16,7 +16,7 @@ export regtype=altg    # This variable only needed if trkrtype = tcgen or midlat
 export atcfnum=15
 export atcfname="tshd"
 export atcfout="tshd"
-export atcfymdh=${pdy}${cyc}
+export atcfymdh=${pdy}${hh}
 export max_mslp_850=400.0
 export mslpthresh=0.0015
 export v850thresh=1.5000
