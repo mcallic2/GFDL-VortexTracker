@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH  -o output/tshld3.out
+#SBATCH  -o output/compile.out
 #SBATCH  -J tshld
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
