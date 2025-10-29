@@ -38,7 +38,7 @@ export date_stamp=$(date +"%a %b %d %H:%M:%S %Z %Y")
 wdir=${workroot}/${curymdh}
 if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 
-
+set +x
 # -------------------------------------------------------------------------------------------------
 # INVOKE SCRIPTS
 
