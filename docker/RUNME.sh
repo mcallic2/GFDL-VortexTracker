@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH  -o output/compile.out
+#SBATCH  -o output/vars.out
 #SBATCH  -J tshld
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
@@ -86,8 +86,8 @@ echo "TRACKER SET UP FINISHED"
 echo "INITIALIZE TRACKER EXECUTABLE"
 echo "Running tracker for $atcfname at ${hh}z at ${date_stamp}"
 
-${execdir}/gettrk.x
-#export gettrk_rcc=$?
+#${execdir}/gettrk.x
+export gettrk_rcc=$?
 
 echo "After tracker source code run  ---> ${date_stamp}"
 echo "Return code from tracker= gettrk_rcc= ${gettrk_rcc}"
