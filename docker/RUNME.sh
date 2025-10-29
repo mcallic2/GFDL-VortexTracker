@@ -3,7 +3,7 @@
 #SBATCH  -J tshld
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
-#SBATCH  --partition=kjet
+#SBATCH  --partition=xjet
 #SBATCH  -A hfip-gfdl
 
 # print line numbers in std out
