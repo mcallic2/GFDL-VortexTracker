@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH  -o output/vars.out
+#SBATCH  -o output/vitals2.out
 #SBATCH  -J tshld
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
@@ -51,11 +51,11 @@ source ${compilescript}
 
 # export & run variables code
 export varscript=${rundir}/subscripts/variables.sh
-#source ${varscript}
+source ${varscript}
 
 # export & run known tcvitals script
 export knowntcvitscript=${rundir}/subscripts/tcvitals.sh
-#source ${knowntcvitscript}
+source ${knowntcvitscript}
 
 # export & run ncvariables script
 export ncvarscript=${rundir}/subscripts/ncvariables.sh

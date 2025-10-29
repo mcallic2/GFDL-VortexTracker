@@ -1,4 +1,5 @@
-#!/bin/bash -x
+#!/bin/bash
+set -x
 
 # -------------------------------------------------------------------------------------------------
 # SET UP INPUT/OUTPUT FILES
@@ -65,3 +66,5 @@ fi
 if [ ${trkrtype} = 'midlat' -o ${trkrtype} = 'tcgen' -o ${trkrtype} = 'tracker' ]; then
   ln -s -f ${wdir}/trkrmask.${atcfout}.${pdy}          fort.77
 fi
+
+set +x

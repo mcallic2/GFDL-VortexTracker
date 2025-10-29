@@ -1,4 +1,5 @@
-#!/bin/bash -x
+#!/bin/bash
+set -x
 
 # -------------------------------------------------------------------------------------------------
 # SET UP ENVIRONMENT VARIABLES
@@ -65,3 +66,5 @@ export model=41
 export use_land_mask=n
 export use_backup_mslp_grad_check=y  #caitlyn, use_backup_mslp_grad_check var isn't in the list yet
 export use_backup_850_vt_check=y        #caitlyn, same thing for this
+
+set +x

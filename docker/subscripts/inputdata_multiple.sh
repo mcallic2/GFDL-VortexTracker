@@ -1,4 +1,5 @@
-#!/bin/bash -x
+#!/bin/bash
+set -x
 
 # -------------------------------------------------------------------------------------------------
 # SET UP INPUT NETCDF FOR MULTIPLE DATA FILES
@@ -24,6 +25,6 @@ export netcdffile=${wdir}/combined.${pdy}${cyc}.nc
 # get netcdf time units
 ncdf_time_units="$(ncdump -h $netcdffile | grep "time:units" | awk -F= '{print $2}' | awk -F\" '{print $2}' | awk '{print $1}')"
 export ${ncdf_time_units}
-echo " "
 echo "NetCDF time units pulled from data file = ${ncdf_time_units}"
-echo " "
+
+set +x

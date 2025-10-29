@@ -1,4 +1,5 @@
-#!/bin/bash -x
+#!/bin/bash
+set -x
 
 # -------------------------------------------------------------------------------------------------
 # SET UP NETCDF VARIABLE DEFINITIONS
@@ -60,3 +61,5 @@ export ncdf_temp700name="t700"
 export ncdf_temp650name="t650"
 export ncdf_temp600name="t600"
 export ncdf_omega500name="omg500"
+
+set +x

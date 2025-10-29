@@ -1,4 +1,5 @@
-#!/bin/bash -x
+#!/bin/bash
+set -x
 
 # -------------------------------------------------------------------------------------------------
 # SET UP KNOWN TCVITALS FILE
@@ -24,3 +25,5 @@ if [ ${num_storms} -gt 0 ]; then
 else
   touch ${wdir}/vitals.${initymdh}
 fi
+
+set +x

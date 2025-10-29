@@ -1,4 +1,5 @@
-#!/bin/bash -x
+#!/bin/bash
+set -x
 
 # -------------------------------------------------------------------------------------------------
 # SET UP INPUT NETCDF DATA FILE
@@ -140,3 +141,5 @@ echo "&gendiaginfo genflag='${genflag}',"                              >>${namel
 echo "             gen_read_rh_fields='${gen_read_rh_fields}',"        >>${namelist}
 echo "             need_to_compute_rh_from_q='${need_to_compute_rh_from_q}',"  >>${namelist}
 echo "             smoothe_mslp_for_gen_scan='${smoothe_mslp_for_gen_scan}'/"  >>${namelist}
+
+set +x
