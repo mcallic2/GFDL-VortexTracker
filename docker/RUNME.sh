@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH  -o output/tshld2.out
+#SBATCH  -o output/tshld3.out
 #SBATCH  -J tshld
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
@@ -24,18 +24,21 @@ export execdir=${codedir}/exec
 export vitalsdir=${home}/files/vitals
 export knowntcvitals=  # add path to tcvitals file if user already created it
 
-# set model initialization variables
-export curymdh=2023082900   # model initialization date
-export pdy=`     echo ${curymdh} | cut -c1-8`
-export yyyy=`    echo ${curymdh} | cut -c1-4`
-export cyc=`     echo ${curymdh} | cut -c9-10`
-export ymdh=${pdy}${cyc}
+# slice init date/time to use later in script
+export pdy=`     echo $initymdh | cut -c1-8`
+export yyyy=`    echo $initymdh | cut -c1-4`
+export cc=`      echo $initymdh | cut -c1-2`
+export yy=`      echo $initymdh | cut -c3-4`
+export mm=`      echo $initymdh | cut -c5-6`
+export dd=`      echo $initymdh | cut -c7-8`
+export hh=`      echo $initymdh | cut -c9-10`
+export ymdh=${pdy}${hh}
 
 # set date stamp var
 export date_stamp=$(date +"%a %b %d %H:%M:%S %Z %Y")
 
 # set wdir path
-wdir=${workroot}/${curymdh}
+wdir=${workdir}/${initymdh}
 if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 
 set +x
@@ -48,31 +51,31 @@ source ${compilescript}
 
 # export & run variables code
 export varscript=${rundir}/subscripts/variables.sh
-source ${varscript}
+#source ${varscript}
 
 # export & run known tcvitals script
 export knowntcvitscript=${rundir}/subscripts/tcvitals.sh
-source ${knowntcvitscript}
+#source ${knowntcvitscript}
 
 # export & run ncvariables script
 export ncvarscript=${rundir}/subscripts/ncvariables.sh
-source ${ncvarscript}
+#source ${ncvarscript}
 
 # export & run input data script, use this script if there is only 1 data file
-export datascript1=${rundir}/subscripts/inputdata_single.sh
+#export datascript1=${rundir}/subscripts/inputdata_single.sh
 #source ${datascript1}
 
 # export & run input data script, use this script if there are multiple data files
 export datascript2=${rundir}/subscripts/inputdata_multiple.sh
-source ${datascript2}
+#source ${datascript2}
 
 # export & run populate namelist script
 export popnamelist=${rundir}/subscripts/populatenamelist.sh
-source ${popnamelist}
+#source ${popnamelist}
 
 # export & run input/output files script
 export ioscript=${rundir}/subscripts/IOfiles.sh
-source ${ioscript}
+#source ${ioscript}
 
 # print tracker set up is finished
 echo "TRACKER SET UP FINISHED"
@@ -80,28 +83,22 @@ echo "TRACKER SET UP FINISHED"
 # -------------------------------------------------------------------------------------------------
 # EXECUTE TRACKER SOURCE CODE
 
-echo " "
 echo "INITIALIZE TRACKER EXECUTABLE"
-echo " "
+echo "Running tracker for $atcfname at ${hh}z at ${date_stamp}"
 
-echo "gettrk start for $atcfout at ${cyc}z at ${date_stamp}"
-
-echo "TIMING: BEFORE gettrk  ---> ${date_stamp}"
-
-export for_dump_core_file=TRUE
-ulimit -s unlimited
-
-echo " "
-echo "before gettrk, Output of ulimit command follows...."
-ulimit -a
-echo "before gettrk, Done: Output of ulimit command."
 ${execdir}/gettrk.x
-export gettrk_rcc=$?
+#export gettrk_rcc=$?
 
-echo "   TIMING: AFTER  gettrk  ---> ${date_stamp}"
-echo "   "
-echo "   Return code from tracker= gettrk_rcc= ${gettrk_rcc}"
-echo "   "
+echo "After tracker source code run  ---> ${date_stamp}"
+echo "Return code from tracker= gettrk_rcc= ${gettrk_rcc}"
+
+# add print statement if tracker completed successfully
+if [ ${gettrk_rcc} -gt 0 ]; then
+  echo "TRACKER DID NOT RUN TO COMPLETION"
+  exit 1
+else
+  echo "TRACKER RAN SUCCESSFULLY"
+fi
 
 # -------------------------------------------------------------------------------------------------
 # CLEAN UP WORK DIRECTORY
