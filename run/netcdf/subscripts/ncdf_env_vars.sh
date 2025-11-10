@@ -11,7 +11,7 @@ export file_sequence='onebig'
 cp ${datadir}/${ncdf_filename} ${wdir}/.
 cd ${wdir}
 
-ncdf_time_units="$(ncdump -h $ncdf_filename | grep "time:units" | awk -F= '{print $2}' | awk -F\" '{print $2}' | awk '{print $1}')"
+ncdf_time_units="$(ncdump -h ${ncdf_filename} | grep "time:units" | awk -F= '{print $2}' | awk -F\" '{print $2}' | awk '{print $1}')"
 export ${ncdf_time_units}
 echo " "
 echo "NetCDF time units pulled from data file = ${ncdf_time_units}"
