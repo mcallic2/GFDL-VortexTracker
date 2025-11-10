@@ -10,7 +10,6 @@ export namelist=${wdir}/input.${atcfname}.${pdy}${hh}
 echo "&datein inp%bcc=${cc},inp%byy=${yy},inp%bmm=${mm},"                              > ${namelist}
 echo "        inp%bdd=${dd},inp%bhh=${hh},inp%model=${model},"                        >> ${namelist}
 echo "        inp%modtyp='${modtyp}',"                                                >> ${namelist}
-echo "        inp%lt_units='${lead_time_units}',"                                     >> ${namelist}
 echo "        inp%file_seq='${file_sequence}',"                                       >> ${namelist}
 echo "        inp%nesttyp='${nest_type}'/"                                            >> ${namelist}
 echo "&atcfinfo atcfnum=${atcfnum},atcfname='${atcfname}',"                           >> ${namelist}
