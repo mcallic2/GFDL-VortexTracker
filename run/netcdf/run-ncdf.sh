@@ -83,7 +83,7 @@ export ymdh=${pdy}${hh}
 export date_stamp=$(date +"%a %b %d %H:%M:%S %Z %Y")
 
 # set wdir path
-wdir=${workdir}/${initymdh}
+export wdir=${workdir}/${initymdh}
 if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 
 set +x
