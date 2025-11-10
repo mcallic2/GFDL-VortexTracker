@@ -15,7 +15,7 @@ if [ -d ${builddir} ]; then rm -rf {*,*}; fi
 if [ -z ${which_system} ]; then             # blank
   echo "not using known rdhpc system; not using docker image"
 elif [ ${which_system} = "docker" ]; then    # using container
-  echo "what goes here?"
+  echo "running inside container"
 else                                        # using rdhpc system
   export modsetup=${codedir}/modulefile-setup
   cd ${modsetup}
@@ -37,7 +37,6 @@ elif [ ${which_system} = "analysis" ] \
 elif [ ${which_system} = "docker" ]; then
   cmake ..
 else    # not on known system
-    echo "this might have to be edited"
     cmake ..
 fi
 
@@ -45,7 +44,6 @@ fi
 make
 
 # add success/fail compilation message
-# CAITLYN - don't know if this will work or if it's needed
 if [ $? -eq 0 ]; then
   echo "COMPILATION SUCCESSFUL"
 else
