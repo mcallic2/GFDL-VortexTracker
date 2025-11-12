@@ -25,16 +25,12 @@ do
     echo "ERROR: gribver is not equal to 1 or 2.  gribver = ${gribver} EXITING"
     exit 94
   fi
-done
 
 # -------------------------------------------------------------------------------------------------
 # EXECUTE SUPPLMENTAL SOURCE CODE (tave and/or vint) TO AVERAGE DATA
 
-# interpolate and average data for phase checking
-if [ ${need_to_use_vint_or_tave} = 'y' ]; then
-
-  for fhour in ${fcsthrs}
-  do
+  # interpolate and average data for phase checking
+  if [ ${need_to_use_vint_or_tave} = 'y' ]; then
 
     echo "Now processing hour ${fhour} for GP height & temperture data"
 
@@ -58,7 +54,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
     export rcc2=77
     export rcc3=77
 
-# call vint source code to vertically interpolate the geopotential height data to 50-mb intervals from 300-900 mb
+    # call vint source code to vertically interpolate the geopotential height data to 50-mb intervals from 300-900 mb
     if [ ${need_to_interpolate_height} = 'y' ]; then
 
       export gparm=7
@@ -84,7 +80,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
     
     fi
 
-# call vint source code to vertically interpolate the temperature data to 50-mb intervals from 300-500 mb
+    # call vint source code to vertically interpolate the temperature data to 50-mb intervals from 300-500 mb
     if [ ${need_to_interpolate_temperature} = 'y' ]; then
 
       export gparm=11
@@ -102,7 +98,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
       ${execdir}/vint.x < ${namelist}
       export rcc2=$?
 
-# if vint was successful, then average the temperature in those levels to get a mean 300-500 mb temperature
+      # if vint was successful, then average the temperature in those levels to get a mean 300-500 mb temperature
       if [ ${rcc2} -eq 0 ]; then
 
         export ffile=${wdir}/${atcfname}.${pdy}${hh}.t.f${fhour}
@@ -148,12 +144,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
       cat ${tavefile} >> ${gribfile}
     fi
 
-  done
-fi
-
-# adding to see if it fixes SIG error
-for fhour in ${fcsthrs}
-do
+  fi
 
   echo "Now creating GRIB index file for hour ${fhour}"
 
@@ -162,7 +153,8 @@ do
 
   export gribfile=${wdir}/${atcfname}.${rundescr}.${atcfdescr}.${ymdh}.f${min5}
   export ixfile=${wdir}/${atcfname}.${rundescr}.${atcfdescr}.${ymdh}.f${min5}.ix
-
+  
+  # final grib index after data averaging
   if [ ${gribver} -eq 1 ]; then
     grbindex ${gribfile} ${ixfile}
   else
