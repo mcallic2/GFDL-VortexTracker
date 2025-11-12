@@ -12,11 +12,11 @@ cd ${builddir}
 if [ -d ${builddir} ]; then rm -rf {*,*}; fi
 
 # determine which system user is on
-if [ -z ${which_system} ]; then             # blank
+if [ -z ${which_system} ]; then              # blank
   echo "not using known rdhpc system; not using docker image"
 elif [ ${which_system} = "docker" ]; then    # using container
   echo "running inside container"
-else                                        # using rdhpc system
+else                                         # using rdhpc system
   export modsetup=${codedir}/modulefile-setup
   cd ${modsetup}
   source ${which_system}-setup.sh

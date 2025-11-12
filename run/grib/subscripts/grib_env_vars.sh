@@ -72,7 +72,7 @@ export user_wants_to_track_thick200500='n'
 export user_wants_to_track_thick200850='n'
 
 # char value variables
-export phase_scheme='both'    # can also be = 'vtt' or 'cps'
+export phase_scheme='both'    # 'both', 'vtt', or 'cps'
 export basin='al'
 
 # ----- netcdf specific vars -----

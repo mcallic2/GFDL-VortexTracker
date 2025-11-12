@@ -31,7 +31,7 @@ fi
 ln -s -f ${rundir}/leadtimes.txt                               fort.15
 
 if [ ${vortex_tilt_flag} = 'y' ]; then
-  ln -s -f ${rundir}/vortex_tilt_levs.txt  fort.18
+  ln -s -f ${rundir}/vortex_tilt_levs.txt                      fort.18
   ln -s -f ${wdir}/trak.${atcfname}.vortex_tilt.${pdy}${hh}    fort.82
 fi
 
