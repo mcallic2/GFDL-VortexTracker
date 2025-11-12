@@ -30,7 +30,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
   for fhour in ${fcsthrs}
   do
 
-    echo "Now processing hour $fhour for GP height & temperture data"
+    echo "Now processing hour ${fhour} for GP height & temperture data"
 
     export gfile=${gribfile}
     export ifile=${ixfile}
