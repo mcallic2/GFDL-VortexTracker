@@ -27,6 +27,11 @@ export workdir=${rundir}/work
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
 export which_system=''
 
+if [ ${which_system} = 'docker' ]; then
+  export dockerdir=${homedir}/run/docker
+  source ${dockerdir}/run-docker.sh
+fi
+
 # Initialization forecast date/time matching your data (yyyymmddhh format)
 export initymdh=
 
