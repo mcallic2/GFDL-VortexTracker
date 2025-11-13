@@ -36,6 +36,7 @@ fi
 export initymdh=
 
 # Add the respective forcast hours to match your data; (spaces between hrs only, no commas)
+# This will be used for temperature and height interpolation
 export fcsthrs=''
 
 # trkrtype=tracker for known storms, trkrtype=tcgen for genesis runs
