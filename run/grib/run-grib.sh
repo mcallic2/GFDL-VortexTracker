@@ -83,9 +83,9 @@ fi
 # to run the tracker don't have data at 50mb height level (850, 750, 550, etc.).
 # If 'need_to_use_vint_or_tave' set to 'y' then interpolation code will be ran within the multi or onebig scripts.
 # User can determine if only height and/or temperature interpolation is calculated determined by the value of the following variables
-need_to_use_vint_or_tave=''
-need_to_interpolate_height=''
-need_to_interpolate_temperature=''
+export need_to_use_vint_or_tave=''
+export need_to_interpolate_height=''
+export need_to_interpolate_temperature=''
 
 # -------------------------------------------------------------------------------------------------
 # ADDITIONAL VARIABLE DECLARINING, DOES NOT NEED TO BE EDITED BY USER
