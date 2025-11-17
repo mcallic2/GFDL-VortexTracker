@@ -75,14 +75,14 @@ fi
 # ADDITIONAL VARIABLE DECLARINING, DOES NOT NEED TO BE EDITED BY USER
 
 # slice init date/time to use later in script
-export pdy=`     echo $initymdh | cut -c1-8`
-export yyyy=`    echo $initymdh | cut -c1-4`
-export cc=`      echo $initymdh | cut -c1-2`
-export yy=`      echo $initymdh | cut -c3-4`
-export mm=`      echo $initymdh | cut -c5-6`
-export dd=`      echo $initymdh | cut -c7-8`
-export hh=`      echo $initymdh | cut -c9-10`
-export ymdh=${pdy}${hh}
+export pdy=`     echo ${initymdh} | cut -c1-8`
+export yyyy=`    echo ${initymdh} | cut -c1-4`
+export cc=`      echo ${initymdh} | cut -c1-2`
+export yy=`      echo ${initymdh} | cut -c3-4`
+export mm=`      echo ${initymdh} | cut -c5-6`
+export dd=`      echo ${initymdh} | cut -c7-8`
+export hh=`      echo ${initymdh} | cut -c9-10`
+export ymdh=${initymdh}
 
 # set date stamp var
 export date_stamp=$(date +"%a %b %d %H:%M:%S %Z %Y")
