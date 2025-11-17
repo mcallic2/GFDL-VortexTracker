@@ -6,6 +6,7 @@ set -x
 
 # grib specific
 export inp_data_type='grib'
+export lead_time_units='hours'
 
 export g1_mslp_parm_id=130
 export g1_sfcwind_lev_typ=105
