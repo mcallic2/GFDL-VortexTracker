@@ -13,9 +13,8 @@ cd ${wdir}
 
 ncdf_time_units="$(ncdump -h ${ncdf_filename} | grep "time:units" | awk -F= '{print $2}' | awk -F\" '{print $2}' | awk '{print $1}')"
 export ${ncdf_time_units}
-echo " "
+export lead_time_units=${ncdf_time_units}
 echo "NetCDF time units pulled from data file = ${ncdf_time_units}"
-echo " "
 
 # ---------- needed for both data types ----------
 
