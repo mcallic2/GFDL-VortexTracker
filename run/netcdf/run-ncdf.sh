@@ -33,7 +33,7 @@ export which_system=''
 
 if [ ${which_system} = 'docker' ]; then
   export dockerdir=${homedir}/run/docker
-  source ${dockerdir}/run-docker.sh
+  source ${dockerdir}/use-docker.sh
 fi
 
 # Initialization forecast date/time matching your data
