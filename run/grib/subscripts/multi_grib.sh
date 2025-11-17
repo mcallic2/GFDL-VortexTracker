@@ -34,7 +34,6 @@ do
 
     echo "Now processing hour ${fhour} for GP height & temperture data"
 
-    # adding to see if it fixes SIG error
     let min=fhour*60
     export min5=` echo ${min} | awk '{printf ("%5.5d\n",$0)}'`
 
