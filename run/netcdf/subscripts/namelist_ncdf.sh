@@ -10,6 +10,7 @@ export namelist=${wdir}/input.${atcfname}.${pdy}${hh}
 echo "&datein inp%bcc=${cc},inp%byy=${yy},inp%bmm=${mm},"                              > ${namelist}
 echo "        inp%bdd=${dd},inp%bhh=${hh},inp%model=${model},"                        >> ${namelist}
 echo "        inp%modtyp='${modtyp}',"                                                >> ${namelist}
+echo "        inp%lt_units='${lead_time_units}',"                                     >> ${namelist}
 echo "        inp%file_seq='${file_sequence}',"                                       >> ${namelist}
 echo "        inp%nesttyp='${nest_type}'/"                                            >> ${namelist}
 echo "&atcfinfo atcfnum=${atcfnum},atcfname='${atcfname}',"                           >> ${namelist}
@@ -58,7 +59,7 @@ echo "          wait_max_wait=1800,"                                            
 echo "          wait_sleeptime=5,"                                                    >> ${namelist}
 echo "          per_fcst_command=''/"                                                 >> ${namelist}
 echo "&netcdflist netcdfinfo%num_netcdf_vars=${ncdf_num_netcdf_vars},"                >> ${namelist}
-echo "      netcdfinfo%netcdf_filename='${ncdf_filename}',"                              >> ${namelist}
+echo "      netcdfinfo%netcdf_filename='${ncdf_filename}',"                           >> ${namelist}
 echo "      netcdfinfo%netcdf_lsmask_filename='${ncdf_ls_mask_filename}',"            >> ${namelist}
 echo "      netcdfinfo%time_units='${ncdf_time_units}',"                              >> ${namelist}
 echo "      netcdfinfo%time_name='${ncdf_time_name}',"                                >> ${namelist}
