@@ -61,7 +61,7 @@ export nest_type='fixed'
 export use_land_mask='y'
 export read_separate_land_mask_file='y'
 # Add path to landmask file below if 'y' to above variables, leave blank if 'n'
-export ncdf_ls_mask_filename='{datadir}/SLMSKsfc_SHiELD_C768.RT2020a_GFSv16.nc'
+export ncdf_ls_mask_filename=${datadir}/SLMSKsfc_SHiELD_C768.RT2020a_GFSv16.nc
 
 # 'vortex_tilt_flag' = 'y'/'n'
 # if developer wants to run vortex tilt diagnostics, set to 'y'. If set to 'n', the following if-statement will set
