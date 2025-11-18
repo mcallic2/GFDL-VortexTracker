@@ -75,7 +75,7 @@ export nest_type='fixed'
 # the tilt_parm and threshold variables values automatically
 export vortex_tilt_flag='y'
 export vortex_tilt_parm='zeta'
-export vortex_tilt_allow_thresh='1.0'
+export vortex_tilt_allow_thresh=1.0
 
 if [ ${vortex_tilt_flag} = 'n' ]; then
   export vortex_tilt_parm=''
