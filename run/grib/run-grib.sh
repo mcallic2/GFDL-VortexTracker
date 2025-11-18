@@ -1,6 +1,6 @@
 #!/bin/bash --login
 #SBATCH -o output/test1.out
-#SBATCH -J trkbig
+#SBATCH -J grib2
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
 #SBATCH --nodes=1
