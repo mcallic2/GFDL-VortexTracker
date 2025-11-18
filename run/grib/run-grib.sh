@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH  -o output/test1
+#SBATCH  -o output/test1.out
 #SBATCH  -J grib1
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
