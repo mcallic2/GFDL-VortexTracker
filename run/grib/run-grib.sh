@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/test1.out
+#SBATCH -o output/test2.out
 #SBATCH -J grib2
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
@@ -30,7 +30,7 @@ export rundir=${homedir}/run/grib
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work/test1
+export workdir=${rundir}/work/test2
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
 export which_system='gaea'
@@ -55,7 +55,7 @@ export gribver=2
 
 # file_sequence='multi' when there are multiple files with single frcast hour;
 # file_sequenxe='onebig when all of the data is in one single file
-export file_sequence='onebig'
+export file_sequence='multi'
 
 # ATCF name of model (4 char long)
 export atcfname='g2gf'
