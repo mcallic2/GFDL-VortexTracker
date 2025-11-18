@@ -5,7 +5,7 @@ set -x
 # SET UP NAMELIST VARIABLES FOR NAMELIST FILE
 
 # create namelist file in work directory
-export namelist=${wdir}/input.${atcfname}.${pdy}${hh}
+export namelist=${wdir}/input.${atcfname}.${ymdh}
 
 echo "&datein inp%bcc=${cc},inp%byy=${yy},inp%bmm=${mm},"                              > ${namelist}
 echo "        inp%bdd=${dd},inp%bhh=${hh},inp%model=${model},"                        >> ${namelist}
