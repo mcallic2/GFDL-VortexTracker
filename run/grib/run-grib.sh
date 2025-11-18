@@ -1,5 +1,13 @@
 #!/bin/bash --login
-# ADD BATCH COMMANDS IF NEEDED
+#SBATCH -o output/test1.out
+#SBATCH -J trkbig
+#SBATCH --export=ALL
+#SBATCH --time=30   # time limit in minutes
+#SBATCH --nodes=1
+#SBATCH --clusters=c5
+#SBATCH --partition=batch
+#SBATCH --qos=normal
+#SBATCH --account=gfdl_f
 
 # print line numbers in std out
 export PS4=' line $LINENO: '
@@ -10,8 +18,8 @@ set -x
 # PLEASE TAKE TIME TO READ COMMENTS AND EDIT ACCORDINGLY
 
 # Set directory paths
-export datadir=
-export homedir=
+export datadir=/gpfs/f5/gfdl_f/scratch/Caitlyn.Mcallister/gribdata/grib2
+export homedir=/gpfs/f5/gfdl_f/scratch/Caitlyn.Mcallister/genericscripts/grib2
 
 # If you already have a tcvitals file, add path and name below.
 # If the file has not been created yet, leave this blank and the tcvitals_grib.sh script will create one
@@ -22,10 +30,10 @@ export rundir=${homedir}/run/grib
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work
+export workdir=${rundir}/work/test1
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
-export which_system=''
+export which_system='gaea'
 
 if [ ${which_system} = 'docker' ]; then
   export dockerdir=${homedir}/run/docker
@@ -33,41 +41,41 @@ if [ ${which_system} = 'docker' ]; then
 fi
 
 # Initialization forecast date/time matching your data (yyyymmddhh format)
-export initymdh=
+export initymdh=2023092912
 
 # Add the respective forcast hours to match your data; (spaces between hrs only, no commas)
 # This will be used for temperature and height interpolation
-export fcsthrs=''
+export fcsthrs='0 6 12 18 24 30 36 42 48 54 60 66 72 78 84 90 96 102 108 114 120 126'
 
 # trkrtype=tracker for known storms, trkrtype=tcgen for genesis runs
-export trkrtype=''
+export trkrtype='tracker'
 
 # gribver=1 for GRIB1 data; gribver=2 for GRIB2 data
-export gribver=
+export gribver=2
 
 # file_sequence='multi' when there are multiple files with single frcast hour;
 # file_sequenxe='onebig when all of the data is in one single file
-export file_sequence=''
+export file_sequence='onebig'
 
 # ATCF name of model (4 char long)
-export atcfname=''
+export atcfname='g2gf'
 
 # (Optional) This is descriptive and up to the developer (e.g., "6thdeg", "9km_run","1.6km_run", "15km_ens_run_member_n13", etc)
-export rundescr=''
+export rundescr='0p25deg'
 # (Optional) If used, it should be something that identifies the particular storm, preferably using the atcf ID.
 # For example, the GFDL model standard is to use something like "ike09l", or "two02e", etc. 
-export atcfdescr=''
+export atcfdescr='test76l'
 
 # Variables to declare the model's grid and nesting configurations
-export modtyp=''              # 'global' or 'regional'
-export nest_type=''
+export modtyp='global'              # 'global' or 'regional'
+export nest_type='fixed'
 
 # 'vortex_tilt_flag' = 'y'/'n'
 # If developer wants to run vortex tilt diagnostics, set to 'y'. If set to 'n', the following if-statement will set
 # the tilt_parm and threshold variables values automatically
-export vortex_tilt_flag=''
-export vortex_tilt_parm=''
-export vortex_tilt_allow_thresh=''
+export vortex_tilt_flag='y'
+export vortex_tilt_parm='zeta'
+export vortex_tilt_allow_thresh='1.0'
 
 if [ ${vortex_tilt_flag} = 'n' ]; then
   export vortex_tilt_parm=''
@@ -83,9 +91,9 @@ fi
 # to run the tracker don't have data at 50mb height level (850, 750, 550, etc.).
 # If 'need_to_use_vint_or_tave' set to 'y' then interpolation code will be ran within the multi or onebig scripts.
 # User can determine if only height and/or temperature interpolation is calculated determined by the value of the following variables
-export need_to_use_vint_or_tave=''
-export need_to_interpolate_height=''
-export need_to_interpolate_temperature=''
+export need_to_use_vint_or_tave='y'
+export need_to_interpolate_height='y'
+export need_to_interpolate_temperature='y'
 
 # -------------------------------------------------------------------------------------------------
 # ADDITIONAL VARIABLE DECLARINING, DOES NOT NEED TO BE EDITED BY USER
