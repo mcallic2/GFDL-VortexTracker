@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/test1.out
+#SBATCH -o output/redotest1.out
 #SBATCH -J grib1
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
