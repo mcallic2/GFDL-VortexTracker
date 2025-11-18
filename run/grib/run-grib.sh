@@ -18,8 +18,8 @@ set -x
 # PLEASE TAKE TIME TO READ COMMENTS AND EDIT ACCORDINGLY
 
 # Set directory paths
-export datadir=/gpfs/f5/gfdl_f/scratch/Caitlyn.Mcallister/gribdata/grib2
-export homedir=/gpfs/f5/gfdl_f/scratch/Caitlyn.Mcallister/genericscripts/grib2
+export datadir=/gpfs/f5/gfdl_f/scratch/Caitlyn.Mcallister/gribdata/grib1
+export homedir=/gpfs/f5/gfdl_f/scratch/Caitlyn.Mcallister/genericscripts/grib1
 
 # If you already have a tcvitals file, add path and name below.
 # If the file has not been created yet, leave this blank and the tcvitals_grib.sh script will create one
@@ -51,14 +51,14 @@ export fcsthrs='0 6 12 18 24 30 36 42 48 54 60 66 72 78 84 90 96 102 108 114 120
 export trkrtype='tracker'
 
 # gribver=1 for GRIB1 data; gribver=2 for GRIB2 data
-export gribver=2
+export gribver=1
 
 # file_sequence='multi' when there are multiple files with single frcast hour;
 # file_sequenxe='onebig when all of the data is in one single file
 export file_sequence='onebig'
 
 # ATCF name of model (4 char long)
-export atcfname='g2gf'
+export atcfname='g1gf'
 
 # (Optional) This is descriptive and up to the developer (e.g., "6thdeg", "9km_run","1.6km_run", "15km_ens_run_member_n13", etc)
 export rundescr='0p25deg'
