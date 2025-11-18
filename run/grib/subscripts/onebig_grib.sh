@@ -7,10 +7,11 @@ set -x
 # move into wdir so fort.* files go into correct place
 cd ${wdir}
 
-cp ${datadir}/${atcfname}.${initymdh} ${wdir}/.
+export filebase=${atcfname}.${ymdh}
+cp ${datadir}/${filebase} ${wdir}/.
 
-export gribfile=${wdir}/${atcfname}.${initymdh}
-export ixfile=${wdir}/${atcfname}.${initymdh}.ix
+export gribfile=${filebase}
+export ixfile=${filebase}.ix
 
 if [ ${gribver} -eq 1 ]; then
   grbindex ${gribfile} ${ixfile}
@@ -49,7 +50,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
     if [ ${need_to_interpolate_height} = 'y' ]; then
 
       export gparm=7
-      export namelist=${wdir}/vint_input.${pdy}${hh}.z
+      export namelist=vint_input.${ymdh}.z
       echo "&timein ifcsthour=${fhour},"       > ${namelist}
       echo "        iparm=${gparm},"          >> ${namelist}
       echo "        gribver=${gribver},"      >> ${namelist}
@@ -58,13 +59,13 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
       ln -s -f ${gfile}                                    fort.11
       ln -s -f ${rundir}/hgt_levs.txt                      fort.16
       ln -s -f ${ifile}                                    fort.31
-      ln -s -f ${wdir}/${atcfname}.${pdy}${hh}.z.f${fhour} fort.51
+      ln -s -f ${filebase}.z.f${fhour} fort.51
 
       ${execdir}/vint.x < ${namelist}
       export rcc1=$?
 
       if [ ${rcc1} -eq 0 ]; then
-        export zfile=${wdir}/${atcfname}.${pdy}${hh}.z.f${fhour}
+        export zfile=${filebase}.z.f${fhour}
       else
         echo "ERROR tave.x failure for fhour= ${fhour}"
       fi
@@ -75,7 +76,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
     if [ ${need_to_interpolate_temperature} = 'y' ]; then
 
       export gparm=11
-      export namelist=${wdir}/vint_input.${pdy}${hh}.t
+      export namelist=vint_input.${ymdh}.t
       echo "&timein ifcsthour=${fhour},"       > ${namelist}
       echo "        iparm=${gparm},"          >> ${namelist}
       echo "        gribver=${gribver},"      >> ${namelist}
@@ -84,7 +85,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
       ln -s -f ${gfile}                                    fort.11
       ln -s -f ${rundir}/tmp_levs.txt                      fort.16
       ln -s -f ${ifile}                                    fort.31
-      ln -s -f ${wdir}/${atcfname}.${pdy}${hh}.t.f${fhour} fort.51
+      ln -s -f ${filebase}.t.f${fhour} fort.51
 
       ${execdir}/vint.x < ${namelist}
       export rcc2=$?
@@ -92,8 +93,8 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
 # if vint was successful, then average the temperature in those levels to get a mean 300-500 mb temperature
       if [ ${rcc2} -eq 0 ]; then
 
-        export ffile=${wdir}/${atcfname}.${pdy}${hh}.t.f${fhour}
-        export ifile=${wdir}/${atcfname}.${pdy}${hh}.t.f${fhour}.i
+        export ffile=${filebase}.t.f${fhour}
+        export ifile=${filebase}.t.f${fhour}.i
 
         if [ ${gribver} -eq 1 ]; then
           grbindex ${ffile} ${ifile}
@@ -102,7 +103,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
         fi
 
         export gparm=11
-        export namelist=${wdir}/tave_input.${pdy}${hh}
+        export namelist=tave_input.${ymdh}
         echo "&timein ifcsthour=${fhour},"       > ${namelist}
         echo "        iparm=${gparm},"          >> ${namelist}
         echo "        gribver=${gribver},"      >> ${namelist}
@@ -110,19 +111,19 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
 
         ln -s -f ${ffile}                                       fort.11
         ln -s -f ${ifile}                                       fort.31
-        ln -s -f ${wdir}/${atcfname}_tave.${pdy}${hh}.f${fhour} fort.51
+        ln -s -f ${wdir}/${atcfname}_tave.${ymdh}.f${fhour} fort.51
 
         ${execdir}/tave.x < ${namelist}
         export rcc3=$?
 
         if [ ${rcc3} -eq 0 ]; then
-          export tavefile=${wdir}/${atcfname}_tave.${pdy}${hh}.f${fhour}
+          export tavefile=${atcfname}_tave.${ymdh}.f${fhour}
         else
           echo "ERROR tave.x failure for fhour= ${fhour}"
         fi
 
       else
-        echo "ERROR running vint.x for fhour= $fhour"
+        echo "ERROR running vint.x for fhour= ${fhour}"
 
       fi
     fi

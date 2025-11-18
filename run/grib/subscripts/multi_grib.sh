@@ -12,10 +12,11 @@ do
   let min=fhour*60
   export min5=` echo ${min} | awk '{printf ("%5.5d\n",$0)}'`
 
-  cp ${datadir}/${atcfname}.${rundescr}.${atcfdescr}.${initymdh}.f${min5} ${wdir}/.
+  export filebase=${atcfname}.${rundescr}.${atcfdescr}.${ymdh}
+  cp ${datadir}/${filebase}.f${min5} ${wdir}/.
 
-  export gribfile=${wdir}/${atcfname}.${rundescr}.${atcfdescr}.${initymdh}.f${min5}
-  export ixfile=${wdir}/${atcfname}.${rundescr}.${atcfdescr}.${initymdh}.f${min5}.ix
+  export gribfile=${filebase}.f${min5}
+  export ixfile=${wdir}/${filebase}.f${min5}.ix
 
   if [ ${gribver} -eq 1 ]; then
     grbindex ${gribfile} ${ixfile}
@@ -37,8 +38,8 @@ do
     let min=fhour*60
     export min5=` echo ${min} | awk '{printf ("%5.5d\n",$0)}'`
 
-    export gribfile=${wdir}/${atcfname}.${rundescr}.${atcfdescr}.${ymdh}.f${min5}
-    export ixfile=${wdir}/${atcfname}.${rundescr}.${atcfdescr}.${ymdh}.f${min5}.ix
+    export gribfile=${filebase}.f${min5}
+    export ixfile=${filebase}.f${min5}.ix
 
     export gfile=${gribfile}
     export ifile=${ixfile}
@@ -57,7 +58,7 @@ do
     if [ ${need_to_interpolate_height} = 'y' ]; then
 
       export gparm=7
-      export namelist=${wdir}/vint_input.${pdy}${hh}.z
+      export namelist=vint_input.${ymdh}.z
       echo "&timein ifcsthour=${fhour},"       > ${namelist}
       echo "        iparm=${gparm},"          >> ${namelist}
       echo "        gribver=${gribver},"      >> ${namelist}
@@ -66,13 +67,13 @@ do
       ln -s -f ${gfile}                                    fort.11
       ln -s -f ${rundir}/hgt_levs.txt                      fort.16
       ln -s -f ${ifile}                                    fort.31
-      ln -s -f ${wdir}/${atcfname}.${pdy}${hh}.z.f${fhour} fort.51
+      ln -s -f ${filebase}.z.f${fhour} fort.51
 
       ${execdir}/vint.x < ${namelist}
       exoprt rcc1=$?
 
       if [ ${rcc1} -eq 0 ]; then
-        export zfile=${wdir}/${atcfname}.${pdy}${hh}.z.f${fhour}
+        export zfile=${filebase}.z.f${fhour}
       else
         echo "ERROR tave.x failure for fhour= ${fhour}"
       fi
@@ -83,7 +84,7 @@ do
     if [ ${need_to_interpolate_temperature} = 'y' ]; then
 
       export gparm=11
-      export namelist=${wdir}/vint_input.${pdy}${hh}.t
+      export namelist=vint_input.${ymdh}.t
       echo "&timein ifcsthour=${fhour},"       > ${namelist}
       echo "        iparm=${gparm},"          >> ${namelist}
       echo "        gribver=${gribver},"      >> ${namelist}
@@ -92,7 +93,7 @@ do
       ln -s -f ${gfile}                                    fort.11
       ln -s -f ${rundir}/tmp_levs.txt                      fort.16
       ln -s -f ${ifile}                                    fort.31
-      ln -s -f ${wdir}/${atcfname}.${pdy}${hh}.t.f${fhour} fort.51
+      ln -s -f ${filebase}.t.f${fhour} fort.51
 
       ${execdir}/vint.x < ${namelist}
       export rcc2=$?
@@ -100,8 +101,8 @@ do
       # if vint was successful, then average the temperature in those levels to get a mean 300-500 mb temperature
       if [ ${rcc2} -eq 0 ]; then
 
-        export ffile=${wdir}/${atcfname}.${pdy}${hh}.t.f${fhour}
-        export ifile=${wdir}/${atcfname}.${pdy}${hh}.t.f${fhour}.i
+        export ffile=${filebase}.t.f${fhour}
+        export ifile=${filebase}.t.f${fhour}.i
 
         if [ ${gribver} -eq 1 ]; then
           grbindex ${ffile} ${ifile}
@@ -110,7 +111,7 @@ do
         fi
 
         export gparm=11
-        export namelist=${wdir}/tave_input.${pdy}${hh}
+        export namelist=tave_input.${ymdh}
         echo "&timein ifcsthour=${fhour},"       > ${namelist}
         echo "        iparm=${gparm},"          >> ${namelist}
         echo "        gribver=${gribver},"      >> ${namelist}
@@ -118,13 +119,13 @@ do
 
         ln -s -f ${ffile}                                       fort.11
         ln -s -f ${ifile}                                       fort.31
-        ln -s -f ${wdir}/${atcfname}_tave.${pdy}${hh}.f${fhour} fort.51
+        ln -s -f ${atcfname}_tave.${ymdh}.f${fhour} fort.51
 
         ${execdir}/tave.x < ${namelist}
         export rcc3=$?
 
         if [ $rcc3 -eq 0 ]; then
-          export tavefile=${wdir}/${atcfname}_tave.${pdy}${hh}.f${fhour}
+          export tavefile=${atcfname}_tave.${ymdh}.f${fhour}
         else
           echo "ERROR tave.x failure for fhour= ${fhour}"
         fi
@@ -150,8 +151,8 @@ do
   let min=fhour*60
   export min5=` echo ${min} | awk '{printf ("%5.5d\n",$0)}'`
 
-  export gribfile=${wdir}/${atcfname}.${rundescr}.${atcfdescr}.${ymdh}.f${min5}
-  export ixfile=${wdir}/${atcfname}.${rundescr}.${atcfdescr}.${ymdh}.f${min5}.ix
+  export gribfile=${filebase}.f${min5}
+  export ixfile=${filebase}.f${min5}.ix
   
   # final grib index after data averaging
   if [ ${gribver} -eq 1 ]; then
