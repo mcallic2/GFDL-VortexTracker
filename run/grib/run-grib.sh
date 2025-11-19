@@ -15,7 +15,7 @@ export homedir=
 
 # If you already have a tcvitals file, add path and name below.
 # If the file has not been created yet, leave this blank and the tcvitals_grib.sh script will create one
-# Please note, our archived vitals information contains data up until 03/21/2023
+# Please note, our archived vitals information contains data up until 03/21/2025
 export tcvitals_file=
 
 export rundir=${homedir}/run/grib
