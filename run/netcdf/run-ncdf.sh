@@ -1,5 +1,5 @@
 #!/bin/bash --login
-# # add batch commands if needed
+# add batch commands if needed
 
 # print line numbers in std out
 export PS4=' line $LINENO: '
