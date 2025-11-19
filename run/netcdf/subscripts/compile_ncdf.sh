@@ -37,7 +37,7 @@ elif [ ${which_system} = "analysis" ] \
 elif [ ${which_system} = "docker" ]; then
   cmake ..
 else    # not on known system
-    cmake ..
+  cmake ..
 fi
 
 # compile source code
