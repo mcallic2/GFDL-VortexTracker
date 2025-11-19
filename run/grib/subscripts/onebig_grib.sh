@@ -46,7 +46,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
     export rcc2=77
     export rcc3=77
 
-# call vint source code to vertically interpolate the geopotential height data to 50-mb intervals from 300-900 mb
+    # call vint source code to vertically interpolate the geopotential height data to 50-mb intervals from 300-900 mb
     if [ ${need_to_interpolate_height} = 'y' ]; then
 
       export gparm=7
@@ -72,7 +72,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
     
     fi
 
-# call vint source code to vertically interpolate the temperature data to 50-mb intervals from 300-500 mb
+    # call vint source code to vertically interpolate the temperature data to 50-mb intervals from 300-500 mb
     if [ ${need_to_interpolate_temperature} = 'y' ]; then
 
       export gparm=11
@@ -90,7 +90,7 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
       ${execdir}/vint.x < ${namelist}
       export rcc2=$?
 
-# if vint was successful, then average the temperature in those levels to get a mean 300-500 mb temperature
+      # if vint was successful, then average the temperature in those levels to get a mean 300-500 mb temperature
       if [ ${rcc2} -eq 0 ]; then
 
         export ffile=${filebase}.t.f${fhour}
