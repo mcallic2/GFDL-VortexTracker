@@ -53,11 +53,6 @@ else  # trkrtype = tcgen
   ln -s -f ${wdir}/trak.${atcfname}.parmfix.${ymdh}       fort.81
 fi
 
-if [ ${atcfname} = 'aear' ]
-then
-  ln -s -f ${wdir}/trak.${atcfname}.initvitl.${ymdh}      fort.65
-fi
-
 if [ ${write_vit} = 'y' ]
 then
   ln -s -f ${wdir}/output_genvitals.${atcfname}.${ymdh}   fort.67
