@@ -41,7 +41,7 @@ export contour_interval=1.0
 export radii_pctile=95.0
 export radii_free_pass_pctile=67.0
 export radii_width_thresh=15.0
-export depth_of_mslp_for_gen_scan=0.0000
+export depth_of_mslp_for_gen_scan=1.0
 
 # yes/no variables
 export phaseflag='y'
