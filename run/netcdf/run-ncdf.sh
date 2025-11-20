@@ -46,8 +46,8 @@ export trkrtype=''
 export atcfname=''
 
 # Variables to declare the model's grid and nesting configurations
-export modtyp=''              # 'global' or 'regional'
-export nest_type=''
+export modtyp=''         # 'global' or 'regional'
+export nest_type=''      # 'moveable' or 'fixed'
 
 # Set 'use_land_mask' = 'y' AND 'read_serperate_land_mask_file' = 'y' if landmask file is needed.
 export use_land_mask=''

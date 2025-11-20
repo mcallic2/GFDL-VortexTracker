@@ -59,8 +59,8 @@ export rundescr=''
 export atcfdescr=''
 
 # Variables to declare the model's grid and nesting configurations
-export modtyp=''              # 'global' or 'regional'
-export nest_type=''
+export modtyp=''         # 'global' or 'regional'
+export nest_type=''      # 'moveable' or 'fixed'
 
 # 'vortex_tilt_flag' = 'y'/'n'
 # If developer wants to run vortex tilt diagnostics, set to 'y'. If set to 'n', the following if-statement will set
