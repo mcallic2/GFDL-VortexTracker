@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/cleanup1.out
+#SBATCH -o output/ncdf1.out
 #SBATCH -J shld
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
