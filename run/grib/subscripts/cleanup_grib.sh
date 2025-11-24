@@ -12,23 +12,36 @@ cd ${wdir}
 if [ ${file_sequence} = 'onebig']; then
 
   # create output files directory
-  export outputfiles=${trkrtype}-output
-  mkdir ${outputfiles}
+  export outputdir=${trkrtype}-output
+  mkdir ${outputdir}
 
+  # move all trak.atcfname.* files into tracker_output directory
+  mv trak.${atcfname}.* ${outputdir}/.
+
+  # remove symlink fort files now that actual output files have been populated
+  rm fort.*
+
+  # remove extra namelist file; keep namelist.gettrk for reference
+  rm input.${atcfname}.${ymdh}
+
+  # keep vitals.ymdh, remove any other vitals file in work directory
+  rm tcvit_*_storms.txt
   
+  # remove copied input grib data file and grib index file that was created to save space
+  rm ${gribfile}; rm ${ixfile}
 
-
-
-# fort.* files
-# datafile
-# datafile.ix
-# atcfname.ymdh.t.fcsthrs + 22
-# atcfname.ymdh.z.fcsthrs + 22
-# input.atcfname.ymdh
-# tcvit_*.txt
-# vint_input.ymdh.t
-# vint_input.ymdh.z
-# vitals.ymdh ?
+  # if interpolation code used, remove excess files created from calculations
+  if [ ${need_to_use_vint_or_tave} = 'y' ]; then
+    for fhour in ${fcsthrs}
+    do
+      # remove files created from vint.f and tave.f for each indiviual forecast hr
+      rm ${filebase}.z.f${fhour}
+      rm ${filebase}.t.f${fhour}
+    done
+  fi
+fi
+      
+# vint_input.ymdh.t & vint_input.ymdh.z --> keep for now
 
 # ---------- multi ----------
 
