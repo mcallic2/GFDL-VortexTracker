@@ -2,19 +2,23 @@
 
 set -x
 # -------------------------------------------------------------------------------------------------
-# CLEAN UP WORK DIRECTORY
+# CLEAN UP NETCDF WORK DIRECTORY
 
 # move into wdir
 cd ${wdir}
 
 # create output files directory
-export outputfiles='tracker_output'
+
+export outputfiles=${trkrtype}-output
 mkdir ${outputfiles}
 
 # move all trak.atcfname.* files into tracker_output directory
 mv trak.${atcfname}.* ${outputfiles}/.
 
-# fort.* files
+# remove symlink fort files now that actual output files have been populated
+#rm fort.*
+
+
 # input.atcfname.ymdh --> namelist.gettrk
   # remove input.atcfname.ymdh; no reason to have 2 of the same files
 # datafile
