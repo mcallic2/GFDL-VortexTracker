@@ -96,7 +96,7 @@ export ymdh=${initymdh}
 export date_stamp=$(date +"%a %b %d %H:%M:%S %Z %Y")
 
 # set wdir path
-export wdir=${workdir}/${atcfname}-${ymdh}-${trkrtype}
+export wdir=${workdir}/${atcfname}_${ymdh}
 if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 
 set +x
