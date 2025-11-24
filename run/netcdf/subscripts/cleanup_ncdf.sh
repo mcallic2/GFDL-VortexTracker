@@ -8,7 +8,6 @@ set -x
 cd ${wdir}
 
 # create output files directory
-
 export outputfiles=${trkrtype}-output
 mkdir ${outputfiles}
 
@@ -16,18 +15,16 @@ mkdir ${outputfiles}
 mv trak.${atcfname}.* ${outputfiles}/.
 
 # remove symlink fort files now that actual output files have been populated
-#rm fort.*
+rm fort.*
 
+# remove extra namelist file; keep namelist.gettrk for reference
+rm input.${atcfname}.${ymdh}
 
-# input.atcfname.ymdh --> namelist.gettrk
-  # remove input.atcfname.ymdh; no reason to have 2 of the same files
-# datafile
-# figure out what tcvit_*.txt files are
-  # tcvit_genesis.txt has nothing in it, probably shouldn't be created if not in tcgen mode
-  # tcvit_rsmc.txt == vitals.ymdh; remove tcvit_rsmc.txt
-# create outputfiles directory
-# move trak.atcfname.* files into outputfiles directory
-# vitals.ymdh --> keep, especially since developer may be using their own file
+# remove copied datafile from work directory to save space
+rm ${ncdf_filename}
+
+# keep vitals.ymdh, remove any other vitals file in work directory
+rm tcvit_*_storms.txt
 
 # -------------------------------------------------------------------------------------------------
 set +x
