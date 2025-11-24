@@ -8,11 +8,11 @@ set -x
 cd ${wdir}
 
 # create output files directory
-export outputfiles=${trkrtype}-output
-mkdir ${outputfiles}
+export outputdir=${trkrtype}-output
+mkdir ${outputdir}
 
 # move all trak.atcfname.* files into tracker_output directory
-mv trak.${atcfname}.* ${outputfiles}/.
+mv trak.${atcfname}.* ${outputdir}/.
 
 # remove symlink fort files now that actual output files have been populated
 rm fort.*
