@@ -6,6 +6,7 @@ set -x
 
 # create namelist file in work directory
 export namelist=${wdir}/input.${atcfname}.${ymdh}
+export capsatcf=` echo "${atcfname}" | tr '[a-z]' '[A-Z]'` # capitalize atcfname for expected ATCF format
 
 echo "&datein inp%bcc=${cc},inp%byy=${yy},inp%bmm=${mm},"                              > ${namelist}
 echo "        inp%bdd=${dd},inp%bhh=${hh},inp%model=${model},"                        >> ${namelist}
@@ -13,7 +14,7 @@ echo "        inp%modtyp='${modtyp}',"                                          
 echo "        inp%lt_units='${lead_time_units}',"                                     >> ${namelist}
 echo "        inp%file_seq='${file_sequence}',"                                       >> ${namelist}
 echo "        inp%nesttyp='${nest_type}'/"                                            >> ${namelist}
-echo "&atcfinfo atcfnum=${atcfnum},atcfname='${atcfname}',"                           >> ${namelist}
+echo "&atcfinfo atcfnum=${atcfnum},atcfname='${capsatcf}',"                           >> ${namelist}
 echo "          atcfymdh=${atcfymdh},atcffreq=${atcffreq}/"                           >> ${namelist}
 echo "&trackerinfo trkrinfo%westbd=${trkrwbd},"                                       >> ${namelist}
 echo "      trkrinfo%eastbd=${trkrebd},"                                              >> ${namelist}
