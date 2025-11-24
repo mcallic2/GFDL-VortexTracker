@@ -104,7 +104,7 @@ export ymdh=${initymdh}
 export date_stamp=$(date +"%a %b %d %H:%M:%S %Z %Y")
 
 # set wdir path
-export wdir=${workdir}/${initymdh}
+export wdir=${workdir}/${atcfname}-${ymdh}-${trkrtype}
 if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 
 set +x
@@ -162,3 +162,8 @@ if [ ${gettrk_rcc} -gt 0 ]; then
 else
   echo "TRACKER RAN SUCCESSFULLY"
 fi
+
+# -------------------------------------------------------------------------------------------------
+# RUN CLEAN UP SCRIPT
+export runcleanup=${rundir}/subscripts/cleanup_grib.sh
+source ${runcleanup}

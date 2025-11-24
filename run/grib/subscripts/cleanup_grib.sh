@@ -1,9 +1,23 @@
 #!/bin/bash
 
+set -x
 # -------------------------------------------------------------------------------------------------
-# CLEAN UP WORK DIRECTORY
+# CLEAN UP GRIB WORK DIRECTORY
+
+# move into wdir
+cd ${wdir}
 
 # ---------- onebig ----------
+
+if [ ${file_sequence} = 'onebig']; then
+
+  # create output files directory
+  export outputfiles=${trkrtype}-output
+  mkdir ${outputfiles}
+
+  
+
+
 
 # fort.* files
 # datafile
@@ -12,8 +26,6 @@
 # atcfname.ymdh.z.fcsthrs + 22
 # input.atcfname.ymdh
 # tcvit_*.txt
-# create outputfiles directory
-# move all trak.atcfname.* files into outputfiles directory
 # vint_input.ymdh.t
 # vint_input.ymdh.z
 # vitals.ymdh ?
@@ -32,3 +44,6 @@
 # vint_input.ymdh.t
 # vint_input.ymdh.z
 # vitals.ymdh ?
+
+# -------------------------------------------------------------------------------------------------
+set +x
