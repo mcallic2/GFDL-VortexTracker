@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/tcgenpt3.out
+#SBATCH -o output/trackerpt3.out
 #SBATCH -J grib2
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
@@ -48,7 +48,7 @@ export initymdh=2023092912
 export fcsthrs='0 6 12 18 24 30 36 42 48 54 60 66 72 78 84 90 96 102 108 114 120 126'
 
 # trkrtype=tracker for known storms, trkrtype=tcgen for genesis runs
-export trkrtype='tcgen'
+export trkrtype='tracker'
 
 # gribver=1 for GRIB1 data; gribver=2 for GRIB2 data
 export gribver=2
