@@ -162,3 +162,8 @@ if [ ${gettrk_rcc} -gt 0 ]; then
 else
   echo "TRACKER RAN SUCCESSFULLY"
 fi
+
+# -------------------------------------------------------------------------------------------------
+# RUN CLEAN UP SCRIPT
+export runcleanup=${rundir}/subscripts/cleanup_grib.sh
+source ${runcleanup}
