@@ -175,4 +175,4 @@ fi
 # -------------------------------------------------------------------------------------------------
 # RUN CLEAN UP SCRIPT
 export runcleanup=${rundir}/subscripts/cleanup_grib.sh
-#source ${runcleanup}
+source ${runcleanup}
