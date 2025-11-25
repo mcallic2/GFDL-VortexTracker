@@ -9,7 +9,7 @@ cd ${wdir}
 
 # ---------- onebig ----------
 
-if [ ${file_sequence} = 'onebig']; then
+if [ ${file_sequence} = 'onebig' ]; then
 
   # create output files directory
   export outputdir=${trkrtype}-output
