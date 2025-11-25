@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/grb2bigtcgen.out
+#SBATCH -o output/tcgenpt2.out
 #SBATCH -J grib2
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
@@ -30,7 +30,7 @@ export rundir=${homedir}/run/grib
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work
+export workdir=${rundir}/work/tcgen
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
 export which_system='gaea'
