@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/multitrk3.out
+#SBATCH -o output/multitrk4.out
 #SBATCH -J grib2
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes

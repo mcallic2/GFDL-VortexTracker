@@ -77,9 +77,11 @@ if [ ${file_sequence} = 'multi' ]; then
   if [ ${need_to_use_vint_or_tave} = 'y' ]; then
     for fhour in ${fcsthrs}
     do
+      let min=fhour*60
+      export min5=` echo ${min} | awk '{printf ("%5.5d\n",$0)}'`
       # remove copied input grib data file and grib index file that was created to save space
-      rm ${gribfile}
-      rm ${ixfile}
+      rm ${gribfile}.f${min5}
+      rm ${ixfile}.f${min5}.ix
       # remove files created from vint.f and tave.f for each indiviual forecast hr
       rm ${filebase}.z.f${fhour}
       rm ${filebase}.t.f${fhour}
