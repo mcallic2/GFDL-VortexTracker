@@ -72,14 +72,14 @@ if [ ${file_sequence} = 'multi' ]; then
 
   # keep vitals.ymdh, remove any other vitals file in work directory
   rm tcvit_*_storms.txt
-  
-  # remove copied input grib data file and grib index file that was created to save space
-  rm ${gribfile}; rm ${ixfile}
 
   # if interpolation code used, remove excess files created from calculations
   if [ ${need_to_use_vint_or_tave} = 'y' ]; then
     for fhour in ${fcsthrs}
     do
+      # remove copied input grib data file and grib index file that was created to save space
+      rm ${gribfile}.f${fhour}
+      rm ${ixfile}.f${fhour}.ix
       # remove files created from vint.f and tave.f for each indiviual forecast hr
       rm ${filebase}.z.f${fhour}
       rm ${filebase}.t.f${fhour}
