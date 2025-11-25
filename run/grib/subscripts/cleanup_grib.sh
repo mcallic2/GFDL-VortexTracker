@@ -78,8 +78,8 @@ if [ ${file_sequence} = 'multi' ]; then
     for fhour in ${fcsthrs}
     do
       # remove copied input grib data file and grib index file that was created to save space
-      rm ${gribfile}.f${fhour}
-      rm ${ixfile}.f${fhour}.ix
+      rm ${gribfile}
+      rm ${ixfile}
       # remove files created from vint.f and tave.f for each indiviual forecast hr
       rm ${filebase}.z.f${fhour}
       rm ${filebase}.t.f${fhour}
