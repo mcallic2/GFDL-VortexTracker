@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/trkr_test1.out
+#SBATCH -o output/gen_test1.out
 #SBATCH -J shld
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
@@ -34,7 +34,7 @@ export rundir=${homedir}/run/netcdf
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work/ncdf/trkr_test1
+export workdir=${rundir}/work/ncdf/gen_test1
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
 export which_system='gaea'
@@ -48,7 +48,7 @@ fi
 export initymdh=2024092500
 
 # trkrtype=tracker for known storms, trkrtype=tcgen for genesis runs
-export trkrtype='tracker'
+export trkrtype='tcgen'
 
 # ATCF name of model (4 char long)
 export atcfname='shld'
