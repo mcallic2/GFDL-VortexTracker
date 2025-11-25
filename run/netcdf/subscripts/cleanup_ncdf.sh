@@ -9,7 +9,7 @@ cd ${wdir}
 
 # create output files directory
 export outputdir=${trkrtype}-output
-mkdir ${outputdir}
+if [ ! -d ${outputdir} ]; then mkdir -p ${outputdir}; fi
 
 # move all trak.atcfname.* files into tracker_output directory
 mv trak.${atcfname}.* ${outputdir}/.
