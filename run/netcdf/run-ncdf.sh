@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/tcgen.out
+#SBATCH -o output/trkr.out
 #SBATCH -J shld
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
@@ -48,7 +48,7 @@ fi
 export initymdh=2024092500
 
 # trkrtype=tracker for known storms, trkrtype=tcgen for genesis runs
-export trkrtype='tcgen'
+export trkrtype='tracker'
 
 # ATCF name of model (4 char long)
 export atcfname='shld'
