@@ -45,8 +45,6 @@ if [ ${file_sequence} = 'onebig' ]; then
     done
   fi
 fi
-      
-# vint_input.ymdh.t & vint_input.ymdh.z --> keeping for now
 
 # ---------- multi ----------
 
@@ -88,19 +86,6 @@ if [ ${file_sequence} = 'multi' ]; then
     done
   fi
 fi
-
-# fort.* files
-# datafile.fcsthrs + 22
-# datafile.fcsthrs.ix + 22 
-# atcfname.ymdh.t.fcsthrs + 22
-# atcfname.ymdh.z.fcsthrs + 22
-# input.atcfname.ymdh
-# tcvit_*.txt
-# create outputfiles directory
-# move all trak.atcfname.* files into outputfiles directory
-# vint_input.ymdh.t
-# vint_input.ymdh.z
-# vitals.ymdh ?
 
 # -------------------------------------------------------------------------------------------------
 set +x
