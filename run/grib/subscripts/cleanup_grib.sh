@@ -13,8 +13,8 @@ if [ ${file_sequence} = 'onebig' ]; then
 
   # create output files directory
   export outputdir=${trkrtype}-output
-  mkdir ${outputdir}
-
+  if [ ! -d ${outputdir} ]; then mkdir -p ${outputdir}; fi
+  
   # move all trak.atcfname.* files into tracker_output directory
   mv trak.${atcfname}.* ${outputdir}/.
 
@@ -54,7 +54,7 @@ if [ ${file_sequence} = 'multi' ]; then
 
   # create output files directory
   export outputdir=${trkrtype}-output
-  mkdir ${outputdir}
+  if [ ! -d ${outputdir} ]; then mkdir -p ${outputdir}; fi
 
   # move all trak.atcfname.* files into tracker_output directory
   mv trak.${atcfname}.* ${outputdir}/.
@@ -80,8 +80,8 @@ if [ ${file_sequence} = 'multi' ]; then
       let min=fhour*60
       export min5=` echo ${min} | awk '{printf ("%5.5d\n",$0)}'`
       # remove copied input grib data file and grib index file that was created to save space
-      rm ${gribfile}.f${min5}
-      rm ${ixfile}.f${min5}.ix
+      rm ${filebase}.f${min5}
+      rm ${filebase}.f${min5}.ix
       # remove files created from vint.f and tave.f for each indiviual forecast hr
       rm ${filebase}.z.f${fhour}
       rm ${filebase}.t.f${fhour}
