@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/gen_test1.out
+#SBATCH -o output/tcgen.out
 #SBATCH -J shld
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
@@ -34,7 +34,7 @@ export rundir=${homedir}/run/netcdf
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work/ncdf/gen_test1
+export workdir=${rundir}/work
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
 export which_system='gaea'
