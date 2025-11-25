@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/trackerpt3.out
+#SBATCH -o output/multitrk1.out
 #SBATCH -J grib2
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
@@ -30,7 +30,7 @@ export rundir=${homedir}/run/grib
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work
+export workdir=${rundir}/work/multi
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
 export which_system='gaea'
@@ -55,16 +55,16 @@ export gribver=2
 
 # file_sequence='multi' when there are multiple files with single frcast hour;
 # file_sequenxe='onebig when all of the data is in one single file
-export file_sequence='onebig'
+export file_sequence='multi'
 
 # ATCF name of model (4 char long)
 export atcfname='g2gf'
 
 # (Optional) This is descriptive and up to the developer (e.g., "6thdeg", "9km_run","1.6km_run", "15km_ens_run_member_n13", etc)
-export rundescr=''
+export rundescr='0p25deg'
 # (Optional) If used, it should be something that identifies the particular storm, preferably using the atcf ID.
 # For example, the GFDL model standard is to use something like "ike09l", or "two02e", etc. 
-export atcfdescr=''
+export atcfdescr='test761'
 
 # Variables to declare the model's grid and nesting configurations
 export modtyp='global'         # 'global' or 'regional'

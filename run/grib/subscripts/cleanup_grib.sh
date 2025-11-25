@@ -59,6 +59,11 @@ if [ ${file_sequence} = 'multi' ]; then
   # move all trak.atcfname.* files into tracker_output directory
   mv trak.${atcfname}.* ${outputdir}/.
 
+  # move tracker mask file for genesis runs in output file directory
+  if [ ${trkrtype} = 'tcgen' ]; then
+    mv trkrmask.${atcfname}.${ymdh} ${outputdir}/.
+  fi
+
   # remove symlink fort files now that actual output files have been populated
   rm fort.*
 
