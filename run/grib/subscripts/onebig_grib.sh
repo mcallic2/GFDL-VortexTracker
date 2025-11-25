@@ -56,10 +56,10 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
       echo "        gribver=${gribver},"      >> ${namelist}
       echo "        g2_jpdtn=${g2_jpdtn}/"    >> ${namelist}
 
-      ln -s -f ${gfile}                                    fort.11
-      ln -s -f ${rundir}/hgt_levs.txt                      fort.16
-      ln -s -f ${ifile}                                    fort.31
-      ln -s -f ${filebase}.z.f${fhour} fort.51
+      ln -s -f ${gfile}                       fort.11
+      ln -s -f ${rundir}/hgt_levs.txt         fort.16
+      ln -s -f ${ifile}                       fort.31
+      ln -s -f ${filebase}.z.f${fhour}        fort.51
 
       ${execdir}/vint.x < ${namelist}
       export rcc1=$?
@@ -82,10 +82,10 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
       echo "        gribver=${gribver},"      >> ${namelist}
       echo "        g2_jpdtn=${g2_jpdtn}/"    >> ${namelist}
 
-      ln -s -f ${gfile}                                    fort.11
-      ln -s -f ${rundir}/tmp_levs.txt                      fort.16
-      ln -s -f ${ifile}                                    fort.31
-      ln -s -f ${filebase}.t.f${fhour} fort.51
+      ln -s -f ${gfile}                       fort.11
+      ln -s -f ${rundir}/tmp_levs.txt         fort.16
+      ln -s -f ${ifile}                       fort.31
+      ln -s -f ${filebase}.t.f${fhour}        fort.51
 
       ${execdir}/vint.x < ${namelist}
       export rcc2=$?
@@ -109,8 +109,8 @@ if [ ${need_to_use_vint_or_tave} = 'y' ]; then
         echo "        gribver=${gribver},"      >> ${namelist}
         echo "        g2_jpdtn=${g2_jpdtn}/"    >> ${namelist}
 
-        ln -s -f ${ffile}                                       fort.11
-        ln -s -f ${ifile}                                       fort.31
+        ln -s -f ${ffile}                                   fort.11
+        ln -s -f ${ifile}                                   fort.31
         ln -s -f ${wdir}/${atcfname}_tave.${ymdh}.f${fhour} fort.51
 
         ${execdir}/tave.x < ${namelist}
