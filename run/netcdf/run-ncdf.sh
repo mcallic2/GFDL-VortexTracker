@@ -92,11 +92,12 @@ export dd=`      echo ${initymdh} | cut -c7-8`
 export hh=`      echo ${initymdh} | cut -c9-10`
 export ymdh=${initymdh}
 
-# set date stamp var
+# set date stamp vars
 export date_stamp=$(date +"%a %b %d %H:%M:%S %Z %Y")
+export today=$(date +"%a-%b%d")
 
 # set wdir path
-export wdir=${workdir}/${atcfname}_${ymdh}
+export wdir=${workdir}/${today}
 if [ ! -d ${wdir} ]; then mkdir -p ${wdir}; fi
 
 set +x
