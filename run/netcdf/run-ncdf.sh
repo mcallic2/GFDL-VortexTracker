@@ -1,13 +1,4 @@
-#!/bin/bash --login
-#SBATCH -o output/docker/tshdgen.out
-#SBATCH -J tshd
-#SBATCH --export=ALL
-#SBATCH --time=30   # time limit in minutes
-#SBATCH --nodes=1
-#SBATCH --clusters=c5
-#SBATCH --partition=batch
-#SBATCH --qos=normal
-#SBATCH --account=gfdl_f
+#!/bin/bash
 
 # print line numbers in std out
 export PS4=' line $LINENO: '
