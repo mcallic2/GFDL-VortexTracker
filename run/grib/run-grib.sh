@@ -1,4 +1,13 @@
-#!/bin/bash
+#!/bin/bash --login
+#SBATCH -o output/grib1/bigtrk.out
+#SBATCH -J grib1
+#SBATCH --export=ALL
+#SBATCH --time=30   # time limit in minutes
+#SBATCH --nodes=1
+#SBATCH --clusters=c5
+#SBATCH --partition=batch
+#SBATCH --qos=normal
+#SBATCH --account=gfdl_f
 
 # print line numbers in std out
 export PS4=' line $LINENO: '
@@ -9,7 +18,7 @@ set -x
 # PLEASE TAKE TIME TO READ COMMENTS AND EDIT ACCORDINGLY
 
 # Set directory paths
-export datadir=/gpfs/f5/gfdl_f/scratch/Caitlyn.Mcallister/gribdata/grib2
+export datadir=/gpfs/f5/gfdl_f/scratch/Caitlyn.Mcallister/gribdata/grib1
 export homedir=/gpfs/f5/gfdl_f/scratch/Caitlyn.Mcallister/genericscripts/nov25
 
 # If you already have a tcvitals file, add path and name below.
@@ -21,10 +30,10 @@ export rundir=${homedir}/run/grib
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work/docker
+export workdir=${rundir}/work/grib1
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
-export which_system='docker'
+export which_system='gaea'
 
 if [ ${which_system} = 'docker' ]; then
   export dockerdir=${homedir}/run/docker
@@ -42,14 +51,14 @@ export fcsthrs='0 6 12 18 24 30 36 42 48 54 60 66 72 78 84 90 96 102 108 114 120
 export trkrtype='tracker'
 
 # gribver=1 for GRIB1 data; gribver=2 for GRIB2 data
-export gribver=2
+export gribver=1
 
 # file_sequence='multi' when there are multiple files with single frcast hour;
 # file_sequenxe='onebig when all of the data is in one single file
 export file_sequence='onebig'
 
 # ATCF name of model (4 char long)
-export atcfname='g2gf'
+export atcfname='g1gf'
 
 # (Optional) This is descriptive and up to the developer (e.g., "6thdeg", "9km_run","1.6km_run", "15km_ens_run_member_n13", etc)
 export rundescr='0p25deg'
