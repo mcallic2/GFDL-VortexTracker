@@ -46,7 +46,7 @@ export gribver=2
 
 # file_sequence='multi' when there are multiple files with single frcast hour;
 # file_sequenxe='onebig when all of the data is in one single file
-export file_sequence='multi'
+export file_sequence='onebig'
 
 # ATCF name of model (4 char long)
 export atcfname='g2gf'
