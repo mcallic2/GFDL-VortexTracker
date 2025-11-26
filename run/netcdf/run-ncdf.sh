@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/tshdgen.out
+#SBATCH -o output/docker/tshdgen.out
 #SBATCH -J tshd
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
@@ -37,7 +37,7 @@ export execdir=${codedir}/exec
 export workdir=${rundir}/work/ncdf
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
-export which_system='gaea'
+export which_system='docker'
 
 if [ ${which_system} = 'docker' ]; then
   export dockerdir=${homedir}/run/docker

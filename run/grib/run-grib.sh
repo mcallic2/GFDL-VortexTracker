@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/multitrk.out
+#SBATCH -o output/docker/multitrk.out
 #SBATCH -J biggen
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
@@ -30,10 +30,10 @@ export rundir=${homedir}/run/grib
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work/grib2
+export workdir=${rundir}/work/docker
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
-export which_system='gaea'
+export which_system='docker'
 
 if [ ${which_system} = 'docker' ]; then
   export dockerdir=${homedir}/run/docker
