@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/ncdf/tshdtrk.out
+#SBATCH -o output/tshdtrk.out
 #SBATCH -J tshd
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes

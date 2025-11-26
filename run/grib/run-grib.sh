@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/grib2/bigtrk.out
+#SBATCH -o output/bigtrk.out
 #SBATCH -J bigtrk
 #SBATCH --export=ALL
 #SBATCH --time=30   # time limit in minutes
