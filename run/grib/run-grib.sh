@@ -61,10 +61,10 @@ export file_sequence='multi'
 export atcfname='g2gf'
 
 # (Optional) This is descriptive and up to the developer (e.g., "6thdeg", "9km_run","1.6km_run", "15km_ens_run_member_n13", etc)
-export rundescr=''
+export rundescr='0p25deg'
 # (Optional) If used, it should be something that identifies the particular storm, preferably using the atcf ID.
 # For example, the GFDL model standard is to use something like "ike09l", or "two02e", etc. 
-export atcfdescr=''
+export atcfdescr='test76l'
 
 # Variables to declare the model's grid and nesting configurations
 export modtyp='global'         # 'global' or 'regional'
