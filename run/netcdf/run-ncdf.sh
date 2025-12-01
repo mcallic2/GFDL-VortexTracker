@@ -1,9 +1,9 @@
 #!/bin/bash --login
-#SBATCH  -o output/shldtrk.out
-#SBATCH  -J shtrk
+#SBATCH  -o output/tshdtrk.out
+#SBATCH  -J tshd
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
-#SBATCH  --partition=xjet
+#SBATCH  --partition=kjet
 #SBATCH  -A hfip-gfdl
 
 # print line numbers in std out
