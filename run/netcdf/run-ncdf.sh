@@ -1,9 +1,9 @@
 #!/bin/bash --login
-#SBATCH  -o output/tshdtrk.out
-#SBATCH  -J tshd
+#SBATCH  -o output/tshdgen.out
+#SBATCH  -J tsgen
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
-#SBATCH  --partition=kjet
+#SBATCH  --partition=xjet
 #SBATCH  -A hfip-gfdl
 
 # print line numbers in std out
@@ -45,7 +45,7 @@ fi
 export initymdh=2023082900
 
 # trkrtype=tracker for known storms, trkrtype=tcgen for genesis runs
-export trkrtype='tracker'
+export trkrtype='tcgen'
 
 # ATCF name of model (4 char long)
 export atcfname='tshd'
