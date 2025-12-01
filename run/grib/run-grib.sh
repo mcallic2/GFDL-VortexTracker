@@ -1,9 +1,9 @@
 #!/bin/bash --login
-#SBATCH  -o output/biggen.out
-#SBATCH  -J biggen
+#SBATCH  -o output/bigtrk.out
+#SBATCH  -J g2trk
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
-#SBATCH  --partition=kjet
+#SBATCH  --partition=xjet
 #SBATCH  -A hfip-gfdl
 
 # print line numbers in std out
@@ -27,7 +27,7 @@ export rundir=${homedir}/run/grib
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work/grib2/tcgen
+export workdir=${rundir}/work/grib2/trk
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
 export which_system='jet'
@@ -45,7 +45,7 @@ export initymdh=2023092912
 export fcsthrs='0 6 12 18 24 30 36 42 48 54 60 66 72 78 84 90 96 102 108 114 120 126'
 
 # trkrtype=tracker for known storms, trkrtype=tcgen for genesis runs
-export trkrtype='tcgen'
+export trkrtype='tracker'
 
 # gribver=1 for GRIB1 data; gribver=2 for GRIB2 data
 export gribver=2
