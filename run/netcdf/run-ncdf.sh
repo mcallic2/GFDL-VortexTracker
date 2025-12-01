@@ -31,7 +31,7 @@ export rundir=${homedir}/run/netcdf
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work/tshd
+export workdir=${rundir}/work/shld
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
 export which_system='jet'
