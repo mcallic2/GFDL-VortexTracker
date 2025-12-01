@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH  -o output/grib1/biggen.out
+#SBATCH  -o output/grib2/biggen.out
 #SBATCH  -J biggen
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
@@ -15,7 +15,7 @@ set -x
 # PLEASE TAKE TIME TO READ COMMENTS AND EDIT ACCORDINGLY
 
 # Set directory paths
-export datadir=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/input_grib_testingdata/grib1
+export datadir=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/input_grib_testingdata/grib2
 export homedir=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/genericscripts/nov25
 
 # If you already have a tcvitals file, add path and name below.
@@ -27,7 +27,7 @@ export rundir=${homedir}/run/grib
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work/grib1/tcgen
+export workdir=${rundir}/work/grib2/tcgen
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
 export which_system='jet'
@@ -48,14 +48,14 @@ export fcsthrs='0 6 12 18 24 30 36 42 48 54 60 66 72 78 84 90 96 102 108 114 120
 export trkrtype='tcgen'
 
 # gribver=1 for GRIB1 data; gribver=2 for GRIB2 data
-export gribver=1
+export gribver=2
 
 # file_sequence='multi' when there are multiple files with single frcast hour;
 # file_sequenxe='onebig when all of the data is in one single file
 export file_sequence='onebig'
 
 # ATCF name of model (4 char long)
-export atcfname='g1gf'
+export atcfname='g2gf'
 
 # (Optional) This is descriptive and up to the developer (e.g., "6thdeg", "9km_run","1.6km_run", "15km_ens_run_member_n13", etc)
 export rundescr='0p25deg'
