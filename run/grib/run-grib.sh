@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH  -o output/bigtrk.out
+#SBATCH  -o output/multrk.out
 #SBATCH  -J g2trk
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
@@ -27,7 +27,7 @@ export rundir=${homedir}/run/grib
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
-export workdir=${rundir}/work/grib2/trk
+export workdir=${rundir}/work/grib2/multtrk
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
 export which_system='jet'
@@ -52,7 +52,7 @@ export gribver=2
 
 # file_sequence='multi' when there are multiple files with single frcast hour;
 # file_sequenxe='onebig when all of the data is in one single file
-export file_sequence='onebig'
+export file_sequence='multi'
 
 # ATCF name of model (4 char long)
 export atcfname='g2gf'
