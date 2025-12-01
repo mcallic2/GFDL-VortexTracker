@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH  -o output/grib2/biggen.out
+#SBATCH  -o output/biggen.out
 #SBATCH  -J biggen
 #SBATCH  --time=30       # time limit in minutes
 #SBATCH  --ntasks=1
@@ -16,7 +16,7 @@ set -x
 
 # Set directory paths
 export datadir=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/input_grib_testingdata/grib2
-export homedir=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/genericscripts/nov25
+export homedir=/mnt/lfs5/HFIP/hfip-gfdl/Caitlyn.Mcallister/genericscripts/dec1
 
 # If you already have a tcvitals file, add path and name below.
 # If the file has not been created yet, leave this blank and the tcvitals_grib.sh script will create one
