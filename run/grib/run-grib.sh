@@ -27,7 +27,11 @@ export rundir=${homedir}/run/grib
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
 export execdir=${codedir}/exec
+<<<<<<< HEAD
 export workdir=${rundir}/work/grib2/multgen
+=======
+export workdir=${rundir}/work/grib1/multitrk
+>>>>>>> 81e327549ae7faee0e6667f9aaff7a60d19af565
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
 export which_system='jet'
@@ -45,7 +49,7 @@ export initymdh=2023092912
 export fcsthrs='0 6 12 18 24 30 36 42 48 54 60 66 72 78 84 90 96 102 108 114 120 126'
 
 # trkrtype=tracker for known storms, trkrtype=tcgen for genesis runs
-export trkrtype='tcgen'
+export trkrtype='tracker'
 
 # gribver=1 for GRIB1 data; gribver=2 for GRIB2 data
 export gribver=2
