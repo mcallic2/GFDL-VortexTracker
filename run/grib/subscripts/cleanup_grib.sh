@@ -15,7 +15,7 @@ if [ ${file_sequence} = 'onebig' ]; then
   export outputdir=${trkrtype}-output
   if [ ! -d ${outputdir} ]; then mkdir -p ${outputdir}; fi
   
-  # move all trak.atcfname.* files into output file directory
+  # move all trak.atcfname.* files into tracker_output directory
   mv trak.${atcfname}.* ${outputdir}/.
 
   # move tracker mask file for genesis runs in output file directory
@@ -42,6 +42,8 @@ if [ ${file_sequence} = 'onebig' ]; then
       # remove files created from vint.f and tave.f for each indiviual forecast hr
       rm ${filebase}.z.f${fhour}
       rm ${filebase}.t.f${fhour}
+      rm ${filebase}.t.f${fhour}.i
+      rm ${atcfname}_tave.${ymdh}.f${fhour}
     done
   fi
 fi
@@ -54,7 +56,7 @@ if [ ${file_sequence} = 'multi' ]; then
   export outputdir=${trkrtype}-output
   if [ ! -d ${outputdir} ]; then mkdir -p ${outputdir}; fi
 
-  # move all trak.atcfname.* files into output file directory
+  # move all trak.atcfname.* files into tracker_output directory
   mv trak.${atcfname}.* ${outputdir}/.
 
   # move tracker mask file for genesis runs in output file directory
@@ -83,6 +85,8 @@ if [ ${file_sequence} = 'multi' ]; then
       # remove files created from vint.f and tave.f for each indiviual forecast hr
       rm ${filebase}.z.f${fhour}
       rm ${filebase}.t.f${fhour}
+      rm ${filebase}.t.f${fhour}.i
+      rm ${atcfname}_tave.${ymdh}.f${fhour}
     done
   fi
 fi
