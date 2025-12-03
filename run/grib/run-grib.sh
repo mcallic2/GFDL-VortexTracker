@@ -1,4 +1,4 @@
-#!/bin/bash --login
+#!/bin/sh --login
 # add batch commands if needed
 
 # print line numbers in std out
