@@ -1,8 +1,6 @@
-#!/bin/sh
-
-set -x
 # -------------------------------------------------------------------------------------------------
 # SET UP MUTIPLE INPUT DATA FILES (i.e. files that only include a single forecast hour)
+set -x
 
 # move into wdir so fort.* files go into correct place
 cd ${wdir}

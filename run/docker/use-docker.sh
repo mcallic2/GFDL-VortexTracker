@@ -1,7 +1,6 @@
-#!/bin/sh
-
-set -x
 # -------------------------------------------------------------------------------------------------
+# CHECK TO SEE IF USER IS RUNNING IN CONTAINER
+set -x
 
 # Check if user's run directory is set to netcdf or grib
 if [[ -n ${rundir} && -d ${rundir} ]]; then

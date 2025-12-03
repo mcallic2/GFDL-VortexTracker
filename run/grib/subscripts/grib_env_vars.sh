@@ -1,8 +1,6 @@
-#!/bin/sh
-
-set -x
 # -------------------------------------------------------------------------------------------------
 # SET UP ENVIRONMENT VARIABLES
+set -x
 
 # grib specific
 export inp_data_type='grib'

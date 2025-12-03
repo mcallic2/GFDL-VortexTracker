@@ -1,8 +1,6 @@
-#!/bin/sh
-
-set -x
 # -------------------------------------------------------------------------------------------------
 # SET UP KNOWN TCVITALS FILE
+set -x
 
 if [ -z ${tcvitals_file} ]; then  # need to record tcvitals
   echo "tcvitals file not known; running tcvitals code"

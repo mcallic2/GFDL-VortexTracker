@@ -1,8 +1,6 @@
-#!/bin/sh
-
-set -x
 # -------------------------------------------------------------------------------------------------
 # SET UP INPUT/OUTPUT FILES
+set -x
 
 # go into work dir to add files
 cd ${wdir}

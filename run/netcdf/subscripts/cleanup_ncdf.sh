@@ -1,8 +1,6 @@
-#!/bin/sh
-
-set -x
 # -------------------------------------------------------------------------------------------------
 # CLEAN UP NETCDF WORK DIRECTORY
+set -x
 
 # move into wdir
 cd ${wdir}

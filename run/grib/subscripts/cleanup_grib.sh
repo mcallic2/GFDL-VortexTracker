@@ -1,8 +1,6 @@
-#!/bin/sh
-
-set -x
 # -------------------------------------------------------------------------------------------------
 # CLEAN UP GRIB WORK DIRECTORY
+set -x
 
 # move into wdir
 cd ${wdir}

@@ -1,8 +1,6 @@
-#!/bin/sh
-
-set -x
 # -------------------------------------------------------------------------------------------------
 # DEFINE NETCDF VARIABLE DEFINITIONS
+set -x
 
 # The variables declared below are common meteorlogical variables that the source code uses to
 # produce the cyclone(s) path. Please carefully go through your data file to match the variables
