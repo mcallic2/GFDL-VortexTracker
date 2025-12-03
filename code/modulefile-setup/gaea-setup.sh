@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # set up module environment on gaea
 
 module use /ncrc/proj/epic/spack-stack/spack-stack-1.8.0/envs/ue-intel-2021.10.0/install/modulefiles/Core/
