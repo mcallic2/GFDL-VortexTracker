@@ -1,8 +1,6 @@
-#!/bin/bash
-
-set -x
 # -------------------------------------------------------------------------------------------------
 # SET UP ENVIRONMENT VARIABLES
+set -x
 
 export inp_data_type='netcdf'
 export file_sequence='onebig'
