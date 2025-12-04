@@ -1,5 +1,6 @@
 #!/bin/bash --login
-# add batch commands if needed
+# USER - please note shell type is defaulted to bash, change if necessary
+# Add batch commdands if needed, if running in container leave these lines as they are
 
 # print line numbers in std out
 export PS4=' line $LINENO: '
