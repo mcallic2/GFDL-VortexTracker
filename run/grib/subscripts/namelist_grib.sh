@@ -1,8 +1,6 @@
-#!/bin/bash
-
-set -x
 # -------------------------------------------------------------------------------------------------
 # SET UP NAMELIST VARIABLES FOR NAMELIST FILE
+set -x
 
 # create namelist file in work directory
 export namelist=${wdir}/input.${atcfname}.${ymdh}

@@ -1,8 +1,6 @@
-#!/bin/bash
-
-set -x
 # -------------------------------------------------------------------------------------------------
 # SET UP INPUT DATA FILE
+set -x
 
 # move into wdir so fort.* files go into correct place
 cd ${wdir}
