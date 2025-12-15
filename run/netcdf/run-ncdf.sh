@@ -72,6 +72,10 @@ else
   echo "vortex tilt threshold = ${vortex_tilt_allow_thresh}"
 fi
 
+# The below variables (y/n) are various options dependent on developer’s preference
+export freshcompile='' # Would you like a fresh compilation of the executables?
+export usecleaup=''    # Clears up space in work dir after tracker is ran to completion; does not effect any files that the tracker creates
+
 # -------------------------------------------------------------------------------------------------
 # ADDITIONAL VARIABLE DECLARINING, DOES NOT NEED TO BE EDITED BY USER
 
@@ -99,7 +103,18 @@ set +x
 
 # compile source code
 export compile=${rundir}/subscripts/compile_ncdf.sh
-source ${compile}
+if [ ${freshcompile} = 'n' ]; then
+  # check to make sure there is an exec directory and that it isn't empty
+  if [ ! -d ${execdir} ] || [ "$(ls -A ${execdir})" ]; then
+    echo "EXEC DIRECTORY DOES NOT EXSIST OR IS EMPTY"
+    echo "running compilation script"
+    source ${compile}
+  else # exec dir exsists and is not empty 
+    echo "Skipping compilation"
+  fi
+else # fresh compilation
+  source ${compile}
+fi
 
 # export & run variables code
 export env_vars=${rundir}/subscripts/ncdf_env_vars.sh
@@ -147,4 +162,6 @@ fi
 # -------------------------------------------------------------------------------------------------
 # RUN CLEAN UP SCRIPT
 export runcleanup=${rundir}/subscripts/cleanup_ncdf.sh
-source ${runcleanup}
+if [ ${usecleaup} = 'y' ]; then
+  source ${runcleanup}
+fi
