@@ -23,6 +23,9 @@ export datadir=
 # Please note, our archived vitals information contains data up until 03/21/2025
 export tcvitals_file=
 
+# The following paths should not necessarily need to be modified, however they can be edited as developer wishes
+# CAVEAT - if running the same case on the same day, adding an additional subdirectory to 
+# the workdir path will ensure that no output files are accidentally overwritten
 export rundir=${homedir}/run/netcdf
 export codedir=${homedir}/code
 export arcvitals=${homedir}/archived_vitals
