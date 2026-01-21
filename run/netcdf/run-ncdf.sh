@@ -77,7 +77,7 @@ fi
 
 # The below variables (y/n) are various options dependent on developer’s preference
 export freshcompile='' # Would you like a fresh compilation of the executables?
-export usecleaup=''    # Clears up space in work dir after tracker is ran to completion; does not effect any files that the tracker creates
+export usecleanup=''    # Clears up space in work dir after tracker is ran to completion; does not effect any files that the tracker creates
 
 # -------------------------------------------------------------------------------------------------
 # ADDITIONAL VARIABLE DECLARINING, DOES NOT NEED TO BE EDITED BY USER
@@ -165,6 +165,6 @@ fi
 # -------------------------------------------------------------------------------------------------
 # RUN CLEAN UP SCRIPT
 export runcleanup=${rundir}/subscripts/cleanup_ncdf.sh
-if [ ${usecleaup} = 'y' ]; then
+if [ ${usecleanup} = 'y' ]; then
   source ${runcleanup}
 fi
