@@ -1,4 +1,11 @@
 #!/bin/bash --login
+#SBATCH -o output/grb2_trkr_pt1.out
+#SBATCH -J trkr
+#SBATCH --export=ALL
+#SBATCH --time=59   # time limit in minutes
+#SBATCH --mem-per-cpu=8G
+#SBATCH --ntasks=1
+#SBATCH --partition=analysis
 # USER - please note shell type is defaulted to bash, change if necessary
 # Add batch commdands if needed, if running in container leave these lines as they are
 
@@ -11,8 +18,8 @@ set -x
 # PLEASE TAKE TIME TO READ COMMENTS AND EDIT ACCORDINGLY
 
 # Set directory paths
-export datadir=
-export homedir=
+export datadir=/xtmp/Caitlyn.Mcallister/gribdata/GRIB2
+export homedir=/xtmp/Caitlyn.Mcallister/runinspack_ppan
 
 # If you already have a tcvitals file, add path and name below.
 # If the file has not been created yet, leave this blank and the tcvitals_grib.sh script will create one
@@ -29,7 +36,7 @@ export execdir=${codedir}/exec
 export workdir=${rundir}/work
 
 # Name of rdhpc system (gaea, analysis, wcoss2, etc.), docker, or blank if on personal system
-export which_system=''
+export which_system='docker'
 
 if [ ${which_system} = 'docker' ]; then
   export dockerdir=${homedir}/run/docker
@@ -37,24 +44,24 @@ if [ ${which_system} = 'docker' ]; then
 fi
 
 # Initialization forecast date/time matching your data (yyyymmddhh format)
-export initymdh=
+export initymdh=2023092912
 
 # Add the respective forcast hours to match your data; (spaces between hrs only, no commas)
 # This will be used for temperature and height interpolation
-export fcsthrs=''
+export fcsthrs='0 6 12 18 24 30 36 42 48 54 60 66 72 78 84 90 96 102 108 114 120 126'
 
 # trkrtype=tracker for known storms, trkrtype=tcgen for genesis runs
-export trkrtype=''
+export trkrtype='tracker'
 
 # gribver=1 for GRIB1 data; gribver=2 for GRIB2 data
-export gribver=
+export gribver=2
 
 # file_sequence='multi' when there are multiple files with single frcast hour;
 # file_sequenxe='onebig when all of the data is in one single file
-export file_sequence=''
+export file_sequence='onebig'
 
 # ATCF name of model (4 char long)
-export atcfname=''
+export atcfname='g2gf'
 
 # (Optional) This is descriptive and up to the developer (e.g., "6thdeg", "9km_run","1.6km_run", "15km_ens_run_member_n13", etc)
 export rundescr=''
@@ -63,15 +70,15 @@ export rundescr=''
 export atcfdescr=''
 
 # Variables to declare the model's grid and nesting configurations
-export modtyp=''         # 'global' or 'regional'
-export nest_type=''      # 'moveable' or 'fixed'
+export modtyp='global'         # 'global' or 'regional'
+export nest_type='fixed'      # 'moveable' or 'fixed'
 
 # 'vortex_tilt_flag' = 'y'/'n'
 # If developer wants to run vortex tilt diagnostics, set to 'y'. If set to 'n', the following if-statement will set
 # the tilt_parm and threshold variables values automatically
-export vortex_tilt_flag=''
-export vortex_tilt_parm=''
-export vortex_tilt_allow_thresh=
+export vortex_tilt_flag='y'
+export vortex_tilt_parm='zeta'
+export vortex_tilt_allow_thresh=1.0
 
 if [ ${vortex_tilt_flag} = 'n' ]; then
   export vortex_tilt_parm=''
@@ -87,13 +94,13 @@ fi
 # to run the tracker don't have data at 50mb height level (850, 750, 550, etc.).
 # If 'need_to_use_vint_or_tave' set to 'y' then interpolation code will be ran within the multi or onebig scripts.
 # User can determine if only height and/or temperature interpolation is calculated determined by the value of the following variables
-export need_to_use_vint_or_tave=''
-export need_to_interpolate_height=''
-export need_to_interpolate_temperature=''
+export need_to_use_vint_or_tave='y'
+export need_to_interpolate_height='y'
+export need_to_interpolate_temperature='y'
 
 # The below variables (y/n) are various options dependent on developer’s preference
-export freshcompile='' # Would you like a fresh compilation of the executables?
-export usecleanup=''    # Clears up space in work dir after tracker is ran to completion; does not effect any files that the tracker creates
+export freshcompile='y' # Would you like a fresh compilation of the executables?
+export usecleanup='y'    # Clears up space in work dir after tracker is ran to completion; does not effect any files that the tracker creates
 
 # -------------------------------------------------------------------------------------------------
 # ADDITIONAL VARIABLE DECLARINING, DOES NOT NEED TO BE EDITED BY USER
