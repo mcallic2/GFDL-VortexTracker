@@ -5,7 +5,7 @@ set -x
 # move into wdir so fort.* files go into correct place
 cd ${wdir}
 
-export filebase=${atcfname}.${ymdh}
+export filebase=gfsgribfile.${ymdh}
 cp ${datadir}/${filebase} ${wdir}/.
 
 export gribfile=${filebase}

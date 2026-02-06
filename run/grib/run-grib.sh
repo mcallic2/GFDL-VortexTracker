@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -o output/grb2_trkr_pt1.out
+#SBATCH -o output/grb2_trkr_pt2.out
 #SBATCH -J trkr
 #SBATCH --export=ALL
 #SBATCH --time=59   # time limit in minutes
