@@ -130,19 +130,19 @@ set +x
 # compile source code
 export compile=${rundir}/subscripts/compile_grib.sh
 
-cd ${codedir}
-if [ ${freshcompile} = 'n' ]; then
-  # check to make sure there is an exec directory and that it isn't empty
-  if [ -n "$(ls -A ${execdir})" ] || [ ! -d ${execdir} ]; then
-    echo "no exec directory exists or is empty; forcing compilation"
-    source ${compile}
-  else # exec dir exsists and is not empty 
-    echo "Skipping compilation"
-  fi
-else # fresh compilation
-  source ${compile}
-fi
-cd ${rundir}
+#cd ${codedir}
+#if [ ${freshcompile} = 'n' ]; then
+#  # check to make sure there is an exec directory and that it isn't empty
+#  if [ -n "$(ls -A ${execdir})" ] || [ ! -d ${execdir} ]; then
+#    echo "no exec directory exists or is empty; forcing compilation"
+#    source ${compile}
+#  else # exec dir exsists and is not empty 
+#    echo "Skipping compilation"
+#  fi
+#else # fresh compilation
+#  source ${compile}
+#fi
+#cd ${rundir}
 
 # export & run variables code
 export env_vars=${rundir}/subscripts/grib_env_vars.sh
