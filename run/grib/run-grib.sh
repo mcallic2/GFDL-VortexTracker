@@ -99,7 +99,7 @@ export need_to_interpolate_height='y'
 export need_to_interpolate_temperature='y'
 
 # The below variables (y/n) are various options dependent on developer’s preference
-export freshcompile='y' # Would you like a fresh compilation of the executables?
+export freshcompile='n' # Would you like a fresh compilation of the executables?
 export usecleanup='y'    # Clears up space in work dir after tracker is ran to completion; does not effect any files that the tracker creates
 
 # -------------------------------------------------------------------------------------------------
