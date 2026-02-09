@@ -19,7 +19,7 @@ set -x
 
 # Set directory paths
 export datadir=/xtmp/Caitlyn.Mcallister/gribdata/GRIB2
-export homedir=/xtmp/Caitlyn.Mcallister/runinspack_ppan
+export homedir=/xtmp/Caitlyn.Mcallister/runinspack/intelspack
 
 # If you already have a tcvitals file, add path and name below.
 # If the file has not been created yet, leave this blank and the tcvitals_grib.sh script will create one
