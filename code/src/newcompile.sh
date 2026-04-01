@@ -71,9 +71,9 @@ do
 			echo -e ' '
       echo -e "valid options are:"
       echo -e "\t[put system options here] for system options"
-			echo -e "\t[intel(D) | gcc] for compiler options"
-      echo -e "\t[prod(D) | debug] for mode setting"
-      echo -e "\t[cleanall(D) | clean | noclean] for clean exec area options"
+			echo -e "\t[ intel(D) | gcc ] for compiler options"
+      echo -e "\t[ prod(D) | debug ] for mode setting"
+      echo -e "\t[ cleanall(D) | clean | noclean ] for clean exec area options"
       echo -e "\n"
       exit
       ;;
