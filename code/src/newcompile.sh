@@ -70,8 +70,7 @@ do
       fi
 			echo -e ' '
       echo -e "Valid options for system configureation are: "
-			echo -e "\t[ analysis | gaea | hera | hercules | mercury | orion "
-			echo -e "\t[ ursa | wcoss2 | container | personal ] "
+			echo -e "\t[ analysis | gaea | hera | hercules | mercury | orion | ursa | wcoss2 | container | personal ] "
       echo -e "Valid options for compilers are: "
 			echo -e "\t[ intel(D) | gcc ] "
       echo -e "Valid options compilations modes are: "
