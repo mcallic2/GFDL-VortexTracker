@@ -90,7 +90,6 @@ done
 
 #------------------------------------------------------------------------------
 # load environment for correct system
-#set -x
 
 export BUILD_ROOT=${PWD%/*}
 echo -e " ${BUILD_ROOT} "
