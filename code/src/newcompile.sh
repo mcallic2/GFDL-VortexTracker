@@ -23,7 +23,7 @@ spin()
 # BUILD PARAMETERS
 
 #system
-#which_system=""
+which_system="" #CAITLYN-if this is left empty it should catch after i actually finish this script
 #compiler
 compiler="intel"
 #clean (cleanall=rm all build contnets & executables, clean=clean make, noclean=no recompile)
@@ -85,13 +85,6 @@ done
 
 # if there are options that cannot be used together, for instance if there's no
 # gcc on wcoss2, put if statements underneath here
-
-
-#------------------------------------------------------------------------------
-
-
-#------------------------------------------------------------------------------
-# default paths?
 #------------------------------------------------------------------------------
 
 
