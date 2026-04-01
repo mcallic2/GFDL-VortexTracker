@@ -42,7 +42,7 @@ for arg in "$@"
 do
   case $arg in
     #system
-    analysis|gaea|hera|hercules|mercury|orion|ursa|wcoss2|container|personal)
+    ppan|gaea|hera|hercules|mercury|orion|ursa|wcoss2|container|personal)
     	which_system="${arg#*=}"
     	# if-statements go here if needed
 			shift # remove "which_system" from processing CAITLYN-not sure what this does
@@ -70,7 +70,7 @@ do
       fi
 			echo -e ' '
       echo -e "Valid options for system configureation are: "
-			echo -e "\t[ analysis | gaea | hera | hercules | mercury | orion | ursa | wcoss2 | container | personal ] "
+			echo -e "\t[ gaea | hera | hercules | mercury | orion | ppan | ursa | wcoss2 | container | personal ] "
       echo -e "Valid options for compilers are: "
 			echo -e "\t[ intel(D) | gcc ] "
       echo -e "Valid options compilations modes are: "
@@ -89,7 +89,12 @@ done
 
 
 #------------------------------------------------------------------------------
-# load environment
+# load environment for correct system
+
+export BUILD_ROOT=${PWD%/*}
+echo $PWD
+
+
 #------------------------------------------------------------------------------
 
 
