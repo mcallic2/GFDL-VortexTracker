@@ -21,7 +21,7 @@ spin()
 
 #------------------------------------------------------------------------------
 # BUILD PARAMETERS
-
+set -x
 #system
 which_system="" #CAITLYN-if this is left empty it should catch after i actually finish this script
 #compiler
@@ -32,7 +32,7 @@ clean="cleanall"
 mode="prog"
 #verbose?
 
-
+set +x
 #------------------------------------------------------------------------------
 
 
@@ -90,11 +90,12 @@ done
 
 #------------------------------------------------------------------------------
 # load environment for correct system
+set -x
 
 export BUILD_ROOT=${PWD%/*}
 echo -e " ${BUILD_ROOT} "
 
-
+set +x
 #------------------------------------------------------------------------------
 
 
@@ -102,14 +103,14 @@ echo -e " ${BUILD_ROOT} "
 # output before build & compile
 
 # output build setup
-echo -e ' '
-echo -e "Compilation will continue in five seconds with"
-echo -e "\tsystem   = $which_system"
-echo -e "\tcompiler = $compiler"
-echo -e "\tclean    = $clean"
-echo -e "\tmode     = $mode"
-echo -e "\n"
-sleep 5
+#echo -e ' '
+#echo -e "Compilation will continue in five seconds with"
+#echo -e "\tsystem   = $which_system"
+#echo -e "\tcompiler = $compiler"
+#echo -e "\tclean    = $clean"
+#echo -e "\tmode     = $mode"
+#echo -e "\n"
+#sleep 5
 
 # start the spinner
 spin &
