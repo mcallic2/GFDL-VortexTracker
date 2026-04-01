@@ -23,7 +23,7 @@ spin()
 # BUILD PARAMETERS
 
 #system
-which_system=""
+#which_system=""
 #compiler
 compiler="intel"
 #clean (cleanall=rm all build contnets & executables, clean=clean make, noclean=no recompile)
@@ -106,7 +106,7 @@ done
 # output build setup
 echo -e ' '
 echo -e "Compilation will continue in five seconds with"
-echo -e "\tconfig   = $which_system"
+echo -e "\tsystem   = $which_system"
 echo -e "\tcompiler = $compiler"
 echo -e "\tclean    = $clean"
 echo -e "\tmode     = $mode"
