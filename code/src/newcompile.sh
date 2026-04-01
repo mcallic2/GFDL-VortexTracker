@@ -66,7 +66,7 @@ do
   	# catch
     *)
     	if [ ${arg#} != '--help' ] && [ ${arg#} != '-h' ] ; then
-      	echo "option "${arg#}" not found"
+      	echo " "${arg#}" OPTION NOT FOUND"
       fi
 			echo -e ' '
       echo -e "Valid options for system configureation are: "
