@@ -23,7 +23,7 @@ spin()
 # BUILD PARAMETERS
 
 #system
-which_system=" "
+which_system=""
 #compiler
 compiler="intel"
 #clean (cleanall=rm all build contnets & executables, clean=clean make, noclean=no recompile)
