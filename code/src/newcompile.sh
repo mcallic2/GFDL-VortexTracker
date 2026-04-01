@@ -69,12 +69,15 @@ do
       	echo "option "${arg#}" not found"
       fi
 			echo -e ' '
-      echo -e "valid options are:"
-      echo -e "\t[put system options here]\t--> system options"
-			echo -e "\t[ intel(D) | gcc ]  --> for compiler options"
-      echo -e "\t[ prod(D) | debug ]  --> for mode setting"
-      echo -e "\t[ prod(D) | debug ]\t\t\t--> for mode setting"
-			echo -e "\t[ cleanall(D) | clean | noclean ] --> for clean exec area options"
+      echo -e "Valid options for system configureation are: "
+			echo -e "\t[ analysis | gaea | hera | hercules | mercury | orion "
+			echo -e "\t[ ursa | wcoss2 | container | personal ] "
+      echo -e "Valid options for compilers are: "
+			echo -e "\t[ intel(D) | gcc ] "
+      echo -e "Valid options compilations modes are: "
+			echo -e "\t[ prod(D) | debug ] "
+			echo -e "Valid cleaning optiona are: " 
+			echo -e "\t[ cleanall(D) | clean | noclean ] "
 			echo -e "\n"
       exit
       ;;
