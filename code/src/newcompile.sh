@@ -21,7 +21,7 @@ spin()
 
 #------------------------------------------------------------------------------
 # BUILD PARAMETERS
-set -x
+#set -x
 #system
 which_system="" #CAITLYN-if this is left empty it should catch after i actually finish this script
 #compiler
@@ -32,7 +32,7 @@ clean="cleanall"
 mode="prog"
 #verbose?
 
-set +x
+#set +x
 #------------------------------------------------------------------------------
 
 
