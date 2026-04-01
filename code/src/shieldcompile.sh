@@ -1,0 +1,332 @@
+#!/bin/bash
+#***********************************************************************
+#*                   GNU Lesser General Public License
+#*
+#* This file is part of the SHiELD Build System.
+#*
+#* The SHiELD Build System free software: you can redistribute it
+#* and/or modify it under the terms of the
+#* GNU Lesser General Public License as published by the
+#* Free Software Foundation, either version 3 of the License, or
+#* (at your option) any later version.
+#*
+#* The SHiELD Build System distributed in the hope that it will be
+#* useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+#* of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#* See the GNU General Public License for more details.
+#*
+#* You should have received a copy of the GNU Lesser General Public
+#* License along with theSHiELD Build System
+#* If not, see <http://www.gnu.org/licenses/>.
+#***********************************************************************
+#
+#  DISCLAIMER: This script is provided as-is and as such is unsupported.
+#
+
+#
+# function to display a spinning wheel while a command is in progress
+spin()
+{
+  spinner="\\|/-\\|/-"
+  while :
+  do
+    for i in `seq 0 7`
+    do
+      echo -n "${spinner:$i:1}"
+      echo -en "\010"
+      sleep 1
+    done
+  done
+}
+# end function
+
+#
+#------------------------------------------------------------------------------
+# functional code below this point
+
+#
+# set default values
+#
+# configure your build parameters
+  config="shield"
+  hydro="nh"
+  comp="prod"
+  bit="32bit"
+  avx="Y"
+  compiler="intel"
+  clean="noclean"
+  pic="nopic"
+
+  config_name="SHiELD"
+
+#
+# parse arguments
+  for arg in "$@"
+  do
+      case $arg in
+          shield|solo|shiemom|shiemom_lm4)
+             config="${arg#*=}"
+             if [ $config = 'solo' ] ; then
+               config_name="SOLO"
+             fi
+             if [ $config = 'shiemom' ] ; then
+               config_name="SHiEMOM"
+             fi
+             if [ $config = 'shiemom_lm4' ] ; then
+               config_name="SHiEMOM_LM4"
+             fi
+             shift # Remove "config" from processing
+             ;;
+          nh|hydro|sw)
+             hydro="${arg#*=}"
+             shift # remove "hydro" from processing
+             ;;
+          prod|repro|debug)
+             comp="${arg#*=}"
+             shift # remove "comp" from processing
+             ;;
+          32bit|64bit)
+             bit="${arg#*=}"
+             shift # remove "bit" from processing
+             ;;
+          avx|noavx)
+             if [ ${arg#*} = 'noavx' ] ; then
+               avx="N"
+             fi
+             shift # remove "avx from processing
+             ;;
+          intel|gnu|nvhpc)
+             compiler="${arg#*=}"
+             shift # Remove "compiler" from processing
+             if [ ${compiler} = 'nvhpc' ] ; then
+               echo -e ' '
+               echo -e "The NVidia compiler has only been tested with the CI scripts."
+               echo -e "A runtime bug with v23.1 occurs when deallocating the Atm Fortran derived data type."
+               echo -e "The bug can be worked around by commenting out the offfending line of code."
+               echo -e "\n"
+               sleep 20
+             fi
+             ;;
+          noclean|clean|cleanall)
+             clean="${arg#*=}"
+             shift # Remove "clean" from processing
+             ;;
+          nopic|pic)
+             pic="${arg#*=}"
+             shift # Remove "pic" from processing
+             ;;
+          *)
+          if [ ${arg#} != '--help' ] && [ ${arg#} != '-h' ] ; then
+            echo "option "${arg#}" not found"
+          fi
+          echo -e ' '
+          echo -e "valid options are:"
+          echo -e "\t[shield(D)  | solo | shiemom | shiemom_lm4] \t\t\t configuration"
+          echo -e "\t[nh(D) | hydro | sw] \t\t\t executable configuration"
+          echo -e "\t[prod(D) | repro | debug] \t\t compiler option settings"
+          echo -e "\t[32bit(D) | 64bit] \t\t\t FV3 precision option"
+          echo -e "\t[avx(D) | noavx] \t\t\t use AVX_LEVEL defined in site/environment.<compiler>.sh"
+          echo -e "\t[intel(D) | gnu | nvhpc] \t\t\t compiler"
+          echo -e "\t[noclean(D) | clean | cleanall] \t cleans exec area"
+          echo -e "\t[nopic(D) | pic] \t whether to build all components with the -fPIC flag (position independent code)"
+          echo -e "\n"
+          exit
+          ;;
+      esac
+  done
+
+if [ $hydro = "sw" ] && [ $config = "shield" ] ; then
+  echo -e ">>> option '$hydro' with '$config' is not a valid configuration"
+  exit 1
+fi
+
+if [ $compiler = "nvhpc" ] && [ $config = "shiemom" ] ; then
+  echo -e ">>> option '$compiler' with '$config' is not a valid configuration"
+  exit 1
+fi
+
+if [ $compiler = "nvhpc" ] && [ $config = "shiemom_lm4" ] ; then
+  echo -e ">>> option '$compiler' with '$config' is not a valid configuration"
+  exit 1
+fi
+
+
+#
+# set up some default variables for use within the helper scripts
+export BUILD_ROOT=${PWD%/*}
+export SHiELD_SRC=${PWD%/*/*}/SHiELD_SRC/
+export PATH="${BUILD_ROOT}/mkmf/bin:${BUILD_ROOT}/Build/mk_scripts:${PATH}"
+export LIBS_DIR=${BUILD_ROOT}/Build
+
+#
+# load the proper environment for your machine
+. ${BUILD_ROOT}/site/environment.${compiler}.sh
+
+#
+# output the build setup
+echo -e ' '
+echo -e "Compilation will continue in five seconds with"
+echo -e "\tconfig   = $config"
+echo -e "\thydro    = $hydro"
+echo -e "\tcomp     = $comp"
+echo -e "\tbit      = $bit"
+echo -e "\tavx      = $avx"
+echo -e "\tcompiler = $compiler"
+echo -e "\tclean    = $clean"
+echo -e "\tpic      = $pic"
+echo -e "\n"
+sleep 5
+
+#
+# start the spinner
+spin &
+SPIN_PID=$!
+trap "kill -9 $SPIN_PID" `seq 0 15`
+
+#
+# test for mkmf
+if [ ! -f "${BUILD_ROOT}/mkmf/bin/mkmf" ] ; then
+   echo -e ' '
+   echo -e "The mkmf submodule has not been initialized"
+   echo -e "Please run this command in the SHiELD_build base directory:"
+   echo -e "\tgit submodule update --init mkmf"
+   echo -e "\n"
+   exit 0
+fi
+
+
+#
+# conditionally clean the build directory
+  if [ ${clean} = "cleanall" ] ; then
+     echo " cleaning FMS library, nceplibs and build directory in 2 seconds"
+     sleep 2
+     \rm -rf libFMS/${compiler}/*
+     \rm -rf exec/${config}_${hydro}.${comp}.${bit}.${compiler}/*
+     \rm -rf nceplibs/${compiler}/*
+     \rm -rf mom6/${comp}.${bit}.${compiler}/*
+     \rm -rf sis2/${comp}.${bit}.${compiler}/*
+     \rm -rf lm4/${comp}.${bit}.${compiler}/*
+  elif [ ${clean} = "clean" ] ; then
+     echo " cleaning build directory in 2 seconds"
+     sleep 2
+     \rm -rf mom6/${comp}.${bit}.${compiler}/*
+     \rm -rf lm4/${comp}.${bit}.${compiler}/*
+     \rm -rf sis2/${comp}.${bit}.${compiler}/*
+     \rm -rf exec/${config}_${hydro}.${comp}.${bit}.${compiler}/*
+  fi
+
+# If EXTERNAL_LIBS is set, then the program will use the path defined by
+#    EXTERNAL_LIBS as the location of nceplibs and libFMS
+  if [ ! -z ${EXTERNAL_LIBS} ] ; then
+    echo " External Libraries are being used: ${EXTERNAL_LIBS}"
+    export LIBS_DIR=${EXTERNAL_LIBS}
+  fi
+#
+# check to make sure libFMS exists
+  if [ -d ${LIBS_DIR}/libFMS/${compiler} ] && [ -e ${LIBS_DIR}/libFMS/${compiler}/32bit/libFMS.a ] && \
+     [ -e ${LIBS_DIR}/libFMS/${compiler}/64bit/libFMS.a ] ; then
+     echo " pre-built ${LIBS_DIR}/libFMS/${compiler} exists"
+  else
+     echo " ${LIBS_DIR}/libFMS/${compiler} does not exist"
+     ./BUILDlibfms ${compiler} ${pic}
+     if [ $? -ne 0 ] ; then
+        echo ">>> ${LIBS_DIR}/Libfms/${compiler} build failed"
+        exit 2
+     fi
+  fi
+# check to make sure nceplibs exists
+  if [ -d ${LIBS_DIR}/nceplibs/${compiler} ] && [ -e ${LIBS_DIR}/nceplibs/${compiler}/libbacio.a ] && \
+     [ -e ${LIBS_DIR}/nceplibs/${compiler}/libsp_d.a ] && [ -e ${LIBS_DIR}/nceplibs/${compiler}/libw3emc_d.a ] && \
+     [ -e ${LIBS_DIR}/nceplibs/${compiler}/libw3nco_d.a ] ; then
+     echo " pre-built ${LIBS_DIR}/nceplibs/${compiler} exists"
+  else
+     echo " ${LIBS_DIR}/nceplibs/${compiler} does not exist"
+     ./BUILDnceplibs ${compiler} ${pic}
+     if [ $? -ne 0 ] ; then
+        echo ">>> ${LIBS_DIR}/ncepdir/${compiler} build failed"
+        exit 3
+     fi
+  fi
+
+if [ $config = "shiemom" ] || [ $config = "shiemom_lm4" ]  ; then
+# from lauren
+  # I think mom6 needs to be built in 64bit for now?
+  # I can only get it to compiler with 64bit FMS
+  if [ -d ${LIBS_DIR}/mom6/${comp}.64bit.${compiler} ] && [ -e ${LIBS_DIR}/mom6/${comp}.64bit.${compiler}/libmom6.a ] ; then
+     echo " pre-built ${LIBS_DIR}/mom6/${comp}.64bit.${compiler} exists"
+  else
+     echo " ${LIBS_DIR}/mom6/${comp}.64bit.${compiler} does not exist"
+     ./BUILDmom6 ${comp} ${compiler}
+     if [ $? -ne 0 ] ; then
+        echo " MOM6 build failed"
+        exit
+     fi
+     echo "DONE WITH MOM6"
+  fi
+
+# for sis2
+  if [ -d ${LIBS_DIR}/sis2/${comp}.64bit.${compiler} ] && [ -e ${LIBS_DIR}/sis2/${comp}.64bit.${compiler}/libsis2.a ] ; then
+     echo " pre-built ${LIBS_DIR}/sis2/${compiler} exists"
+  else
+     echo " ${LIBS_DIR}/sis2/${comp}.64bit.${compiler} does not exist"
+     ./BUILDsis2 ${comp} ${compiler}
+     if [ $? -ne 0 ] ; then
+        echo " SIS2 build failed"
+        exit
+     fi
+     echo "DONE WITH SIS2"
+  fi
+fi
+
+if [ $config = "shiemom_lm4" ] ; then
+  if [ -d ${LIBS_DIR}/lm4/${comp}.64bit.${compiler} ] && [ -e ${LIBS_DIR}/lm4/${comp}.64bit.${compiler}/liblm4.a ] ; then
+       echo " pre-built ${LIBS_DIR}/lm4/${comp}.64bit.${compiler} exists"
+    else
+       echo " ${LIBS_DIR}/lm4/${compiler} does not exist"
+       ./BUILDlm4 ${comp} ${compiler}
+       if [ $? -ne 0 ] ; then
+          echo " LM4 build failed"
+          exit
+       fi
+       echo "DONE WITH LM4"
+    fi
+fi
+
+#
+# ensure the build and final executable locations are available
+  mkdir -p ./exec/${config}_${hydro}.${comp}.${bit}.${compiler}
+  mkdir -p ./bin/
+
+# build the model
+echo -e "  building ${config} ${hydro} ${comp} ${bit} ${compiler} \t `date`"
+  #
+  # create the file list for the build
+    mk_paths ${config} ${hydro} ${comp} ${bit} ${compiler}       > build_${config}_${hydro}.${comp}.${bit}.${compiler}.out 2>&1
+    if [ $? -ne 0 ] ; then
+       echo ">>> filelist cration failed"
+       exit 4
+    fi
+  #
+  # create the library makefiles
+    mk_makefile ${config} ${hydro} ${comp} ${bit} ${compiler}    >> build_${config}_${hydro}.${comp}.${bit}.${compiler}.out 2>&1
+    if [ $? -ne 0 ] ; then
+       echo ">>> makefile creation failed"
+       exit 5
+    fi
+  #
+  # build the configuration
+    mk_make ${config} ${hydro} ${comp} ${bit} ${avx} ${compiler} ${pic} >> build_${config}_${hydro}.${comp}.${bit}.${compiler}.out 2>&1
+  #
+  # move the executable to an accessible area
+    mv exec/${config}_${hydro}.${comp}.${bit}.${compiler}/test.x bin/${config_name}_${hydro}.${comp}.${bit}.${compiler}.x
+
+#
+# test and report on build success
+  if [ $? -ne 0 ] ; then
+     echo ">>> ${config_name} build ${hydro} ${comp} ${bit} ${compiler} failed"
+     exit 6
+  else
+     echo " ${config_name} build ${hydro} ${comp} ${bit} ${compiler} successful"
+  fi
+
+exit 0
