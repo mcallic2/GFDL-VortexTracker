@@ -94,7 +94,12 @@ if [ -z "${system}" ]; then
 	exit 0
 fi
 
-# add if [gaea & gcc] --> no gcc env for gaea
+# no gcc environment on gaea
+if [ ${system} = "gaea" ] && [ ${compiler} = "gcc" ] ; then
+  echo -e "There is currently no ${compiler} environment available on ${system}"
+  echo -e "Please try using different compiler"
+  exit 1
+fi
 # ------------------------------------------------------------------------------
 
 
