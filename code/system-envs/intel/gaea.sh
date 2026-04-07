@@ -24,7 +24,6 @@ module load w3emc/2.10.0
 # netcdf specific libs
 module load nco/5.1.9
 module load cdo/2.3.0-omp
-
 export ncdump=/opt/cray/pe/netcdf/4.9.0.13/bin/ncdump
 
 # grib specific libs
