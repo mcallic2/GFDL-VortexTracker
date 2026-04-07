@@ -30,3 +30,7 @@ export ncdump=/apps/netcdf/4.7.0/intel/18.0.5.274/bin/ncdump
 module load grib-util/1.4.0
 module load wgrib/1.8.1.0b
 module load wgrib2/3.1.3_wmo
+
+# set flags for compilations
+export FC=ifx
+export CC=icx
