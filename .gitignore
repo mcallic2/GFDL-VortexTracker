@@ -33,6 +33,9 @@
 build/
 cmake-build-*/
 
+# Ignore build stdout logs
+buildlogs/
+
 # Ignore test executables
 *.test
 */test/*
