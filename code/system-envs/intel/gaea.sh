@@ -30,3 +30,7 @@ export ncdump=/opt/cray/pe/netcdf/4.9.0.13/bin/ncdump
 module load grib-util/1.4.0
 module load wgrib/1.8.5
 module load wgrib2/3.1.1
+
+# set flags for compilations
+export FC=ftn
+export CC=cc
