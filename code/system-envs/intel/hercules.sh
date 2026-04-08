@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # This script is designed to load all necessary modules/libraries
-# to compile and run the tracker on HERCULES with the intel-classic compiler.
-# The libraries are loaded using the spack environment v1.8.0
+# to compile and run the tracker on HERCULES with the intel-oneapi compiler.
+# The libraries are loaded using the spack environment v1.9.3
 # -------------------------------------------------------------------
 
 module use /apps/contrib/spack-stack/spack-stack-1.9.3/envs/ue-oneapi-2024.2.1/install/modulefiles/Core/
