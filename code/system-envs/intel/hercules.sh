@@ -6,7 +6,7 @@
 # -------------------------------------------------------------------
 
 module use /apps/contrib/spack-stack/spack-stack-1.9.3/envs/ue-oneapi-2024.2.1/install/modulefiles/Core/
-module load stack-intel/2024.2.1
+module load stack-oneapi/2024.2.1
 module load intel-oneapi-compilers/2024.2.1
 
 module load cmake/3.30.2
