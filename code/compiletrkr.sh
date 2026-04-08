@@ -98,6 +98,7 @@ fi
 if [ ${system} = "gaea" ] && [ ${compiler} = "gcc" ] ; then
   echo -e "There is currently no ${compiler} environment available on ${system}"
   echo -e "Please try using different compiler"
+  echo -e "\n"
   exit 1
 fi
 # ------------------------------------------------------------------------------
@@ -115,9 +116,15 @@ trap "kill -9 $SPIN_PID" `seq 0 15`
 # LOAD ENVIRONMENT
 
 echo -e "Loading environment for ${system} with ${compiler} compiler"
-sleep 3
+sleep 2
 
+# load modules 
 . ${codedir}/system-envs/${compiler}/${system}.sh
+
+# list modules
+echo -e " "
+module list
+echo -e "\n"
 # ------------------------------------------------------------------------------
 
 
