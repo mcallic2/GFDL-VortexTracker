@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# This script is designed to load all necessary modules/libraries
-# to compile and run the tracker on ORION with the gcc compiler.
-# The libraries are loaded using the spack environment v2026.01
+# This script sets up an environment configured to load the necessary modules
+# for compiling and running the Vortex Tracker on ORION with GNU.
+# Last modified on: 04/09/2026
 # -------------------------------------------------------------------
 
 module use /apps/contrib/spack-stack/spack-stack-1.8.0/envs/ue-gcc-12.2.0/install/modulefiles/Core/

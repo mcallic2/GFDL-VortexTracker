@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# This script is designed to load all necessary modules/libraries
-# to compile and run the tracker on HERA with the gcc compiler.
-# The libraries are loaded using the spack environment v1.9.2
+# This script sets up an environment configured to load the necessary modules
+# for compiling and running the Vortex Tracker on HERA with GNU.
+# Last modified on: 04/09/2026
 # -------------------------------------------------------------------
 
 module use /contrib/spack-stack/spack-stack-1.9.2/envs/ue-gcc-13.2.0/install/modulefiles/Core/

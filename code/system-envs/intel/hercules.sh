@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# This script is designed to load all necessary modules/libraries
-# to compile and run the tracker on HERCULES with the intel-oneapi compiler.
-# The libraries are loaded using the spack environment v1.9.3
+# This script sets up an environment configured to load the necessary modules
+# for compiling and running the Vortex Tracker on HERCULES with Intel.
+# Last modified on: 04/09/2026
 # -------------------------------------------------------------------
 
 module use /apps/contrib/spack-stack/spack-stack-1.9.3/envs/ue-oneapi-2024.2.1/install/modulefiles/Core/
