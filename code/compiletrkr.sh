@@ -33,7 +33,7 @@ export execdir=${codedir}/exec
 export builddir=${codedir}/build
 export logdir=${codedir}/logfiles
 export date_stamp=$(date +"%a %b %d %H:%M:%S %Z %Y")
-export today_stamp=$(date +"%b%d" | tr '[:upper:]' '[:lower:]')
+export today_stamp=$(date +"%m.%d-%H.%M%p")
 # ------------------------------------------------------------------------------
 
 
