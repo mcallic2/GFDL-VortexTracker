@@ -31,7 +31,7 @@ mode="prod" 			# build mode
 export codedir=${PWD}
 export execdir=${codedir}/exec
 export builddir=${codedir}/build
-export logdir=${codedir}/buildlogs
+export logdir=${codedir}/logfiles
 export date_stamp=$(date +"%a %b %d %H:%M:%S %Z %Y")
 export today_stamp=$(date +"%b%d" | tr '[:upper:]' '[:lower:]')
 # ------------------------------------------------------------------------------
@@ -109,6 +109,7 @@ fi
 spin &
 SPIN_PID=$!
 trap "kill -9 $SPIN_PID" `seq 0 15`
+if [ ! -d ${logdir} ]; then mkdir -p ${logdir}; fi
 # ------------------------------------------------------------------------------
 
 
@@ -150,8 +151,6 @@ sleep 3
 echo -e " "
 echo -e "Creating executables on ${system} with ${compiler} on ${date_stamp}"
 echo -e "\n"
-
-if [ ! -d ${logdir} ]; then mkdir -p ${logdir}; fi
 
 if [ ${clean} = "new" ]; then
 	if [ -d ${builddir} ]; then
