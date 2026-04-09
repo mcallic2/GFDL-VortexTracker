@@ -105,11 +105,15 @@ fi
 
 
 # ------------------------------------------------------------------------------
-# start the spinner
+# START SCRIPT & CREATE STDOUT FILE
+
 spin &
 SPIN_PID=$!
 trap "kill -9 $SPIN_PID" `seq 0 15`
+
 if [ ! -d ${logdir} ]; then mkdir -p ${logdir}; fi
+export logfile="${logdir}/build_${compiler}_${system}_${today_stamp}.log"
+exec > >(tee -a "${logfile}") 2>&1
 # ------------------------------------------------------------------------------
 
 
@@ -166,17 +170,17 @@ if [ ${clean} = "new" ]; then
 	sleep 2
 	mkdir -p ${builddir}
 	cd ${builddir}
-	cmake ..			2>&1 | tee ${logdir}/build_${compiler}_${system}_${today_stamp}.out
-	make					2>&1 | tee -a ${logdir}/build_${compiler}_${system}_${today_stamp}.out
-	make install	2>&1 | tee -a ${logdir}/build_${compiler}_${system}_${today_stamp}.out
+	cmake ..
+	make
+	make install
 elif [ ${clean} = "clean" ]; then
 	echo -e " "
 	echo "Cleaning build directory then recompiling"
 	echo -e "\n"
 	sleep 2
 	cd ${builddir}
-	cmake --build . --clean-first	2>&1 | tee ${logdir}/build_${compiler}_${system}_${today_stamp}.out
-	make install									2>&1 | tee -a ${logdir}/build_${compiler}_${system}_${today_stamp}.out
+	cmake --build . --clean-first
+	make install
 elif [ ${clean} = "fullclean" ]; then
 	echo -e " "
 	echo "Cleaning build and exec directories then recompiling"
@@ -186,9 +190,9 @@ elif [ ${clean} = "fullclean" ]; then
 	\rm -rf ${execdir}
 	mkdir -p ${builddir}
 	cd ${builddir}
-	cmake ..			 2>&1 | tee ${logdir}/build_${compiler}_${system}_${today_stamp}.out
-	make					 2>&1 | tee -a ${logdir}/build_${compiler}_${system}_${today_stamp}.out
-	make install	 2>&1 | tee -a ${logdir}/build_${compiler}_${system}_${today_stamp}.out
+	cmake ..
+	make
+	make install
 else # "noclean"
 	echo -e " "
 	echo "Checking that the executables exist before moving on"
@@ -228,7 +232,7 @@ else
 fi
 
 echo -e "Log from this compilation can be found here:"
-echo -e "\t${logdir}/build_${compiler}_${system}_${today_stamp}.out"
+echo -e "\t${logfile}"
 echo -e "\n"
 # ------------------------------------------------------------------------------
 
