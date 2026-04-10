@@ -54,7 +54,7 @@ do
 			shift # remove "compiler" from proccessing
 			;;
   	#clean
-		fresh|clean|fullclean|noclean)
+		fresh|clean|noclean)
 			clean="${arg#*=}"
 			shift # remove "clean" from processing
 			;;
@@ -77,7 +77,7 @@ do
       echo -e "Valid options compilations modes are: "
 			echo -e "\t[ prod(D) | debug ] "
 			echo -e "Valid cleaning optiona are: " 
-			echo -e "\t[ fresh(D) | clean | fullclean | noclean ] "
+			echo -e "\t[ fresh(D) | clean | noclean ] "
 			echo -e "\n"
       exit
       ;;
@@ -180,18 +180,6 @@ elif [ ${clean} = "clean" ]; then
 	sleep 2
 	cd ${builddir}
 	cmake --build . --clean-first
-	make install
-elif [ ${clean} = "fullclean" ]; then
-	echo -e " "
-	echo "Cleaning build and exec directories then recompiling"
-	echo -e "\n"
-	sleep 2
-	\rm -rf ${builddir}
-	\rm -rf ${execdir}
-	mkdir -p ${builddir}
-	cd ${builddir}
-	cmake ..
-	make
 	make install
 else # "noclean"
 	echo -e " "
