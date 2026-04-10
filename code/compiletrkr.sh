@@ -172,7 +172,7 @@ cd ${builddir}
 # check clean arg
 if [ ${clean} = "clean" ]; then
   echo -e " "
-	echo "\tcleaning build directory then recompiling"
+	echo -e "\tcleaning build directory then recompiling"
 	sleep 2
   # equivalent of running "make clean"
   cmake --build . --clean-first
@@ -183,11 +183,13 @@ else # [clean=fresh]
 	# report on compilation 
 	if [ $? -ne 0 ] ; then
 		echo -e " "
-  	echo "\tERROR with compilation"
+  	echo -e "\tERROR with compilation"
+		echo -e "\n"
   	exit 1
 	else
 		echo -e " "
-  	echo "\tCompilation successfull"
+  	echo -e "\tCOMPILATION SUCCESSFUL"
+		echo -e "\n"
 	fi
 fi
 
