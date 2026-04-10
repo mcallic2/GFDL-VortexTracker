@@ -5,6 +5,9 @@
 # Last modified on: 04/09/2026
 # -------------------------------------------------------------------
 
+# reset to default module env before loading tracker module env
+module purge
+
 module use /contrib/spack-stack/spack-stack-1.9.3/envs/ue-oneapi-2024.2.1/install/modulefiles/Core/
 module load stack-oneapi/2024.2.1
 module load intel-oneapi-compilers/2025.3.1

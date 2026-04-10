@@ -5,6 +5,9 @@
 # Last modified on: 04/09/2026
 # -------------------------------------------------------------------
 
+# reset to default module env before loading tracker module env
+module reset
+
 module use /ncrc/proj/epic/spack-stack/spack-stack-1.8.0/envs/ue-intel-2021.10.0/install/modulefiles/Core/
 module load stack-intel/2023.2.0
 

@@ -5,6 +5,9 @@
 # Last modified on: 04/09/2026
 # -------------------------------------------------------------------
 
+# reset to default module env before loading tracker module env
+module reset
+
 module load PrgEnv-intel/8.5.0
 module load intel-oneapi/2022.2.0.262
 

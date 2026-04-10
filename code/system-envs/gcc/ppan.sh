@@ -5,6 +5,9 @@
 # Last modified on: 04/09/2026
 # -------------------------------------------------------------------
 
+# reset to default module env before loading tracker module env
+module purge
+
 module use /app/spack/2026.01/lmod/linux-rhel8-x86_64/Core
 
 module load gcc/14.3.0

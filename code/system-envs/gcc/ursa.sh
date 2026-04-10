@@ -5,6 +5,9 @@
 # Last modified on: 04/09/2026
 # -------------------------------------------------------------------
 
+# reset to default module env before loading tracker module env
+module purge
+
 module use /contrib/spack-stack/spack-stack-1.9.3/envs/ue-gcc-12.4.0/install/modulefiles/Core/
 module load stack-gcc/12.4.0
 module load gcc//12.4.0 
