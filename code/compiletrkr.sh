@@ -154,51 +154,47 @@ sleep 3
 
 echo -e " "
 echo -e "Creating executables on ${system} with ${compiler} on ${date_stamp}"
-echo -e "\n"
+sleep 3
 
-if [ ${clean} = "fresh" ]; then
-	echo -e " "
-	echo -e "Creating build directory and compiling"
+echo -e " "
+echo -e "Creating build directory"
+if [ -d ${builddir} ]; then
+  echo -e " "
+	echo "\tpreexisting build directory found;"
+	echo "\tnew build directory being generated"
+  sleep 2
+  rm -rf ${builddir}
+fi
+
+mkdir -p ${builddir}
+cd ${builddir}
+
+# check clean arg
+if [ ${clean} = "clean" ]; then
+  echo -e " "
+	echo "\tcleaning build directory then recompiling"
 	sleep 2
-	if [ -d ${builddir} ]; then
+  # equivalent of running "make clean"
+  cmake --build . --clean-first
+else # [clean=fresh]
+  cmake ..      # build code
+  make          # compile code
+
+	# report on compilation 
+	if [ $? -ne 0 ] ; then
 		echo -e " "
-		echo "\tpreexisting build directory found;"
-		echo "\tnew build directory being generated"
-		echo -e "\n"
-		sleep 2
-		rm -rf ${builddir}
+  	echo "\tERROR with compilation"
+  	exit 1
+	else
+		echo -e " "
+  	echo "\tCompilation successfull"
 	fi
-	mkdir -p ${builddir}
-	cd ${builddir}
-	cmake ..
-	make
-	make install
-elif [ ${clean} = "clean" ]; then
-	echo -e " "
-	echo "Cleaning build directory then recompiling"
-	echo -e "\n"
-	sleep 2
-	cd ${builddir}
-	cmake --build . --clean-first
-	make install
-else
-
 fi
 
-# ------------------------------------------------------------------------------
+# install executables in exec/ dir
+make install
 
-# ------------------------------------------------------------------------------
-# REPORT ON COMPILE FUNCTIONALLITY
-if [ $? -ne 0 ] ; then
-	echo -e " "
-  echo "COMPILATION FAILED"
-  exit 3
-else
-	echo -e " "
-  echo "COMPILATION SUCCESSFUL"
-fi
-
-echo -e "Log from this compilation can be found here:"
+echo -e "A log from this compilation can be found here:"
 echo -e "\t${logfile}"
 echo -e "\n"
 # ------------------------------------------------------------------------------
