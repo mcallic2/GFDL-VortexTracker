@@ -54,7 +54,7 @@ do
 			shift # remove "compiler" from proccessing
 			;;
   	#clean
-		fresh|clean|noclean)
+		fresh|clean)
 			clean="${arg#*=}"
 			shift # remove "clean" from processing
 			;;
@@ -77,7 +77,7 @@ do
       echo -e "Valid options compilations modes are: "
 			echo -e "\t[ prod(D) | debug ] "
 			echo -e "Valid cleaning optiona are: " 
-			echo -e "\t[ fresh(D) | clean | noclean ] "
+			echo -e "\t[ fresh(D) | clean ] "
 			echo -e "\n"
       exit
       ;;
@@ -181,29 +181,8 @@ elif [ ${clean} = "clean" ]; then
 	cd ${builddir}
 	cmake --build . --clean-first
 	make install
-else # "noclean"
-	echo -e " "
-	echo "Checking that the executables exist before moving on"
-	echo -e "\n"
-	sleep 2
-	export trkrx="${execdir}/gettrk.x"
-	export supvitx="${execdir}/supvit.x"
-	export tavex="${execdir}/tave.x"
-	export vintx="${execdir}/vint.x"
-  if [ ! -x ${trkrx} ] && [ ! -x ${supvitx} ] && [ ! -x ${tavex} ] && [ ! -x ${vintx} ]; then
-		echo -e " "
-		echo -e "Executables were not found"
-		echo -e "Please run compile script again using different cleaning option"
-		echo -e "If you are unsure of possible arguments please run this command:"
-		echo -e "\t./compile.sh --help"
-		echo -e "\n"
-		sleep 2
-	else	
-		echo -e " "
-		echo "All necssary executables exist; nothing to do"
-		echo -e "\n"
-		sleep 2
-  fi
+else
+
 fi
 
 # ------------------------------------------------------------------------------
