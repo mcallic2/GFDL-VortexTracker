@@ -160,8 +160,8 @@ echo -e " "
 echo -e "Creating build directory"
 if [ -d ${builddir} ]; then
   echo -e " "
-	echo "\tpreexisting build directory found;"
-	echo "\tnew build directory being generated"
+	echo -e "\tpreexisting build directory found;"
+	echo -e "\tnew build directory being generated"
   sleep 2
   rm -rf ${builddir}
 fi
@@ -196,6 +196,7 @@ fi
 # install executables in exec/ dir
 make install
 
+echo -e "\n"
 echo -e "A log from this compilation can be found here:"
 echo -e "\t${logfile}"
 echo -e "\n"
