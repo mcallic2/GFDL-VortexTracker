@@ -25,7 +25,7 @@ spin()
 # declare default arguments
 system=""					# system being used
 compiler="intel"	# compiler
-clean="new" 			# cleaning mode
+clean="fresh" 		# cleaning mode
 mode="prod" 			# build mode
 
 export codedir=${PWD}
@@ -54,7 +54,7 @@ do
 			shift # remove "compiler" from proccessing
 			;;
   	#clean
-		new|clean|fullclean|noclean)
+		fresh|clean|fullclean|noclean)
 			clean="${arg#*=}"
 			shift # remove "clean" from processing
 			;;
@@ -77,7 +77,7 @@ do
       echo -e "Valid options compilations modes are: "
 			echo -e "\t[ prod(D) | debug ] "
 			echo -e "Valid cleaning optiona are: " 
-			echo -e "\t[ new(D) | clean | fullclean | noclean ] "
+			echo -e "\t[ fresh(D) | clean | fullclean | noclean ] "
 			echo -e "\n"
       exit
       ;;
@@ -156,7 +156,7 @@ echo -e " "
 echo -e "Creating executables on ${system} with ${compiler} on ${date_stamp}"
 echo -e "\n"
 
-if [ ${clean} = "new" ]; then
+if [ ${clean} = "fresh" ]; then
 	echo -e " "
 	echo -e "Creating build directory and compiling"
 	sleep 2
