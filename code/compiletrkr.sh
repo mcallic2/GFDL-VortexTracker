@@ -156,9 +156,31 @@ echo -e " "
 echo -e "Creating executables on ${system} with ${compiler} on ${date_stamp}"
 sleep 3
 
+# check clean arg
+if [ ${clean} = "clean" ] && [ -d ${builddir} ]; then
+  echo -e " "
+	echo -e "\tCleaning build directory then recompiling"
+	sleep 2
+  cd ${builddir}
+	# equivalent of running "make clean"
+	cmake --build . --clean-first
+else # [clean=clean] + build/ dir doesn't exist
+	echo -e " "
+	echo -e "\tNo build/ dir was found to clean"
+	echo -e "\tPlease run the compile script with different cleaning option"
+	echo -e "\tIf you are unsure of possible arguments please run this command:"
+	echo -e "\t./compiletrkr.sh --help"
+	sleep 2
+fi
+
+# clean = "fresh" logic
 echo -e " "
 echo -e "Creating build directory"
-if [ -d ${builddir} ]; then
+
+# create build/ dir; delete build/ dir if it already exists
+if [! -d ${builddir} ]; then
+	mkdir -p ${builddir}
+else
   echo -e " "
 	echo -e "\tpreexisting build directory found;"
 	echo -e "\tnew build directory being generated"
@@ -166,31 +188,20 @@ if [ -d ${builddir} ]; then
   rm -rf ${builddir}
 fi
 
-mkdir -p ${builddir}
 cd ${builddir}
+cmake ..      # build code
+make          # compile code
 
-# check clean arg
-if [ ${clean} = "clean" ]; then
-  echo -e " "
-	echo -e "\tcleaning build directory then recompiling"
-	sleep 2
-  # equivalent of running "make clean"
-  cmake --build . --clean-first
-else # [clean=fresh]
-  cmake ..      # build code
-  make          # compile code
-
-	# report on compilation 
-	if [ $? -ne 0 ] ; then
-		echo -e " "
-  	echo -e "\tERROR with compilation"
-		echo -e "\n"
-  	exit 1
-	else
-		echo -e " "
-  	echo -e "\tCOMPILATION SUCCESSFUL"
-		echo -e "\n"
-	fi
+# report on compilation 
+if [ $? -ne 0 ] ; then
+	echo -e " "
+ 	echo -e "\tERROR with compilation"
+	echo -e "\n"
+ 	exit 1
+else
+	echo -e " "
+ 	echo -e "\tCOMPILATION SUCCESSFUL"
+	echo -e "\n"
 fi
 
 # install executables in exec/ dir
