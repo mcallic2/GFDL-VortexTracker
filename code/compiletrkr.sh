@@ -157,17 +157,17 @@ echo -e "Creating executables on ${system} with ${compiler} on ${date_stamp}"
 echo -e "\n"
 
 if [ ${clean} = "new" ]; then
+	echo -e " "
+	echo -e "Creating build directory and compiling"
+	sleep 2
 	if [ -d ${builddir} ]; then
 		echo -e " "
-		echo "Deleting exisiting build directory that was found"
+		echo "\tpreexisting build directory found;"
+		echo "\tnew build directory being generated"
 		echo -e "\n"
 		sleep 2
 		rm -rf ${builddir}
 	fi
-	echo -e " "
-	echo -e "Creating build directory and compiling"
-	echo -e "\n"
-	sleep 2
 	mkdir -p ${builddir}
 	cd ${builddir}
 	cmake ..
