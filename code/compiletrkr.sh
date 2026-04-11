@@ -129,7 +129,6 @@ sleep 2
 # list modules
 echo -e " "
 module list
-echo -e "\n"
 # ------------------------------------------------------------------------------
 
 
@@ -156,41 +155,31 @@ echo -e " "
 echo -e "Creating executables on ${system} with ${compiler} on ${date_stamp}"
 sleep 3
 
-# check clean arg
-if [ ${clean} = "clean" ] && [ -d ${builddir} ]; then
-  echo -e " "
-	echo -e "\tCleaning build directory then recompiling"
+if [ -d ${builddir} ]; then
+
+	if [ ${clean} = "fresh" ]; then
+		echo -e "\tpreexisting build directory found; removing contents and continuing compilation"
+		echo -e "\n"
+		sleep 2
+		rm -rf ${builddir}/*
+		cd ${builddir} ; cmake .. ; make ;
+	elif [ ${clean} = "clean" ]; then
+		echo -e "\tcleaning build directory then recompiling"
+		echo -e "\n"
+		sleep 2
+		cd ${builddir}; cmake --build . --clean-first ;
+	fi
+	
+elif [ ! -d ${builddir} ]; then
+	if [ ${clean} = "clean" ]; then
+		echo -e "\tno preexisting code to clean;"
+	fi
+	echo -e "\tgenerating new build directory & initiating compilation"
+	echo -e "\n"
 	sleep 2
-  cd ${builddir}
-	# equivalent of running "make clean"
-	cmake --build . --clean-first
-else # [clean=clean] + build/ dir doesn't exist
-	echo -e " "
-	echo -e "\tNo build/ dir was found to clean"
-	echo -e "\tPlease run the compile script with different cleaning option"
-	echo -e "\tIf you are unsure of possible arguments please run this command:"
-	echo -e "\t./compiletrkr.sh --help"
-	sleep 2
+	mkdir ${builddir}
+	cd ${builddir} ; cmake .. ; make ;
 fi
-
-# clean = "fresh" logic
-echo -e " "
-echo -e "Creating build directory"
-
-# create build/ dir; delete build/ dir if it already exists
-if [! -d ${builddir} ]; then
-	mkdir -p ${builddir}
-else
-  echo -e " "
-	echo -e "\tpreexisting build directory found;"
-	echo -e "\tnew build directory being generated"
-  sleep 2
-  rm -rf ${builddir}
-fi
-
-cd ${builddir}
-cmake ..      # build code
-make          # compile code
 
 # report on compilation 
 if [ $? -ne 0 ] ; then
@@ -205,6 +194,7 @@ else
 fi
 
 # install executables in exec/ dir
+if [ -d ${execdir} ]; then rm -rf ${execdir}; fi
 make install
 
 echo -e "\n"
