@@ -113,32 +113,32 @@ set +x
 # SECTION 4; INVOKE SCRIPTS
 
 # compile source code
-export compile=${rundir}/subscripts/compile_grib.sh
+export compile=${rundir}/derived_scrs/compile_grib.sh
 source ${compile}
 
 # export & run variables code
-export env_vars=${rundir}/subscripts/grib_env_vars.sh
+export env_vars=${rundir}/derived_scrs/gribvars.sh
 source ${env_vars}
 
 # export & run tcvitals script; this will either produce tcvitals file or use developer's tcvitals file
-export tcvitals=${rundir}/subscripts/tcvitals_grib.sh
+export tcvitals=${rundir}/derived_scrs/tcvitals_grib.sh
 source ${tcvitals}
 
 # export & run input data scripts; the file that is called is dependent on the value of 'file_sequence'
 if [ ${file_sequence} = "onebig" ]; then
-  export onebigscript=${rundir}/subscripts/onebig_grib.sh
+  export onebigscript=${rundir}/derived_scrs/onebig_fileseq.sh
   source ${onebigscript}
 else  # file_sequence = "multi"
-  export multiscript=${rundir}/subscripts/multi_grib.sh
+  export multiscript=${rundir}/derived_scrs/multi_fileseq.sh
   source ${multiscript}
 fi
 
 # export & run populate namelist script
-export populatenamelist=${rundir}/subscripts/namelist_grib.sh
+export populatenamelist=${rundir}/derived_scrs/namelistvars_grib.sh
 source ${populatenamelist}
 
 # export & run input/output files script
-export ioscript=${rundir}/subscripts/IOfiles_grib.sh
+export ioscript=${rundir}/derived_scrs/IOfiles_grib.sh
 source ${ioscript}
 
 # print tracker set up is finished
