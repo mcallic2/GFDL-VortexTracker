@@ -15,7 +15,7 @@ set -x
 export homedir=
 
 # After adding the name of your data file & the path to it, please make sure to
-# navigate into subscripts/name_ncdfvars.sh and follow the directions
+# navigate into derived_scrs/atmos_ncdfvars.sh and follow the directions
 export ncdf_filename=''
 export datadir=
 
@@ -97,27 +97,27 @@ set +x
 # SECTION 4; INVOKE SCRIPTS
 
 # compile source code
-export compile=${rundir}/subscripts/compile_ncdf.sh
+export compile=${rundir}/derived_scrs/compile_ncdf.sh
 source ${compile}
 
 # export & run variables code
-export env_vars=${rundir}/subscripts/ncdf_env_vars.sh
+export env_vars=${rundir}/derived_scrs/ncdfvars.sh
 source ${env_vars}
 
 # export & run tcvitals script; this will either produce tcvitals file or use developer's tcvitals file
-export tcvitals=${rundir}/subscripts/tcvitals_ncdf.sh
+export tcvitals=${rundir}/derived_scrs/tcvitals_ncdf.sh
 source ${tcvitals}
 
 # export & run ncvariables script
-export ncvarscript=${rundir}/subscripts/name_ncdfvars.sh
+export ncvarscript=${rundir}/derived_scrs/atmos_ncdfvars.sh
 source ${ncvarscript}
 
 # export & run populate namelist script
-export populatenamelist=${rundir}/subscripts/namelist_ncdf.sh
+export populatenamelist=${rundir}/derived_scrs/namelistvars_ncdf.sh
 source ${populatenamelist}
 
 # export & run input/output files script
-export ioscript=${rundir}/subscripts/IOfiles_ncdf.sh
+export ioscript=${rundir}/derived_scrs/IOfiles_ncdf.sh
 source ${ioscript}
 
 # print tracker set up is finished
