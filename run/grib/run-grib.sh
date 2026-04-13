@@ -25,7 +25,7 @@ export tcvitals_file=
 # the workdir path will ensure that no output files are accidentally overwritten
 export rundir=${homedir}/run/grib
 export codedir=${homedir}/code
-export arcvitals=${homedir}/archived_vitals
+export arcvitals=${homedir}/run/archived_vitals
 export execdir=${codedir}/exec
 export workdir=${rundir}/work
 
