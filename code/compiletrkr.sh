@@ -67,18 +67,24 @@ do
   	# catch
     *)
     	if [ ${arg#} != '--help' ] && [ ${arg#} != '-h' ] ; then
-      	echo " "${arg#}" OPTION NOT FOUND"
+        echo -e "** INVALID ARGUMENT ** \t--> "${arg#}" "
       fi
 			echo -e " "
-      echo -e "Valid options for system configureation are: "
+			echo -e "Example command --> ./compiletrkr <system> [compiler] [mode] [clean]"
+			echo -e "(arguments inside brackets are optional, defaults are listed below)"
+			echo -e " "
+			echo -e "Valid options for system configuration are: "
 			echo -e "\t[ gaea | hera | hercules | orion | ppan | ursa | wcoss2 | container | personal ] "
       echo -e "Valid options for compilers are: "
 			echo -e "\t[ intel(D) | gcc ] "
       echo -e "Valid options compilations modes are: "
 			echo -e "\t[ prod(D) | debug ] "
-			echo -e "Valid cleaning optiona are: " 
+			echo -e "Valid cleaning options are: " 
 			echo -e "\t[ fresh(D) | clean ] "
-			echo -e "\n"
+			echo -e " "
+			echo -e "Additional information can be found here: "
+			echo -e "\t<add link here when ready>"
+			echo -e " "
       exit
       ;;
   esac
@@ -87,10 +93,11 @@ done
 # 'system' cannot be empty when script is run
 if [ -z "${system}" ]; then
 	echo -e " "
-	echo -e "System option required for compilation to continue"
-	echo -e "If you are unsure of possible arguments please run this command:"
+	echo -e "\t** MISSING SYSTEM ARGUMENT **"
+	echo -e "System arg required for compilation to continue"
+	echo -e "For more info run: "
 	echo -e "\t./compiletrkr.sh --help"
-	echo -e "\n"
+	echo -e " "
 	exit 0
 fi
 
