@@ -9,9 +9,17 @@ cd ${wdir}
 cp ${namelist} namelist.gettrk
 ln -s -f namelist.gettrk                                  fort.555
 
-ln -s -f ${ncdf_filename}                                 fort.11
-if [ ${read_separate_land_mask_file} = 'y' ]; then
-  ln -s -f ${ncdf_ls_mask_filename}                       fort.17
+if [ ${inp_data_type} = 'grib' ]; then
+  if [ ${file_sequence} = 'onebig' ]; then
+    ln -s -f ${gribfile}                                  fort.11
+    ln -s -f ${ixfile}                                    fort.31
+  fi 
+  ln -s -f ${gribfile}                                    fort.11
+else
+  ln -s -f ${netcdffile}                                             fort.11
+  if [ ${read_separate_land_mask_file} = 'y' ]; then
+    ln -s -f ${ncdf_ls_mask_filename}                                fort.17
+  fi
 fi
 
 if [ -s ${wdir}/vitals.${ymdh} ]; then
@@ -29,8 +37,10 @@ fi
 ln -s -f ${homedir}/run/leadtimes.txt                     fort.15
 
 if [ ${vortex_tilt_flag} = 'y' ]; then
+  if [ ${inp_data_type} = 'netcdf' ]; then
+    ln -s -f ${homedir}/run/vortex_tilt_vars.txt          fort.33
+  if
   ln -s -f ${homedir}/run/vortex_tilt_levs.txt            fort.18
-  ln -s -f ${homedir}/run/vortex_tilt_vars.txt            fort.33
   ln -s -f ${wdir}/trak.${atcfname}.vortex_tilt.${ymdh}   fort.82
 fi
 
