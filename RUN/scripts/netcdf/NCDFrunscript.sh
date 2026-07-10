@@ -21,7 +21,7 @@ export datadir=
 
 # If you already have a tcvitals file, add path and name below.
 # If the file has not been created yet, leave this blank and the tcvitals_ncdf.sh script will create one
-# Please note, our archived vitals information contains data up until 03/21/2025
+# Please note, our archived vitals information contains data up until 12/18/2025
 export tcvitals_file=
 
 # The following paths should not necessarily need to be modified, however they can be edited as developer wishes
