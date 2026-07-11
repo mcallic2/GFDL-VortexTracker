@@ -28,7 +28,7 @@ compiler="intel"	# compiler
 clean="fresh" 		# cleaning mode
 mode="prod" 			# build mode
 
-export codedir=${PWD}/code
+export codedir=${PWD}/src_code
 export execdir=${codedir}/exec
 export builddir=${codedir}/build
 export logdir=${codedir}/logfiles
@@ -131,7 +131,7 @@ echo -e "Loading environment for ${system} with ${compiler} compiler"
 sleep 2
 
 # load modules 
-. ${codedir}/system-envs/${compiler}/${system}.sh
+. ${PWD}/system-envs/${compiler}/${system}.sh
 
 # list modules
 echo -e " "

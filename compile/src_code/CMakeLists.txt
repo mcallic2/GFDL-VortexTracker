@@ -25,5 +25,5 @@ find_package(w3emc REQUIRED)
 
 enable_testing()
 
-add_subdirectory(src/support/)
-add_subdirectory(src/tracker/)
+add_subdirectory(trkr_src/)
+add_subdirectory(sup_src/)
