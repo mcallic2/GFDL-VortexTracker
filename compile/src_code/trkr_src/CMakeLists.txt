@@ -82,6 +82,42 @@ target_link_libraries(test_wtavrg_lon.x PRIVATE subroutine_lib)
 add_executable(test_wtavrg.x test_tracker/test_wtavrg.F90)
 target_link_libraries(test_wtavrg.x PRIVATE subroutine_lib)
 
+add_executable(test_distbear.x test_tracker/test_distbear.F90)
+target_link_libraries(test_distbear.x PRIVATE subroutine_lib)
+
+add_executable(test_calcdist.x test_tracker/test_calcdist.F90)
+target_link_libraries(test_calcdist.x PRIVATE subroutine_lib)
+
+add_executable(test_lin_int.x test_tracker/test_lin_int.F90)
+target_link_libraries(test_lin_int.x PRIVATE subroutine_lib)
+
+add_executable(test_qsort.x test_tracker/test_qsort.F90)
+target_link_libraries(test_qsort.x PRIVATE subroutine_lib)
+
+add_executable(test_bitmapchk.x test_tracker/test_bitmapchk.F90)
+target_link_libraries(test_bitmapchk.x PRIVATE subroutine_lib)
+
+add_executable(test_conv1d2d.x test_tracker/test_conv1d2d.F90)
+target_link_libraries(test_conv1d2d.x PRIVATE subroutine_lib)
+
+add_executable(test_get_ijplus1_check_wrap.x test_tracker/test_get_ijplus1_check_wrap.F90)
+target_link_libraries(test_get_ijplus1_check_wrap.x PRIVATE subroutine_lib)
+
+add_executable(test_sort_storms_by_pressure.x test_tracker/test_sort_storms_by_pressure.F90)
+target_link_libraries(test_sort_storms_by_pressure.x PRIVATE subroutine_lib)
+
+add_executable(test_getvrvt.x test_tracker/test_getvrvt.F90)
+target_link_libraries(test_getvrvt.x PRIVATE subroutine_lib)
+
+add_executable(test_bilin_int_uneven.x test_tracker/test_bilin_int_uneven.F90)
+target_link_libraries(test_bilin_int_uneven.x PRIVATE subroutine_lib)
+
+add_executable(test_rvcal.x test_tracker/test_rvcal.F90)
+target_link_libraries(test_rvcal.x PRIVATE subroutine_lib)
+
+add_executable(test_barnes.x test_tracker/test_barnes.F90)
+target_link_libraries(test_barnes.x PRIVATE subroutine_lib)
+
 # unit test suit
 add_test(test_calccorr ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/calccorr.x)
 add_test(test_avgcalc ${subroutine_lib} ${CMAKE_BINARY_DIR}/src/tracker/exec/test_avgcalc.x)
