@@ -52,7 +52,7 @@ include/divisible/*
 
 
 ## Local 
-
+.vscode/settings.json
 .idea/*.xml
 
 build/**/*
