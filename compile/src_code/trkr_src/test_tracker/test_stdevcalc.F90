@@ -1,3 +1,15 @@
+!************************************************
+!* This test program tests the subroutine stdevcalc, which calculates
+!* the standard deviation of the values in an array around a given
+!* mean, skipping any elements flagged as not valid. As a special
+!* case, if the standard deviation comes out to exactly 0 (which can
+!* happen with just 2 points, since their mean sits exactly between
+!* them), it is forced to 1.0 instead -- the calling routine would
+!* otherwise treat a standard deviation of 0 as a fatal error.
+!*
+!* Created by: Caitlyn McAllister
+!* Email: caitlyn.mcalliser@noaa.gov
+!************************************************
 program test_subroutine_stdevcalc
 
   use access_subroutines

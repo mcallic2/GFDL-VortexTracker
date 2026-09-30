@@ -1,3 +1,11 @@
+!************************************************
+!* This test program tests the subroutine avgcalc, which calculates
+!* a straight (unweighted) average of the values in an array,
+!* skipping any elements flagged as not valid.
+!*
+!* Created by: Caitlyn McAllister
+!* Email: caitlyn.mcalliser@noaa.gov
+!************************************************
 program test_subroutine_avgcalc
 
   use access_subroutines

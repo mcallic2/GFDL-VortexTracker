@@ -1,3 +1,11 @@
+!************************************************
+!* This test program tests the subroutine calc_vmag, which calculates
+!* the wind speed magnitude at each gridpoint from separate u and v
+!* wind-component arrays.
+!*
+!* Created by: Caitlyn McAllister
+!* Email: caitlyn.mcalliser@noaa.gov
+!************************************************
 program test_subroutine_calc_vmag
 
   use access_subroutines

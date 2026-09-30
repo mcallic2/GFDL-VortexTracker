@@ -1,3 +1,14 @@
+!************************************************
+!* This test program tests the subroutine wtavrg_lon, which
+!* calculates a weighted average of longitudes -- used when finding a
+!* storm's center-fix longitude. Unlike a plain weighted average, it
+!* accounts for wrapping around the Greenwich meridian, so a mix of
+!* longitudes just west and just east of 0/360 still averages to a
+!* position near them, rather than to the wrong side of the world.
+!*
+!* Created by: Caitlyn McAllister
+!* Email: caitlyn.mcalliser@noaa.gov
+!************************************************
 program test_subroutine_wtavrg_lon
 
   use access_subroutines

@@ -1,3 +1,11 @@
+!************************************************
+!* This test program tests the subroutine wtavrg, which calculates a
+!* weighted average of the values in an array -- used when finding a
+!* storm's center-fix latitude and longitude positions.
+!*
+!* Created by: Caitlyn McAllister
+!* Email: caitlyn.mcalliser@noaa.gov
+!************************************************
 program test_subroutine_wtavrg
 
   use access_subroutines
