@@ -1,0 +1,2 @@
+compile/src_code/trkr_src/test_tracker/test_data/*.grib2 filter=lfs diff=lfs merge=lfs -text
+compile/src_code/trkr_src/test_tracker/test_data/*.nc filter=lfs diff=lfs merge=lfs -text
