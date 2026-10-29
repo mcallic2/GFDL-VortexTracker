@@ -16,6 +16,19 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+      with:
+        # test_tracker/test_data/*.grib2 and *.nc are stored in Git LFS.
+        # Without this, CI gets LFS pointer files instead of the real
+        # fixtures and the GRIB2/NetCDF regression tests fail.
+        lfs: true
+    - name: Verify LFS test fixtures were downloaded
+      run: |
+        for f in trkr_src/test_tracker/test_data/*.grib2 trkr_src/test_tracker/test_data/*.nc; do
+          if head -c 100 "$f" | grep -q "git-lfs.github.com/spec"; then
+            echo "::error file=$f::$f is a Git LFS pointer, not the real fixture. Check that checkout has 'lfs: true' and git-lfs is installed in the CI container."
+            exit 1
+          fi
+        done
     - name: Build & compile code
       run: |
         mkdir -p build && cd build
